@@ -2559,13 +2559,66 @@ Build exactly in this order:
 16. Observability
 17. Security hardening
 18. Performance tuning
+19. Chart screenshot ingestion and trend inference (optional phase): upload chart screenshots, extract OHLC primitives, and feed reconstructed candles through the existing deterministic pipeline for next-trend hypothesis generation.
 ```
 
 Do not skip steps.
 
 ---
 
-# 22. What the Backend Should Return to UI Later
+# 22. Chart Screenshot Trend Inference Phase
+
+## Goal
+
+Add image-based analysis support for users uploading or manually parsing trading chart screenshots
+and generate a next-trend hypothesis from deterministic artifacts.
+
+Initial implementation status: the backend accepts manually or externally extracted OHLC rows via
+`POST /chart-screenshot-runs`, persists `chart_screenshot_runs`, stores valid rows through the
+shared candle path, and returns a deterministic trend hypothesis. Native file upload, OCR, geometry
+parsing, and automatic analysis-run triggering remain later work.
+
+## Scope
+
+- Add an API path for screenshot-derived candle ingestion, with native file upload or signed URL as
+  a later extension.
+- Validate and persist ingestion metadata (workspace, user, asset symbol hint, timeframe guess, source timestamp).
+- Add a chart parsing worker path that can extract bar-level geometry/values into raw chart observations.
+- Convert extracted observations into canonical `NormalizedCandleInput` rows and route through the
+  existing candle validation / storage path.
+- Persist `chart_screenshot_runs` metadata: parser, extraction confidence, warnings, and human-review
+  status.
+- Reuse existing analysis pipeline to produce:
+  - deterministic feature snapshots
+  - deterministic indicator snapshots
+  - deterministic patterns
+  - deterministic signals
+  - deterministic explanation
+- Expose an explicit `trend_forecast_confidence` output only as a hypothesis, never as guaranteed advice.
+
+## Required constraints
+
+- Never classify directly from pixels; all final analysis must flow through normalized candles and existing
+  artifact pipelines.
+- Keep screenshot-derived data provenance explicit and auditable.
+- Do not treat screenshot trend output as advice or order intent.
+- Keep deterministic core unchanged:
+  AI may summarize but not override signal class, confidence, or risk notes.
+- Include a conservative fallback when extraction confidence is low (warn + require manual confirmation).
+
+## Done criteria
+
+```txt
+Screenshot-derived candle payload accepted and persisted with extraction metadata
+Manual or external parser output creates a run with confidence and audit trail
+At least one reconstructed candle batch is stored through the existing candle path without bypassing validation
+Trend hypothesis response is returned with confidence and explicit uncertainty metadata
+Safety guardrails block any direct trading instructions
+```
+
+---
+
+# 23. What the Backend Should Return to UI Later
 
 The future UI should not need to calculate anything.
 
@@ -2638,7 +2691,7 @@ This is the ideal backend contract.
 
 ---
 
-# 23. The Most Important Backend Rules
+# 24. The Most Important Backend Rules
 
 ## Rule 1
 

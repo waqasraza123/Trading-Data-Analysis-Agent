@@ -16,6 +16,7 @@ class DataSourceType(StrEnum):
     API_POLLING = "api_polling"
     WEBSOCKET_LIVE = "websocket_live"
     MANUAL_SEED = "manual_seed"
+    CHART_SCREENSHOT = "chart_screenshot"
 
 
 class DataSourceStatus(StrEnum):
@@ -29,7 +30,7 @@ class DataSource(Base):
     __table_args__ = (
         CheckConstraint(
             "source_type in ('csv_upload', 'json_import', 'api_polling', "
-            "'websocket_live', 'manual_seed')",
+            "'websocket_live', 'manual_seed', 'chart_screenshot')",
             name="source_type_allowed",
         ),
         CheckConstraint("status in ('active', 'inactive', 'failed')", name="status_allowed"),

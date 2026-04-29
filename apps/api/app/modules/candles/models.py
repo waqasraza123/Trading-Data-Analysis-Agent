@@ -62,6 +62,7 @@ class Candle(Base):
         Index("ix_candles_source_timestamp", "source_id", "timestamp"),
         Index("ix_candles_import_batch_id", "import_batch_id"),
         Index("ix_candles_live_feed_event_id", "live_feed_event_id"),
+        Index("ix_candles_chart_screenshot_run_id", "chart_screenshot_run_id"),
     )
 
     id = uuid_primary_key()
@@ -88,6 +89,11 @@ class Candle(Base):
     live_feed_event_id: Mapped[UUID | None] = mapped_column(
         PostgresUUID(as_uuid=True),
         ForeignKey("live_feed_events.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    chart_screenshot_run_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("chart_screenshot_runs.id", ondelete="SET NULL"),
         nullable=True,
     )
     timeframe: Mapped[str] = mapped_column(String(16), nullable=False)

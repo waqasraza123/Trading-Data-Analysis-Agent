@@ -11,6 +11,7 @@ from app.core.logging import configure_logging
 from app.core.middleware import OperationsMiddleware
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.candles.routes import router as candles_router
+from app.modules.chart_screenshots.routes import router as chart_screenshot_router
 from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.explanations.routes import router as explanations_router
@@ -70,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(chart_screenshot_router, prefix=resolved_settings.api_prefix)
     app.include_router(analysis_router, prefix=resolved_settings.api_prefix)
     app.include_router(strategy_profiles_router, prefix=resolved_settings.api_prefix)
     app.include_router(signals_router, prefix=resolved_settings.api_prefix)

@@ -199,12 +199,18 @@ class CandleRepository:
         live_feed_event_id = (
             candle.origin_reference_id if candle.origin_type == CandleOriginType.LIVE_FEED else None
         )
+        chart_screenshot_run_id = (
+            candle.origin_reference_id
+            if candle.origin_type == CandleOriginType.CHART_SCREENSHOT
+            else None
+        )
         return Candle(
             workspace_id=candle.workspace_id,
             symbol_id=candle.symbol_id,
             source_id=candle.source_id,
             import_batch_id=import_batch_id,
             live_feed_event_id=live_feed_event_id,
+            chart_screenshot_run_id=chart_screenshot_run_id,
             timeframe=candle.timeframe.value,
             timestamp=candle.timestamp,
             open=candle.open,
@@ -224,6 +230,8 @@ class CandleRepository:
         existing_candle.is_final = candle.is_final
         if candle.origin_type == CandleOriginType.LIVE_FEED:
             existing_candle.live_feed_event_id = candle.origin_reference_id
+        if candle.origin_type == CandleOriginType.CHART_SCREENSHOT:
+            existing_candle.chart_screenshot_run_id = candle.origin_reference_id
 
     def has_conflicting_final_values(
         self,

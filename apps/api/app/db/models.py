@@ -1,6 +1,7 @@
 from app.db.base import Base
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.candles.models import Candle
+from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.data_sources.models import DataSource
 from app.modules.engine_versions.models import EngineVersion
 from app.modules.explanations.models import DeterministicExplanation
@@ -28,6 +29,7 @@ __all__ = [
     "AnalysisRun",
     "Base",
     "Candle",
+    "ChartScreenshotRun",
     "DataSource",
     "DeterministicExplanation",
     "EngineVersion",

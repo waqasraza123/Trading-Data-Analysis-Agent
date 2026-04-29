@@ -3,7 +3,9 @@
 FastAPI backend for deterministic market intelligence over imported and live-originated
 candle data. The backend stores market data, calculates features and indicators, classifies
 signals with rules, generates safe deterministic explanations from persisted artifacts, and
-supports replay from stored candles, and persists deterministic news/event context.
+supports replay from stored candles, and persists deterministic news/event context for
+analysis-aware workflows. It also accepts manually or externally extracted trading chart
+screenshot candles and persists deterministic next-trend hypotheses.
 
 No UI, LLM calls, broker execution, auto-trading, alerts, or billing
 is implemented in this backend slice.
@@ -117,13 +119,13 @@ configured, and returns a safe degraded status otherwise.
 Run the live feed worker:
 
 ```sh
-python -m app.workers.live_feed_worker
+.venv/bin/python -m app.workers.live_feed_worker
 ```
 
 Run the stale monitor:
 
 ```sh
-python -m app.workers.live_stale_monitor
+.venv/bin/python -m app.workers.live_stale_monitor
 ```
 
 Security and traffic controls are configured through environment variables:
@@ -231,6 +233,18 @@ Deterministic explanations are documented in:
 docs/deterministic-explanations.md
 ```
 
+Deterministic news/event correlation is documented in:
+
+```txt
+docs/news-event-correlation.md
+```
+
+Chart screenshot trend prediction is documented in:
+
+```txt
+docs/chart-screenshot-prediction.md
+```
+
 Workspace/user APIs expose backend setup primitives:
 
 ```txt
@@ -256,6 +270,16 @@ Replay supports `latest_engine_version` and `same_engine_version`. Same-version 
 supported for the currently registered v1 deterministic engines and returns
 `unsupported_engine_version` instead of falling back when a stored snapshot references an
 unregistered engine version.
+
+Chart screenshot APIs support manually or externally extracted OHLC rows from trading chart
+images, store valid rows through the shared candle path, and persist a deterministic next-trend
+hypothesis:
+
+```txt
+POST /chart-screenshot-runs
+GET /chart-screenshot-runs
+GET /chart-screenshot-runs/{run_id}
+```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:
 

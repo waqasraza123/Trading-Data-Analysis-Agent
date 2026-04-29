@@ -15,6 +15,7 @@ class CandleOriginType(StrEnum):
     LIVE_FEED = "live_feed"
     API_POLLING = "api_polling"
     MANUAL_SEED = "manual_seed"
+    CHART_SCREENSHOT = "chart_screenshot"
 
 
 class CandleUpsertStatus(StrEnum):
@@ -95,6 +96,7 @@ class CandleRead(ApiReadSchema):
     source_id: UUID
     import_batch_id: UUID | None
     live_feed_event_id: UUID | None
+    chart_screenshot_run_id: UUID | None
     timeframe: str
     timestamp: datetime
     open: Decimal

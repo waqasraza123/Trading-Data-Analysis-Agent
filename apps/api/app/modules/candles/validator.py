@@ -72,3 +72,5 @@ def source_type_for_origin(origin_type: CandleOriginType) -> DataSourceType:
             return DataSourceType.API_POLLING
         case CandleOriginType.MANUAL_SEED:
             return DataSourceType.MANUAL_SEED
+        case CandleOriginType.CHART_SCREENSHOT:
+            return DataSourceType.CHART_SCREENSHOT
