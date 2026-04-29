@@ -66,3 +66,9 @@ Historical CSV and JSON import wiring is documented in:
 ```txt
 docs/historical-imports.md
 ```
+
+Live feed ingestion foundation is documented in:
+
+```txt
+docs/live-feed-ingestion.md
+```

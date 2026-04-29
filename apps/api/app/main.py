@@ -9,6 +9,7 @@ from app.core.errors import RequestIdMiddleware, register_error_handlers
 from app.core.logging import configure_logging
 from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.imports.routes import router as imports_router
+from app.modules.live.routes import router as live_router
 from app.modules.symbols.routes import router as symbols_router
 from app.routes.health import router as health_router
 
@@ -44,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(symbols_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_sources_router, prefix=resolved_settings.api_prefix)
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
+    app.include_router(live_router, prefix=resolved_settings.api_prefix)
     return app
 
 
