@@ -54,3 +54,9 @@ The Phase 3 configuration services are documented in:
 ```txt
 docs/configuration-services.md
 ```
+
+The shared candle validation and normalization layer is documented in:
+
+```txt
+docs/candle-normalization.md
+```
