@@ -17,6 +17,7 @@ from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.live.routes import router as live_router
+from app.modules.llm_explanations.routes import router as llm_explanations_router
 from app.modules.news.routes import news_events_router
 from app.modules.news.routes import router as news_router
 from app.modules.signals.routes import router as signals_router
@@ -78,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(news_events_router, prefix=resolved_settings.api_prefix)
     app.include_router(news_router, prefix=resolved_settings.api_prefix)
     app.include_router(explanations_router, prefix=resolved_settings.api_prefix)
+    app.include_router(llm_explanations_router, prefix=resolved_settings.api_prefix)
     return app
 
 

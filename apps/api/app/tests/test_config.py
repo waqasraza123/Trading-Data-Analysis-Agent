@@ -12,6 +12,14 @@ def test_settings_load_defaults() -> None:
     assert settings.database_url is None
     assert settings.redis_url is None
     assert settings.openai_api_key is None
+    assert settings.llm_explanations_enabled is False
+    assert settings.llm_provider == "mock"
+    assert settings.llm_model == "gpt-4o-mini"
+    assert settings.llm_store_inputs is False
+    assert settings.llm_store_outputs is True
+    assert settings.news_correlation_pre_event_minutes == 5
+    assert settings.news_correlation_post_event_minutes == 30
+    assert settings.news_correlation_max_events_per_signal == 10
     assert settings.cors_allowed_origins == []
     assert settings.cors_allow_credentials is False
     assert settings.auth_enabled is False

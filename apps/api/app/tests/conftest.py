@@ -36,6 +36,7 @@ from app.modules.workspaces.models import Workspace
 
 TEST_DATABASE_SKIP_REASON = "DB integration tests require TEST_DATABASE_URL"
 APP_TABLES = (
+    "llm_explanations",
     "deterministic_explanations",
     "signal_news_correlations",
     "signal_risk_notes",
@@ -43,6 +44,7 @@ APP_TABLES = (
     "signal_confidence_components",
     "signals",
     "news_events",
+    "chart_screenshot_runs",
     "pattern_candidates",
     "indicator_snapshots",
     "feature_snapshots",

@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     redis_url: SecretStr | None = None
     openai_api_key: SecretStr | None = None
+    llm_explanations_enabled: bool = False
+    llm_provider: str = "mock"
+    llm_model: str = "gpt-4o-mini"
+    llm_timeout_seconds: float = Field(default=12.0, gt=0)
+    llm_max_input_tokens: int = Field(default=1800, ge=1)
+    llm_max_output_tokens: int = Field(default=450, ge=1)
+    llm_store_inputs: bool = False
+    llm_store_outputs: bool = True
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
@@ -97,6 +105,20 @@ class Settings(BaseSettings):
             return None
         normalized_value = value.strip().lower()
         return normalized_value or None
+
+    @field_validator("llm_provider")
+    @classmethod
+    def normalize_llm_provider(cls, value: str) -> str:
+        return value.strip().lower()
+
+    @field_validator("llm_model")
+    @classmethod
+    def normalize_llm_model(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "LLM_MODEL must not be empty when LLM explanations are enabled"
+            raise ValueError(msg)
+        return normalized_value
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> Self:

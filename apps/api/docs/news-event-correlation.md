@@ -1,8 +1,8 @@
 # News Event Correlation
 
 This slice adds deterministic market/economic/news event context. It stores structured events,
-maps them to symbols, scores possible proximity to completed signals, and persists auditable
-correlation rows.
+maps them to symbols, scores possible proximity to completed or in-progress lifecycle signals, and
+persists auditable correlation rows.
 
 It does not add external paid news providers, UI, broker execution, alerts, auto-trading, billing,
 copy/social trading, or LLM-based classification.
@@ -58,7 +58,8 @@ created_at
 updated_at
 ```
 
-`signal_news_correlations` stores scored context for completed signals:
+`signal_news_correlations` stores scored context for completed signals and signals being processed
+inside the analysis lifecycle:
 
 ```txt
 workspace_id
@@ -211,7 +212,9 @@ new rows are persisted.
 ## Lifecycle Hook
 
 If `include_news_correlation=true`, the analysis lifecycle runs correlation after signal
-classification and before deterministic explanation generation. If false, it skips news context.
+classification and before deterministic explanation generation. If `include_ai_explanation=true`
+as well, this ordering guarantees the LLM can only see news that has already been persisted as
+signal news correlations. If false, it skips news context.
 
 When a strong correlation is persisted, the service adds a small risk note:
 
@@ -220,3 +223,11 @@ A relevant market event occurred near this signal window. Volatility may be even
 ```
 
 Confidence and classification are not changed.
+
+Audit events include:
+
+```txt
+news_correlation_started
+news_correlation_completed
+news_correlation_failed
+```

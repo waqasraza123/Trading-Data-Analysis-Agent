@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, workspace/user setup, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and versioned replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, engine version, deterministic signal classification, deterministic explanation, deterministic news/event correlation, and chart screenshot trend-prediction endpoints.
+- The API currently exposes health, workspace/user setup, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and versioned replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, engine version, deterministic signal classification, deterministic explanation, deterministic news/event correlation, grounded LLM explanation, and chart screenshot trend-prediction endpoints.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
@@ -61,7 +61,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Deterministic strategy profiles, signal classification, signal evidence, confidence components, risk notes, and golden intelligence tests are implemented.
 - Deterministic explanations are implemented on top of persisted signals, evidence, confidence components, risk notes, strategy profile snapshots, feature snapshots, and indicator snapshots.
 - Deterministic news/event correlation is implemented on top of manually/imported events and persisted signals. It is contextual only, avoids causation language, and does not override signal classification or confidence.
-- Later phases add optional LLM explanations, live scanning, deeper external integrations, and performance tuning.
+- Grounded LLM explanations are implemented as an optional layer on top of deterministic explanation artifacts, with mock/OpenAI provider abstraction, safety checks, grounding checks, and deterministic fallback behavior.
+- Later phases add live scanning, deeper external integrations, and performance tuning.
 - Chart screenshot ingestion accepts manually or externally extracted OHLC rows, stores valid rows through the shared candle path, and persists deterministic trend hypotheses.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
@@ -86,6 +87,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented strategy_profiles, signals, signal_confidence_components, signal_evidence, and signal_risk_notes migrations/models, default profile seed data, deterministic classifier service, lifecycle integration, retrieval APIs, audit events, documentation, and intelligence tests.
 - Implemented deterministic_explanations migration/model, deterministic explanation templates, safety checker, idempotent persistence service, lifecycle/manual classification integration, retrieval/generation APIs, audit events, documentation, and explanation unit tests.
 - Implemented news_events and signal_news_correlations migration/models, manual/import JSON event ingestion APIs, deterministic relevance/scoring service, manual correlation APIs, optional include_news_correlation lifecycle hook, cautious risk-note integration, documentation, and tests.
+- Implemented llm_explanations migration/model, grounded LLM input builder, prompt, mock/OpenAI provider abstraction, safety and grounding checks, LLM explanation APIs, optional include_ai_explanation lifecycle hook, documentation, and tests.
 - Implemented chart_screenshot_runs migration/model, chart_screenshot data source type, screenshot-derived candle storage linkage, deterministic trend-hypothesis service, APIs, and documentation.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
 - Implemented workspace/user APIs, idempotent backend seed command/service, engine version registry/query APIs, analysis engine/rule-set snapshots, and current-v1 same-engine replay support.
@@ -121,7 +123,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Pattern candidates serialize Decimal market values as strings in JSONB and mark a selected candidate only when the strongest score clears the deterministic selection threshold.
 - Analysis retry replaces prior pattern candidate rows for the same analysis run until a future analysis-attempt model exists.
 - Strategy profiles are deterministic market-reading configurations for signal classification; they are not broker strategies, trade execution, auto-trading, or financial advice.
-- The core intelligence layer should be implemented before optional LLM explanations, news correlation, live scanner work, frontend/UI, or broker/external automation.
+- Optional LLM explanations must remain downstream of deterministic artifacts and must not classify, override signals, invent news, claim causation, or provide trade instructions.
 - Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, `replay_mode`, `engine_snapshot_json`, and `rule_set_snapshot_json`; `latest_engine_version` uses current registered engines/profiles, and `same_engine_version` supports registered current v1 snapshots or returns `unsupported_engine_version`.
 - DB integration tests require explicit `TEST_DATABASE_URL`; unit tests must not fall back to production Neon `DATABASE_URL`.
 - Golden integration tests assert deterministic signal outputs and deterministic explanations for completed analysis runs.

@@ -23,6 +23,15 @@ class NewsEventRepository:
     async def get_by_id(self, news_event_id: UUID) -> NewsEvent | None:
         return await self.session.get(NewsEvent, news_event_id)
 
+    async def get_many_by_ids(self, news_event_ids: list[UUID]) -> builtins.list[NewsEvent]:
+        if not news_event_ids:
+            return []
+        statement: Select[tuple[NewsEvent]] = select(NewsEvent).where(
+            NewsEvent.id.in_(news_event_ids)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
     async def list_events(
         self,
         limit: int,

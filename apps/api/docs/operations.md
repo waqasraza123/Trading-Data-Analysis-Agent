@@ -1,7 +1,8 @@
 # Backend Operations
 
 This backend is a deterministic trading intelligence API. It does not include UI, broker
-execution, auto-trading, LLM calls, news correlation, alerts, billing, or copy/social trading.
+execution, auto-trading, alerts, billing, or copy/social trading. Optional LLM explanations can
+be enabled, but they only explain persisted deterministic artifacts and do not classify signals.
 
 ## Required Runtime Variables
 
@@ -37,6 +38,18 @@ LIVE_FEED_RECONNECT_MULTIPLIER=2
 LIVE_FEED_STALE_MESSAGE_SECONDS=180
 LIVE_FEED_STALE_FINAL_CANDLE_SECONDS=300
 LIVE_FEED_WORKER_POLL_SECONDS=10
+NEWS_CORRELATION_PRE_EVENT_MINUTES=5
+NEWS_CORRELATION_POST_EVENT_MINUTES=30
+NEWS_CORRELATION_MAX_EVENTS_PER_SIGNAL=10
+LLM_EXPLANATIONS_ENABLED=false
+LLM_PROVIDER=mock
+LLM_MODEL=gpt-4o-mini
+LLM_TIMEOUT_SECONDS=12
+LLM_MAX_INPUT_TOKENS=1800
+LLM_MAX_OUTPUT_TOKENS=450
+OPENAI_API_KEY=
+LLM_STORE_INPUTS=false
+LLM_STORE_OUTPUTS=true
 SEED_DEFAULT_WORKSPACE_NAME=
 SEED_DEFAULT_ADMIN_EMAIL=
 SEED_DEFAULT_ADMIN_NAME=
@@ -44,6 +57,7 @@ SEED_DEFAULT_ADMIN_NAME=
 
 Optional secrets are not required at API startup. `ADMIN_API_KEY` is required only when
 `AUTH_ENABLED=true`. `LIVE_FEED_API_KEY` is required only for providers that require a key.
+`OPENAI_API_KEY` is required only when LLM explanations are enabled with `LLM_PROVIDER=openai`.
 
 ## Running The API
 

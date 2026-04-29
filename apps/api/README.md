@@ -2,13 +2,13 @@
 
 FastAPI backend for deterministic market intelligence over imported and live-originated
 candle data. The backend stores market data, calculates features and indicators, classifies
-signals with rules, generates safe deterministic explanations from persisted artifacts, and
-supports replay from stored candles, and persists deterministic news/event context for
-analysis-aware workflows. It also accepts manually or externally extracted trading chart
-screenshot candles and persists deterministic next-trend hypotheses.
+signals with rules, generates safe deterministic and optional grounded LLM explanations from
+persisted artifacts, supports replay from stored candles, and persists deterministic news/event
+context for analysis-aware workflows. It also accepts manually or externally extracted trading
+chart screenshot candles and persists deterministic next-trend hypotheses.
 
-No UI, LLM calls, broker execution, auto-trading, alerts, or billing
-is implemented in this backend slice.
+No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
+The LLM explanation layer is optional and may only explain persisted deterministic output.
 
 ## Commands
 
@@ -244,6 +244,15 @@ Chart screenshot trend prediction is documented in:
 ```txt
 docs/chart-screenshot-prediction.md
 ```
+
+Grounded LLM explanations are documented in:
+
+```txt
+docs/llm-explanations.md
+```
+
+When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs
+before LLM explanation generation so the LLM can only use persisted correlation context.
 
 Workspace/user APIs expose backend setup primitives:
 

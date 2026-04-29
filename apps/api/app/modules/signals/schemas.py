@@ -3,8 +3,12 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from pydantic import Field
+
 from app.core.schemas import ApiReadSchema
 from app.modules.explanations.schemas import DeterministicExplanationRead
+from app.modules.llm_explanations.schemas import LlmExplanationRead
+from app.modules.news.schemas import NewsCorrelationRead
 from app.modules.signals.models import (
     SignalBias,
     SignalClassificationStatus,
@@ -81,3 +85,5 @@ class SignalClassificationRead(ApiReadSchema):
     evidence: list[SignalEvidenceRead]
     risk_notes: list[SignalRiskNoteRead]
     deterministic_explanation: DeterministicExplanationRead | None = None
+    news_correlations: list[NewsCorrelationRead] = Field(default_factory=list)
+    llm_explanation: LlmExplanationRead | None = None

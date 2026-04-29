@@ -9,6 +9,7 @@ from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
+from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.patterns.models import PatternCandidate
 from app.modules.signals.models import (
@@ -39,6 +40,7 @@ __all__ = [
     "ImportError",
     "LiveFeedEvent",
     "LiveFeedSubscription",
+    "LlmExplanation",
     "NewsEvent",
     "PatternCandidate",
     "SignalNewsCorrelation",

@@ -13,6 +13,10 @@ from app.modules.explanations.schemas import DeterministicExplanationRead
 from app.modules.explanations.service import DeterministicExplanationService
 from app.modules.features.repository import FeatureSnapshotRepository
 from app.modules.indicators.repository import IndicatorSnapshotRepository
+from app.modules.llm_explanations.repository import LlmExplanationRepository
+from app.modules.llm_explanations.schemas import LlmExplanationRead
+from app.modules.news.repository import NewsCorrelationRepository
+from app.modules.news.schemas import NewsCorrelationRead
 from app.modules.patterns.models import PatternCandidate
 from app.modules.patterns.repository import PatternCandidateRepository
 from app.modules.patterns.serialization import serialize_pattern_map
@@ -57,6 +61,8 @@ class SignalClassificationService:
         self.indicator_repository = IndicatorSnapshotRepository(session)
         self.strategy_profile_repository = StrategyProfileRepository(session)
         self.explanation_repository = DeterministicExplanationRepository(session)
+        self.llm_explanation_repository = LlmExplanationRepository(session)
+        self.news_correlation_repository = NewsCorrelationRepository(session)
         self.explanation_service = DeterministicExplanationService(session)
 
     async def classify_analysis_run(self, analysis_run_id: UUID) -> SignalClassificationRead:
@@ -222,6 +228,8 @@ class SignalClassificationService:
         evidence = await self.signal_repository.list_evidence(signal.id)
         risk_notes = await self.signal_repository.list_risk_notes(signal.id)
         explanation = await self.explanation_repository.get_by_signal_id(signal.id)
+        news_correlations = await self.news_correlation_repository.list_by_signal_id(signal.id)
+        llm_explanation = await self.llm_explanation_repository.get_by_signal_id(signal.id)
         return SignalClassificationRead(
             analysis_run_id=signal.analysis_run_id,
             signal=SignalRead.model_validate(signal),
@@ -234,6 +242,15 @@ class SignalClassificationService:
             deterministic_explanation=(
                 DeterministicExplanationRead.model_validate(explanation)
                 if explanation is not None
+                else None
+            ),
+            news_correlations=[
+                NewsCorrelationRead.model_validate(correlation)
+                for correlation in news_correlations
+            ],
+            llm_explanation=(
+                LlmExplanationRead.model_validate(llm_explanation)
+                if llm_explanation is not None
                 else None
             ),
         )

@@ -34,6 +34,7 @@ from app.modules.features.models import FeatureSnapshot
 from app.modules.features.service import FeatureSnapshotService
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.indicators.service import IndicatorSnapshotService
+from app.modules.llm_explanations.service import LlmExplanationService
 from app.modules.news.service import NewsCorrelationService
 from app.modules.patterns.models import PatternCandidate
 from app.modules.patterns.service import PatternCandidateService
@@ -60,6 +61,7 @@ class AnalysisService:
         self.pattern_candidate_service = PatternCandidateService(session)
         self.signal_classification_service = SignalClassificationService(session)
         self.deterministic_explanation_service = DeterministicExplanationService(session)
+        self.llm_explanation_service = LlmExplanationService(session)
         self.news_correlation_service = NewsCorrelationService(session)
         self.engine_version_service = EngineVersionService(session)
         self.signal_repository = SignalRepository(session)
@@ -263,8 +265,8 @@ class AnalysisService:
                 baseline_start_time=original_run.baseline_start_time,
                 analysis_mode=AnalysisMode.REPLAY,
                 include_partial_live_candle=original_run.include_partial_live_candle,
-                include_news_correlation=False,
-                include_ai_explanation=False,
+                include_news_correlation=original_run.include_news_correlation,
+                include_ai_explanation=original_run.include_ai_explanation,
                 status=AnalysisRunStatus.QUEUED,
                 engine_version=(
                     original_run.engine_version
@@ -623,6 +625,38 @@ class AnalysisService:
                 "Deterministic explanation completed and persisted",
                 {"explanationId": str(explanation.id), "signalId": str(signal.id)},
             )
+            if run.include_ai_explanation:
+                try:
+                    llm_explanation = await self.llm_explanation_service.generate_for_signal(
+                        signal.id,
+                        commit=False,
+                    )
+                    await self.add_audit_log(
+                        run.id,
+                        "llm_explanations_calculated",
+                        "Optional grounded LLM explanation completed",
+                        {
+                            "llmExplanationId": str(llm_explanation.id),
+                            "signalId": str(signal.id),
+                            "safetyStatus": llm_explanation.safety_status.value,
+                            "groundingStatus": llm_explanation.grounding_status.value,
+                        },
+                    )
+                except Exception as error:
+                    logger.warning(
+                        "llm_explanation_lifecycle_failed",
+                        extra={
+                            "analysis_run_id": str(run.id),
+                            "signal_id": str(signal.id),
+                            "error_type": type(error).__name__,
+                        },
+                    )
+                    await self.add_audit_log(
+                        run.id,
+                        "llm_explanation_failed",
+                        "Optional grounded LLM explanation failed without failing analysis",
+                        {"signalId": str(signal.id), "error": type(error).__name__},
+                    )
             run.status = AnalysisRunStatus.COMPLETED
             run.completed_at = utc_now()
             await self.add_audit_log(

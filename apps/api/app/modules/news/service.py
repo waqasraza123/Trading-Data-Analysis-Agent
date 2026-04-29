@@ -228,36 +228,42 @@ class NewsCorrelationService:
         run: AnalysisRun,
         commit: bool = False,
     ) -> list[SignalNewsCorrelation]:
-        if run.status != AnalysisRunStatus.COMPLETED:
+        if run.status not in {AnalysisRunStatus.COMPLETED, AnalysisRunStatus.RUNNING}:
             raise AppError(
                 422,
                 "analysis_run_not_correlatable",
-                "Only completed analysis runs can be correlated with news",
+                "Only completed or running analysis runs can be correlated with news",
             )
-        symbol = await self.symbol_repository.get_by_id(signal.symbol_id)
-        if symbol is None:
-            raise AppError(404, "symbol_not_found", "Symbol not found")
-        feature_snapshot = await self.feature_repository.get_by_analysis_run_id(run.id)
-        candidates = await self.load_candidate_events(run)
-        scored_events = self.score_events(
-            signal=signal,
-            run=run,
-            symbol=symbol,
-            features=feature_snapshot.features_json if feature_snapshot is not None else None,
-            events=candidates,
+        await self.add_audit_log(
+            run.id,
+            "news_correlation_started",
+            "Deterministic news correlation started",
+            {"signalId": str(signal.id), "scorerVersion": NEWS_CORRELATION_SCORER_VERSION},
         )
-        correlations = [
-            self.build_correlation(signal=signal, score=score)
-            for score in scored_events[: self.settings.news_correlation_max_events_per_signal]
-        ]
         try:
+            symbol = await self.symbol_repository.get_by_id(signal.symbol_id)
+            if symbol is None:
+                raise AppError(404, "symbol_not_found", "Symbol not found")
+            feature_snapshot = await self.feature_repository.get_by_analysis_run_id(run.id)
+            candidates = await self.load_candidate_events(run)
+            scored_events = self.score_events(
+                signal=signal,
+                run=run,
+                symbol=symbol,
+                features=feature_snapshot.features_json if feature_snapshot is not None else None,
+                events=candidates,
+            )
+            correlations = [
+                self.build_correlation(signal=signal, score=score)
+                for score in scored_events[: self.settings.news_correlation_max_events_per_signal]
+            ]
             await self.correlation_repository.delete_for_signal(signal.id)
             persisted = await self.correlation_repository.create_many(correlations)
             await self.persist_risk_note_if_needed(signal, persisted)
             await self.add_audit_log(
                 run.id,
-                "news_correlations_calculated",
-                "Deterministic news correlations calculated and persisted",
+                "news_correlation_completed",
+                "Deterministic news correlation completed",
                 {
                     "signalId": str(signal.id),
                     "correlationCount": len(persisted),
@@ -273,6 +279,14 @@ class NewsCorrelationService:
                 "news_correlation_conflict",
                 "News correlations could not be persisted",
             ) from error
+        except Exception:
+            await self.add_audit_log(
+                run.id,
+                "news_correlation_failed",
+                "Deterministic news correlation failed",
+                {"signalId": str(signal.id)},
+            )
+            raise
         return persisted
 
     async def list_by_signal_id(self, signal_id: UUID) -> list[SignalNewsCorrelation]:

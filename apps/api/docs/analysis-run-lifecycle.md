@@ -23,7 +23,6 @@ replay completed runs from stored candles with same registered deterministic eng
 Not implemented:
 
 ```txt
-LLM explanation
 background worker execution
 ```
 
@@ -140,7 +139,8 @@ rule_set_snapshot_json = active rule/profile snapshot
 ```
 
 Replay copies the original workspace, user, symbol, source, timeframe, analysis window,
-warmup window, baseline window, and partial-candle setting. It then reuses the same
+warmup window, baseline window, partial-candle setting, news-correlation flag, and AI-explanation
+flag. It then reuses the same
 synchronous lifecycle over stored candles and persists new feature, indicator, pattern,
 signal, confidence, evidence, risk, and deterministic explanation artifacts for the
 replay run.
@@ -169,10 +169,11 @@ pattern candidates were calculated and persisted
 deterministic signal classification was calculated and persisted
 optional deterministic news correlations were calculated when requested
 deterministic explanation was generated and persisted
+optional grounded LLM explanation was attempted when requested
 ```
 
-Future engine phases continue from stored artifacts into optional LLM explanations, scanners,
-and external provider integrations.
+Future engine phases continue from stored artifacts into scanners and external provider
+integrations.
 
 ## Data Sufficiency Policy
 
@@ -213,6 +214,9 @@ signal_selected
 no_signal_generated
 signal_classification_completed
 signals_calculated
+news_correlation_started
+news_correlation_completed
+news_correlation_failed
 analysis_replay_requested
 analysis_replay_created
 analysis_replay_started
@@ -224,6 +228,14 @@ deterministic_explanation_generated
 deterministic_explanation_blocked
 deterministic_explanation_failed
 deterministic_explanations_calculated
+llm_explanation_requested
+llm_explanation_input_built
+llm_explanation_generated
+llm_explanation_blocked
+llm_explanation_grounding_failed
+llm_explanation_fallback_used
+llm_explanation_failed
+llm_explanations_calculated
 insufficient_data
 analysis_completed
 analysis_failed

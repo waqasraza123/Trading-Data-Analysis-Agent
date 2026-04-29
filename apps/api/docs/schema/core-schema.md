@@ -281,6 +281,10 @@ These rows do not override signal classification or confidence.
 
 Stores one current safe deterministic explanation per signal. The row includes explanation sections, source artifact snapshots, safety status, and blocked terms when fallback text is used.
 
+### `llm_explanations`
+
+Stores one current optional grounded LLM explanation per signal, provider, model, and prompt version. Rows include the grounded input snapshot when enabled, safe output text or fallback text, safety status, blocked terms, grounding status, grounding issues, provider token metadata, optional estimated cost, and provider error metadata. The table is idempotent on `signal_id`, `provider`, `model`, and `prompt_version`.
+
 ## Migration
 
 The initial schema migration is:

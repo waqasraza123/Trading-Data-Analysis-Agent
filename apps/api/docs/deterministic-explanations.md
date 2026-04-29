@@ -1,6 +1,6 @@
 # Deterministic Explanations
 
-This slice adds safe deterministic explanation persistence. It does not add LLM calls, news correlation, UI, broker execution, alerts, auto-trading, or financial-advice output.
+This slice adds safe deterministic explanation persistence. It does not add UI, broker execution, alerts, auto-trading, or financial-advice output. Optional grounded LLM explanations are a separate layer that reads this persisted output and falls back to it when disabled, unsafe, or ungrounded.
 
 ## Boundary
 
@@ -18,6 +18,7 @@ signal
 ```
 
 Market data remains the source of truth. Rules classify. The explanation layer only summarizes persisted backend artifacts.
+The LLM layer may explain the deterministic explanation but must not replace deterministic classification.
 
 ## Table
 
