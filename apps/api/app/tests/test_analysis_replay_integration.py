@@ -61,6 +61,8 @@ async def test_replay_creates_new_linked_analysis_run_without_mutating_original(
     assert replay_run.replayed_from_analysis_run_id == original.analysis_run.id
     assert replay_run.replay_mode == AnalysisReplayMode.LATEST_ENGINE_VERSION
     assert replay_run.status == AnalysisRunStatus.COMPLETED
+    assert replay_run.engine_snapshot_json is not None
+    assert replay_run.rule_set_snapshot_json is not None
     assert replay_signal.signal.classification_status == "signal"
     assert replay_signal.deterministic_explanation is not None
     assert replay_signal.deterministic_explanation.signal_id == replay_signal.signal.id
@@ -87,6 +89,45 @@ async def test_replay_invalid_analysis_run_id_returns_clean_error(
 
 
 @pytest.mark.asyncio
+async def test_same_engine_replay_uses_original_version_snapshot_when_supported(
+    db_session: AsyncSession,
+    workspace: Workspace,
+    user: User,
+    eurusd_symbol: Symbol,
+    json_data_source: DataSource,
+    seeded_strategy_profiles: None,
+) -> None:
+    original = await run_golden_analysis(
+        db_session,
+        "bullish_breakout_eurusd_1m",
+        workspace,
+        user,
+        eurusd_symbol,
+        json_data_source,
+    )
+    assert original.analysis_run.engine_snapshot_json is not None
+    assert original.analysis_run.rule_set_snapshot_json is not None
+
+    replay_run = await AnalysisService(db_session).replay_run(
+        original.analysis_run.id,
+        AnalysisReplayRequest(mode=AnalysisReplayMode.SAME_ENGINE_VERSION),
+    )
+    replay_signal = await SignalClassificationService(db_session).get_by_analysis_run_id(
+        replay_run.id
+    )
+
+    assert replay_run.status == AnalysisRunStatus.COMPLETED
+    assert replay_run.replay_mode == AnalysisReplayMode.SAME_ENGINE_VERSION
+    assert replay_run.engine_version == original.analysis_run.engine_version
+    assert replay_run.rule_set_version == original.analysis_run.rule_set_version
+    assert replay_run.engine_snapshot_json == original.analysis_run.engine_snapshot_json
+    assert replay_run.rule_set_snapshot_json is not None
+    assert "strategyProfileSnapshot" in replay_run.rule_set_snapshot_json
+    assert replay_signal.signal.strategy_profile_key == "breakout_continuation"
+    assert replay_signal.signal.strategy_profile_version == "v1"
+
+
+@pytest.mark.asyncio
 async def test_same_engine_replay_returns_explicit_unsupported_error(
     db_session: AsyncSession,
     workspace: Workspace,
@@ -103,6 +144,16 @@ async def test_same_engine_replay_returns_explicit_unsupported_error(
         eurusd_symbol,
         json_data_source,
     )
+    original.analysis_run.engine_snapshot_json = {
+        "engines": {
+            "signal_classifier": {
+                "version": "v999",
+                "description": "unsupported",
+                "config": {},
+            }
+        }
+    }
+    await db_session.flush()
 
     with pytest.raises(AppError) as error_info:
         await AnalysisService(db_session).replay_run(
@@ -111,7 +162,12 @@ async def test_same_engine_replay_returns_explicit_unsupported_error(
         )
 
     assert error_info.value.status_code == 422
-    assert error_info.value.code == "replay_mode_not_supported"
+    assert error_info.value.code == "unsupported_engine_version"
+
+    audit_logs = await AnalysisService(db_session).list_audit_logs(original.analysis_run.id)
+    event_types = [audit_log.event_type for audit_log in audit_logs]
+    assert "analysis_replay_requested" in event_types
+    assert "analysis_replay_unsupported_engine_version" in event_types
 
 
 @pytest.mark.asyncio
@@ -165,4 +221,6 @@ def build_completed_run_without_source(
         status=AnalysisRunStatus.COMPLETED,
         engine_version=ANALYSIS_LIFECYCLE_ENGINE_VERSION,
         rule_set_version=ANALYSIS_LIFECYCLE_RULE_SET_VERSION,
+        engine_snapshot_json=None,
+        rule_set_snapshot_json=None,
     )

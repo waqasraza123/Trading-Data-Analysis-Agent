@@ -8,16 +8,23 @@ def default_data_sources(workspace_id: UUID) -> tuple[DataSourceCreate, ...]:
     return (
         DataSourceCreate(
             workspace_id=workspace_id,
-            name="CSV Upload",
+            name="csv_upload",
             source_type=DataSourceType.CSV_UPLOAD,
             provider="csv",
             status=DataSourceStatus.ACTIVE,
         ),
         DataSourceCreate(
             workspace_id=workspace_id,
-            name="Internal JSON Import",
+            name="json_import",
             source_type=DataSourceType.JSON_IMPORT,
             provider="internal_json",
+            status=DataSourceStatus.ACTIVE,
+        ),
+        DataSourceCreate(
+            workspace_id=workspace_id,
+            name="mock_live",
+            source_type=DataSourceType.WEBSOCKET_LIVE,
+            provider="mock",
             status=DataSourceStatus.ACTIVE,
         ),
     )

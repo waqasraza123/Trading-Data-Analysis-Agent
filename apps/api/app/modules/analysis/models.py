@@ -118,6 +118,11 @@ class AnalysisRun(Base):
     error_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     engine_version: Mapped[str] = mapped_column(String(64), nullable=False)
     rule_set_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    engine_snapshot_json: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
+    rule_set_snapshot_json: Mapped[dict[str, object] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
     created_at = created_at_column()
     updated_at = updated_at_column()
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

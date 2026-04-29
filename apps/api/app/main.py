@@ -10,12 +10,15 @@ from app.core.logging import configure_logging
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.data_sources.routes import router as data_sources_router
+from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.live.routes import router as live_router
 from app.modules.signals.routes import router as signals_router
 from app.modules.strategy_profiles.routes import router as strategy_profiles_router
 from app.modules.symbols.routes import router as symbols_router
+from app.modules.users.routes import router as users_router
+from app.modules.workspaces.routes import router as workspaces_router
 from app.routes.health import router as health_router
 
 
@@ -47,8 +50,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestIdMiddleware)
     register_error_handlers(app)
     app.include_router(health_router, prefix=resolved_settings.api_prefix)
+    app.include_router(workspaces_router, prefix=resolved_settings.api_prefix)
+    app.include_router(users_router, prefix=resolved_settings.api_prefix)
     app.include_router(symbols_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_sources_router, prefix=resolved_settings.api_prefix)
+    app.include_router(engine_versions_router, prefix=resolved_settings.api_prefix)
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)

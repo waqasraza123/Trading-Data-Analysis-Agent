@@ -17,6 +17,7 @@ write audit logs
 transition run status
 retry failed or insufficient-data runs
 replay completed runs from stored candles with latest deterministic engine version
+replay completed runs from stored candles with same registered deterministic engine version
 ```
 
 Not implemented:
@@ -133,6 +134,8 @@ completed -> replay queued -> running -> completed
 analysis_mode = replay
 replayed_from_analysis_run_id = original run id
 replay_mode = latest_engine_version
+engine_snapshot_json = active engine version snapshot
+rule_set_snapshot_json = active rule/profile snapshot
 ```
 
 Replay copies the original workspace, user, symbol, source, timeframe, analysis window,
@@ -141,8 +144,14 @@ synchronous lifecycle over stored candles and persists new feature, indicator, p
 signal, confidence, evidence, risk, and deterministic explanation artifacts for the
 replay run.
 
-`same_engine_version` is validated but returns `replay_mode_not_supported` until versioned
-rule configs are stored deeply enough to recreate old engine behavior.
+`latest_engine_version` re-runs with the currently registered deterministic engine versions
+and active strategy profiles.
+
+`same_engine_version` re-runs with the original run's stored engine snapshot and rule-set
+snapshot when those versions are registered in this codebase. It reuses the original signal's
+strategy profile snapshot for classification when one exists. If a snapshot references an
+unregistered version, replay returns `unsupported_engine_version` and does not silently fall
+back to latest behavior.
 
 Replay does not mutate the original run or its artifacts. Each request creates a new linked
 replay run.
@@ -206,6 +215,7 @@ analysis_replay_created
 analysis_replay_started
 analysis_replay_completed
 analysis_replay_failed
+analysis_replay_unsupported_engine_version
 deterministic_explanation_started
 deterministic_explanation_generated
 deterministic_explanation_blocked

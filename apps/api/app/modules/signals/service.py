@@ -74,6 +74,7 @@ class SignalClassificationService:
         self,
         run: AnalysisRun,
         require_completed: bool,
+        strategy_profiles: list[StrategyProfile] | None = None,
     ) -> Signal:
         if require_completed and run.status != AnalysisRunStatus.COMPLETED:
             raise AppError(
@@ -90,7 +91,11 @@ class SignalClassificationService:
         candidates = await self.pattern_repository.list_by_analysis_run_id(run.id)
         feature_snapshot = await self.feature_repository.get_by_analysis_run_id(run.id)
         indicator_snapshot = await self.indicator_repository.get_by_analysis_run_id(run.id)
-        profiles = await self.strategy_profile_repository.list_active_profiles()
+        profiles = (
+            strategy_profiles
+            if strategy_profiles is not None
+            else await self.strategy_profile_repository.list_active_profiles()
+        )
         await self.add_audit_log(
             run.id,
             "strategy_profiles_loaded",

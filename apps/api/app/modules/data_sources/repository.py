@@ -16,6 +16,22 @@ class DataSourceRepository:
         await self.session.refresh(data_source)
         return data_source
 
+    async def get_by_natural_key(
+        self,
+        workspace_id: UUID,
+        name: str,
+        provider: str,
+        source_type: str,
+    ) -> DataSource | None:
+        statement = select(DataSource).where(
+            DataSource.workspace_id == workspace_id,
+            DataSource.name == name,
+            DataSource.provider == provider,
+            DataSource.source_type == source_type,
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def get_by_id(self, data_source_id: UUID) -> DataSource | None:
         return await self.session.get(DataSource, data_source_id)
 

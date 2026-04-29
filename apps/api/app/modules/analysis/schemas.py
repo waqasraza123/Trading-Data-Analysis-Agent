@@ -71,6 +71,8 @@ class AnalysisRunRead(ApiReadSchema):
     error_message: str | None
     engine_version: str
     rule_set_version: str
+    engine_snapshot_json: dict[str, Any] | None
+    rule_set_snapshot_json: dict[str, Any] | None
     started_at: datetime | None
     completed_at: datetime | None
     created_at: datetime

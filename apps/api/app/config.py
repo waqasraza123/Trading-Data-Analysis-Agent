@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"
+    seed_default_workspace_name: str | None = None
+    seed_default_admin_email: str | None = None
+    seed_default_admin_name: str | None = None
 
     @field_validator("api_prefix")
     @classmethod

@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -26,6 +27,7 @@ from app.modules.candles.quality import CandleQualityReport
 from app.modules.candles.service import CandleService
 from app.modules.candles.timeframes import Timeframe, normalize_timestamp, timeframe_duration
 from app.modules.data_sources.repository import DataSourceRepository
+from app.modules.engine_versions.service import EngineVersionService
 from app.modules.explanations.service import DeterministicExplanationService
 from app.modules.features.models import FeatureSnapshot
 from app.modules.features.service import FeatureSnapshotService
@@ -33,7 +35,10 @@ from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.indicators.service import IndicatorSnapshotService
 from app.modules.patterns.models import PatternCandidate
 from app.modules.patterns.service import PatternCandidateService
+from app.modules.signals.repository import SignalRepository
 from app.modules.signals.service import SignalClassificationService
+from app.modules.strategy_profiles.models import StrategyProfile
+from app.modules.strategy_profiles.repository import StrategyProfileRepository
 from app.modules.symbols.repository import SymbolRepository
 
 ANALYSIS_LIFECYCLE_ENGINE_VERSION = "analysis_lifecycle_0.1.0"
@@ -52,6 +57,9 @@ class AnalysisService:
         self.pattern_candidate_service = PatternCandidateService(session)
         self.signal_classification_service = SignalClassificationService(session)
         self.deterministic_explanation_service = DeterministicExplanationService(session)
+        self.engine_version_service = EngineVersionService(session)
+        self.signal_repository = SignalRepository(session)
+        self.strategy_profile_repository = StrategyProfileRepository(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
 
@@ -92,6 +100,8 @@ class AnalysisService:
             status=AnalysisRunStatus.QUEUED,
             engine_version=ANALYSIS_LIFECYCLE_ENGINE_VERSION,
             rule_set_version=ANALYSIS_LIFECYCLE_RULE_SET_VERSION,
+            engine_snapshot_json=self.engine_version_service.current_snapshot(),
+            rule_set_snapshot_json=await self.build_current_rule_set_snapshot(),
         )
         return await self.create_and_process_run(run)
 
@@ -139,6 +149,8 @@ class AnalysisService:
             status=AnalysisRunStatus.QUEUED,
             engine_version=ANALYSIS_LIFECYCLE_ENGINE_VERSION,
             rule_set_version=ANALYSIS_LIFECYCLE_RULE_SET_VERSION,
+            engine_snapshot_json=self.engine_version_service.current_snapshot(),
+            rule_set_snapshot_json=await self.build_current_rule_set_snapshot(),
         )
         return await self.create_and_process_run(run)
 
@@ -213,33 +225,48 @@ class AnalysisService:
         payload: AnalysisReplayRequest,
     ) -> AnalysisRun:
         original_run = await self.get_run(analysis_run_id)
-        self.validate_replay_request(original_run, payload.mode)
-        replay_run = AnalysisRun(
-            workspace_id=original_run.workspace_id,
-            user_id=original_run.user_id,
-            symbol_id=original_run.symbol_id,
-            source_id=original_run.source_id,
-            replayed_from_analysis_run_id=original_run.id,
-            replay_mode=payload.mode.value,
-            timeframe=original_run.timeframe,
-            start_time=original_run.start_time,
-            end_time=original_run.end_time,
-            warmup_start_time=original_run.warmup_start_time,
-            baseline_start_time=original_run.baseline_start_time,
-            analysis_mode=AnalysisMode.REPLAY,
-            include_partial_live_candle=original_run.include_partial_live_candle,
-            include_news_correlation=False,
-            include_ai_explanation=False,
-            status=AnalysisRunStatus.QUEUED,
-            engine_version=ANALYSIS_LIFECYCLE_ENGINE_VERSION,
-            rule_set_version=ANALYSIS_LIFECYCLE_RULE_SET_VERSION,
-        )
         try:
             await self.add_audit_log(
                 original_run.id,
                 "analysis_replay_requested",
                 "Analysis replay requested",
                 {"replayMode": payload.mode.value},
+            )
+            await self.validate_replay_request(original_run, payload.mode)
+            engine_snapshot = await self.resolve_replay_engine_snapshot(original_run, payload.mode)
+            rule_set_snapshot = await self.resolve_replay_rule_set_snapshot(
+                original_run,
+                payload.mode,
+            )
+            replay_run = AnalysisRun(
+                workspace_id=original_run.workspace_id,
+                user_id=original_run.user_id,
+                symbol_id=original_run.symbol_id,
+                source_id=original_run.source_id,
+                replayed_from_analysis_run_id=original_run.id,
+                replay_mode=payload.mode.value,
+                timeframe=original_run.timeframe,
+                start_time=original_run.start_time,
+                end_time=original_run.end_time,
+                warmup_start_time=original_run.warmup_start_time,
+                baseline_start_time=original_run.baseline_start_time,
+                analysis_mode=AnalysisMode.REPLAY,
+                include_partial_live_candle=original_run.include_partial_live_candle,
+                include_news_correlation=False,
+                include_ai_explanation=False,
+                status=AnalysisRunStatus.QUEUED,
+                engine_version=(
+                    original_run.engine_version
+                    if payload.mode == AnalysisReplayMode.SAME_ENGINE_VERSION
+                    else ANALYSIS_LIFECYCLE_ENGINE_VERSION
+                ),
+                rule_set_version=(
+                    original_run.rule_set_version
+                    if payload.mode == AnalysisReplayMode.SAME_ENGINE_VERSION
+                    else ANALYSIS_LIFECYCLE_RULE_SET_VERSION
+                ),
+                engine_snapshot_json=engine_snapshot,
+                rule_set_snapshot_json=rule_set_snapshot,
             )
             created_replay = await self.repository.create_run(replay_run)
             replay_metadata = {
@@ -295,24 +322,27 @@ class AnalysisService:
                 )
             await self.session.commit()
             return created_replay
+        except AppError as error:
+            if error.code == "unsupported_engine_version":
+                await self.add_audit_log(
+                    original_run.id,
+                    "analysis_replay_unsupported_engine_version",
+                    "Analysis replay references an unsupported engine version",
+                    {"replayMode": payload.mode.value},
+                )
+                await self.session.commit()
+            else:
+                await self.session.rollback()
+            raise
         except Exception:
             await self.session.rollback()
             raise
 
-    def validate_replay_request(
+    async def validate_replay_request(
         self,
         original_run: AnalysisRun,
         replay_mode: AnalysisReplayMode,
     ) -> None:
-        if replay_mode == AnalysisReplayMode.SAME_ENGINE_VERSION:
-            raise AppError(
-                422,
-                "replay_mode_not_supported",
-                (
-                    "same_engine_version replay requires versioned rule configs and is "
-                    "not supported yet"
-                ),
-            )
         if original_run.status != AnalysisRunStatus.COMPLETED:
             raise AppError(
                 422,
@@ -325,6 +355,83 @@ class AnalysisService:
                 "analysis_run_missing_source_context",
                 "Analysis replay requires the original run to have a source_id",
             )
+        if replay_mode == AnalysisReplayMode.SAME_ENGINE_VERSION:
+            self.engine_version_service.validate_supported_snapshot(
+                original_run.engine_snapshot_json
+            )
+
+    async def build_current_rule_set_snapshot(self) -> dict[str, object]:
+        profiles = await self.strategy_profile_repository.list_active_profiles()
+        return {
+            "analysisLifecycle": {
+                "engineVersion": ANALYSIS_LIFECYCLE_ENGINE_VERSION,
+                "ruleSetVersion": ANALYSIS_LIFECYCLE_RULE_SET_VERSION,
+            },
+            "strategyProfiles": [
+                {
+                    "key": profile.key,
+                    "version": profile.version,
+                    "name": profile.name,
+                    "description": profile.description,
+                    "isActive": profile.is_active,
+                    "allowedPatterns": profile.allowed_patterns_json,
+                    "excludedPatterns": profile.excluded_patterns_json,
+                    "minimumCandidateStrength": str(profile.minimum_candidate_strength),
+                    "minimumConfidence": str(profile.minimum_confidence),
+                    "componentWeights": profile.component_weights_json,
+                    "riskFilters": profile.risk_filters_json,
+                    "noSignalRules": profile.no_signal_rules_json,
+                }
+                for profile in profiles
+            ],
+        }
+
+    async def resolve_replay_engine_snapshot(
+        self,
+        original_run: AnalysisRun,
+        replay_mode: AnalysisReplayMode,
+    ) -> dict[str, object] | None:
+        if replay_mode == AnalysisReplayMode.SAME_ENGINE_VERSION:
+            return original_run.engine_snapshot_json
+        return self.engine_version_service.current_snapshot()
+
+    async def resolve_replay_rule_set_snapshot(
+        self,
+        original_run: AnalysisRun,
+        replay_mode: AnalysisReplayMode,
+    ) -> dict[str, object] | None:
+        if replay_mode == AnalysisReplayMode.SAME_ENGINE_VERSION:
+            return await self.build_same_engine_rule_set_snapshot(original_run)
+        return await self.build_current_rule_set_snapshot()
+
+    async def build_same_engine_rule_set_snapshot(
+        self,
+        original_run: AnalysisRun,
+    ) -> dict[str, object] | None:
+        original_snapshot = original_run.rule_set_snapshot_json or {}
+        original_signal = await self.signal_repository.get_by_analysis_run_id(original_run.id)
+        if original_signal is None or original_signal.strategy_profile_snapshot_json is None:
+            return original_snapshot
+        return {
+            **original_snapshot,
+            "strategyProfileSnapshot": original_signal.strategy_profile_snapshot_json,
+        }
+
+    async def resolve_strategy_profiles_for_run(
+        self,
+        run: AnalysisRun,
+    ) -> list[StrategyProfile] | None:
+        if run.replay_mode != AnalysisReplayMode.SAME_ENGINE_VERSION.value:
+            return None
+        if run.replayed_from_analysis_run_id is None:
+            return None
+        original_signal = await self.signal_repository.get_by_analysis_run_id(
+            run.replayed_from_analysis_run_id
+        )
+        if original_signal is None or original_signal.strategy_profile_snapshot_json is None:
+            return None
+        return [strategy_profile_from_snapshot(original_signal.strategy_profile_snapshot_json)]
+
     async def retry_run(self, analysis_run_id: UUID) -> AnalysisRun:
         run = await self.get_run(analysis_run_id)
         if run.status not in {
@@ -459,6 +566,7 @@ class AnalysisService:
             signal = await self.signal_classification_service.classify_run(
                 run,
                 require_completed=False,
+                strategy_profiles=await self.resolve_strategy_profiles_for_run(run),
             )
             explanation = await self.deterministic_explanation_service.generate_for_signal(signal)
             await self.add_audit_log(
@@ -621,3 +729,32 @@ def indicator_snapshot_is_ready(indicators_json: Mapping[str, object]) -> object
     if isinstance(calculation, Mapping):
         return calculation.get("isReady")
     return None
+
+
+def strategy_profile_from_snapshot(snapshot: Mapping[str, object]) -> StrategyProfile:
+    return StrategyProfile(
+        key=str(snapshot["key"]),
+        name=str(snapshot.get("name", snapshot["key"])),
+        description=str(snapshot.get("description", "")),
+        version=str(snapshot["version"]),
+        is_active=bool(snapshot.get("isActive", True)),
+        allowed_patterns_json=string_list(snapshot.get("allowedPatterns")),
+        excluded_patterns_json=string_list(snapshot.get("excludedPatterns")),
+        minimum_candidate_strength=Decimal(str(snapshot["minimumCandidateStrength"])),
+        minimum_confidence=Decimal(str(snapshot["minimumConfidence"])),
+        component_weights_json=object_dict(snapshot.get("componentWeights")),
+        risk_filters_json=object_dict(snapshot.get("riskFilters")),
+        no_signal_rules_json=object_dict(snapshot.get("noSignalRules")),
+    )
+
+
+def string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value]
+
+
+def object_dict(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        return {}
+    return {str(key): item for key, item in value.items()}

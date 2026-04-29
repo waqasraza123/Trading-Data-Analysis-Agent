@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, deterministic signal classification, and deterministic explanation endpoints.
+- The API currently exposes health, workspace/user setup, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and versioned replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, engine version, deterministic signal classification, and deterministic explanation endpoints.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
@@ -83,6 +83,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented strategy_profiles, signals, signal_confidence_components, signal_evidence, and signal_risk_notes migrations/models, default profile seed data, deterministic classifier service, lifecycle integration, retrieval APIs, audit events, documentation, and intelligence tests.
 - Implemented deterministic_explanations migration/model, deterministic explanation templates, safety checker, idempotent persistence service, lifecycle/manual classification integration, retrieval/generation APIs, audit events, documentation, and explanation unit tests.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
+- Implemented workspace/user APIs, idempotent backend seed command/service, engine version registry/query APIs, analysis engine/rule-set snapshots, and current-v1 same-engine replay support.
 
 ## Important Decisions
 
@@ -114,18 +115,15 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Analysis retry replaces prior pattern candidate rows for the same analysis run until a future analysis-attempt model exists.
 - Strategy profiles are deterministic market-reading configurations for signal classification; they are not broker strategies, trade execution, auto-trading, or financial advice.
 - The core intelligence layer should be implemented before optional LLM explanations, news correlation, live scanner work, frontend/UI, or broker/external automation.
-- Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, and `replay_mode`; `latest_engine_version` is supported and `same_engine_version` is explicitly unsupported until versioned rule configs are complete.
+- Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, `replay_mode`, `engine_snapshot_json`, and `rule_set_snapshot_json`; `latest_engine_version` uses current registered engines/profiles, and `same_engine_version` supports registered current v1 snapshots or returns `unsupported_engine_version`.
 - DB integration tests require explicit `TEST_DATABASE_URL`; unit tests must not fall back to production Neon `DATABASE_URL`.
 - Golden integration tests assert deterministic signal outputs and deterministic explanations for completed analysis runs.
 
 ## Deferred / Not Yet Implemented
 
-- README and product usage documentation.
 - Lockfile.
-- Workspace and user API routes.
-- Seed execution command.
 - Persistent live provider websocket workers and reconnect loops.
-- Full same-engine replay versioning, news, and scanner modules.
+- Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
 - Background workers, storage orchestration, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 

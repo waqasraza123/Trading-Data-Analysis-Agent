@@ -13,6 +13,9 @@ def test_settings_load_defaults() -> None:
     assert settings.redis_url is None
     assert settings.openai_api_key is None
     assert settings.live_feed_api_key is None
+    assert settings.seed_default_workspace_name is None
+    assert settings.seed_default_admin_email is None
+    assert settings.seed_default_admin_name is None
 
 
 def test_settings_validate_api_prefix() -> None:

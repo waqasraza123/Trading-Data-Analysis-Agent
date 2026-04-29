@@ -29,6 +29,21 @@ Run migrations:
 .venv/bin/alembic upgrade head
 ```
 
+Seed deterministic backend defaults:
+
+```sh
+SEED_DEFAULT_WORKSPACE_NAME="Default Workspace" \
+SEED_DEFAULT_ADMIN_EMAIL="admin@example.test" \
+SEED_DEFAULT_ADMIN_NAME="Default Admin" \
+.venv/bin/python -m app.cli seed
+```
+
+The seed command is idempotent. It seeds configured workspace/admin user defaults, default
+symbols, default workspace data sources, strategy profiles, and current engine versions.
+`SEED_DEFAULT_WORKSPACE_NAME`, `SEED_DEFAULT_ADMIN_EMAIL`, and `SEED_DEFAULT_ADMIN_NAME`
+are optional; data sources and the admin user are seeded only when a default workspace is
+configured.
+
 Run tests:
 
 ```sh
@@ -126,3 +141,29 @@ Deterministic explanations are documented in:
 ```txt
 docs/deterministic-explanations.md
 ```
+
+Workspace/user APIs expose backend setup primitives:
+
+```txt
+POST /workspaces
+GET /workspaces
+GET /workspaces/{workspace_id}
+PATCH /workspaces/{workspace_id}
+POST /users
+GET /users
+GET /users/{user_id}
+PATCH /users/{user_id}
+```
+
+Engine versions are queryable through:
+
+```txt
+GET /engine-versions
+GET /engine-versions/{engine_name}
+POST /engine-versions/seed
+```
+
+Replay supports `latest_engine_version` and `same_engine_version`. Same-version replay is
+supported for the currently registered v1 deterministic engines and returns
+`unsupported_engine_version` instead of falling back when a stored snapshot references an
+unregistered engine version.
