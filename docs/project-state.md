@@ -57,8 +57,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Deterministic feature engineering snapshots are implemented.
 - Deterministic indicator snapshots are implemented.
 - Deterministic pattern candidates are implemented.
-- Next phase is signal classification.
-- Later phases add signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Next core milestone is the intelligence layer: deterministic strategy profiles, signal classification, signal evidence, confidence components, risk notes, deterministic explanations, and golden intelligence tests.
+- Later phases add replay/versioning, optional LLM explanations, news correlation, live scanning, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -108,6 +108,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Indicator snapshots serialize Decimal market values as strings in JSONB and use `isReady` flags instead of guessing when warmup/baseline data is thin.
 - Pattern candidates serialize Decimal market values as strings in JSONB and mark a selected candidate only when the strongest score clears the deterministic selection threshold.
 - Analysis retry replaces prior pattern candidate rows for the same analysis run until a future analysis-attempt model exists.
+- Strategy profiles are deterministic market-reading configurations for signal classification; they are not broker strategies, trade execution, auto-trading, or financial advice.
+- The core intelligence layer should be implemented before optional LLM explanations, news correlation, live scanner work, frontend/UI, or broker/external automation.
 
 ## Deferred / Not Yet Implemented
 
@@ -116,7 +118,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Workspace and user API routes.
 - Seed execution command.
 - Persistent live provider websocket workers and reconnect loops.
-- Signal, evidence, confidence, risk note, explanation, news, replay, and scanner modules.
+- Signal, strategy profile, evidence, confidence, risk note, deterministic explanation, news, replay, and scanner modules.
 - Background workers, storage orchestration, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 
@@ -127,6 +129,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Future trading-related features should avoid implying financial advice unless the product explicitly defines compliant behavior.
 - Phase 1 set initial backend conventions; later phases should preserve the small-file modular structure under `apps/api/app/`.
 - Do not start with `candles -> GPT -> answer`; the durable plan requires deterministic intelligence first and AI explanations second.
+- Do not delay the signal/evidence/confidence/risk layer behind optional AI language, news, UI, scanner, or deployment polish.
 
 ## Standard Verification
 

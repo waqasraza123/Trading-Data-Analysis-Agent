@@ -1256,6 +1256,51 @@ Every step should be logged in `analysis_audit_logs`.
 
 # 9. Phase-by-Phase Backend Implementation
 
+## Current Priority Override: Core Intelligence First
+
+Now that the ingestion, candle, analysis lifecycle, feature, indicator, and pattern foundations exist, the next product milestone should be the intelligence layer, not UI, news, LLM explanation, broad deployment polish, or extra integrations.
+
+Build these pieces together as the next core milestone:
+
+```txt
+strategy profiles
+signal classification
+evidence generation
+confidence scoring
+risk notes
+deterministic explanation
+golden intelligence tests
+```
+
+Strategy profiles are deterministic analysis configurations, not broker strategies or auto-trading execution. They should define how the classifier weighs pattern strength, trend alignment, volatility, indicator support, data quality, and risk conditions for different market-reading styles.
+
+Suggested first strategy profiles:
+
+```txt
+breakout_continuation
+reversal_rejection
+range_chop_avoidance
+fakeout_protection
+```
+
+This priority means:
+
+```txt
+Do next:
+pattern candidates -> strategy profile -> signal -> evidence -> confidence -> risk -> deterministic explanation
+
+Defer:
+news correlation
+LLM explanations
+live scanner
+replay UI
+frontend
+broker execution
+external automation
+```
+
+The backend is valuable only when it returns evidence-backed, risk-aware, auditable market intelligence. The strategy and signal layers should therefore come before presentation and optional AI language features.
+
 # Phase 1: FastAPI + Neon Foundation
 
 ## Goal
@@ -1807,23 +1852,59 @@ Weak markets do not force bullish/bearish output
 
 ---
 
-# Phase 9: Signal Classification Engine
+# Phase 9: Core Intelligence, Strategy, And Signal Layer
 
 ## Goal
 
-Select final signal from pattern candidates and feature data.
+Turn pattern candidates, features, indicators, and candle quality into the first complete intelligence output.
+
+This phase should include strategy profiles, signal classification, evidence, confidence, risk notes, and deterministic explanation as one integrated product slice. Splitting them into many delayed phases weakens the product because a signal without evidence, confidence, and risk context is not production-grade intelligence.
 
 ## Tasks
 
 ```txt
+Create deterministic strategy profiles
+Create signal tables and schemas
 Rank pattern candidates
 Resolve conflicting patterns
 Determine final bias
 Determine final pattern
+Apply strategy-specific weights
 Calculate confidence
 Generate evidence
 Generate risk notes
+Generate deterministic explanation
 Store final signal
+Store signal evidence
+Store confidence components
+Store risk notes
+Store deterministic explanation
+```
+
+## Strategy profiles
+
+Strategy profiles are market-reading configurations. They do not place trades.
+
+Each profile should define:
+
+```txt
+name
+description
+allowed_patterns
+minimum_candidate_strength
+minimum_confidence_score
+component_weights
+risk_filters
+no_signal_rules
+```
+
+Initial profiles:
+
+```txt
+breakout_continuation
+reversal_rejection
+range_chop_avoidance
+fakeout_protection
 ```
 
 ## Conflict examples
@@ -1857,10 +1938,13 @@ The classifier should select fakeout if failure evidence is stronger.
 ```txt
 Final signal is created for completed analysis
 No-signal/unclear state works
+Strategy profile is stored with the signal
 Confidence components are stored
 Signal evidence is stored
 Risk notes are stored
+Deterministic explanation is stored
 Classifier is deterministic
+Golden tests cover strong, weak, conflicting, and no-signal cases
 ```
 
 ---
@@ -2467,18 +2551,14 @@ Build exactly in this order:
 8. Feature engineering engine
 9. Indicator engine
 10. Pattern detection engine
-11. Signal classifier
-12. Evidence engine
-13. Confidence engine
-14. Risk notes engine
-15. Deterministic explanation engine
-16. LLM explanation engine
-17. News/event correlation engine
-18. Engine versioning and replay
-19. Golden dataset test suite
-20. Observability
-21. Security hardening
-22. Performance tuning
+11. Core intelligence layer: strategy profiles, signal classifier, evidence, confidence, risk notes, deterministic explanation
+12. Golden dataset test suite for the intelligence layer
+13. Engine versioning and replay
+14. LLM explanation engine
+15. News/event correlation engine
+16. Observability
+17. Security hardening
+18. Performance tuning
 ```
 
 Do not skip steps.
