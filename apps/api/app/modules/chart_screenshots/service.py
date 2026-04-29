@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.core.time import utc_now
-from app.modules.analysis.schemas import AnalysisRunCreate
+from app.modules.analysis.models import AnalysisRun, AnalysisRunStatus
+from app.modules.analysis.schemas import AnalysisRunCreate, AnalysisRunRead
 from app.modules.analysis.service import AnalysisService
 from app.modules.candles.normalizer import RawCandlePayload, normalize_candle_payload
 from app.modules.candles.repository import CandleRepository
@@ -24,9 +25,15 @@ from app.modules.chart_screenshots.parser import (
     build_trend_hypothesis,
 )
 from app.modules.chart_screenshots.repository import ChartScreenshotRunRepository
-from app.modules.chart_screenshots.schemas import ChartScreenshotPredictionCreate
+from app.modules.chart_screenshots.schemas import (
+    ChartScreenshotDecisionRead,
+    ChartScreenshotPredictionCreate,
+    ChartScreenshotRunRead,
+)
 from app.modules.data_sources.models import DataSource, DataSourceType
 from app.modules.data_sources.repository import DataSourceRepository
+from app.modules.signals.schemas import SignalClassificationRead
+from app.modules.signals.service import SignalClassificationService
 from app.modules.symbols.models import Symbol
 from app.modules.symbols.repository import SymbolRepository
 
@@ -166,6 +173,61 @@ class ChartScreenshotPredictionService:
             raise AppError(404, "chart_screenshot_run_not_found", "Chart screenshot run not found")
         return run
 
+    async def get_decision(self, run_id: UUID) -> ChartScreenshotDecisionRead:
+        run = await self.get_run(run_id)
+        warnings = self.extract_warning_items(run.extraction_warnings_json)
+        limitations = [
+            "Chart screenshot outputs are hypotheses, not financial advice or trade instructions",
+            "Image-derived candles depend on extraction quality and supplied calibration metadata",
+        ]
+        if run.analysis_run_id is None:
+            warnings.append("No linked analysis run exists; returning screenshot-only hypothesis")
+            return self.build_screenshot_hypothesis_decision(
+                run=run,
+                warnings=warnings,
+                limitations=limitations,
+            )
+        analysis_service = AnalysisService(self.session)
+        analysis_run = await analysis_service.get_run(run.analysis_run_id)
+        if analysis_run.status != AnalysisRunStatus.COMPLETED.value:
+            warnings.append(
+                f"Linked analysis run is {analysis_run.status}; returning screenshot-only hypothesis"
+            )
+            return self.build_screenshot_hypothesis_decision(
+                run=run,
+                warnings=warnings,
+                limitations=limitations,
+                analysis_run=analysis_run,
+            )
+        try:
+            signal_classification = await SignalClassificationService(
+                self.session
+            ).get_by_analysis_run_id(analysis_run.id)
+        except AppError as error:
+            if error.code != "signal_not_found":
+                raise
+            warnings.append("Linked analysis run completed without a persisted signal")
+            return self.build_screenshot_hypothesis_decision(
+                run=run,
+                warnings=warnings,
+                limitations=limitations,
+                analysis_run=analysis_run,
+            )
+        reasoning = self.build_analysis_reasoning(signal_classification)
+        return ChartScreenshotDecisionRead(
+            chart_screenshot_run=ChartScreenshotRunRead.model_validate(run),
+            decision_source="deterministic_analysis",
+            direction=ChartTrendDirection(signal_classification.signal.bias.value),
+            confidence=signal_classification.signal.confidence_score,
+            confidence_label=signal_classification.signal.confidence_label.value,
+            reasoning=reasoning,
+            warnings=warnings,
+            limitations=limitations,
+            analysis_status=AnalysisRunStatus(analysis_run.status),
+            analysis_run=AnalysisRunRead.model_validate(analysis_run),
+            signal_classification=signal_classification,
+        )
+
     async def list_runs(
         self,
         limit: int,
@@ -291,3 +353,84 @@ class ChartScreenshotPredictionService:
             first_error = error.errors()[0]
             return f"row {row_number}: invalid_row: {first_error['msg']}"
         return f"row {row_number}: invalid_row"
+
+    def build_screenshot_hypothesis_decision(
+        self,
+        run: ChartScreenshotRun,
+        warnings: list[str],
+        limitations: list[str],
+        analysis_run: AnalysisRun | None = None,
+    ) -> ChartScreenshotDecisionRead:
+        trend_metrics = {}
+        if run.extracted_payload_json is not None:
+            raw_metrics = run.extracted_payload_json.get("trendMetrics")
+            if isinstance(raw_metrics, dict):
+                trend_metrics = raw_metrics
+        return ChartScreenshotDecisionRead(
+            chart_screenshot_run=ChartScreenshotRunRead.model_validate(run),
+            decision_source="chart_screenshot_hypothesis",
+            direction=ChartTrendDirection(run.analysis_hypothesis),
+            confidence=run.analysis_hypothesis_confidence,
+            confidence_label=None,
+            reasoning=self.build_screenshot_reasoning(run, trend_metrics),
+            warnings=warnings,
+            limitations=limitations,
+            analysis_status=(
+                AnalysisRunStatus(analysis_run.status) if analysis_run is not None else None
+            ),
+            analysis_run=(
+                AnalysisRunRead.model_validate(analysis_run) if analysis_run is not None else None
+            ),
+            signal_classification=None,
+        )
+
+    def build_screenshot_reasoning(
+        self,
+        run: ChartScreenshotRun,
+        trend_metrics: dict[str, object],
+    ) -> list[str]:
+        reasoning = [
+            f"Screenshot hypothesis is {run.analysis_hypothesis} with confidence "
+            f"{run.analysis_hypothesis_confidence}.",
+            f"Stored {run.stored_candle_count} extracted candles, with "
+            f"{run.duplicate_count} duplicates and {run.conflict_count} conflicts.",
+        ]
+        if trend_metrics:
+            reasoning.append(
+                "Trend metrics: "
+                f"firstClose={trend_metrics.get('firstClose')}, "
+                f"lastClose={trend_metrics.get('lastClose')}, "
+                f"moveRatio={trend_metrics.get('moveRatio')}, "
+                f"upwardSteps={trend_metrics.get('upwardSteps')}, "
+                f"downwardSteps={trend_metrics.get('downwardSteps')}, "
+                f"closeConsistency={trend_metrics.get('closeConsistency')}."
+            )
+        return reasoning
+
+    def build_analysis_reasoning(
+        self,
+        signal_classification: SignalClassificationRead,
+    ) -> list[str]:
+        signal = signal_classification.signal
+        reasoning = [signal.summary]
+        explanation = signal_classification.deterministic_explanation
+        if explanation is not None:
+            reasoning.extend(
+                [
+                    explanation.short_summary,
+                    explanation.evidence_summary,
+                    explanation.confidence_summary,
+                    explanation.risk_summary,
+                ]
+            )
+        if signal_classification.evidence:
+            reasoning.extend(
+                item.message for item in signal_classification.evidence[:5]
+            )
+        return [item for item in reasoning if item]
+
+    def extract_warning_items(self, warnings_json: dict[str, object]) -> list[str]:
+        raw_warnings = warnings_json.get("warnings")
+        if not isinstance(raw_warnings, list):
+            return []
+        return [str(item) for item in raw_warnings]

@@ -6,11 +6,14 @@ from uuid import UUID
 from pydantic import Field, field_validator
 
 from app.core.schemas import ApiReadSchema, ApiSchema
+from app.modules.analysis.models import AnalysisRunStatus
+from app.modules.analysis.schemas import AnalysisRunRead
 from app.modules.candles.timeframes import Timeframe
 from app.modules.chart_screenshots.models import (
     ChartScreenshotRunStatus,
     ChartTrendDirection,
 )
+from app.modules.signals.schemas import SignalClassificationRead
 
 
 class ChartScreenshotCandle(ApiSchema):
@@ -93,3 +96,17 @@ class ChartScreenshotRunRead(ApiReadSchema):
 class ChartScreenshotRunListRead(ApiSchema):
     count: int
     runs: list[ChartScreenshotRunRead]
+
+
+class ChartScreenshotDecisionRead(ApiSchema):
+    chart_screenshot_run: ChartScreenshotRunRead
+    decision_source: str
+    direction: ChartTrendDirection
+    confidence: Decimal | None
+    confidence_label: str | None
+    reasoning: list[str]
+    warnings: list[str]
+    limitations: list[str]
+    analysis_status: AnalysisRunStatus | None
+    analysis_run: AnalysisRunRead | None
+    signal_classification: SignalClassificationRead | None

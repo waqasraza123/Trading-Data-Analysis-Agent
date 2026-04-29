@@ -37,6 +37,7 @@ POST /chart-screenshot-runs
 POST /chart-screenshot-runs/image
 GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}
+GET /chart-screenshot-runs/{run_id}/decision
 ```
 
 ## Create Request With Extracted Candles
@@ -174,6 +175,54 @@ When analysis is triggered:
 The analysis lifecycle still enforces normal candle sufficiency, final-candle reads, deterministic
 feature/indicator/pattern/signal generation, deterministic explanation generation, and optional
 news/LLM behavior.
+
+## Decision Response
+
+`GET /chart-screenshot-runs/{run_id}/decision` returns the client-facing next-direction decision
+object for a chart screenshot run.
+
+The endpoint prefers the linked deterministic analysis artifacts when they exist and the analysis
+run completed. In that case:
+
+- `decisionSource=deterministic_analysis`;
+- `direction` comes from the persisted signal bias;
+- `confidence` and `confidenceLabel` come from the persisted signal confidence;
+- `reasoning` includes the signal summary, deterministic explanation sections, and persisted
+  signal evidence messages;
+- `signalClassification` contains the full signal, confidence components, evidence, risk notes,
+  deterministic explanation, optional news correlations, and optional LLM explanation.
+
+When no linked analysis run exists, or the linked analysis run is not completed, the endpoint falls
+back to the lightweight screenshot trend hypothesis:
+
+- `decisionSource=chart_screenshot_hypothesis`;
+- `direction` and `confidence` come from the screenshot hypothesis stored on the run;
+- `reasoning` includes stored candle counts and trend metrics from `extractedPayloadJson`;
+- `warnings` explains why analysis-backed output was unavailable.
+
+Example response shape:
+
+```json
+{
+  "decisionSource": "deterministic_analysis",
+  "direction": "bullish",
+  "confidence": "0.7300",
+  "confidenceLabel": "high",
+  "reasoning": [
+    "Bullish breakout passed profile thresholds.",
+    "Evidence supports directional continuation with controlled risk notes."
+  ],
+  "warnings": [],
+  "limitations": [
+    "Chart screenshot outputs are hypotheses, not financial advice or trade instructions",
+    "Image-derived candles depend on extraction quality and supplied calibration metadata"
+  ],
+  "analysisStatus": "completed",
+  "analysisRun": {},
+  "signalClassification": {},
+  "chartScreenshotRun": {}
+}
+```
 
 ## Image Parser Limits
 

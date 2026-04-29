@@ -19,6 +19,7 @@ from app.modules.chart_screenshots.parser import (
     extract_candles_from_png,
 )
 from app.modules.chart_screenshots.schemas import (
+    ChartScreenshotDecisionRead,
     ChartScreenshotPredictionCreate,
     ChartScreenshotRunListRead,
     ChartScreenshotRunRead,
@@ -184,3 +185,14 @@ async def get_chart_screenshot_run(
 ) -> ChartScreenshotRunRead:
     run = await service.get_run(run_id)
     return ChartScreenshotRunRead.model_validate(run)
+
+
+@router.get("/{run_id}/decision", response_model=ChartScreenshotDecisionRead)
+async def get_chart_screenshot_decision(
+    run_id: UUID,
+    service: Annotated[
+        ChartScreenshotPredictionService,
+        Depends(get_chart_screenshot_service),
+    ],
+) -> ChartScreenshotDecisionRead:
+    return await service.get_decision(run_id)
