@@ -172,6 +172,26 @@ Stores future analysis lifecycle audit events.
 
 Stores deterministic engine versions and configuration snapshots for future replay and audit.
 
+### `feature_snapshots`
+
+Stores deterministic feature artifacts for completed analysis runs.
+
+### `indicator_snapshots`
+
+Stores deterministic indicator artifacts for completed analysis runs.
+
+### `pattern_candidates`
+
+Stores every deterministic pattern candidate considered for an analysis run.
+
+Allowed bias values:
+
+- `bullish`
+- `bearish`
+- `neutral`
+
+`strength_score` is constrained from 0 to 1. One candidate may be marked selected when a detector score clears the current selection threshold.
+
 ## Migration
 
 The initial schema migration is:

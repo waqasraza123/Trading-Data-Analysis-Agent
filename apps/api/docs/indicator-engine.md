@@ -1,6 +1,6 @@
 # Indicator Snapshots
 
-This slice adds deterministic indicator calculation and persistence. It does not add pattern detection, signal classification, evidence, confidence, risk notes, explanations, news correlation, or LLM calls.
+This slice adds deterministic indicator calculation and persistence. Pattern detection is implemented in the next engine layer; indicators still do not classify final signals by themselves.
 
 ## Boundary
 
@@ -13,6 +13,7 @@ analysis run
 -> deterministic indicator engine
 -> indicator_snapshots row
 -> indicators_calculated audit log
+-> pattern candidate engine
 ```
 
 Indicators are supporting evidence for future pattern and signal logic. They do not override price-action features and do not classify the market by themselves.
@@ -187,7 +188,7 @@ queued
 -> completed
 ```
 
-In this phase, `completed` means deterministic feature and indicator snapshots were calculated and stored. Later phases continue from these artifacts into pattern detection, signal classification, evidence, confidence, risk notes, and explanations.
+In the current lifecycle, `completed` means deterministic feature snapshots, indicator snapshots, and pattern candidates were calculated and stored. Later phases continue from these artifacts into signal classification, evidence, confidence, risk notes, and explanations.
 
 ## Serialization
 
@@ -196,7 +197,6 @@ Indicator values are stored in JSONB. Decimal values are serialized as strings t
 ## Not Implemented In This Slice
 
 ```txt
-pattern candidates
 signals
 signal evidence
 confidence components

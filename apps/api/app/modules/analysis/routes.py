@@ -17,6 +17,7 @@ from app.modules.analysis.schemas import (
 from app.modules.analysis.service import AnalysisService
 from app.modules.features.schemas import FeatureSnapshotRead
 from app.modules.indicators.schemas import IndicatorSnapshotRead
+from app.modules.patterns.schemas import PatternCandidateRead
 
 router = APIRouter(prefix="/analysis-runs", tags=["analysis-runs"])
 
@@ -105,6 +106,15 @@ async def get_analysis_indicators(
     if snapshot is None:
         raise AppError(404, "indicator_snapshot_not_found", "Indicator snapshot not found")
     return IndicatorSnapshotRead.model_validate(snapshot)
+
+
+@router.get("/{analysis_run_id}/patterns", response_model=list[PatternCandidateRead])
+async def list_analysis_patterns(
+    analysis_run_id: UUID,
+    service: Annotated[AnalysisService, Depends(get_analysis_service)],
+) -> list[PatternCandidateRead]:
+    candidates = await service.list_pattern_candidates(analysis_run_id)
+    return [PatternCandidateRead.model_validate(candidate) for candidate in candidates]
 
 
 @router.post("/{analysis_run_id}/retry", response_model=AnalysisRunRead)

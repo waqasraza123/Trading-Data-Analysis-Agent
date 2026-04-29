@@ -1,6 +1,6 @@
 # Feature Engineering Snapshots
 
-This slice adds deterministic feature calculation and persistence. It does not add indicators, pattern detection, signal classification, evidence, confidence, risk notes, explanations, news correlation, or LLM calls.
+This slice adds deterministic feature calculation and persistence. Later slices consume these features for indicators and pattern candidates; features do not classify final signals by themselves.
 
 ## Boundary
 
@@ -203,7 +203,7 @@ queued
 -> completed
 ```
 
-In this phase, feature snapshots are followed by indicator snapshots. Later phases will continue from stored feature and indicator artifacts into patterns, signals, evidence, confidence, and explanations.
+In the current lifecycle, feature snapshots are followed by indicator snapshots and pattern candidates. Later phases will continue from stored artifacts into final signals, evidence, confidence, and explanations.
 
 ## Data Sufficiency
 
@@ -225,7 +225,6 @@ Feature values are stored in JSONB. Decimal values are serialized as strings to 
 ## Not Implemented In This Slice
 
 ```txt
-pattern candidates
 signals
 signal evidence
 confidence components

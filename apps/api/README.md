@@ -96,3 +96,9 @@ Indicator snapshots are documented in:
 ```txt
 docs/indicator-engine.md
 ```
+
+Pattern candidates are documented in:
+
+```txt
+docs/pattern-engine.md
+```

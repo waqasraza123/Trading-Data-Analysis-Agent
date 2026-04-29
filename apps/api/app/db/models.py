@@ -7,6 +7,7 @@ from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
+from app.modules.patterns.models import PatternCandidate
 from app.modules.symbols.models import Symbol
 from app.modules.users.models import User
 from app.modules.workspaces.models import Workspace
@@ -26,6 +27,7 @@ __all__ = [
     "ImportError",
     "LiveFeedEvent",
     "LiveFeedSubscription",
+    "PatternCandidate",
     "Symbol",
     "User",
     "Workspace",

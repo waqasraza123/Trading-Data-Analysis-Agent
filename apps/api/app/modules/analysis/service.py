@@ -24,6 +24,8 @@ from app.modules.features.models import FeatureSnapshot
 from app.modules.features.service import FeatureSnapshotService
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.indicators.service import IndicatorSnapshotService
+from app.modules.patterns.models import PatternCandidate
+from app.modules.patterns.service import PatternCandidateService
 from app.modules.symbols.repository import SymbolRepository
 
 ANALYSIS_LIFECYCLE_ENGINE_VERSION = "analysis_lifecycle_0.1.0"
@@ -39,6 +41,7 @@ class AnalysisService:
         self.candle_service = CandleService(session)
         self.feature_snapshot_service = FeatureSnapshotService(session)
         self.indicator_snapshot_service = IndicatorSnapshotService(session)
+        self.pattern_candidate_service = PatternCandidateService(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
 
@@ -188,6 +191,10 @@ class AnalysisService:
         await self.get_run(analysis_run_id)
         return await self.indicator_snapshot_service.get_by_analysis_run_id(analysis_run_id)
 
+    async def list_pattern_candidates(self, analysis_run_id: UUID) -> list[PatternCandidate]:
+        await self.get_run(analysis_run_id)
+        return await self.pattern_candidate_service.list_by_analysis_run_id(analysis_run_id)
+
     async def retry_run(self, analysis_run_id: UUID) -> AnalysisRun:
         run = await self.get_run(analysis_run_id)
         if run.status not in {
@@ -290,13 +297,40 @@ class AnalysisService:
                     "isReady": indicator_snapshot.indicators_json["calculation"]["isReady"],
                 },
             )
+            pattern_candidates = await self.pattern_candidate_service.create_candidates(
+                analysis_run=run,
+                analysis_candles=analysis_candles,
+                baseline_candles=baseline_candles,
+                feature_snapshot=feature_snapshot,
+                indicator_snapshot=indicator_snapshot,
+            )
+            selected_candidate = next(
+                (candidate for candidate in pattern_candidates if candidate.is_selected),
+                None,
+            )
+            await self.add_audit_log(
+                run.id,
+                "patterns_detected",
+                "Pattern candidates calculated and persisted",
+                {
+                    "candidateCount": len(pattern_candidates),
+                    "selectedPatternCandidateId": (
+                        str(selected_candidate.id) if selected_candidate is not None else None
+                    ),
+                    "selectedPatternType": (
+                        selected_candidate.pattern_type
+                        if selected_candidate is not None
+                        else None
+                    ),
+                },
+            )
             run.status = AnalysisRunStatus.COMPLETED
             run.completed_at = utc_now()
             await self.add_audit_log(
                 run.id,
                 "analysis_completed",
-                "Analysis feature and indicator snapshots completed",
-                {"nextEnginesImplemented": False},
+                "Analysis feature, indicator, and pattern candidate snapshots completed",
+                {"nextEngine": "signal_classification"},
             )
         except AppError as error:
             run.status = AnalysisRunStatus.FAILED

@@ -1,6 +1,6 @@
 # Analysis Run Lifecycle
 
-This slice adds analysis orchestration without implementing trading intelligence engines yet.
+This document describes analysis orchestration and the deterministic artifact engines currently wired into it.
 
 ## Boundary
 
@@ -21,7 +21,6 @@ retry failed or insufficient-data runs
 Not implemented:
 
 ```txt
-indicator calculations
 signal classification
 evidence generation
 confidence scoring
@@ -40,6 +39,9 @@ POST /analysis-runs/live-window
 GET /analysis-runs
 GET /analysis-runs/{analysis_run_id}
 GET /analysis-runs/{analysis_run_id}/audit-logs
+GET /analysis-runs/{analysis_run_id}/features
+GET /analysis-runs/{analysis_run_id}/indicators
+GET /analysis-runs/{analysis_run_id}/patterns
 POST /analysis-runs/{analysis_run_id}/retry
 ```
 
@@ -132,10 +134,11 @@ quality was calculated
 audit logs were written
 feature snapshot was calculated and persisted
 indicator snapshot was calculated and persisted
+pattern candidates were calculated and persisted
 later signal engines have not run yet
 ```
 
-Future engine phases will continue from feature and indicator snapshots into patterns, signals, and explanations.
+Future engine phases will continue from stored artifacts into signals and explanations.
 
 ## Data Sufficiency Policy
 
@@ -168,6 +171,7 @@ candles_loaded
 analysis_windows_resolved
 features_calculated
 indicators_calculated
+patterns_detected
 insufficient_data
 analysis_completed
 analysis_failed
@@ -185,7 +189,7 @@ engine_version = analysis_lifecycle_0.1.0
 rule_set_version = preflight_0.1.0
 ```
 
-These values identify analysis lifecycle plus feature and indicator snapshot runs and should change when broader deterministic engines are added.
+These values identify analysis lifecycle plus feature, indicator, and pattern candidate runs and should change when broader deterministic engines are added.
 
 ## Retry Policy
 
