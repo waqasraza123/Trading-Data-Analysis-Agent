@@ -1,9 +1,16 @@
+from datetime import datetime
+from typing import cast
 from uuid import UUID
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, or_, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
+from app.modules.live.models import (
+    LiveFeedEvent,
+    LiveFeedSubscription,
+    LiveFeedSubscriptionStatus,
+)
 
 
 class LiveRepository:
@@ -47,6 +54,74 @@ class LiveRepository:
             statement = statement.where(LiveFeedSubscription.symbol_id == symbol_id)
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def list_runtime_candidates(self, limit: int) -> list[LiveFeedSubscription]:
+        statement: Select[tuple[LiveFeedSubscription]] = (
+            select(LiveFeedSubscription)
+            .where(LiveFeedSubscription.status == LiveFeedSubscriptionStatus.ACTIVE)
+            .order_by(LiveFeedSubscription.created_at.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def acquire_subscription_lease(
+        self,
+        subscription_id: UUID,
+        worker_id: str,
+        now: datetime,
+        lease_expires_at: datetime,
+    ) -> LiveFeedSubscription | None:
+        statement = (
+            update(LiveFeedSubscription)
+            .where(
+                LiveFeedSubscription.id == subscription_id,
+                LiveFeedSubscription.status == LiveFeedSubscriptionStatus.ACTIVE,
+                or_(
+                    LiveFeedSubscription.worker_id.is_(None),
+                    LiveFeedSubscription.worker_id == worker_id,
+                    LiveFeedSubscription.lease_expires_at.is_(None),
+                    LiveFeedSubscription.lease_expires_at <= now,
+                ),
+            )
+            .values(worker_id=worker_id, lease_expires_at=lease_expires_at)
+            .returning(LiveFeedSubscription)
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
+    async def refresh_subscription_lease(
+        self,
+        subscription_id: UUID,
+        worker_id: str,
+        lease_expires_at: datetime,
+    ) -> bool:
+        statement = (
+            update(LiveFeedSubscription)
+            .where(
+                LiveFeedSubscription.id == subscription_id,
+                LiveFeedSubscription.worker_id == worker_id,
+            )
+            .values(lease_expires_at=lease_expires_at)
+        )
+        result = cast(CursorResult[object], await self.session.execute(statement))
+        return result.rowcount > 0
+
+    async def release_subscription_lease(
+        self,
+        subscription_id: UUID,
+        worker_id: str,
+    ) -> bool:
+        statement = (
+            update(LiveFeedSubscription)
+            .where(
+                LiveFeedSubscription.id == subscription_id,
+                LiveFeedSubscription.worker_id == worker_id,
+            )
+            .values(worker_id=None, lease_expires_at=None)
+        )
+        result = cast(CursorResult[object], await self.session.execute(statement))
+        return result.rowcount > 0
 
     async def create_event(self, event: LiveFeedEvent) -> LiveFeedEvent:
         self.session.add(event)

@@ -2,7 +2,7 @@ from enum import StrEnum
 from functools import lru_cache
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     live_feed_provider: str | None = None
     live_feed_api_key: SecretStr | None = None
+    live_feed_reconnect_initial_seconds: float = Field(default=1, gt=0)
+    live_feed_reconnect_max_seconds: float = Field(default=60, gt=0)
+    live_feed_reconnect_multiplier: float = Field(default=2, gt=1)
+    live_feed_stale_message_seconds: int = Field(default=180, ge=1)
+    live_feed_stale_final_candle_seconds: int = Field(default=300, ge=1)
+    live_feed_worker_poll_seconds: float = Field(default=10, gt=0)
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"

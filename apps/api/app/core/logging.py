@@ -5,6 +5,32 @@ from typing import Any
 
 from app.config import LogLevel
 
+STANDARD_LOG_FIELDS = {
+    "args",
+    "asctime",
+    "created",
+    "exc_info",
+    "exc_text",
+    "filename",
+    "funcName",
+    "levelname",
+    "levelno",
+    "lineno",
+    "module",
+    "msecs",
+    "message",
+    "msg",
+    "name",
+    "pathname",
+    "process",
+    "processName",
+    "relativeCreated",
+    "stack_info",
+    "thread",
+    "threadName",
+    "taskName",
+}
+
 
 class JsonLogFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -14,9 +40,8 @@ class JsonLogFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        for field_name in ("request_id", "app_env", "service"):
-            field_value = getattr(record, field_name, None)
-            if field_value is not None:
+        for field_name, field_value in record.__dict__.items():
+            if field_name not in STANDARD_LOG_FIELDS and field_value is not None:
                 log_payload[field_name] = field_value
         if record.exc_info:
             log_payload["exception"] = self.formatException(record.exc_info)

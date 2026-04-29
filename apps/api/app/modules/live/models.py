@@ -46,6 +46,7 @@ class LiveFeedSubscription(Base):
         Index("ix_live_feed_subscriptions_source_id", "source_id"),
         Index("ix_live_feed_subscriptions_symbol_timeframe", "symbol_id", "timeframe"),
         Index("ix_live_feed_subscriptions_status", "status"),
+        Index("ix_live_feed_subscriptions_lease", "worker_id", "lease_expires_at"),
     )
 
     id = uuid_primary_key()
@@ -73,6 +74,11 @@ class LiveFeedSubscription(Base):
         nullable=True,
     )
     last_error: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    worker_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     config_json: Mapped[dict[str, object]] = mapped_column(
         JSONB,
         nullable=False,

@@ -55,6 +55,8 @@ class LiveSubscriptionRead(ApiReadSchema):
     last_message_at: datetime | None
     last_final_candle_at: datetime | None
     last_error: str | None
+    worker_id: str | None
+    lease_expires_at: datetime | None
     config_json: dict[str, Any]
     created_at: datetime
     updated_at: datetime

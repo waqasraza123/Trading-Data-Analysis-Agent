@@ -25,6 +25,27 @@ class BinanceLiveProvider(LiveProvider):
         return None
 
     def normalize_message(self, payload: LiveProviderMessage) -> NormalizedLiveProviderEvent:
+        if payload.event_type in {
+            LiveFeedEventType.HEARTBEAT,
+            LiveFeedEventType.RECONNECT,
+            LiveFeedEventType.SNAPSHOT,
+        }:
+            return NormalizedLiveProviderEvent(
+                event_type=payload.event_type,
+                provider_timestamp=(
+                    payload.provider_timestamp or datetime_from_event(payload.payload_json)
+                ),
+                payload_json=payload.payload_json,
+            )
+        if payload.event_type == LiveFeedEventType.ERROR:
+            return NormalizedLiveProviderEvent(
+                event_type=LiveFeedEventType.ERROR,
+                provider_timestamp=(
+                    payload.provider_timestamp or datetime_from_event(payload.payload_json)
+                ),
+                payload_json=payload.payload_json,
+                error_message=str(payload.payload_json.get("errorMessage", "Provider error")),
+            )
         kline_payload = payload.payload_json.get("k")
         if not isinstance(kline_payload, dict):
             raise AppError(

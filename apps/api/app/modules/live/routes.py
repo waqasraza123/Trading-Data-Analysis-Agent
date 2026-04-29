@@ -102,10 +102,7 @@ async def pause_subscription(
     subscription_id: UUID,
     service: Annotated[LiveService, Depends(get_live_service)],
 ) -> LiveSubscriptionRead:
-    subscription = await service.set_subscription_status(
-        subscription_id,
-        LiveFeedSubscriptionStatus.PAUSED,
-    )
+    subscription = await service.pause_subscription(subscription_id)
     return LiveSubscriptionRead.model_validate(subscription)
 
 
@@ -114,10 +111,7 @@ async def resume_subscription(
     subscription_id: UUID,
     service: Annotated[LiveService, Depends(get_live_service)],
 ) -> LiveSubscriptionRead:
-    subscription = await service.set_subscription_status(
-        subscription_id,
-        LiveFeedSubscriptionStatus.ACTIVE,
-    )
+    subscription = await service.resume_subscription(subscription_id)
     return LiveSubscriptionRead.model_validate(subscription)
 
 
@@ -126,10 +120,7 @@ async def stop_subscription(
     subscription_id: UUID,
     service: Annotated[LiveService, Depends(get_live_service)],
 ) -> LiveSubscriptionRead:
-    subscription = await service.set_subscription_status(
-        subscription_id,
-        LiveFeedSubscriptionStatus.STOPPED,
-    )
+    subscription = await service.stop_subscription_runtime(subscription_id)
     return LiveSubscriptionRead.model_validate(subscription)
 
 

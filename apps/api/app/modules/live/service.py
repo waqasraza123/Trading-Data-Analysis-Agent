@@ -1,3 +1,5 @@
+import logging
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -35,6 +37,8 @@ from app.modules.live.schemas import (
 )
 from app.modules.symbols.models import Symbol
 from app.modules.symbols.repository import SymbolRepository
+
+logger = logging.getLogger(__name__)
 
 
 class LiveService:
@@ -142,10 +146,150 @@ class LiveService:
         subscription.status = status
         if status == LiveFeedSubscriptionStatus.ACTIVE:
             subscription.last_error = None
+        if status in {
+            LiveFeedSubscriptionStatus.PAUSED,
+            LiveFeedSubscriptionStatus.FAILED,
+            LiveFeedSubscriptionStatus.STOPPED,
+        }:
+            subscription.worker_id = None
+            subscription.lease_expires_at = None
         await self.session.flush()
         await self.session.refresh(subscription)
         await self.session.commit()
         return subscription
+
+    async def start_subscription_runtime(self, subscription_id: UUID) -> LiveFeedSubscription:
+        subscription = await self.set_subscription_status(
+            subscription_id,
+            LiveFeedSubscriptionStatus.ACTIVE,
+        )
+        logger.info(
+            "live_subscription_started",
+            extra={"subscription_id": str(subscription.id), "provider": subscription.provider},
+        )
+        return subscription
+
+    async def stop_subscription_runtime(self, subscription_id: UUID) -> LiveFeedSubscription:
+        subscription = await self.set_subscription_status(
+            subscription_id,
+            LiveFeedSubscriptionStatus.STOPPED,
+        )
+        logger.info(
+            "live_subscription_stopped",
+            extra={"subscription_id": str(subscription.id), "provider": subscription.provider},
+        )
+        return subscription
+
+    async def pause_subscription(self, subscription_id: UUID) -> LiveFeedSubscription:
+        subscription = await self.set_subscription_status(
+            subscription_id,
+            LiveFeedSubscriptionStatus.PAUSED,
+        )
+        logger.info(
+            "live_subscription_paused",
+            extra={"subscription_id": str(subscription.id), "provider": subscription.provider},
+        )
+        return subscription
+
+    async def resume_subscription(self, subscription_id: UUID) -> LiveFeedSubscription:
+        return await self.start_subscription_runtime(subscription_id)
+
+    async def mark_stale(self, subscription_id: UUID) -> LiveFeedSubscription:
+        subscription = await self.set_subscription_status(
+            subscription_id,
+            LiveFeedSubscriptionStatus.STALE,
+        )
+        logger.warning(
+            "live_subscription_stale",
+            extra={"subscription_id": str(subscription.id), "provider": subscription.provider},
+        )
+        return subscription
+
+    async def mark_failed(self, subscription_id: UUID, error_message: str) -> LiveFeedSubscription:
+        subscription = await self.get_subscription(subscription_id)
+        subscription.status = LiveFeedSubscriptionStatus.FAILED
+        subscription.last_error = error_message[:1000]
+        subscription.worker_id = None
+        subscription.lease_expires_at = None
+        await self.session.flush()
+        await self.session.refresh(subscription)
+        await self.session.commit()
+        logger.error(
+            "live_subscription_failed",
+            extra={
+                "subscription_id": str(subscription.id),
+                "provider": subscription.provider,
+                "error_message": subscription.last_error,
+            },
+        )
+        return subscription
+
+    async def update_heartbeat(self, subscription_id: UUID) -> LiveFeedSubscription:
+        subscription = await self.get_subscription(subscription_id)
+        subscription.last_message_at = utc_now()
+        if subscription.status == LiveFeedSubscriptionStatus.STALE:
+            subscription.status = LiveFeedSubscriptionStatus.ACTIVE
+            subscription.last_error = None
+        await self.session.flush()
+        await self.session.refresh(subscription)
+        await self.session.commit()
+        return subscription
+
+    async def update_final_candle_time(
+        self,
+        subscription_id: UUID,
+        final_candle_at: datetime,
+    ) -> LiveFeedSubscription:
+        subscription = await self.get_subscription(subscription_id)
+        subscription.last_final_candle_at = final_candle_at
+        if subscription.status == LiveFeedSubscriptionStatus.STALE:
+            subscription.status = LiveFeedSubscriptionStatus.ACTIVE
+            subscription.last_error = None
+        await self.session.flush()
+        await self.session.refresh(subscription)
+        await self.session.commit()
+        return subscription
+
+    async def list_runtime_candidates(self, limit: int = 500) -> list[LiveFeedSubscription]:
+        return await self.repository.list_runtime_candidates(limit=limit)
+
+    async def acquire_subscription_lease(
+        self,
+        subscription_id: UUID,
+        worker_id: str,
+        lease_seconds: float,
+    ) -> LiveFeedSubscription | None:
+        now = utc_now()
+        subscription = await self.repository.acquire_subscription_lease(
+            subscription_id=subscription_id,
+            worker_id=worker_id,
+            now=now,
+            lease_expires_at=now + timedelta(seconds=lease_seconds),
+        )
+        await self.session.commit()
+        return subscription
+
+    async def refresh_subscription_lease(
+        self,
+        subscription_id: UUID,
+        worker_id: str,
+        lease_seconds: float,
+    ) -> bool:
+        refreshed = await self.repository.refresh_subscription_lease(
+            subscription_id=subscription_id,
+            worker_id=worker_id,
+            lease_expires_at=utc_now() + timedelta(seconds=lease_seconds),
+        )
+        await self.session.commit()
+        return refreshed
+
+    async def release_subscription_lease(self, subscription_id: UUID, worker_id: str) -> bool:
+        released = await self.repository.release_subscription_lease(
+            subscription_id=subscription_id,
+            worker_id=worker_id,
+        )
+        await self.session.commit()
+        return released
 
     async def list_subscription_events(
         self,
@@ -167,6 +311,14 @@ class LiveService:
     ) -> LiveFeedEvent:
         subscription = await self.get_subscription(subscription_id)
         event = await self.create_received_event(subscription, message)
+        logger.info(
+            "live_event_received",
+            extra={
+                "subscription_id": str(subscription.id),
+                "provider": subscription.provider,
+                "event_type": message.event_type.value,
+            },
+        )
         try:
             if subscription.status in {
                 LiveFeedSubscriptionStatus.PAUSED,
@@ -174,6 +326,14 @@ class LiveService:
             }:
                 event.processing_status = LiveFeedEventProcessingStatus.IGNORED
                 await self.session.commit()
+                logger.info(
+                    "live_event_processed",
+                    extra={
+                        "subscription_id": str(subscription.id),
+                        "event_id": str(event.id),
+                        "processing_status": event.processing_status,
+                    },
+                )
                 return event
             provider = get_live_provider(subscription.provider)
             normalized_event = provider.normalize_message(message)
@@ -189,6 +349,26 @@ class LiveService:
         except (AppError, ValidationError) as error:
             await self.mark_event_failed(subscription, event, error)
             await self.session.commit()
+        if event.processing_status == LiveFeedEventProcessingStatus.FAILED:
+            logger.error(
+                "live_event_failed",
+                extra={
+                    "subscription_id": str(subscription.id),
+                    "event_id": str(event.id),
+                    "event_type": event.event_type,
+                    "error_message": event.error_message,
+                },
+            )
+        else:
+            logger.info(
+                "live_event_processed",
+                extra={
+                    "subscription_id": str(subscription.id),
+                    "event_id": str(event.id),
+                    "event_type": event.event_type,
+                    "processing_status": event.processing_status,
+                },
+            )
         return event
 
     async def refresh_stale_statuses(
@@ -208,6 +388,13 @@ class LiveService:
             if subscription_is_stale(subscription, now, policy):
                 subscription.status = LiveFeedSubscriptionStatus.STALE
                 stale_count += 1
+                logger.warning(
+                    "live_subscription_stale",
+                    extra={
+                        "subscription_id": str(subscription.id),
+                        "provider": subscription.provider,
+                    },
+                )
         await self.session.commit()
         return stale_count
 
@@ -304,6 +491,9 @@ class LiveService:
         upsert_result = await self.candle_repository.upsert_normalized_candle(candle)
         if upsert_result.status == CandleUpsertStatus.CONFLICTING_FINAL:
             raise AppError(409, "conflicting_final_candle", upsert_result.message)
+        if upsert_result.status == CandleUpsertStatus.IGNORED_LATE_PARTIAL:
+            event.processing_status = LiveFeedEventProcessingStatus.IGNORED
+            return
         if normalized_event.event_type == LiveFeedEventType.CANDLE_FINAL:
             subscription.last_final_candle_at = candle.timestamp
         if subscription.status == LiveFeedSubscriptionStatus.STALE:
