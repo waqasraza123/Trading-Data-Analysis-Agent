@@ -1,6 +1,12 @@
 # Trading Intelligence API
 
-Phase 1 provides the FastAPI, settings, database, Alembic, health, error handling, logging, and test foundation only.
+FastAPI backend for deterministic market intelligence over imported and live-originated
+candle data. The backend stores market data, calculates features and indicators, classifies
+signals with rules, generates safe deterministic explanations from persisted artifacts, and
+supports replay from stored candles.
+
+No UI, LLM calls, news/event correlation, broker execution, auto-trading, alerts, or billing
+is implemented in this backend slice.
 
 ## Commands
 
@@ -27,6 +33,12 @@ Run tests:
 
 ```sh
 .venv/bin/pytest
+```
+
+Run database integration tests against an explicit disposable database:
+
+```sh
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/pytest -m integration
 ```
 
 Run lint:
@@ -107,4 +119,10 @@ Deterministic signal classification is documented in:
 
 ```txt
 docs/signal-classification.md
+```
+
+Deterministic explanations are documented in:
+
+```txt
+docs/deterministic-explanations.md
 ```

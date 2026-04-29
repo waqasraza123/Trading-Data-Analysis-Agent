@@ -164,6 +164,16 @@ Allowed statuses:
 
 `include_partial_live_candle` defaults to false.
 
+Replay metadata is stored directly on replay runs:
+
+- `replayed_from_analysis_run_id`
+- `replay_mode`
+
+Allowed replay modes:
+
+- `latest_engine_version`
+- `same_engine_version`
+
 ### `analysis_audit_logs`
 
 Stores future analysis lifecycle audit events.
@@ -256,6 +266,10 @@ Stores deterministic signal evidence copied from selected pattern candidate evid
 
 Stores normalized risk and no-signal notes from candidate risk notes and deterministic classifier rules.
 
+### `deterministic_explanations`
+
+Stores one current safe deterministic explanation per signal. The row includes explanation sections, source artifact snapshots, safety status, and blocked terms when fallback text is used.
+
 ## Migration
 
 The initial schema migration is:
@@ -278,5 +292,4 @@ It is intentionally hand-written so the first schema captures the exact Phase 2 
 - candle upsert behavior
 - analysis workers
 - feature/indicator/pattern/signal engines
-- explanations
 - news correlation

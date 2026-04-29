@@ -1,0 +1,12 @@
+{
+  "expected_classification_status": "no_signal",
+  "expected_bias": "neutral",
+  "expected_pattern_type": null,
+  "expected_strategy_profile_key": "range_chop_avoidance",
+  "confidence_min": "0.4500",
+  "confidence_max": "1.0000",
+  "expected_no_signal_reason": "chop_or_sideways_market",
+  "expected_volatility_state": null,
+  "expected_trend_state": "mixed_or_sideways",
+  "expected_range_state": "inside_previous_range"
+}

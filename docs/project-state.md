@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle, feature snapshot, indicator snapshot, pattern candidate, strategy profile, and deterministic signal classification endpoints.
+- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, deterministic signal classification, and deterministic explanation endpoints.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
@@ -53,13 +53,13 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Historical CSV/JSON import pipeline wiring is implemented.
 - Live feed ingestion foundation is implemented with provider adapters, subscription lifecycle APIs, raw event audit storage, stale checks, and shared candle normalization.
 - Candle query and data quality APIs are implemented.
-- Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, insufficient-data status, feature snapshot persistence, indicator snapshot persistence, pattern candidate persistence, and deterministic signal classification persistence.
+- Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, insufficient-data status, feature snapshot persistence, indicator snapshot persistence, pattern candidate persistence, deterministic signal classification persistence, and deterministic explanation persistence.
 - Deterministic feature engineering snapshots are implemented.
 - Deterministic indicator snapshots are implemented.
 - Deterministic pattern candidates are implemented.
 - Deterministic strategy profiles, signal classification, signal evidence, confidence components, risk notes, and golden intelligence tests are implemented.
-- Next core milestone is deterministic explanations on top of persisted signals, evidence, confidence components, and risk notes.
-- Later phases add replay/versioning, optional LLM explanations, news correlation, live scanning, observability, security, and performance tuning.
+- Deterministic explanations are implemented on top of persisted signals, evidence, confidence components, risk notes, strategy profile snapshots, feature snapshots, and indicator snapshots.
+- Later phases add deeper replay versioning, optional LLM explanations, news correlation, live scanning, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -81,6 +81,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented indicator_snapshots migration/model, deterministic EMA/RSI/MACD/ATR engines, indicator persistence wiring, indicator retrieval route, and documentation.
 - Implemented pattern_candidates migration/model, deterministic rule detectors, pattern persistence wiring, pattern retrieval route, and documentation.
 - Implemented strategy_profiles, signals, signal_confidence_components, signal_evidence, and signal_risk_notes migrations/models, default profile seed data, deterministic classifier service, lifecycle integration, retrieval APIs, audit events, documentation, and intelligence tests.
+- Implemented deterministic_explanations migration/model, deterministic explanation templates, safety checker, idempotent persistence service, lifecycle/manual classification integration, retrieval/generation APIs, audit events, documentation, and explanation unit tests.
+- Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
 
 ## Important Decisions
 
@@ -92,7 +94,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - `candles` enforces one row per workspace, symbol, source, timeframe, and timestamp.
 - Repository coding standards are durable: no code comments, strong typing, validation everywhere, modular files, explicit assumptions, and short commit messages.
 - Phase 1 intentionally keeps `DATABASE_URL` optional at app startup so local health can run without secrets; `/health/db` reports unhealthy until a database URL is configured.
-- Async SQLAlchemy normalizes `postgresql://` and `postgres://` URLs to `postgresql+asyncpg://` for Neon compatibility.
+- Async SQLAlchemy normalizes `postgresql://` and `postgres://` URLs to `postgresql+asyncpg://` for Neon compatibility, and translates Neon pooler `sslmode`/`channel_binding` query parameters into asyncpg-compatible SSL settings.
 - Phase 2 owns the first business schema; Phase 3 should add services/routes without changing the ingestion truth boundary.
 - Symbol and data source services are the first business configuration APIs; they do not perform imports, live ingestion, or analysis.
 - Candle normalization accepts future CSV, JSON, API polling, live feed, and manual seed origins through one `NormalizedCandleInput` path.
@@ -104,7 +106,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - The current Binance adapter normalizes kline payloads only; persistent websocket lifecycle remains a later worker slice.
 - Candle read APIs default to final candles; partial candles are returned only when `is_final=false` or inspected through quality reporting.
 - Future analysis code should use `CandleService` read helpers instead of querying candle models directly.
-- Analysis run `completed` currently means lifecycle preflight, deterministic feature snapshot, deterministic indicator snapshot, deterministic pattern candidates, and deterministic signal classification completed.
+- Analysis run `completed` currently means lifecycle preflight, deterministic feature snapshot, deterministic indicator snapshot, deterministic pattern candidates, deterministic signal classification, and deterministic explanation generation completed.
 - Analysis preflight writes audit logs and marks runs `insufficient_data` when candle windows lack required final candles.
 - Feature snapshots serialize Decimal market values as strings in JSONB to preserve precision.
 - Indicator snapshots serialize Decimal market values as strings in JSONB and use `isReady` flags instead of guessing when warmup/baseline data is thin.
@@ -112,6 +114,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Analysis retry replaces prior pattern candidate rows for the same analysis run until a future analysis-attempt model exists.
 - Strategy profiles are deterministic market-reading configurations for signal classification; they are not broker strategies, trade execution, auto-trading, or financial advice.
 - The core intelligence layer should be implemented before optional LLM explanations, news correlation, live scanner work, frontend/UI, or broker/external automation.
+- Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, and `replay_mode`; `latest_engine_version` is supported and `same_engine_version` is explicitly unsupported until versioned rule configs are complete.
+- DB integration tests require explicit `TEST_DATABASE_URL`; unit tests must not fall back to production Neon `DATABASE_URL`.
+- Golden integration tests assert deterministic signal outputs and deterministic explanations for completed analysis runs.
 
 ## Deferred / Not Yet Implemented
 
@@ -120,7 +125,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Workspace and user API routes.
 - Seed execution command.
 - Persistent live provider websocket workers and reconnect loops.
-- Deterministic explanation, news, replay, and scanner modules.
+- Full same-engine replay versioning, news, and scanner modules.
 - Background workers, storage orchestration, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 
@@ -141,5 +146,6 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - `cd apps/api && .venv/bin/ruff check .`
 - `cd apps/api && .venv/bin/mypy app`
 - `cd apps/api && .venv/bin/pytest`
+- `cd apps/api && TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/pytest -m integration`
 - `cd apps/api && .venv/bin/alembic history`
 - `cd apps/api && .venv/bin/uvicorn app.main:app --reload`

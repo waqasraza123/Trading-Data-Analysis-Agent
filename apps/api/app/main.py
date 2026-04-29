@@ -10,6 +10,7 @@ from app.core.logging import configure_logging
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.data_sources.routes import router as data_sources_router
+from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.live.routes import router as live_router
 from app.modules.signals.routes import router as signals_router
@@ -54,6 +55,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(analysis_router, prefix=resolved_settings.api_prefix)
     app.include_router(strategy_profiles_router, prefix=resolved_settings.api_prefix)
     app.include_router(signals_router, prefix=resolved_settings.api_prefix)
+    app.include_router(explanations_router, prefix=resolved_settings.api_prefix)
     return app
 
 

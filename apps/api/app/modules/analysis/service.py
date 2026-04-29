@@ -11,16 +11,22 @@ from app.core.time import utc_now
 from app.modules.analysis.models import (
     AnalysisAuditLog,
     AnalysisMode,
+    AnalysisReplayMode,
     AnalysisRun,
     AnalysisRunStatus,
 )
 from app.modules.analysis.repository import AnalysisRepository
-from app.modules.analysis.schemas import AnalysisRunCreate, LiveWindowAnalysisRunCreate
+from app.modules.analysis.schemas import (
+    AnalysisReplayRequest,
+    AnalysisRunCreate,
+    LiveWindowAnalysisRunCreate,
+)
 from app.modules.candles.models import Candle
 from app.modules.candles.quality import CandleQualityReport
 from app.modules.candles.service import CandleService
 from app.modules.candles.timeframes import Timeframe, normalize_timestamp, timeframe_duration
 from app.modules.data_sources.repository import DataSourceRepository
+from app.modules.explanations.service import DeterministicExplanationService
 from app.modules.features.models import FeatureSnapshot
 from app.modules.features.service import FeatureSnapshotService
 from app.modules.indicators.models import IndicatorSnapshot
@@ -45,6 +51,7 @@ class AnalysisService:
         self.indicator_snapshot_service = IndicatorSnapshotService(session)
         self.pattern_candidate_service = PatternCandidateService(session)
         self.signal_classification_service = SignalClassificationService(session)
+        self.deterministic_explanation_service = DeterministicExplanationService(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
 
@@ -166,6 +173,7 @@ class AnalysisService:
         symbol_id: UUID | None = None,
         status: str | None = None,
         analysis_mode: str | None = None,
+        replayed_from_analysis_run_id: UUID | None = None,
     ) -> list[AnalysisRun]:
         return await self.repository.list_runs(
             limit=limit,
@@ -174,6 +182,7 @@ class AnalysisService:
             symbol_id=symbol_id,
             status=status,
             analysis_mode=analysis_mode,
+            replayed_from_analysis_run_id=replayed_from_analysis_run_id,
         )
 
     async def get_run(self, analysis_run_id: UUID) -> AnalysisRun:
@@ -198,6 +207,124 @@ class AnalysisService:
         await self.get_run(analysis_run_id)
         return await self.pattern_candidate_service.list_by_analysis_run_id(analysis_run_id)
 
+    async def replay_run(
+        self,
+        analysis_run_id: UUID,
+        payload: AnalysisReplayRequest,
+    ) -> AnalysisRun:
+        original_run = await self.get_run(analysis_run_id)
+        self.validate_replay_request(original_run, payload.mode)
+        replay_run = AnalysisRun(
+            workspace_id=original_run.workspace_id,
+            user_id=original_run.user_id,
+            symbol_id=original_run.symbol_id,
+            source_id=original_run.source_id,
+            replayed_from_analysis_run_id=original_run.id,
+            replay_mode=payload.mode.value,
+            timeframe=original_run.timeframe,
+            start_time=original_run.start_time,
+            end_time=original_run.end_time,
+            warmup_start_time=original_run.warmup_start_time,
+            baseline_start_time=original_run.baseline_start_time,
+            analysis_mode=AnalysisMode.REPLAY,
+            include_partial_live_candle=original_run.include_partial_live_candle,
+            include_news_correlation=False,
+            include_ai_explanation=False,
+            status=AnalysisRunStatus.QUEUED,
+            engine_version=ANALYSIS_LIFECYCLE_ENGINE_VERSION,
+            rule_set_version=ANALYSIS_LIFECYCLE_RULE_SET_VERSION,
+        )
+        try:
+            await self.add_audit_log(
+                original_run.id,
+                "analysis_replay_requested",
+                "Analysis replay requested",
+                {"replayMode": payload.mode.value},
+            )
+            created_replay = await self.repository.create_run(replay_run)
+            replay_metadata = {
+                "originalAnalysisRunId": str(original_run.id),
+                "replayAnalysisRunId": str(created_replay.id),
+                "replayMode": payload.mode.value,
+            }
+            await self.add_audit_log(
+                created_replay.id,
+                "analysis_created",
+                "Analysis run created",
+                {"analysisMode": created_replay.analysis_mode},
+            )
+            await self.add_audit_log(
+                original_run.id,
+                "analysis_replay_created",
+                "Analysis replay run created",
+                replay_metadata,
+            )
+            await self.add_audit_log(
+                created_replay.id,
+                "analysis_replay_created",
+                "Analysis replay run created",
+                replay_metadata,
+            )
+            await self.add_audit_log(
+                created_replay.id,
+                "analysis_replay_started",
+                "Analysis replay started",
+                replay_metadata,
+            )
+            await self.process_preflight(created_replay)
+            if created_replay.status == AnalysisRunStatus.COMPLETED:
+                await self.add_audit_log(
+                    created_replay.id,
+                    "analysis_replay_completed",
+                    "Analysis replay completed",
+                    replay_metadata,
+                )
+            elif created_replay.status in {
+                AnalysisRunStatus.FAILED,
+                AnalysisRunStatus.INSUFFICIENT_DATA,
+            }:
+                await self.add_audit_log(
+                    created_replay.id,
+                    "analysis_replay_failed",
+                    "Analysis replay did not complete",
+                    {
+                        **replay_metadata,
+                        "status": created_replay.status,
+                        "errorCode": created_replay.error_code,
+                    },
+                )
+            await self.session.commit()
+            return created_replay
+        except Exception:
+            await self.session.rollback()
+            raise
+
+    def validate_replay_request(
+        self,
+        original_run: AnalysisRun,
+        replay_mode: AnalysisReplayMode,
+    ) -> None:
+        if replay_mode == AnalysisReplayMode.SAME_ENGINE_VERSION:
+            raise AppError(
+                422,
+                "replay_mode_not_supported",
+                (
+                    "same_engine_version replay requires versioned rule configs and is "
+                    "not supported yet"
+                ),
+            )
+        if original_run.status != AnalysisRunStatus.COMPLETED:
+            raise AppError(
+                422,
+                "analysis_run_not_replayable",
+                "Only completed analysis runs can be replayed",
+            )
+        if original_run.source_id is None:
+            raise AppError(
+                422,
+                "analysis_run_missing_source_context",
+                "Analysis replay requires the original run to have a source_id",
+            )
     async def retry_run(self, analysis_run_id: UUID) -> AnalysisRun:
         run = await self.get_run(analysis_run_id)
         if run.status not in {
@@ -333,6 +460,7 @@ class AnalysisService:
                 run,
                 require_completed=False,
             )
+            explanation = await self.deterministic_explanation_service.generate_for_signal(signal)
             await self.add_audit_log(
                 run.id,
                 "signals_calculated",
@@ -344,14 +472,20 @@ class AnalysisService:
                     "strategyProfileKey": signal.strategy_profile_key,
                 },
             )
+            await self.add_audit_log(
+                run.id,
+                "deterministic_explanations_calculated",
+                "Deterministic explanation completed and persisted",
+                {"explanationId": str(explanation.id), "signalId": str(signal.id)},
+            )
             run.status = AnalysisRunStatus.COMPLETED
             run.completed_at = utc_now()
             await self.add_audit_log(
                 run.id,
                 "analysis_completed",
                 (
-                    "Analysis feature, indicator, pattern, and signal classification "
-                    "artifacts completed"
+                    "Analysis feature, indicator, pattern, signal classification, and "
+                    "deterministic explanation artifacts completed"
                 ),
             )
         except AppError as error:

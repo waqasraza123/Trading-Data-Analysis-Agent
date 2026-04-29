@@ -3,6 +3,7 @@ from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.candles.models import Candle
 from app.modules.data_sources.models import DataSource
 from app.modules.engine_versions.models import EngineVersion
+from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
@@ -27,6 +28,7 @@ __all__ = [
     "Base",
     "Candle",
     "DataSource",
+    "DeterministicExplanation",
     "EngineVersion",
     "FeatureSnapshot",
     "IndicatorSnapshot",

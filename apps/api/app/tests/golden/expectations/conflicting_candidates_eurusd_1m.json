@@ -1,0 +1,12 @@
+{
+  "expected_classification_status": "unclear",
+  "expected_bias": "unclear",
+  "expected_pattern_type": null,
+  "expected_strategy_profile_key": null,
+  "confidence_min": "0.0000",
+  "confidence_max": "1.0000",
+  "expected_no_signal_reason": "conflicting_directional_candidates",
+  "expected_volatility_state": null,
+  "expected_trend_state": null,
+  "expected_range_state": null
+}

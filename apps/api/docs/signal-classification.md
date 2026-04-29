@@ -14,6 +14,7 @@ analysis run
 -> pattern candidates
 -> deterministic strategy profile classification
 -> signals, confidence components, evidence, risk notes
+-> deterministic explanation
 ```
 
 Market data remains the source of truth. Pattern candidates are persisted first, rules classify them, and later AI layers may only explain stored evidence.
@@ -111,9 +112,11 @@ GET /strategy-profiles/{key}
 POST /analysis-runs/{analysis_run_id}/classify
 GET /analysis-runs/{analysis_run_id}/signal
 GET /signals/{signal_id}
+POST /signals/{signal_id}/deterministic-explanation
+GET /signals/{signal_id}/deterministic-explanation
 ```
 
-Manual classification only accepts completed runs. Automatic classification runs inside the analysis lifecycle before the run is marked completed.
+Manual classification only accepts completed runs. Automatic classification runs inside the analysis lifecycle before the run is marked completed. Deterministic explanations are generated after classification and summarize only stored artifacts.
 
 ## Tests
 
@@ -130,5 +133,6 @@ range/chop no-signal
 directional conflicts
 reversal-vs-continuation margins
 selected profile snapshots
+deterministic explanation summaries and safety fallback
 golden bullish/bearish/fakeout/chop/reversal/conflict scenarios
 ```

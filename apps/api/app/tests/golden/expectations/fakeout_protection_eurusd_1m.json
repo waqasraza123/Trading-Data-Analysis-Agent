@@ -1,0 +1,12 @@
+{
+  "expected_classification_status": "no_signal",
+  "expected_bias": "neutral",
+  "expected_pattern_type": "fakeout",
+  "expected_strategy_profile_key": "fakeout_protection",
+  "confidence_min": "0.5000",
+  "confidence_max": "1.0000",
+  "expected_no_signal_reason": "fakeout_risk",
+  "expected_volatility_state": null,
+  "expected_trend_state": null,
+  "expected_range_state": "inside_previous_range"
+}

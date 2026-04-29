@@ -1,0 +1,12 @@
+{
+  "expected_classification_status": "insufficient_data",
+  "expected_bias": null,
+  "expected_pattern_type": null,
+  "expected_strategy_profile_key": null,
+  "confidence_min": "0.0000",
+  "confidence_max": "0.0000",
+  "expected_no_signal_reason": "insufficient_candle_data",
+  "expected_volatility_state": null,
+  "expected_trend_state": null,
+  "expected_range_state": null
+}

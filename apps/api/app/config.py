@@ -1,5 +1,6 @@
 from enum import StrEnum
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -55,12 +56,41 @@ class Settings(BaseSettings):
 def build_async_database_url(database_url: SecretStr) -> str:
     raw_database_url = database_url.get_secret_value()
     if raw_database_url.startswith("postgresql+asyncpg://"):
-        return raw_database_url
+        return normalize_asyncpg_query(raw_database_url)
     if raw_database_url.startswith("postgresql://"):
-        return raw_database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return normalize_asyncpg_query(
+            raw_database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        )
     if raw_database_url.startswith("postgres://"):
-        return raw_database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        return normalize_asyncpg_query(
+            raw_database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        )
     return raw_database_url
+
+
+def normalize_asyncpg_query(database_url: str) -> str:
+    url = urlsplit(database_url)
+    query_pairs = parse_qsl(url.query, keep_blank_values=True)
+    normalized_pairs: list[tuple[str, str]] = []
+    ssl_required = False
+    for key, value in query_pairs:
+        if key == "sslmode":
+            ssl_required = value in {"require", "prefer", "verify-ca", "verify-full"}
+            continue
+        if key == "channel_binding":
+            continue
+        normalized_pairs.append((key, value))
+    if ssl_required and not any(key == "ssl" for key, _ in normalized_pairs):
+        normalized_pairs.append(("ssl", "require"))
+    return urlunsplit(
+        (
+            url.scheme,
+            url.netloc,
+            url.path,
+            urlencode(normalized_pairs),
+            url.fragment,
+        )
+    )
 
 
 @lru_cache(maxsize=1)

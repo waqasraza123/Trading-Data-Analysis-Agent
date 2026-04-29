@@ -27,6 +27,7 @@ class AnalysisRepository:
         symbol_id: UUID | None = None,
         status: str | None = None,
         analysis_mode: str | None = None,
+        replayed_from_analysis_run_id: UUID | None = None,
     ) -> list[AnalysisRun]:
         statement: Select[tuple[AnalysisRun]] = (
             select(AnalysisRun)
@@ -42,6 +43,10 @@ class AnalysisRepository:
             statement = statement.where(AnalysisRun.status == status)
         if analysis_mode is not None:
             statement = statement.where(AnalysisRun.analysis_mode == analysis_mode)
+        if replayed_from_analysis_run_id is not None:
+            statement = statement.where(
+                AnalysisRun.replayed_from_analysis_run_id == replayed_from_analysis_run_id
+            )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

@@ -27,6 +27,11 @@ class AnalysisRunStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
+class AnalysisReplayMode(StrEnum):
+    LATEST_ENGINE_VERSION = "latest_engine_version"
+    SAME_ENGINE_VERSION = "same_engine_version"
+
+
 class AnalysisRun(Base):
     __tablename__ = "analysis_runs"
     __table_args__ = (
@@ -39,10 +44,16 @@ class AnalysisRun(Base):
             "'insufficient_data', 'cancelled')",
             name="status_allowed",
         ),
+        CheckConstraint(
+            "replay_mode is null or replay_mode in "
+            "('latest_engine_version', 'same_engine_version')",
+            name="replay_mode_allowed",
+        ),
         Index("ix_analysis_runs_workspace_id", "workspace_id"),
         Index("ix_analysis_runs_symbol_timeframe", "symbol_id", "timeframe"),
         Index("ix_analysis_runs_status", "status"),
         Index("ix_analysis_runs_window", "start_time", "end_time"),
+        Index("ix_analysis_runs_replayed_from", "replayed_from_analysis_run_id"),
     )
 
     id = uuid_primary_key()
@@ -66,6 +77,12 @@ class AnalysisRun(Base):
         ForeignKey("data_sources.id", ondelete="SET NULL"),
         nullable=True,
     )
+    replayed_from_analysis_run_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("analysis_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    replay_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     timeframe: Mapped[str] = mapped_column(String(16), nullable=False)
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

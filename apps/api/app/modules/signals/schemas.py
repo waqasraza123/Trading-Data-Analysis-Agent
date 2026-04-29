@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 
 from app.core.schemas import ApiReadSchema
+from app.modules.explanations.schemas import DeterministicExplanationRead
 from app.modules.signals.models import (
     SignalBias,
     SignalClassificationStatus,
@@ -79,3 +80,4 @@ class SignalClassificationRead(ApiReadSchema):
     confidence_components: list[SignalConfidenceComponentRead]
     evidence: list[SignalEvidenceRead]
     risk_notes: list[SignalRiskNoteRead]
+    deterministic_explanation: DeterministicExplanationRead | None = None

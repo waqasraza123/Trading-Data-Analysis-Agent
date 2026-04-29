@@ -16,16 +16,12 @@ calculate candle quality
 write audit logs
 transition run status
 retry failed or insufficient-data runs
+replay completed runs from stored candles with latest deterministic engine version
 ```
 
 Not implemented:
 
 ```txt
-signal classification
-evidence generation
-confidence scoring
-risk notes
-deterministic explanation
 LLM explanation
 news correlation
 background worker execution
@@ -43,6 +39,8 @@ GET /analysis-runs/{analysis_run_id}/features
 GET /analysis-runs/{analysis_run_id}/indicators
 GET /analysis-runs/{analysis_run_id}/patterns
 POST /analysis-runs/{analysis_run_id}/retry
+POST /analysis-runs/{analysis_run_id}/replay
+GET /analysis-runs/{analysis_run_id}/replays
 ```
 
 ## Historical Run
@@ -124,7 +122,30 @@ queued -> running -> failed
 failed -> queued -> running -> completed
 insufficient_data -> queued -> running -> completed
 cancelled -> queued -> running -> completed
+completed -> replay queued -> running -> completed
 ```
+
+## Replay
+
+`POST /analysis-runs/{analysis_run_id}/replay` creates a new analysis run with:
+
+```txt
+analysis_mode = replay
+replayed_from_analysis_run_id = original run id
+replay_mode = latest_engine_version
+```
+
+Replay copies the original workspace, user, symbol, source, timeframe, analysis window,
+warmup window, baseline window, and partial-candle setting. It then reuses the same
+synchronous lifecycle over stored candles and persists new feature, indicator, pattern,
+signal, confidence, evidence, risk, and deterministic explanation artifacts for the
+replay run.
+
+`same_engine_version` is validated but returns `replay_mode_not_supported` until versioned
+rule configs are stored deeply enough to recreate old engine behavior.
+
+Replay does not mutate the original run or its artifacts. Each request creates a new linked
+replay run.
 
 In this phase, `completed` means:
 
@@ -136,9 +157,10 @@ feature snapshot was calculated and persisted
 indicator snapshot was calculated and persisted
 pattern candidates were calculated and persisted
 deterministic signal classification was calculated and persisted
+deterministic explanation was generated and persisted
 ```
 
-Future engine phases continue from stored artifacts into deterministic explanations, optional LLM explanations, and optional news correlation.
+Future engine phases continue from stored artifacts into optional LLM explanations and optional news correlation.
 
 ## Data Sufficiency Policy
 
@@ -179,6 +201,16 @@ signal_selected
 no_signal_generated
 signal_classification_completed
 signals_calculated
+analysis_replay_requested
+analysis_replay_created
+analysis_replay_started
+analysis_replay_completed
+analysis_replay_failed
+deterministic_explanation_started
+deterministic_explanation_generated
+deterministic_explanation_blocked
+deterministic_explanation_failed
+deterministic_explanations_calculated
 insufficient_data
 analysis_completed
 analysis_failed

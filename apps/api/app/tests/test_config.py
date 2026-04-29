@@ -32,3 +32,16 @@ def test_build_async_database_url_for_neon_postgres_url() -> None:
     )
 
     assert database_url == "postgresql+asyncpg://user:password@example.neon.tech/dbname"
+
+
+def test_build_async_database_url_normalizes_neon_pooler_ssl_query() -> None:
+    database_url = build_async_database_url(
+        SecretStr(
+            "postgresql://user:password@example.neon.tech/dbname"
+            "?sslmode=require&channel_binding=require"
+        )
+    )
+
+    assert database_url == (
+        "postgresql+asyncpg://user:password@example.neon.tech/dbname?ssl=require"
+    )

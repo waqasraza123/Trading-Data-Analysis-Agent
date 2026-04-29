@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import Field, model_validator
 
 from app.core.schemas import ApiReadSchema, ApiSchema
-from app.modules.analysis.models import AnalysisMode, AnalysisRunStatus
+from app.modules.analysis.models import AnalysisMode, AnalysisReplayMode, AnalysisRunStatus
 from app.modules.candles.timeframes import Timeframe
 
 
@@ -55,6 +55,8 @@ class AnalysisRunRead(ApiReadSchema):
     user_id: UUID | None
     symbol_id: UUID
     source_id: UUID | None
+    replayed_from_analysis_run_id: UUID | None
+    replay_mode: AnalysisReplayMode | None
     timeframe: str
     start_time: datetime
     end_time: datetime
@@ -73,6 +75,17 @@ class AnalysisRunRead(ApiReadSchema):
     completed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+
+
+class AnalysisReplayRequest(ApiSchema):
+    mode: AnalysisReplayMode
+
+
+class AnalysisReplayRead(ApiSchema):
+    original_analysis_run_id: UUID
+    replay_analysis_run_id: UUID
+    replay_mode: AnalysisReplayMode
+    status: AnalysisRunStatus
 
 
 class AnalysisAuditLogRead(ApiReadSchema):

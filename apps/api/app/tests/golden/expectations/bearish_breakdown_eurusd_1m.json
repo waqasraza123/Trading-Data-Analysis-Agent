@@ -1,0 +1,12 @@
+{
+  "expected_classification_status": "signal",
+  "expected_bias": "bearish",
+  "expected_pattern_type": "bearish_breakdown",
+  "expected_strategy_profile_key": "breakout_continuation",
+  "confidence_min": "0.6000",
+  "confidence_max": "1.0000",
+  "expected_no_signal_reason": null,
+  "expected_volatility_state": null,
+  "expected_trend_state": "short_term_downtrend",
+  "expected_range_state": "below_previous_range"
+}

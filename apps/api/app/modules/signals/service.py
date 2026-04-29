@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import AppError
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun, AnalysisRunStatus
 from app.modules.analysis.repository import AnalysisRepository
+from app.modules.explanations.repository import DeterministicExplanationRepository
+from app.modules.explanations.schemas import DeterministicExplanationRead
+from app.modules.explanations.service import DeterministicExplanationService
 from app.modules.features.repository import FeatureSnapshotRepository
 from app.modules.indicators.repository import IndicatorSnapshotRepository
 from app.modules.patterns.models import PatternCandidate
@@ -53,11 +56,14 @@ class SignalClassificationService:
         self.feature_repository = FeatureSnapshotRepository(session)
         self.indicator_repository = IndicatorSnapshotRepository(session)
         self.strategy_profile_repository = StrategyProfileRepository(session)
+        self.explanation_repository = DeterministicExplanationRepository(session)
+        self.explanation_service = DeterministicExplanationService(session)
 
     async def classify_analysis_run(self, analysis_run_id: UUID) -> SignalClassificationRead:
         run = await self.get_completed_run(analysis_run_id)
         try:
             signal = await self.classify_run(run, require_completed=True)
+            await self.explanation_service.generate_for_signal(signal)
             await self.session.commit()
             return await self.get_signal_response(signal.id)
         except Exception:
@@ -210,6 +216,7 @@ class SignalClassificationService:
         components = await self.signal_repository.list_confidence_components(signal.id)
         evidence = await self.signal_repository.list_evidence(signal.id)
         risk_notes = await self.signal_repository.list_risk_notes(signal.id)
+        explanation = await self.explanation_repository.get_by_signal_id(signal.id)
         return SignalClassificationRead(
             analysis_run_id=signal.analysis_run_id,
             signal=SignalRead.model_validate(signal),
@@ -219,6 +226,11 @@ class SignalClassificationService:
             ],
             evidence=[SignalEvidenceRead.model_validate(item) for item in evidence],
             risk_notes=[SignalRiskNoteRead.model_validate(note) for note in risk_notes],
+            deterministic_explanation=(
+                DeterministicExplanationRead.model_validate(explanation)
+                if explanation is not None
+                else None
+            ),
         )
 
     async def get_completed_run(self, analysis_run_id: UUID) -> AnalysisRun:

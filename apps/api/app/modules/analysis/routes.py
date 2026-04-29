@@ -10,6 +10,8 @@ from app.dependencies import database_session
 from app.modules.analysis.models import AnalysisMode, AnalysisRunStatus
 from app.modules.analysis.schemas import (
     AnalysisAuditLogRead,
+    AnalysisReplayRead,
+    AnalysisReplayRequest,
     AnalysisRunCreate,
     AnalysisRunRead,
     LiveWindowAnalysisRunCreate,
@@ -92,6 +94,38 @@ async def list_analysis_audit_logs(
 ) -> list[AnalysisAuditLogRead]:
     audit_logs = await service.list_audit_logs(analysis_run_id)
     return [AnalysisAuditLogRead.model_validate(audit_log) for audit_log in audit_logs]
+
+
+@router.post("/{analysis_run_id}/replay", response_model=AnalysisReplayRead)
+async def replay_analysis_run(
+    analysis_run_id: UUID,
+    payload: AnalysisReplayRequest,
+    service: Annotated[AnalysisService, Depends(get_analysis_service)],
+) -> AnalysisReplayRead:
+    replay_run = await service.replay_run(analysis_run_id, payload)
+    return AnalysisReplayRead(
+        original_analysis_run_id=analysis_run_id,
+        replay_analysis_run_id=replay_run.id,
+        replay_mode=payload.mode,
+        status=AnalysisRunStatus(replay_run.status),
+    )
+
+
+@router.get("/{analysis_run_id}/replays", response_model=list[AnalysisRunRead])
+async def list_analysis_replays(
+    analysis_run_id: UUID,
+    service: Annotated[AnalysisService, Depends(get_analysis_service)],
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[AnalysisRunRead]:
+    await service.get_run(analysis_run_id)
+    pagination = PaginationParams(limit=limit, offset=offset)
+    runs = await service.list_runs(
+        limit=pagination.limit,
+        offset=pagination.offset,
+        replayed_from_analysis_run_id=analysis_run_id,
+    )
+    return [AnalysisRunRead.model_validate(run) for run in runs]
 
 
 @router.get("/{analysis_run_id}/features", response_model=FeatureSnapshotRead)
