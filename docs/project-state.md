@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, symbol configuration, and data source configuration endpoints; no trading intelligence logic exists yet.
+- The API currently exposes health, symbol configuration, data source configuration, and historical candle import endpoints; no trading intelligence logic exists yet.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
@@ -45,8 +45,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Phase 2 core database schema is implemented for workspaces, users, symbols, data_sources, import_batches, import_errors, candles, live_feed_subscriptions, live_feed_events, analysis_runs, analysis_audit_logs, and engine_versions.
 - Phase 3 symbol and data source configuration services are implemented.
 - Unified candle validation and normalization is implemented as an internal service layer.
-- Next phase is historical CSV/JSON import pipeline wiring.
-- Later phases add live feed ingestion, candle query APIs, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Historical CSV/JSON import pipeline wiring is implemented.
+- Next phase is live feed ingestion foundation.
+- Later phases add candle query APIs, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -60,6 +61,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented Phase 2 core SQLAlchemy models, Alembic migration, and schema documentation.
 - Implemented Phase 3 symbol and data source schemas, repositories, services, routes, seed payloads, and documentation.
 - Implemented shared candle normalization, validation, quality calculation, repository upsert rules, and internal service documentation.
+- Implemented historical CSV/JSON import routes, parsing, batch/error persistence, candle storage wiring, and documentation.
 
 ## Important Decisions
 
@@ -76,6 +78,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Symbol and data source services are the first business configuration APIs; they do not perform imports, live ingestion, or analysis.
 - Candle normalization accepts future CSV, JSON, API polling, live feed, and manual seed origins through one `NormalizedCandleInput` path.
 - Existing final candles are not overwritten by later partial candles or conflicting final candles.
+- Historical imports must use the shared candle normalization and repository path; they do not bypass candle validation.
+- CSV imports require `csv_upload` sources; JSON imports require `json_import` sources.
 
 ## Deferred / Not Yet Implemented
 
@@ -83,7 +87,6 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Lockfile.
 - Workspace and user API routes.
 - Seed execution command.
-- CSV/JSON import route wiring.
 - Live provider ingestion.
 - Candle query API routes.
 - Analysis workflow, deterministic engines, workers, storage orchestration, and external API integrations.

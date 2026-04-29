@@ -60,3 +60,9 @@ The shared candle validation and normalization layer is documented in:
 ```txt
 docs/candle-normalization.md
 ```
+
+Historical CSV and JSON import wiring is documented in:
+
+```txt
+docs/historical-imports.md
+```
