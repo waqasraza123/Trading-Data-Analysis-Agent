@@ -280,12 +280,13 @@ supported for the currently registered v1 deterministic engines and returns
 `unsupported_engine_version` instead of falling back when a stored snapshot references an
 unregistered engine version.
 
-Chart screenshot APIs support manually or externally extracted OHLC rows from trading chart
-images, store valid rows through the shared candle path, and persist a deterministic next-trend
-hypothesis:
+Chart screenshot APIs support manually or externally extracted OHLC rows and deterministic PNG
+candlestick extraction from trading chart images. Valid extracted rows are stored through the shared
+candle path and persisted with a deterministic next-trend hypothesis:
 
 ```txt
 POST /chart-screenshot-runs
+POST /chart-screenshot-runs/image
 GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}
 ```

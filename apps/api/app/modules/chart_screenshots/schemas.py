@@ -37,11 +37,13 @@ class ChartScreenshotPredictionCreate(ApiSchema):
     timeframe: Timeframe
     file_name: str | None = Field(default=None, max_length=255)
     parser_source_path: str | None = Field(default=None, max_length=255)
+    parser_name: str | None = Field(default=None, max_length=80)
+    parser_version: str | None = Field(default=None, max_length=32)
     extraction_confidence: Decimal = Field(default=Decimal("1"), ge=0, le=1)
     candles: list[ChartScreenshotCandle] = Field(min_length=3, max_length=1000)
     parser_metadata_json: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("file_name", "parser_source_path")
+    @field_validator("file_name", "parser_source_path", "parser_name", "parser_version")
     @classmethod
     def normalize_optional_text(cls, value: str | None) -> str | None:
         if value is None:

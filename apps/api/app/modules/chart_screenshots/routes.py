@@ -1,12 +1,23 @@
+from datetime import datetime
+from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import AppError
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.candles.timeframes import Timeframe
 from app.modules.chart_screenshots.models import ChartScreenshotRunStatus
+from app.modules.chart_screenshots.parser import (
+    CHART_SCREENSHOT_IMAGE_PARSER_NAME,
+    CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
+    ChartImageBounds,
+    ChartImageExtractionConfig,
+    extract_candles_from_png,
+)
 from app.modules.chart_screenshots.schemas import (
     ChartScreenshotPredictionCreate,
     ChartScreenshotRunListRead,
@@ -33,6 +44,96 @@ async def create_chart_screenshot_run(
 ) -> ChartScreenshotRunRead:
     run = await service.create_prediction_run(payload)
     return ChartScreenshotRunRead.model_validate(run)
+
+
+@router.post(
+    "/image",
+    response_model=ChartScreenshotRunRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_chart_screenshot_run_from_image(
+    request: Request,
+    service: Annotated[
+        ChartScreenshotPredictionService,
+        Depends(get_chart_screenshot_service),
+    ],
+    workspace_id: Annotated[UUID, Form()],
+    source_id: Annotated[UUID, Form()],
+    symbol_id: Annotated[UUID, Form()],
+    timeframe: Annotated[Timeframe, Form()],
+    window_start: Annotated[datetime, Form()],
+    price_min: Annotated[Decimal, Form(gt=0)],
+    price_max: Annotated[Decimal, Form(gt=0)],
+    file: Annotated[UploadFile, File()],
+    user_id: Annotated[UUID | None, Form()] = None,
+    chart_left: Annotated[int | None, Form(ge=0)] = None,
+    chart_top: Annotated[int | None, Form(ge=0)] = None,
+    chart_right: Annotated[int | None, Form(ge=0)] = None,
+    chart_bottom: Annotated[int | None, Form(ge=0)] = None,
+) -> ChartScreenshotRunRead:
+    file_bytes = await file.read()
+    settings = request.app.state.settings
+    if len(file_bytes) > settings.max_upload_file_bytes:
+        raise AppError(413, "upload_file_too_large", "Upload file is too large")
+    if price_max <= price_min:
+        raise AppError(422, "invalid_chart_price_range", "price_max must be greater than price_min")
+    bounds = parse_chart_bounds(chart_left, chart_top, chart_right, chart_bottom)
+    extraction = extract_candles_from_png(
+        image_bytes=file_bytes,
+        config=ChartImageExtractionConfig(
+            timeframe=timeframe,
+            window_start=window_start,
+            price_min=price_min,
+            price_max=price_max,
+            bounds=bounds,
+        ),
+    )
+    metadata = extraction.parser_metadata_json
+    if extraction.warnings:
+        metadata["imageExtractionWarnings"] = extraction.warnings
+    payload = ChartScreenshotPredictionCreate(
+        workspace_id=workspace_id,
+        user_id=user_id,
+        source_id=source_id,
+        symbol_id=symbol_id,
+        timeframe=timeframe,
+        file_name=file.filename,
+        parser_source_path=file.filename,
+        parser_name=CHART_SCREENSHOT_IMAGE_PARSER_NAME,
+        parser_version=CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
+        extraction_confidence=extraction.confidence,
+        candles=extraction.candles,
+        parser_metadata_json=metadata,
+    )
+    run = await service.create_prediction_run(payload)
+    return ChartScreenshotRunRead.model_validate(run)
+
+
+def parse_chart_bounds(
+    left: int | None,
+    top: int | None,
+    right: int | None,
+    bottom: int | None,
+) -> ChartImageBounds | None:
+    values = [left, top, right, bottom]
+    if all(value is None for value in values):
+        return None
+    if any(value is None for value in values):
+        raise AppError(
+            422,
+            "incomplete_chart_bounds",
+            "chart_left, chart_top, chart_right, and chart_bottom must be provided together",
+        )
+    assert left is not None
+    assert top is not None
+    assert right is not None
+    assert bottom is not None
+    return ChartImageBounds(
+        left=left,
+        top=top,
+        right=right,
+        bottom=bottom,
+    )
 
 
 @router.get("", response_model=ChartScreenshotRunListRead)
