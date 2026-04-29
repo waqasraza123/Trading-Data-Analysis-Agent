@@ -436,13 +436,12 @@ Implemented:
 Planned:
 
 - Pattern candidates.
-- Signal classification.
-- Evidence and confidence engines.
-- Risk notes.
+- Core intelligence layer: deterministic strategy profiles, signal classification, evidence, confidence, risk notes, and deterministic explanations.
+- Golden dataset tests for intelligence quality.
 - Explanation layer constrained to supplied evidence.
+- Replay and versioning.
 - News and event correlation.
 - Live scanning.
-- Replay and versioning.
 - Background workers.
 - Observability, security hardening, and performance tuning.
 - Future frontend UI.
