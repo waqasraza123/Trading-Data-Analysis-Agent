@@ -6,10 +6,10 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 ## Current Architecture
 
-- Git repository initialized on local branch `main`.
-- No commits exist yet on `main`.
-- Remote `origin` is configured as `https://github.com/waqasraza123/Trading-Data-Analysis-Agent`, but `git fetch origin` returned no refs and `git remote show origin` reports no known HEAD branch.
-- No framework, language runtime, package manager, database layer, migration system, CI configuration, or deployment target is established yet.
+- Git repository uses local branch `main` tracking `origin/main`.
+- Phase 1 backend foundation exists under `apps/api/`.
+- The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
+- The API currently exposes health endpoints only; no trading domain models or intelligence logic exist yet.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
 - The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
 - Durable project memory lives in this file.
@@ -38,9 +38,10 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 ## Current Roadmap
 
 - Build the backend only, following the phase order in `docs/backend-only-implementation-plan.md`.
-- Use `docs/backend-phase-0-architecture-plan.md` as the immediate implementation plan for Phase 1.
-- Phase 1 is FastAPI + Neon foundation: Python 3.12+, Pydantic v2, async SQLAlchemy 2.x, Alembic, asyncpg, health endpoints, structured errors/logging, pytest, Ruff, typing, Dockerfile, and CI.
-- Later phases add symbol metadata, data sources, unified candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Use `docs/backend-only-implementation-plan.md` as the phase-by-phase roadmap.
+- Phase 1 FastAPI + Neon foundation is implemented.
+- Next phase is Phase 2: core database schema for workspaces, users, symbols, data_sources, import_batches, import_errors, candles, live_feed_subscriptions, live_feed_events, analysis_runs, analysis_audit_logs, and engine_versions.
+- Later phases add symbol/source services, unified candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -50,6 +51,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Added repo-driven Codex context system with durable and local memory files.
 - Added backend-only implementation plan for the AI Trading Intelligence Agent.
 - Added Phase 0 backend architecture plan covering the FastAPI + Neon foundation and unified CSV/live ingestion boundary.
+- Implemented Phase 1 FastAPI + Neon backend foundation under `apps/api/`.
 
 ## Important Decisions
 
@@ -58,27 +60,33 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - The initial product direction is backend-only: FastAPI controls workflow, Neon stores truth, deterministic engines calculate/classify, and AI only explains.
 - The candle table is the planned source-of-truth model for both imported historical data and live-originated data.
 - Repository coding standards are durable: no code comments, strong typing, validation everywhere, modular files, explicit assumptions, and short commit messages.
-- The current repository has no product implementation yet; the first implementation slice should establish the backend foundation from the plan.
+- Phase 1 intentionally keeps `DATABASE_URL` optional at app startup so local health can run without secrets; `/health/db` reports unhealthy until a database URL is configured.
+- Async SQLAlchemy normalizes `postgresql://` and `postgres://` URLs to `postgresql+asyncpg://` for Neon compatibility.
+- No trading domain models exist yet; Phase 2 owns the first business schema.
 
 ## Deferred / Not Yet Implemented
 
-- Application code under the planned `apps/api/` backend structure.
 - README and product usage documentation.
-- Dependency manifest and lockfile.
-- Test suite.
-- FastAPI app, Neon connection, Alembic migrations, data ingestion, analysis workflow, deterministic engines, workers, storage, and external API integrations.
-- CI, linting, formatting, deployment, and environment configuration.
+- Lockfile.
+- Business database tables and migrations.
+- Data ingestion, analysis workflow, deterministic engines, workers, storage, and external API integrations.
+- Deployment configuration beyond the API Dockerfile and CI workflow.
 
 ## Risks / Watchouts
 
 - The repository name implies trading/financial functionality, but no code currently defines scope, data sources, or risk controls.
 - Financial data integrations may require API keys; keep all secrets out of committed and local memory docs.
 - Future trading-related features should avoid implying financial advice unless the product explicitly defines compliant behavior.
-- Because the repo is empty, the first implementation slice will set conventions that later work inherits.
+- Phase 1 set initial backend conventions; later phases should preserve the small-file modular structure under `apps/api/app/`.
 - Do not start with `candles -> GPT -> answer`; the durable plan requires deterministic intelligence first and AI explanations second.
 
 ## Standard Verification
 
 - `git status --short`
-- `find . -maxdepth 3 -type f -not -path './.git/*' -print`
-- Once a runtime is introduced, add the project-specific install, lint, test, and build commands here.
+- `cd apps/api && python3 -m venv .venv`
+- `cd apps/api && .venv/bin/python -m pip install -e ".[dev]"`
+- `cd apps/api && .venv/bin/ruff check .`
+- `cd apps/api && .venv/bin/mypy app`
+- `cd apps/api && .venv/bin/pytest`
+- `cd apps/api && .venv/bin/alembic history`
+- `cd apps/api && .venv/bin/uvicorn app.main:app --reload`
