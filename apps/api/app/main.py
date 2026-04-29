@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from app.config import Settings, get_settings
 from app.core.errors import RequestIdMiddleware, register_error_handlers
 from app.core.logging import configure_logging
+from app.modules.analysis.routes import router as analysis_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.imports.routes import router as imports_router
@@ -48,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(analysis_router, prefix=resolved_settings.api_prefix)
     return app
 
 

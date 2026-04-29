@@ -78,3 +78,9 @@ Candle query and quality APIs are documented in:
 ```txt
 docs/candle-query-quality.md
 ```
+
+Analysis run lifecycle is documented in:
+
+```txt
+docs/analysis-run-lifecycle.md
+```
