@@ -20,6 +20,8 @@ from app.modules.candles.quality import CandleQualityReport
 from app.modules.candles.service import CandleService
 from app.modules.candles.timeframes import Timeframe, normalize_timestamp, timeframe_duration
 from app.modules.data_sources.repository import DataSourceRepository
+from app.modules.features.models import FeatureSnapshot
+from app.modules.features.service import FeatureSnapshotService
 from app.modules.symbols.repository import SymbolRepository
 
 ANALYSIS_LIFECYCLE_ENGINE_VERSION = "analysis_lifecycle_0.1.0"
@@ -33,6 +35,7 @@ class AnalysisService:
         self.session = session
         self.repository = AnalysisRepository(session)
         self.candle_service = CandleService(session)
+        self.feature_snapshot_service = FeatureSnapshotService(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
 
@@ -174,6 +177,10 @@ class AnalysisService:
         await self.get_run(analysis_run_id)
         return await self.repository.list_audit_logs(analysis_run_id)
 
+    async def get_feature_snapshot(self, analysis_run_id: UUID) -> FeatureSnapshot | None:
+        await self.get_run(analysis_run_id)
+        return await self.feature_snapshot_service.get_by_analysis_run_id(analysis_run_id)
+
     async def retry_run(self, analysis_run_id: UUID) -> AnalysisRun:
         run = await self.get_run(analysis_run_id)
         if run.status not in {
@@ -228,13 +235,16 @@ class AnalysisService:
                     "dataQuality": quality_report.model_dump(mode="json"),
                 },
             )
-            warmup_count = await self.load_auxiliary_window_count(run, run.warmup_start_time)
-            baseline_count = await self.load_auxiliary_window_count(run, run.baseline_start_time)
+            warmup_candles = await self.load_auxiliary_window(run, run.warmup_start_time)
+            baseline_candles = await self.load_auxiliary_window(run, run.baseline_start_time)
             await self.add_audit_log(
                 run.id,
                 "analysis_windows_resolved",
                 "Warmup and baseline windows resolved",
-                {"warmupCandleCount": warmup_count, "baselineCandleCount": baseline_count},
+                {
+                    "warmupCandleCount": len(warmup_candles),
+                    "baselineCandleCount": len(baseline_candles),
+                },
             )
             if not self.has_sufficient_data(run, analysis_candles, quality_report):
                 self.mark_insufficient_data(run, quality_report)
@@ -245,13 +255,26 @@ class AnalysisService:
                     {"dataQuality": quality_report.model_dump(mode="json")},
                 )
                 return
+            feature_snapshot = await self.feature_snapshot_service.create_snapshot(
+                analysis_run=run,
+                analysis_candles=analysis_candles,
+                warmup_candles=warmup_candles,
+                baseline_candles=baseline_candles,
+                data_quality=quality_report,
+            )
+            await self.add_audit_log(
+                run.id,
+                "features_calculated",
+                "Feature snapshot calculated and persisted",
+                {"featureSnapshotId": str(feature_snapshot.id)},
+            )
             run.status = AnalysisRunStatus.COMPLETED
             run.completed_at = utc_now()
             await self.add_audit_log(
                 run.id,
                 "analysis_completed",
-                "Analysis lifecycle preflight completed",
-                {"intelligenceEnginesImplemented": False},
+                "Analysis feature snapshot completed",
+                {"nextEnginesImplemented": False},
             )
         except AppError as error:
             run.status = AnalysisRunStatus.FAILED
@@ -276,17 +299,17 @@ class AnalysisService:
             include_partial=run.include_partial_live_candle,
         )
 
-    async def load_auxiliary_window_count(
+    async def load_auxiliary_window(
         self,
         run: AnalysisRun,
         window_start_time: datetime | None,
-    ) -> int:
+    ) -> list[Candle]:
         if window_start_time is None:
-            return 0
+            return []
         window_end_time = run.start_time - timeframe_duration(Timeframe(run.timeframe))
         if window_start_time > window_end_time:
-            return 0
-        candles = await self.candle_service.fetch_candle_window(
+            return []
+        return await self.candle_service.fetch_candle_window(
             workspace_id=run.workspace_id,
             symbol_id=run.symbol_id,
             timeframe=Timeframe(run.timeframe),
@@ -295,7 +318,6 @@ class AnalysisService:
             source_id=run.source_id,
             include_partial=False,
         )
-        return len(candles)
 
     def has_sufficient_data(
         self,
@@ -304,6 +326,8 @@ class AnalysisService:
         quality_report: CandleQualityReport,
     ) -> bool:
         if not analysis_candles or quality_report.expected_candles == 0:
+            return False
+        if quality_report.duplicate_candles > 0:
             return False
         if quality_report.missing_candles == 0:
             return True

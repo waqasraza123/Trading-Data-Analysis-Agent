@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import AppError
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
 from app.modules.analysis.models import AnalysisMode, AnalysisRunStatus
@@ -14,6 +15,7 @@ from app.modules.analysis.schemas import (
     LiveWindowAnalysisRunCreate,
 )
 from app.modules.analysis.service import AnalysisService
+from app.modules.features.schemas import FeatureSnapshotRead
 
 router = APIRouter(prefix="/analysis-runs", tags=["analysis-runs"])
 
@@ -80,6 +82,17 @@ async def list_analysis_audit_logs(
 ) -> list[AnalysisAuditLogRead]:
     audit_logs = await service.list_audit_logs(analysis_run_id)
     return [AnalysisAuditLogRead.model_validate(audit_log) for audit_log in audit_logs]
+
+
+@router.get("/{analysis_run_id}/features", response_model=FeatureSnapshotRead)
+async def get_analysis_features(
+    analysis_run_id: UUID,
+    service: Annotated[AnalysisService, Depends(get_analysis_service)],
+) -> FeatureSnapshotRead:
+    snapshot = await service.get_feature_snapshot(analysis_run_id)
+    if snapshot is None:
+        raise AppError(404, "feature_snapshot_not_found", "Feature snapshot not found")
+    return FeatureSnapshotRead.model_validate(snapshot)
 
 
 @router.post("/{analysis_run_id}/retry", response_model=AnalysisRunRead)

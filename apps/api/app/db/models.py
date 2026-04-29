@@ -3,6 +3,7 @@ from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.candles.models import Candle
 from app.modules.data_sources.models import DataSource
 from app.modules.engine_versions.models import EngineVersion
+from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.symbols.models import Symbol
@@ -18,6 +19,7 @@ __all__ = [
     "Candle",
     "DataSource",
     "EngineVersion",
+    "FeatureSnapshot",
     "ImportBatch",
     "ImportError",
     "LiveFeedEvent",

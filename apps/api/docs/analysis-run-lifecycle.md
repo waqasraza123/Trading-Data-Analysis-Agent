@@ -21,7 +21,6 @@ retry failed or insufficient-data runs
 Not implemented:
 
 ```txt
-feature engineering
 indicator calculations
 pattern detection
 signal classification
@@ -129,14 +128,14 @@ cancelled -> queued -> running -> completed
 In this phase, `completed` means:
 
 ```txt
-analysis lifecycle preflight completed
 candle windows were loaded
 quality was calculated
 audit logs were written
-intelligence engines have not run yet
+feature snapshot was calculated and persisted
+later intelligence engines have not run yet
 ```
 
-Future engine phases will replace this preflight completion point with feature, indicator, pattern, signal, and explanation work.
+Future engine phases will continue from feature snapshots into indicators, patterns, signals, and explanations.
 
 ## Data Sufficiency Policy
 
@@ -167,6 +166,7 @@ analysis_created
 analysis_running
 candles_loaded
 analysis_windows_resolved
+features_calculated
 insufficient_data
 analysis_completed
 analysis_failed
@@ -177,14 +177,14 @@ Audit metadata stores window counts and data quality snapshots. It does not stor
 
 ## Engine Version Fields
 
-Until intelligence engines exist, runs use:
+Until later intelligence engines exist, runs use:
 
 ```txt
 engine_version = analysis_lifecycle_0.1.0
 rule_set_version = preflight_0.1.0
 ```
 
-These values identify lifecycle-only preflight runs and should change when real deterministic engines are added.
+These values identify analysis lifecycle plus feature snapshot runs and should change when broader deterministic engines are added.
 
 ## Retry Policy
 

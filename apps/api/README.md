@@ -84,3 +84,9 @@ Analysis run lifecycle is documented in:
 ```txt
 docs/analysis-run-lifecycle.md
 ```
+
+Feature engineering snapshots are documented in:
+
+```txt
+docs/feature-engineering.md
+```

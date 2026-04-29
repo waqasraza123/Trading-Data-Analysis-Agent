@@ -9,11 +9,12 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, and analysis run lifecycle endpoints; no trading intelligence logic exists yet.
+- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle, and feature snapshot endpoints; no signal classification logic exists yet.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
 - The analysis run lifecycle exists under `apps/api/app/modules/analysis/`.
+- Deterministic feature engineering exists under `apps/api/app/modules/features/`.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
 - The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
 - Durable project memory lives in this file.
@@ -50,9 +51,10 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Historical CSV/JSON import pipeline wiring is implemented.
 - Live feed ingestion foundation is implemented with provider adapters, subscription lifecycle APIs, raw event audit storage, stale checks, and shared candle normalization.
 - Candle query and data quality APIs are implemented.
-- Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, and insufficient-data status.
-- Next phase is deterministic feature engineering snapshots.
-- Later phases add indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, insufficient-data status, and feature snapshot persistence.
+- Deterministic feature engineering snapshots are implemented.
+- Next phase is indicator snapshots.
+- Later phases add pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -70,6 +72,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented live feed provider abstraction, mock/Binance normalizers, subscription lifecycle routes, raw live event audit persistence, stale checks, live candle storage wiring, and documentation.
 - Implemented candle query, count, latest, quality APIs, final-by-default read policy, warmup/baseline service helpers, and documentation.
 - Implemented analysis run lifecycle routes, historical/live-window preflight, data sufficiency handling, retry policy, audit logs, and documentation.
+- Implemented feature_snapshots migration/model, deterministic movement/candle-shape/range/volatility/trend feature engines, feature persistence wiring, feature retrieval route, and documentation.
 
 ## Important Decisions
 
@@ -93,8 +96,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - The current Binance adapter normalizes kline payloads only; persistent websocket lifecycle remains a later worker slice.
 - Candle read APIs default to final candles; partial candles are returned only when `is_final=false` or inspected through quality reporting.
 - Future analysis code should use `CandleService` read helpers instead of querying candle models directly.
-- Analysis run `completed` currently means lifecycle preflight completed; deterministic intelligence engines are not implemented yet.
+- Analysis run `completed` currently means lifecycle preflight and deterministic feature snapshot completed; indicator/pattern/signal engines are not implemented yet.
 - Analysis preflight writes audit logs and marks runs `insufficient_data` when candle windows lack required final candles.
+- Feature snapshots serialize Decimal market values as strings in JSONB to preserve precision.
 
 ## Deferred / Not Yet Implemented
 
@@ -103,8 +107,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Workspace and user API routes.
 - Seed execution command.
 - Persistent live provider websocket workers and reconnect loops.
-- Deterministic feature engineering snapshots.
-- Indicator, pattern, signal, evidence, confidence, risk note, explanation, news, replay, and scanner modules.
+- Indicator snapshots.
+- Pattern, signal, evidence, confidence, risk note, explanation, news, replay, and scanner modules.
 - Background workers, storage orchestration, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 
