@@ -23,7 +23,7 @@ async def test_validation_error_shape() -> None:
     assert response.status_code == 422
     assert response_payload["error"]["code"] == "validation_error"
     assert response_payload["error"]["message"] == "Request validation failed"
-    assert "request_id" in response_payload["error"]
+    assert "requestId" in response_payload["error"]
     assert response_payload["error"]["details"][0]["type"] == "int_parsing"
 
 
@@ -45,4 +45,5 @@ async def test_unexpected_error_shape() -> None:
     assert response.status_code == 500
     assert response_payload["error"]["code"] == "internal_error"
     assert response_payload["error"]["message"] == "Unexpected server error"
+    assert "requestId" in response_payload["error"]
     assert "hidden failure" not in response.text

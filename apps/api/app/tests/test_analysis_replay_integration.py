@@ -76,6 +76,57 @@ async def test_replay_creates_new_linked_analysis_run_without_mutating_original(
 
 
 @pytest.mark.asyncio
+async def test_replay_api_smoke_exercises_latest_and_same_engine_modes(
+    api_client: AsyncClient,
+    db_session: AsyncSession,
+    workspace: Workspace,
+    user: User,
+    eurusd_symbol: Symbol,
+    json_data_source: DataSource,
+    seeded_strategy_profiles: None,
+) -> None:
+    original = await run_golden_analysis(
+        db_session,
+        "bullish_breakout_eurusd_1m",
+        workspace,
+        user,
+        eurusd_symbol,
+        json_data_source,
+    )
+    assert original.signal_response is not None
+    assert original.signal_response.deterministic_explanation is not None
+    original_signal_id = original.signal_response.signal.id
+    original_explanation_id = original.signal_response.deterministic_explanation.id
+
+    latest_response = await api_client.post(
+        f"/analysis-runs/{original.analysis_run.id}/replay",
+        json={"mode": "latest_engine_version"},
+    )
+    same_response = await api_client.post(
+        f"/analysis-runs/{original.analysis_run.id}/replay",
+        json={"mode": "same_engine_version"},
+    )
+    original_signal = await SignalClassificationService(db_session).get_by_analysis_run_id(
+        original.analysis_run.id
+    )
+
+    assert latest_response.status_code == 200
+    assert latest_response.json()["originalAnalysisRunId"] == str(original.analysis_run.id)
+    assert latest_response.json()["status"] == "completed"
+    assert same_response.status_code == 200
+    assert same_response.json()["originalAnalysisRunId"] == str(original.analysis_run.id)
+    assert same_response.json()["status"] == "completed"
+    assert latest_response.json()["replayAnalysisRunId"] != str(original.analysis_run.id)
+    assert same_response.json()["replayAnalysisRunId"] != str(original.analysis_run.id)
+    assert latest_response.json()["replayAnalysisRunId"] != same_response.json()[
+        "replayAnalysisRunId"
+    ]
+    assert original_signal.signal.id == original_signal_id
+    assert original_signal.deterministic_explanation is not None
+    assert original_signal.deterministic_explanation.id == original_explanation_id
+
+
+@pytest.mark.asyncio
 async def test_replay_invalid_analysis_run_id_returns_clean_error(
     api_client: AsyncClient,
 ) -> None:

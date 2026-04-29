@@ -1,20 +1,18 @@
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
-from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ErrorDetail(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     code: str
     message: str
-    request_id: str
+    request_id: str = Field(serialization_alias="requestId")
     details: list[dict[str, Any]] | None = None
 
 
@@ -30,19 +28,6 @@ class AppError(Exception):
         super().__init__(message)
 
 
-class RequestIdMiddleware(BaseHTTPMiddleware):
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
-        request_id = request.headers.get("x-request-id", str(uuid4()))
-        request.state.request_id = request_id
-        response = await call_next(request)
-        response.headers["x-request-id"] = request_id
-        return response
-
-
 def get_request_id(request: Request) -> str:
     return str(getattr(request.state, "request_id", "unknown"))
 
@@ -54,6 +39,7 @@ def create_error_response(
     message: str,
     details: list[dict[str, Any]] | None = None,
 ) -> JSONResponse:
+    request.state.error_code = code
     error_response = ErrorResponse(
         error=ErrorDetail(
             code=code,
@@ -64,7 +50,7 @@ def create_error_response(
     )
     return JSONResponse(
         status_code=status_code,
-        content=error_response.model_dump(exclude_none=True),
+        content=error_response.model_dump(exclude_none=True, by_alias=True),
     )
 
 

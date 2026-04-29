@@ -238,8 +238,18 @@ Configuration is read from environment variables and `apps/api/.env`.
 | `API_PREFIX` | No | empty | Optional API path prefix. Must be empty or start with `/`. |
 | `LOG_LEVEL` | No | `INFO` | Logging level. |
 | `DATABASE_URL` | For DB features | empty | PostgreSQL or Neon connection string. `postgresql://` and `postgres://` are normalized to asyncpg. |
+| `TEST_DATABASE_URL` | For DB tests/smoke | empty | Explicit disposable database target for integration tests and smoke checks. |
 | `REDIS_URL` | Future workers | empty | Reserved for background processing and cache-backed workflows. |
 | `OPENAI_API_KEY` | Future explanation layer | empty | Reserved for explanation-only AI workflows. |
+| `CORS_ALLOWED_ORIGINS` | No | empty | Comma-separated allowed browser origins. Do not use `*` in production. |
+| `CORS_ALLOW_CREDENTIALS` | No | `false` | Enables credentialed CORS responses for configured origins. |
+| `AUTH_ENABLED` | No | `false` | Enables API key protection for mutating routes. |
+| `ADMIN_API_KEY` | When auth enabled | empty | API key used with `API_KEY_HEADER_NAME`; never commit a real value. |
+| `API_KEY_HEADER_NAME` | No | `x-admin-api-key` | Header read by the optional API key guard. |
+| `RATE_LIMIT_ENABLED` | No | `false` | Enables lightweight write-route rate limiting. |
+| `RATE_LIMIT_REQUESTS_PER_MINUTE` | No | `60` | Per-client, per-route write limit when enabled. |
+| `MAX_REQUEST_BODY_BYTES` | No | `1048576` | Maximum non-upload request body size. |
+| `MAX_UPLOAD_FILE_BYTES` | No | `10485760` | Maximum multipart upload size. |
 | `LIVE_FEED_PROVIDER` | For live ingestion | empty | Optional live market data provider selector. |
 | `LIVE_FEED_API_KEY` | Provider dependent | empty | Optional provider credential. Keep out of Git. |
 

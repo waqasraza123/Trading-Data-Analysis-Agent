@@ -1,6 +1,8 @@
 # Live Feed Ingestion Foundation
 
-This slice adds the backend foundation for live market data ingestion. It does not run a persistent websocket worker yet and does not trigger analysis.
+This slice adds the backend foundation for live market data ingestion. A persistent worker
+foundation exists for polling active subscriptions and handling provider reconnects, but this
+backend does not trigger broker execution, alerts, news correlation, UI, or LLM calls.
 
 ## Boundary
 
@@ -187,16 +189,28 @@ final_candle_stale_after_seconds = 300
 
 These thresholds can be supplied per stale-check request.
 
+## Worker Runtime
+
+```txt
+python -m app.workers.live_feed_worker
+python -m app.workers.live_stale_monitor
+```
+
+The live worker polls active subscriptions, acquires database leases, streams provider messages
+through the provider abstraction, and writes events through `LiveService.ingest_provider_message`.
+The stale monitor refreshes stale subscription status using the same service boundary.
+
+Operational details are documented in:
+
+```txt
+docs/live-runtime.md
+```
+
 ## Not Implemented In This Slice
 
 ```txt
-persistent websocket processes
 Redis-backed worker orchestration
-provider reconnect loops
 scheduled live scanner
-candle query API routes
-analysis runs
-feature/indicator/pattern/signal engines
 LLM explanations
 news correlation
 broker execution

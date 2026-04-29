@@ -78,6 +78,10 @@ async def test_user_api_validates_workspace_role_and_persists_data(
     assert list_response.status_code == 200
     assert any(item["id"] == created["id"] for item in list_response.json())
 
+    get_response = await api_client.get(f"/users/{created['id']}")
+    assert get_response.status_code == 200
+    assert get_response.json()["email"] == "analyst@example.test"
+
     patch_response = await api_client.patch(
         f"/users/{created['id']}",
         json={"role": "admin", "name": "Admin One"},
@@ -103,6 +107,14 @@ async def test_user_create_under_missing_workspace_returns_clean_error(
 
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "workspace_not_found"
+
+
+@pytest.mark.asyncio
+async def test_user_api_returns_clean_missing_error(api_client: AsyncClient) -> None:
+    response = await api_client.get(f"/users/{uuid4()}")
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "user_not_found"
 
 
 @pytest.mark.asyncio

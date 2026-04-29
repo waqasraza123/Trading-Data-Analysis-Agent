@@ -13,6 +13,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
+- Backend operational hardening now includes production-safe settings validation, configurable CORS, optional API key guard, request/rate limits, structured request logs, readiness/liveness/worker health routes, and live/stale worker process entrypoints.
 - The analysis run lifecycle exists under `apps/api/app/modules/analysis/`.
 - Deterministic feature engineering exists under `apps/api/app/modules/features/`.
 - Deterministic indicator calculation exists under `apps/api/app/modules/indicators/`.
@@ -59,7 +60,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Deterministic pattern candidates are implemented.
 - Deterministic strategy profiles, signal classification, signal evidence, confidence components, risk notes, and golden intelligence tests are implemented.
 - Deterministic explanations are implemented on top of persisted signals, evidence, confidence components, risk notes, strategy profile snapshots, feature snapshots, and indicator snapshots.
-- Later phases add deeper replay versioning, optional LLM explanations, news correlation, live scanning, observability, security, and performance tuning.
+- Later phases add optional LLM explanations, news correlation, live scanning, deeper external integrations, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -84,6 +85,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented deterministic_explanations migration/model, deterministic explanation templates, safety checker, idempotent persistence service, lifecycle/manual classification integration, retrieval/generation APIs, audit events, documentation, and explanation unit tests.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
 - Implemented workspace/user APIs, idempotent backend seed command/service, engine version registry/query APIs, analysis engine/rule-set snapshots, and current-v1 same-engine replay support.
+- Implemented disposable DB validation hardening, backend integration smoke coverage, and a safe `python -m app.cli smoke` command for read-only or explicit write checks against non-production databases.
+- Implemented backend security and observability hardening: settings validation, CORS configuration, optional API key guard, request/upload limits, rate-limit foundation, request duration logs, safe error responses with request IDs, health/readiness/worker health endpoints, live worker/stale monitor process hardening, operational docs, and env examples.
 
 ## Important Decisions
 
@@ -118,14 +121,21 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, `replay_mode`, `engine_snapshot_json`, and `rule_set_snapshot_json`; `latest_engine_version` uses current registered engines/profiles, and `same_engine_version` supports registered current v1 snapshots or returns `unsupported_engine_version`.
 - DB integration tests require explicit `TEST_DATABASE_URL`; unit tests must not fall back to production Neon `DATABASE_URL`.
 - Golden integration tests assert deterministic signal outputs and deterministic explanations for completed analysis runs.
+- Integration tests migrate and truncate only the explicit `TEST_DATABASE_URL` database and refuse to run when it equals `DATABASE_URL` under production-like `APP_ENV` or `ENV`.
+- The smoke CLI defaults to `TEST_DATABASE_URL`, skips writes unless `--include-write-tests` is passed, refuses unsafe production-like `TEST_DATABASE_URL`/`DATABASE_URL` reuse, and refuses write checks under production-like `APP_ENV` or `ENV`.
+- `AUTH_ENABLED=false` remains the local/test default; when enabled, mutating routes require the configured API key header while health/readiness routes stay public.
+- Rate limiting is disabled by default; the current implementation is an in-memory local/test foundation and production should use Redis-backed enforcement before enabling it across multiple API instances.
+- API readiness requires database connectivity and critical configuration, but does not require the live worker to be running.
+- Worker process entrypoints are `python -m app.workers.live_feed_worker` and `python -m app.workers.live_stale_monitor`.
 
 ## Deferred / Not Yet Implemented
 
 - Lockfile.
-- Persistent live provider websocket workers and reconnect loops.
+- Production Redis-backed rate limiting and worker orchestration.
+- Full external live provider websocket integrations beyond the current runtime/provider foundation.
 - Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
-- Background workers, storage orchestration, and external API integrations.
-- Deployment configuration beyond the API Dockerfile and CI workflow.
+- External API integrations beyond current live provider adapters.
+- Deployment configuration beyond the API Dockerfile, CI workflow, and operational docs/env examples.
 
 ## Risks / Watchouts
 
@@ -145,5 +155,6 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - `cd apps/api && .venv/bin/mypy app`
 - `cd apps/api && .venv/bin/pytest`
 - `cd apps/api && TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/pytest -m integration`
+- `cd apps/api && TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/python -m app.cli smoke`
 - `cd apps/api && .venv/bin/alembic history`
 - `cd apps/api && .venv/bin/uvicorn app.main:app --reload`

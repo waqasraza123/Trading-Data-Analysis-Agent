@@ -71,7 +71,15 @@ class LiveFeedRuntime:
         self.logger.info("live_worker_started", extra={"worker_id": self.worker_id})
         try:
             while not self.stopping.is_set():
-                await self.poll_once()
+                try:
+                    await self.poll_once()
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    self.logger.exception(
+                        "live_worker_poll_failed",
+                        extra={"worker_id": self.worker_id},
+                    )
                 await self.sleep(self.settings.live_feed_worker_poll_seconds)
         finally:
             await self.stop()
@@ -307,9 +315,18 @@ class LiveStaleMonitor:
         )
 
     async def run_forever(self) -> None:
-        while not self.stopping.is_set():
-            await self.run_once()
-            await self.sleep(self.settings.live_feed_worker_poll_seconds)
+        self.logger.info("stale_monitor_started")
+        try:
+            while not self.stopping.is_set():
+                await self.run_once()
+                await self.sleep(self.settings.live_feed_worker_poll_seconds)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            self.logger.exception("stale_monitor_failed")
+            raise
+        finally:
+            self.logger.info("stale_monitor_stopped")
 
     async def run_once(self) -> int:
         async with self.session_factory() as session:

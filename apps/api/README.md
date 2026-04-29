@@ -56,6 +56,34 @@ Run database integration tests against an explicit disposable database:
 TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/pytest -m integration
 ```
 
+If `TEST_DATABASE_URL` is not set, integration tests are skipped and unit tests still run.
+Do not point `TEST_DATABASE_URL` at production data. If `TEST_DATABASE_URL` equals
+`DATABASE_URL` while `APP_ENV` or `ENV` is production-like, the integration suite refuses to run.
+
+Run migrations against a disposable database:
+
+```sh
+DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/alembic upgrade head
+```
+
+Seed deterministic defaults against a disposable database:
+
+```sh
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/python -m app.cli seed
+```
+
+Run the read-only backend smoke command:
+
+```sh
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/python -m app.cli smoke
+```
+
+Run smoke write checks only against a disposable database:
+
+```sh
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/python -m app.cli smoke --include-write-tests
+```
+
 Run lint:
 
 ```sh
@@ -67,6 +95,58 @@ Run typecheck:
 ```sh
 .venv/bin/mypy app
 ```
+
+## Operations
+
+Health and readiness endpoints:
+
+```txt
+GET /health
+GET /health/live
+GET /health/db
+GET /health/ready
+GET /health/workers
+```
+
+`/health` and `/health/live` only prove the API process is alive. `/health/db` checks
+database connectivity. `/health/ready` requires database connectivity and valid critical
+configuration. `/health/workers` reports live worker and stale monitor state when a database is
+configured, and returns a safe degraded status otherwise.
+
+Run the live feed worker:
+
+```sh
+python -m app.workers.live_feed_worker
+```
+
+Run the stale monitor:
+
+```sh
+python -m app.workers.live_stale_monitor
+```
+
+Security and traffic controls are configured through environment variables:
+
+```txt
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CORS_ALLOW_CREDENTIALS=false
+AUTH_ENABLED=false
+ADMIN_API_KEY=
+API_KEY_HEADER_NAME=x-admin-api-key
+RATE_LIMIT_ENABLED=false
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
+MAX_REQUEST_BODY_BYTES=1048576
+MAX_UPLOAD_FILE_BYTES=10485760
+```
+
+`AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
+configured API key header; health/readiness endpoints stay public. Rate limiting is disabled by
+default and currently uses an in-memory local/test foundation unless a production Redis-backed
+implementation is added later.
+
+Logs are JSON records with request id, method, path, status code, duration, safe client host, and
+error code when applicable. Request bodies, uploaded files, tokens, API keys, database URLs, and
+live feed keys are not logged.
 
 ## Schema Docs
 
@@ -98,6 +178,14 @@ Live feed ingestion foundation is documented in:
 
 ```txt
 docs/live-feed-ingestion.md
+```
+
+Operational hardening is documented in:
+
+```txt
+docs/operations.md
+docs/security.md
+docs/live-runtime.md
 ```
 
 Candle query and quality APIs are documented in:
@@ -167,3 +255,9 @@ Replay supports `latest_engine_version` and `same_engine_version`. Same-version 
 supported for the currently registered v1 deterministic engines and returns
 `unsupported_engine_version` instead of falling back when a stored snapshot references an
 unregistered engine version.
+
+Disposable database validation, integration fixtures, and smoke commands are documented in:
+
+```txt
+docs/integration-tests.md
+```

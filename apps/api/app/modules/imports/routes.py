@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
@@ -44,6 +44,7 @@ async def import_json_candles(
     status_code=status.HTTP_201_CREATED,
 )
 async def import_csv_candles(
+    request: Request,
     service: Annotated[ImportService, Depends(get_import_service)],
     workspace_id: Annotated[UUID, Form()],
     source_id: Annotated[UUID, Form()],
@@ -53,6 +54,9 @@ async def import_csv_candles(
     user_id: Annotated[UUID | None, Form()] = None,
 ) -> ImportBatchRead:
     file_bytes = await file.read()
+    settings = request.app.state.settings
+    if len(file_bytes) > settings.max_upload_file_bytes:
+        raise AppError(413, "upload_file_too_large", "Upload file is too large")
     try:
         csv_text = file_bytes.decode("utf-8-sig")
     except UnicodeDecodeError as error:

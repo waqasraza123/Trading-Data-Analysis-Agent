@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -45,6 +46,7 @@ ANALYSIS_LIFECYCLE_ENGINE_VERSION = "analysis_lifecycle_0.1.0"
 ANALYSIS_LIFECYCLE_RULE_SET_VERSION = "preflight_0.1.0"
 DEFAULT_WARMUP_CANDLES = 100
 DEFAULT_BASELINE_CANDLES = 60
+logger = logging.getLogger(__name__)
 
 
 class AnalysisService:
@@ -225,6 +227,13 @@ class AnalysisService:
         payload: AnalysisReplayRequest,
     ) -> AnalysisRun:
         original_run = await self.get_run(analysis_run_id)
+        logger.info(
+            "replay_requested",
+            extra={
+                "analysis_run_id": str(original_run.id),
+                "replay_mode": payload.mode.value,
+            },
+        )
         try:
             await self.add_audit_log(
                 original_run.id,
@@ -323,6 +332,14 @@ class AnalysisService:
             await self.session.commit()
             return created_replay
         except AppError as error:
+            logger.warning(
+                "replay_failed",
+                extra={
+                    "analysis_run_id": str(original_run.id),
+                    "replay_mode": payload.mode.value,
+                    "error_code": error.code,
+                },
+            )
             if error.code == "unsupported_engine_version":
                 await self.add_audit_log(
                     original_run.id,
@@ -335,6 +352,13 @@ class AnalysisService:
                 await self.session.rollback()
             raise
         except Exception:
+            logger.exception(
+                "replay_failed",
+                extra={
+                    "analysis_run_id": str(original_run.id),
+                    "replay_mode": payload.mode.value,
+                },
+            )
             await self.session.rollback()
             raise
 
@@ -597,6 +621,10 @@ class AnalysisService:
                 ),
             )
         except AppError as error:
+            logger.warning(
+                "analysis_failed",
+                extra={"analysis_run_id": str(run.id), "error_code": error.code},
+            )
             run.status = AnalysisRunStatus.FAILED
             run.error_code = error.code
             run.error_message = error.message

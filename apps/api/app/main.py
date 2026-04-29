@@ -3,10 +3,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, get_settings
-from app.core.errors import RequestIdMiddleware, register_error_handlers
+from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
+from app.core.middleware import OperationsMiddleware
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.data_sources.routes import router as data_sources_router
@@ -47,7 +49,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved_settings
     app.state.logger = logging.getLogger(resolved_settings.service_name)
-    app.add_middleware(RequestIdMiddleware)
+    if resolved_settings.cors_allowed_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=resolved_settings.cors_allowed_origins,
+            allow_credentials=resolved_settings.cors_allow_credentials,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    app.add_middleware(OperationsMiddleware, settings=resolved_settings)
     register_error_handlers(app)
     app.include_router(health_router, prefix=resolved_settings.api_prefix)
     app.include_router(workspaces_router, prefix=resolved_settings.api_prefix)

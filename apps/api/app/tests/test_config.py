@@ -12,6 +12,12 @@ def test_settings_load_defaults() -> None:
     assert settings.database_url is None
     assert settings.redis_url is None
     assert settings.openai_api_key is None
+    assert settings.cors_allowed_origins == []
+    assert settings.cors_allow_credentials is False
+    assert settings.auth_enabled is False
+    assert settings.admin_api_key is None
+    assert settings.api_key_header_name == "x-admin-api-key"
+    assert settings.rate_limit_enabled is False
     assert settings.live_feed_api_key is None
     assert settings.seed_default_workspace_name is None
     assert settings.seed_default_admin_email is None
@@ -27,6 +33,32 @@ def test_settings_validate_api_prefix() -> None:
 def test_settings_reject_invalid_api_prefix() -> None:
     with pytest.raises(ValueError):
         Settings(_env_file=None, api_prefix="api/v1")
+
+
+def test_settings_parse_cors_allowed_origins() -> None:
+    settings = Settings(
+        _env_file=None,
+        cors_allowed_origins="http://localhost:3000, https://app.example.com",
+    )
+
+    assert settings.cors_allowed_origins == [
+        "http://localhost:3000",
+        "https://app.example.com",
+    ]
+
+
+def test_auth_enabled_requires_admin_api_key() -> None:
+    with pytest.raises(ValueError, match="ADMIN_API_KEY"):
+        Settings(_env_file=None, auth_enabled=True)
+
+
+def test_production_rejects_wildcard_cors_origin() -> None:
+    with pytest.raises(ValueError, match="CORS_ALLOWED_ORIGINS"):
+        Settings(
+            _env_file=None,
+            app_env=AppEnvironment.PRODUCTION,
+            cors_allowed_origins="*",
+        )
 
 
 def test_build_async_database_url_for_neon_postgres_url() -> None:

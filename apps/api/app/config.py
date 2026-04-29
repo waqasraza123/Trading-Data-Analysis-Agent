@@ -1,8 +1,9 @@
 from enum import StrEnum
 from functools import lru_cache
+from typing import Self
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +36,15 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     redis_url: SecretStr | None = None
     openai_api_key: SecretStr | None = None
+    cors_allowed_origins: list[str] = Field(default_factory=list)
+    cors_allow_credentials: bool = False
+    auth_enabled: bool = False
+    admin_api_key: SecretStr | None = None
+    api_key_header_name: str = "x-admin-api-key"
+    rate_limit_enabled: bool = False
+    rate_limit_requests_per_minute: int = Field(default=60, ge=1)
+    max_request_body_bytes: int = Field(default=1_048_576, ge=1)
+    max_upload_file_bytes: int = Field(default=10_485_760, ge=1)
     live_feed_provider: str | None = None
     live_feed_api_key: SecretStr | None = None
     live_feed_reconnect_initial_seconds: float = Field(default=1, gt=0)
@@ -60,6 +70,64 @@ class Settings(BaseSettings):
             msg = "API_PREFIX must be empty or start with /"
             raise ValueError(msg)
         return normalized_value.rstrip("/")
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def parse_cors_allowed_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("api_key_header_name")
+    @classmethod
+    def validate_api_key_header_name(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value == "":
+            msg = "API_KEY_HEADER_NAME must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("live_feed_provider")
+    @classmethod
+    def normalize_live_feed_provider(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized_value = value.strip().lower()
+        return normalized_value or None
+
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> Self:
+        if self.auth_enabled and secret_is_empty(self.admin_api_key):
+            msg = "ADMIN_API_KEY is required when AUTH_ENABLED=true"
+            raise ValueError(msg)
+        if self.app_env == AppEnvironment.PRODUCTION and "*" in self.cors_allowed_origins:
+            msg = "CORS_ALLOWED_ORIGINS must not include * in production"
+            raise ValueError(msg)
+        if (
+            self.app_env == AppEnvironment.PRODUCTION
+            and self.cors_allow_credentials
+            and not self.cors_allowed_origins
+        ):
+            msg = "CORS_ALLOWED_ORIGINS is required in production when credentials are enabled"
+            raise ValueError(msg)
+        if provider_requires_api_key(self.live_feed_provider) and secret_is_empty(
+            self.live_feed_api_key
+        ):
+            msg = "LIVE_FEED_API_KEY is required for the selected live feed provider"
+            raise ValueError(msg)
+        return self
+
+
+def secret_is_empty(value: SecretStr | None) -> bool:
+    if value is None:
+        return True
+    return value.get_secret_value().strip() == ""
+
+
+def provider_requires_api_key(provider: str | None) -> bool:
+    if provider is None:
+        return False
+    return provider in {"alpaca", "polygon", "twelve_data"}
 
 
 def build_async_database_url(database_url: SecretStr) -> str:
