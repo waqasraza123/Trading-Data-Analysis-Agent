@@ -1,0 +1,84 @@
+# Project State
+
+## Product
+
+This repository is for an AI Trading Intelligence Agent backend. The planned product is a market intelligence engine, not a chatbot, UI, broker integration, or auto-trading system. It must support both CSV/imported historical candle data and live market data feed ingestion. Both ingestion paths must normalize into the same candle storage model and feed the same deterministic analysis engine.
+
+## Current Architecture
+
+- Git repository initialized on local branch `main`.
+- No commits exist yet on `main`.
+- Remote `origin` is configured as `https://github.com/waqasraza123/Trading-Data-Analysis-Agent`, but `git fetch origin` returned no refs and `git remote show origin` reports no known HEAD branch.
+- No framework, language runtime, package manager, database layer, migration system, CI configuration, or deployment target is established yet.
+- The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
+- The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
+- Durable project memory lives in this file.
+- Local session memory lives in `docs/_local/current-session.md` and is intentionally ignored by Git.
+
+## Non-Negotiable Rules
+
+- Read `AGENTS.md`, then this file, before implementation decisions.
+- Read `docs/_local/current-session.md` if it exists before starting work.
+- Do not invent architecture before the first product slice establishes it.
+- Follow `docs/backend-only-implementation-plan.md` for backend scope and build order unless a later durable decision supersedes it.
+- Backend scope is FastAPI + Neon PostgreSQL first; no UI, broker execution, copy trading, social trading, or financial-advice output in the initial backend.
+- CSV, JSON import, API polling, and live feed ingestion must converge through one candle validation/normalization/storage path.
+- Live feed candles must track partial vs final state; analysis uses final candles by default and includes partial candles only when explicitly requested.
+- Deterministic engines calculate and classify; AI/LLMs may explain only supplied evidence and must never classify or override signals.
+- Store intermediate artifacts for audit/replay once implementation begins.
+- Do not store secrets in repository memory or local session memory.
+- Keep durable state concise, factual, and grounded in repository files.
+- Follow repository conventions once they exist; until then, choose conservative, minimal conventions for the first implementation slice.
+- Code must be production-grade, strongly typed, validated, modular, testable, and scalable.
+- Do not add comments in code; use descriptive and consistent names instead.
+- Avoid hardcoded values, hacks, tightly coupled logic, and shortcuts.
+- State assumptions explicitly when requirements are missing.
+- Keep commit messages under 140 characters and commit/push completed work when requested.
+
+## Current Roadmap
+
+- Build the backend only, following the phase order in `docs/backend-only-implementation-plan.md`.
+- Use `docs/backend-phase-0-architecture-plan.md` as the immediate implementation plan for Phase 1.
+- Phase 1 is FastAPI + Neon foundation: Python 3.12+, Pydantic v2, async SQLAlchemy 2.x, Alembic, asyncpg, health endpoints, structured errors/logging, pytest, Ruff, typing, Dockerfile, and CI.
+- Later phases add symbol metadata, data sources, unified candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Add tests with the first meaningful code path and keep verification commands current here.
+- Update this file when architecture, roadmap, constraints, or important decisions become durable.
+
+## Completed Major Slices
+
+- Initialized Git repository.
+- Added repo-driven Codex context system with durable and local memory files.
+- Added backend-only implementation plan for the AI Trading Intelligence Agent.
+- Added Phase 0 backend architecture plan covering the FastAPI + Neon foundation and unified CSV/live ingestion boundary.
+
+## Important Decisions
+
+- `docs/project-state.md` is committed durable memory and should describe long-lived project facts.
+- `docs/_local/current-session.md` is local scratch memory and should not be committed.
+- The initial product direction is backend-only: FastAPI controls workflow, Neon stores truth, deterministic engines calculate/classify, and AI only explains.
+- The candle table is the planned source-of-truth model for both imported historical data and live-originated data.
+- Repository coding standards are durable: no code comments, strong typing, validation everywhere, modular files, explicit assumptions, and short commit messages.
+- The current repository has no product implementation yet; the first implementation slice should establish the backend foundation from the plan.
+
+## Deferred / Not Yet Implemented
+
+- Application code under the planned `apps/api/` backend structure.
+- README and product usage documentation.
+- Dependency manifest and lockfile.
+- Test suite.
+- FastAPI app, Neon connection, Alembic migrations, data ingestion, analysis workflow, deterministic engines, workers, storage, and external API integrations.
+- CI, linting, formatting, deployment, and environment configuration.
+
+## Risks / Watchouts
+
+- The repository name implies trading/financial functionality, but no code currently defines scope, data sources, or risk controls.
+- Financial data integrations may require API keys; keep all secrets out of committed and local memory docs.
+- Future trading-related features should avoid implying financial advice unless the product explicitly defines compliant behavior.
+- Because the repo is empty, the first implementation slice will set conventions that later work inherits.
+- Do not start with `candles -> GPT -> answer`; the durable plan requires deterministic intelligence first and AI explanations second.
+
+## Standard Verification
+
+- `git status --short`
+- `find . -maxdepth 3 -type f -not -path './.git/*' -print`
+- Once a runtime is introduced, add the project-specific install, lint, test, and build commands here.
