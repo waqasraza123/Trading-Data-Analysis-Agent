@@ -22,7 +22,6 @@ Not implemented:
 
 ```txt
 indicator calculations
-pattern detection
 signal classification
 evidence generation
 confidence scoring
@@ -132,10 +131,11 @@ candle windows were loaded
 quality was calculated
 audit logs were written
 feature snapshot was calculated and persisted
-later intelligence engines have not run yet
+indicator snapshot was calculated and persisted
+later signal engines have not run yet
 ```
 
-Future engine phases will continue from feature snapshots into indicators, patterns, signals, and explanations.
+Future engine phases will continue from feature and indicator snapshots into patterns, signals, and explanations.
 
 ## Data Sufficiency Policy
 
@@ -167,6 +167,7 @@ analysis_running
 candles_loaded
 analysis_windows_resolved
 features_calculated
+indicators_calculated
 insufficient_data
 analysis_completed
 analysis_failed
@@ -184,7 +185,7 @@ engine_version = analysis_lifecycle_0.1.0
 rule_set_version = preflight_0.1.0
 ```
 
-These values identify analysis lifecycle plus feature snapshot runs and should change when broader deterministic engines are added.
+These values identify analysis lifecycle plus feature and indicator snapshot runs and should change when broader deterministic engines are added.
 
 ## Retry Policy
 

@@ -5,6 +5,7 @@ from app.modules.data_sources.models import DataSource
 from app.modules.engine_versions.models import EngineVersion
 from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
+from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.symbols.models import Symbol
 from app.modules.users.models import User
@@ -20,6 +21,7 @@ __all__ = [
     "DataSource",
     "EngineVersion",
     "FeatureSnapshot",
+    "IndicatorSnapshot",
     "ImportBatch",
     "ImportError",
     "LiveFeedEvent",

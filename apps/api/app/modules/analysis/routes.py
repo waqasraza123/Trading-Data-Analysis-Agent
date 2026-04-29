@@ -16,6 +16,7 @@ from app.modules.analysis.schemas import (
 )
 from app.modules.analysis.service import AnalysisService
 from app.modules.features.schemas import FeatureSnapshotRead
+from app.modules.indicators.schemas import IndicatorSnapshotRead
 
 router = APIRouter(prefix="/analysis-runs", tags=["analysis-runs"])
 
@@ -93,6 +94,17 @@ async def get_analysis_features(
     if snapshot is None:
         raise AppError(404, "feature_snapshot_not_found", "Feature snapshot not found")
     return FeatureSnapshotRead.model_validate(snapshot)
+
+
+@router.get("/{analysis_run_id}/indicators", response_model=IndicatorSnapshotRead)
+async def get_analysis_indicators(
+    analysis_run_id: UUID,
+    service: Annotated[AnalysisService, Depends(get_analysis_service)],
+) -> IndicatorSnapshotRead:
+    snapshot = await service.get_indicator_snapshot(analysis_run_id)
+    if snapshot is None:
+        raise AppError(404, "indicator_snapshot_not_found", "Indicator snapshot not found")
+    return IndicatorSnapshotRead.model_validate(snapshot)
 
 
 @router.post("/{analysis_run_id}/retry", response_model=AnalysisRunRead)

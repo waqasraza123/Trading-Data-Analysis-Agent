@@ -22,6 +22,8 @@ from app.modules.candles.timeframes import Timeframe, normalize_timestamp, timef
 from app.modules.data_sources.repository import DataSourceRepository
 from app.modules.features.models import FeatureSnapshot
 from app.modules.features.service import FeatureSnapshotService
+from app.modules.indicators.models import IndicatorSnapshot
+from app.modules.indicators.service import IndicatorSnapshotService
 from app.modules.symbols.repository import SymbolRepository
 
 ANALYSIS_LIFECYCLE_ENGINE_VERSION = "analysis_lifecycle_0.1.0"
@@ -36,6 +38,7 @@ class AnalysisService:
         self.repository = AnalysisRepository(session)
         self.candle_service = CandleService(session)
         self.feature_snapshot_service = FeatureSnapshotService(session)
+        self.indicator_snapshot_service = IndicatorSnapshotService(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
 
@@ -181,6 +184,10 @@ class AnalysisService:
         await self.get_run(analysis_run_id)
         return await self.feature_snapshot_service.get_by_analysis_run_id(analysis_run_id)
 
+    async def get_indicator_snapshot(self, analysis_run_id: UUID) -> IndicatorSnapshot | None:
+        await self.get_run(analysis_run_id)
+        return await self.indicator_snapshot_service.get_by_analysis_run_id(analysis_run_id)
+
     async def retry_run(self, analysis_run_id: UUID) -> AnalysisRun:
         run = await self.get_run(analysis_run_id)
         if run.status not in {
@@ -268,12 +275,27 @@ class AnalysisService:
                 "Feature snapshot calculated and persisted",
                 {"featureSnapshotId": str(feature_snapshot.id)},
             )
+            indicator_snapshot = await self.indicator_snapshot_service.create_snapshot(
+                analysis_run=run,
+                analysis_candles=analysis_candles,
+                warmup_candles=warmup_candles,
+                baseline_candles=baseline_candles,
+            )
+            await self.add_audit_log(
+                run.id,
+                "indicators_calculated",
+                "Indicator snapshot calculated and persisted",
+                {
+                    "indicatorSnapshotId": str(indicator_snapshot.id),
+                    "isReady": indicator_snapshot.indicators_json["calculation"]["isReady"],
+                },
+            )
             run.status = AnalysisRunStatus.COMPLETED
             run.completed_at = utc_now()
             await self.add_audit_log(
                 run.id,
                 "analysis_completed",
-                "Analysis feature snapshot completed",
+                "Analysis feature and indicator snapshots completed",
                 {"nextEnginesImplemented": False},
             )
         except AppError as error:

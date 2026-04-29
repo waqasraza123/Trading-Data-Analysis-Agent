@@ -203,7 +203,7 @@ queued
 -> completed
 ```
 
-In this phase, `completed` means deterministic features were calculated and stored. Later phases will continue from the stored feature snapshot into indicators, patterns, signals, evidence, confidence, and explanations.
+In this phase, feature snapshots are followed by indicator snapshots. Later phases will continue from stored feature and indicator artifacts into patterns, signals, evidence, confidence, and explanations.
 
 ## Data Sufficiency
 
@@ -225,7 +225,6 @@ Feature values are stored in JSONB. Decimal values are serialized as strings to 
 ## Not Implemented In This Slice
 
 ```txt
-indicator snapshots
 pattern candidates
 signals
 signal evidence

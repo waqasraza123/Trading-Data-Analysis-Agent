@@ -90,3 +90,9 @@ Feature engineering snapshots are documented in:
 ```txt
 docs/feature-engineering.md
 ```
+
+Indicator snapshots are documented in:
+
+```txt
+docs/indicator-engine.md
+```
