@@ -40,3 +40,11 @@ Run typecheck:
 ```sh
 .venv/bin/mypy app
 ```
+
+## Schema Docs
+
+The Phase 2 core schema is documented in:
+
+```txt
+docs/schema/core-schema.md
+```

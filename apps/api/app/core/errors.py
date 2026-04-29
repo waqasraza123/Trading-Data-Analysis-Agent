@@ -64,9 +64,7 @@ async def handle_http_exception(request: Request, exception: Exception) -> JSONR
     if not isinstance(exception, HTTPException):
         return await handle_unexpected_exception(request, exception)
     message = (
-        str(exception.detail)
-        if exception.detail
-        else HTTPStatus(exception.status_code).phrase
+        str(exception.detail) if exception.detail else HTTPStatus(exception.status_code).phrase
     )
     return create_error_response(
         request=request,

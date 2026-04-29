@@ -9,7 +9,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health endpoints only; no trading domain models or intelligence logic exist yet.
+- The API currently exposes health endpoints only; no trading intelligence logic exists yet.
+- Phase 2 core database schema models and migration exist under `apps/api/`.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
 - The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
 - Durable project memory lives in this file.
@@ -40,8 +41,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Build the backend only, following the phase order in `docs/backend-only-implementation-plan.md`.
 - Use `docs/backend-only-implementation-plan.md` as the phase-by-phase roadmap.
 - Phase 1 FastAPI + Neon foundation is implemented.
-- Next phase is Phase 2: core database schema for workspaces, users, symbols, data_sources, import_batches, import_errors, candles, live_feed_subscriptions, live_feed_events, analysis_runs, analysis_audit_logs, and engine_versions.
-- Later phases add symbol/source services, unified candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Phase 2 core database schema is implemented for workspaces, users, symbols, data_sources, import_batches, import_errors, candles, live_feed_subscriptions, live_feed_events, analysis_runs, analysis_audit_logs, and engine_versions.
+- Next phase is Phase 3: symbol and data source configuration services.
+- Later phases add unified candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -52,6 +54,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Added backend-only implementation plan for the AI Trading Intelligence Agent.
 - Added Phase 0 backend architecture plan covering the FastAPI + Neon foundation and unified CSV/live ingestion boundary.
 - Implemented Phase 1 FastAPI + Neon backend foundation under `apps/api/`.
+- Implemented Phase 2 core SQLAlchemy models, Alembic migration, and schema documentation.
 
 ## Important Decisions
 
@@ -59,16 +62,18 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - `docs/_local/current-session.md` is local scratch memory and should not be committed.
 - The initial product direction is backend-only: FastAPI controls workflow, Neon stores truth, deterministic engines calculate/classify, and AI only explains.
 - The candle table is the planned source-of-truth model for both imported historical data and live-originated data.
+- `candles` enforces final/partial candle state through `is_final`; analysis must default to final candles only.
+- `candles` enforces one row per workspace, symbol, source, timeframe, and timestamp.
 - Repository coding standards are durable: no code comments, strong typing, validation everywhere, modular files, explicit assumptions, and short commit messages.
 - Phase 1 intentionally keeps `DATABASE_URL` optional at app startup so local health can run without secrets; `/health/db` reports unhealthy until a database URL is configured.
 - Async SQLAlchemy normalizes `postgresql://` and `postgres://` URLs to `postgresql+asyncpg://` for Neon compatibility.
-- No trading domain models exist yet; Phase 2 owns the first business schema.
+- Phase 2 owns the first business schema; Phase 3 should add services/routes without changing the ingestion truth boundary.
 
 ## Deferred / Not Yet Implemented
 
 - README and product usage documentation.
 - Lockfile.
-- Business database tables and migrations.
+- Core schema API routes, repositories, services, and seed data.
 - Data ingestion, analysis workflow, deterministic engines, workers, storage, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 
