@@ -72,3 +72,9 @@ Live feed ingestion foundation is documented in:
 ```txt
 docs/live-feed-ingestion.md
 ```
+
+Candle query and quality APIs are documented in:
+
+```txt
+docs/candle-query-quality.md
+```

@@ -106,3 +106,7 @@ class CandleRead(ApiReadSchema):
     quality_score: Decimal | None
     created_at: datetime
     updated_at: datetime
+
+
+class CandleCountRead(ApiSchema):
+    count: int = Field(ge=0)

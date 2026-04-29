@@ -152,7 +152,7 @@ Future ingestion workflows should treat `conflicting_final` as an auditable data
 - Live provider adapter
 - API polling adapter
 - Manual seed command
-- Candle routes
+- Candle write routes
 - Import batch lifecycle
 - Live feed event lifecycle
 - Analysis run lifecycle

@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, symbol configuration, data source configuration, historical candle import, and live feed ingestion foundation endpoints; no trading intelligence logic exists yet.
+- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, and candle query/quality endpoints; no trading intelligence logic exists yet.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
@@ -48,8 +48,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Unified candle validation and normalization is implemented as an internal service layer.
 - Historical CSV/JSON import pipeline wiring is implemented.
 - Live feed ingestion foundation is implemented with provider adapters, subscription lifecycle APIs, raw event audit storage, stale checks, and shared candle normalization.
-- Next phase is candle query and data quality APIs.
-- Later phases add candle query APIs, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Candle query and data quality APIs are implemented.
+- Next phase is analysis run lifecycle.
+- Later phases add deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -65,6 +66,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented shared candle normalization, validation, quality calculation, repository upsert rules, and internal service documentation.
 - Implemented historical CSV/JSON import routes, parsing, batch/error persistence, candle storage wiring, and documentation.
 - Implemented live feed provider abstraction, mock/Binance normalizers, subscription lifecycle routes, raw live event audit persistence, stale checks, live candle storage wiring, and documentation.
+- Implemented candle query, count, latest, quality APIs, final-by-default read policy, warmup/baseline service helpers, and documentation.
 
 ## Important Decisions
 
@@ -86,6 +88,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Live subscriptions require `websocket_live` data sources and supported provider adapters.
 - Live provider messages are persisted as `live_feed_events` before candle processing, and provider workers should call the same live ingestion service boundary.
 - The current Binance adapter normalizes kline payloads only; persistent websocket lifecycle remains a later worker slice.
+- Candle read APIs default to final candles; partial candles are returned only when `is_final=false` or inspected through quality reporting.
+- Future analysis code should use `CandleService` read helpers instead of querying candle models directly.
 
 ## Deferred / Not Yet Implemented
 
@@ -94,7 +98,6 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Workspace and user API routes.
 - Seed execution command.
 - Persistent live provider websocket workers and reconnect loops.
-- Candle query API routes.
 - Analysis workflow, deterministic engines, workers, storage orchestration, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 

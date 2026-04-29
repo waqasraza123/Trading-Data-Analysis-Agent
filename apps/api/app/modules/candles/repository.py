@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.candles.models import Candle
@@ -82,19 +82,113 @@ class CandleRepository:
         source_id: UUID | None = None,
         include_partial: bool = False,
     ) -> list[Candle]:
+        return await self.list_candles(
+            workspace_id=workspace_id,
+            symbol_id=symbol_id,
+            timeframe=timeframe,
+            start_time=start_time,
+            end_time=end_time,
+            source_id=source_id,
+            is_final=None if include_partial else True,
+            limit=None,
+            offset=0,
+        )
+
+    async def list_candles(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+        timeframe: str,
+        start_time: datetime,
+        end_time: datetime,
+        source_id: UUID | None,
+        is_final: bool | None,
+        limit: int | None,
+        offset: int,
+    ) -> list[Candle]:
+        statement = self.window_statement(
+            workspace_id=workspace_id,
+            symbol_id=symbol_id,
+            timeframe=timeframe,
+            start_time=start_time,
+            end_time=end_time,
+            source_id=source_id,
+            is_final=is_final,
+        ).order_by(Candle.timestamp.asc())
+        if limit is not None:
+            statement = statement.limit(limit)
+        if offset:
+            statement = statement.offset(offset)
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def count_candles(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+        timeframe: str,
+        start_time: datetime,
+        end_time: datetime,
+        source_id: UUID | None,
+        is_final: bool | None,
+    ) -> int:
+        window_statement = self.window_statement(
+            workspace_id=workspace_id,
+            symbol_id=symbol_id,
+            timeframe=timeframe,
+            start_time=start_time,
+            end_time=end_time,
+            source_id=source_id,
+            is_final=is_final,
+        )
+        statement = select(func.count()).select_from(window_statement.subquery())
+        result = await self.session.execute(statement)
+        return int(result.scalar_one())
+
+    async def get_latest_candle(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+        timeframe: str,
+        source_id: UUID | None,
+        is_final: bool | None,
+    ) -> Candle | None:
+        statement = self.window_statement(
+            workspace_id=workspace_id,
+            symbol_id=symbol_id,
+            timeframe=timeframe,
+            start_time=None,
+            end_time=None,
+            source_id=source_id,
+            is_final=is_final,
+        ).order_by(Candle.timestamp.desc())
+        result = await self.session.execute(statement.limit(1))
+        return result.scalar_one_or_none()
+
+    def window_statement(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+        timeframe: str,
+        start_time: datetime | None,
+        end_time: datetime | None,
+        source_id: UUID | None,
+        is_final: bool | None,
+    ) -> Select[tuple[Candle]]:
         statement: Select[tuple[Candle]] = select(Candle).where(
             Candle.workspace_id == workspace_id,
             Candle.symbol_id == symbol_id,
             Candle.timeframe == timeframe,
-            Candle.timestamp >= start_time,
-            Candle.timestamp <= end_time,
         )
+        if start_time is not None:
+            statement = statement.where(Candle.timestamp >= start_time)
+        if end_time is not None:
+            statement = statement.where(Candle.timestamp <= end_time)
         if source_id is not None:
             statement = statement.where(Candle.source_id == source_id)
-        if not include_partial:
-            statement = statement.where(Candle.is_final.is_(True))
-        result = await self.session.execute(statement.order_by(Candle.timestamp.asc()))
-        return list(result.scalars().all())
+        if is_final is not None:
+            statement = statement.where(Candle.is_final.is_(is_final))
+        return statement
 
     def build_candle(self, candle: NormalizedCandleInput) -> Candle:
         import_batch_id = (
