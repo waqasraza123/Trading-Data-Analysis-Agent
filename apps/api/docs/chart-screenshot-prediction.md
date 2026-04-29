@@ -14,7 +14,9 @@ The expected production flow is:
    rows to `POST /chart-screenshot-runs`.
 2. Provide symbol, source, timeframe, start timestamp, and price range metadata.
 3. Review stored counts, warnings, and the deterministic trend hypothesis.
-4. Use the persisted candle rows with existing candle/query/analysis APIs as needed.
+4. Optionally set `trigger_analysis=true` to run the existing deterministic analysis lifecycle over
+   the extracted candle window.
+5. Use the persisted candle rows with existing candle/query/analysis APIs as needed.
 
 ## Data Source
 
@@ -52,6 +54,9 @@ GET /chart-screenshot-runs/{run_id}
     "imageTimeZone": "UTC",
     "chartPlatform": "manual"
   },
+  "triggerAnalysis": true,
+  "includeNewsCorrelation": false,
+  "includeAiExplanation": false,
   "candles": [
     {
       "timestamp": "2026-04-29T08:00:00Z",
@@ -94,6 +99,9 @@ window_start=2026-04-29T08:00:00Z
 price_min=63000
 price_max=64000
 file=@btc-chart.png
+trigger_analysis=true
+include_news_correlation=false
+include_ai_explanation=false
 ```
 
 Optional chart bounds can be provided when the chart contains legends, toolbars, or other
@@ -119,13 +127,53 @@ The response persists:
 - `analysisHypothesis`: deterministic `bullish`, `bearish`, `neutral`, or `unclear` label.
 - `analysisHypothesisConfidence`: confidence from close-direction consistency, move magnitude, and
   extraction confidence.
+- `analysisRunId`: populated when `triggerAnalysis` / `trigger_analysis` creates an analysis run.
 - `extractionWarningsJson`: parser, validation, duplicate, and conflict warnings.
 - `extractedPayloadJson`: submitted candles and trend metrics for audit/replay.
 - `parserMetadataJson`: parser name/version, detected image size, chart bounds, detected candle
-  count, and image extraction warnings when applicable.
+  count, image extraction warnings, and triggered analysis metadata when applicable.
 
 The hypothesis is an evidence artifact for the backend and must not be presented as financial
 advice or a guaranteed prediction.
+
+## Analysis Triggering
+
+Both create endpoints can trigger the normal deterministic analysis lifecycle after extracted
+candles are committed.
+
+Manual/external OHLC JSON uses camelCase fields:
+
+```json
+{
+  "triggerAnalysis": true,
+  "includeNewsCorrelation": false,
+  "includeAiExplanation": false,
+  "analysisWarmupStartTime": "2026-04-28T08:00:00Z",
+  "analysisBaselineStartTime": "2026-04-28T12:00:00Z"
+}
+```
+
+PNG multipart upload uses matching form fields:
+
+```txt
+trigger_analysis=true
+include_news_correlation=false
+include_ai_explanation=false
+analysis_warmup_start_time=2026-04-28T08:00:00Z
+analysis_baseline_start_time=2026-04-28T12:00:00Z
+```
+
+When analysis is triggered:
+
+- the chart screenshot run stores the created `analysisRunId`;
+- `status=analysis_triggered` means extraction completed and an analysis run was created;
+- `parserMetadataJson.analysisTrigger.analysisStatus` records whether the created analysis run
+  completed, failed, or returned `insufficient_data`;
+- `status=analysis_failed` means extraction completed but the analysis run could not be created.
+
+The analysis lifecycle still enforces normal candle sufficiency, final-candle reads, deterministic
+feature/indicator/pattern/signal generation, deterministic explanation generation, and optional
+news/LLM behavior.
 
 ## Image Parser Limits
 

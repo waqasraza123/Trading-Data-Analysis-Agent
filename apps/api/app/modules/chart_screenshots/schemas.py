@@ -42,6 +42,11 @@ class ChartScreenshotPredictionCreate(ApiSchema):
     extraction_confidence: Decimal = Field(default=Decimal("1"), ge=0, le=1)
     candles: list[ChartScreenshotCandle] = Field(min_length=3, max_length=1000)
     parser_metadata_json: dict[str, Any] = Field(default_factory=dict)
+    trigger_analysis: bool = False
+    include_news_correlation: bool = False
+    include_ai_explanation: bool = False
+    analysis_warmup_start_time: datetime | None = None
+    analysis_baseline_start_time: datetime | None = None
 
     @field_validator("file_name", "parser_source_path", "parser_name", "parser_version")
     @classmethod

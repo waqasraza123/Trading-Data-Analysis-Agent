@@ -70,6 +70,11 @@ async def create_chart_screenshot_run_from_image(
     chart_top: Annotated[int | None, Form(ge=0)] = None,
     chart_right: Annotated[int | None, Form(ge=0)] = None,
     chart_bottom: Annotated[int | None, Form(ge=0)] = None,
+    trigger_analysis: Annotated[bool, Form()] = False,
+    include_news_correlation: Annotated[bool, Form()] = False,
+    include_ai_explanation: Annotated[bool, Form()] = False,
+    analysis_warmup_start_time: Annotated[datetime | None, Form()] = None,
+    analysis_baseline_start_time: Annotated[datetime | None, Form()] = None,
 ) -> ChartScreenshotRunRead:
     file_bytes = await file.read()
     settings = request.app.state.settings
@@ -104,6 +109,11 @@ async def create_chart_screenshot_run_from_image(
         extraction_confidence=extraction.confidence,
         candles=extraction.candles,
         parser_metadata_json=metadata,
+        trigger_analysis=trigger_analysis,
+        include_news_correlation=include_news_correlation,
+        include_ai_explanation=include_ai_explanation,
+        analysis_warmup_start_time=analysis_warmup_start_time,
+        analysis_baseline_start_time=analysis_baseline_start_time,
     )
     run = await service.create_prediction_run(payload)
     return ChartScreenshotRunRead.model_validate(run)

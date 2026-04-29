@@ -282,7 +282,8 @@ unregistered engine version.
 
 Chart screenshot APIs support manually or externally extracted OHLC rows and deterministic PNG
 candlestick extraction from trading chart images. Valid extracted rows are stored through the shared
-candle path and persisted with a deterministic next-trend hypothesis:
+candle path and persisted with a deterministic next-trend hypothesis. Both create endpoints can
+optionally trigger the existing deterministic analysis lifecycle after extraction:
 
 ```txt
 POST /chart-screenshot-runs

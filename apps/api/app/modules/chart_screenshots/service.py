@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.core.time import utc_now
+from app.modules.analysis.schemas import AnalysisRunCreate
+from app.modules.analysis.service import AnalysisService
 from app.modules.candles.normalizer import RawCandlePayload, normalize_candle_payload
 from app.modules.candles.repository import CandleRepository
 from app.modules.candles.schemas import CandleOriginType, CandleUpsertStatus
@@ -87,6 +89,8 @@ class ChartScreenshotPredictionService:
             self.finalize_run(run)
             await self.session.commit()
             await self.session.refresh(run)
+            if payload.trigger_analysis:
+                run = await self.trigger_analysis_for_run(run.id, payload)
         except IntegrityError as error:
             await self.session.rollback()
             raise AppError(
@@ -98,6 +102,63 @@ class ChartScreenshotPredictionService:
             await self.session.rollback()
             raise
         return run
+
+    async def trigger_analysis_for_run(
+        self,
+        run_id: UUID,
+        payload: ChartScreenshotPredictionCreate,
+    ) -> ChartScreenshotRun:
+        run = await self.get_run(run_id)
+        if run.status == ChartScreenshotRunStatus.FAILED.value:
+            return run
+        if run.extracted_window_start is None or run.extracted_window_end is None:
+            run.status = ChartScreenshotRunStatus.ANALYSIS_FAILED.value
+            run.last_error_code = "chart_screenshot_window_missing"
+            run.last_error_message = "Chart screenshot run has no extracted analysis window"
+            await self.session.commit()
+            await self.session.refresh(run)
+            return run
+        analysis_service = AnalysisService(self.session)
+        try:
+            analysis_run = await analysis_service.create_historical_run(
+                AnalysisRunCreate(
+                    workspace_id=run.workspace_id,
+                    user_id=run.user_id,
+                    symbol_id=run.symbol_id,
+                    source_id=run.source_id,
+                    timeframe=payload.timeframe,
+                    start_time=run.extracted_window_start,
+                    end_time=run.extracted_window_end,
+                    warmup_start_time=payload.analysis_warmup_start_time,
+                    baseline_start_time=payload.analysis_baseline_start_time,
+                    include_news_correlation=payload.include_news_correlation,
+                    include_ai_explanation=payload.include_ai_explanation,
+                )
+            )
+        except AppError as error:
+            await self.session.rollback()
+            latest_run = await self.get_run(run.id)
+            latest_run.status = ChartScreenshotRunStatus.ANALYSIS_FAILED.value
+            latest_run.last_error_code = error.code
+            latest_run.last_error_message = error.message
+            await self.session.commit()
+            await self.session.refresh(latest_run)
+            return latest_run
+        latest_run = await self.get_run(run.id)
+        latest_run.analysis_run_id = analysis_run.id
+        latest_run.status = ChartScreenshotRunStatus.ANALYSIS_TRIGGERED.value
+        latest_run.parser_metadata_json = {
+            **latest_run.parser_metadata_json,
+            "analysisTrigger": {
+                "analysisRunId": str(analysis_run.id),
+                "analysisStatus": str(analysis_run.status),
+                "includeNewsCorrelation": payload.include_news_correlation,
+                "includeAiExplanation": payload.include_ai_explanation,
+            },
+        }
+        await self.session.commit()
+        await self.session.refresh(latest_run)
+        return latest_run
 
     async def get_run(self, run_id: UUID) -> ChartScreenshotRun:
         run = await self.repository.get_by_id(run_id)
