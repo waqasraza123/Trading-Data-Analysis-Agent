@@ -34,6 +34,7 @@ from app.modules.features.models import FeatureSnapshot
 from app.modules.features.service import FeatureSnapshotService
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.indicators.service import IndicatorSnapshotService
+from app.modules.news.service import NewsCorrelationService
 from app.modules.patterns.models import PatternCandidate
 from app.modules.patterns.service import PatternCandidateService
 from app.modules.signals.repository import SignalRepository
@@ -59,6 +60,7 @@ class AnalysisService:
         self.pattern_candidate_service = PatternCandidateService(session)
         self.signal_classification_service = SignalClassificationService(session)
         self.deterministic_explanation_service = DeterministicExplanationService(session)
+        self.news_correlation_service = NewsCorrelationService(session)
         self.engine_version_service = EngineVersionService(session)
         self.signal_repository = SignalRepository(session)
         self.strategy_profile_repository = StrategyProfileRepository(session)
@@ -592,6 +594,17 @@ class AnalysisService:
                 require_completed=False,
                 strategy_profiles=await self.resolve_strategy_profiles_for_run(run),
             )
+            if run.include_news_correlation:
+                correlations = await self.news_correlation_service.correlate_signal(
+                    signal=signal,
+                    run=run,
+                )
+                await self.add_audit_log(
+                    run.id,
+                    "news_correlation_lifecycle_completed",
+                    "Optional deterministic news correlation completed",
+                    {"correlationCount": len(correlations), "signalId": str(signal.id)},
+                )
             explanation = await self.deterministic_explanation_service.generate_for_signal(signal)
             await self.add_audit_log(
                 run.id,

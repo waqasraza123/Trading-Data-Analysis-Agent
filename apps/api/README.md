@@ -3,9 +3,9 @@
 FastAPI backend for deterministic market intelligence over imported and live-originated
 candle data. The backend stores market data, calculates features and indicators, classifies
 signals with rules, generates safe deterministic explanations from persisted artifacts, and
-supports replay from stored candles.
+supports replay from stored candles, and persists deterministic news/event context.
 
-No UI, LLM calls, news/event correlation, broker execution, auto-trading, alerts, or billing
+No UI, LLM calls, broker execution, auto-trading, alerts, or billing
 is implemented in this backend slice.
 
 ## Commands
@@ -39,7 +39,8 @@ SEED_DEFAULT_ADMIN_NAME="Default Admin" \
 ```
 
 The seed command is idempotent. It seeds configured workspace/admin user defaults, default
-symbols, default workspace data sources, strategy profiles, and current engine versions.
+symbols, default workspace data sources including manual news context, strategy profiles,
+and current engine versions.
 `SEED_DEFAULT_WORKSPACE_NAME`, `SEED_DEFAULT_ADMIN_EMAIL`, and `SEED_DEFAULT_ADMIN_NAME`
 are optional; data sources and the admin user are seeded only when a default workspace is
 configured.

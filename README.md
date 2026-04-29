@@ -54,6 +54,7 @@ It does:
 - Run analysis lifecycle preflight checks before generating artifacts.
 - Persist deterministic feature snapshots.
 - Persist deterministic indicator snapshots for EMA, RSI, MACD, and ATR.
+- Persist deterministic news/event correlation context without causation claims.
 - Store audit logs for analysis runs.
 - Expose typed APIs for future UI, scanner, replay, and explanation layers.
 
@@ -86,6 +87,7 @@ Neon stores the truth. FastAPI controls the workflow. Deterministic engines calc
 - Analysis run lifecycle for historical and live-window runs.
 - Deterministic feature engineering snapshots.
 - Deterministic indicator snapshots.
+- Deterministic news/event ingestion and signal correlation APIs.
 - Pytest, Ruff, mypy, and GitHub Actions CI.
 
 ## Architecture

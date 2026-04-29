@@ -19,7 +19,7 @@ from app.modules.symbols.models import Symbol
 pytestmark = pytest.mark.integration
 
 EXPECTED_SYMBOLS = {"EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "BTCUSDT", "ETHUSDT"}
-EXPECTED_DATA_SOURCES = {"csv_upload", "json_import", "mock_live"}
+EXPECTED_DATA_SOURCES = {"csv_upload", "json_import", "mock_live", "manual_news"}
 EXPECTED_STRATEGY_PROFILES = {
     ("breakout_continuation", "v1"),
     ("reversal_rejection", "v1"),
@@ -32,6 +32,7 @@ EXPECTED_ENGINE_VERSIONS = {
     ("pattern_engine", "v1"),
     ("signal_classifier", "v1"),
     ("deterministic_explanation_engine", "v1"),
+    ("news_correlation_engine", "v1"),
     ("replay_engine", "v1"),
 }
 
@@ -52,7 +53,7 @@ async def test_seed_service_is_idempotent(db_session: AsyncSession) -> None:
     assert first_result.workspace_id == second_result.workspace_id
     assert first_result.admin_user_id == second_result.admin_user_id
     assert second_result.symbol_count == 6
-    assert second_result.data_source_count == 3
+    assert second_result.data_source_count == 4
     assert second_result.strategy_profile_count == 4
     assert second_result.engine_version_count == len(CURRENT_ENGINE_VERSIONS)
 

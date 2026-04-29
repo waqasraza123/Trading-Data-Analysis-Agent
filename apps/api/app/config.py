@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     live_feed_stale_message_seconds: int = Field(default=180, ge=1)
     live_feed_stale_final_candle_seconds: int = Field(default=300, ge=1)
     live_feed_worker_poll_seconds: float = Field(default=10, gt=0)
+    news_correlation_pre_event_minutes: int = Field(default=5, ge=0, le=1440)
+    news_correlation_post_event_minutes: int = Field(default=30, ge=1, le=1440)
+    news_correlation_max_events_per_signal: int = Field(default=10, ge=1, le=100)
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"

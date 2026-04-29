@@ -47,6 +47,15 @@ CURRENT_ENGINE_VERSIONS: tuple[EngineVersionDefinition, ...] = (
         },
     ),
     EngineVersionDefinition(
+        engine_name="news_correlation_engine",
+        version="v1",
+        description="Deterministic event relevance and signal/news correlation scoring engine.",
+        config_json={
+            "artifact": "signal_news_correlations",
+            "scorerVersion": "news_correlation_v1",
+        },
+    ),
+    EngineVersionDefinition(
         engine_name="replay_engine",
         version="v1",
         description="Version-aware deterministic replay engine.",

@@ -24,7 +24,6 @@ Not implemented:
 
 ```txt
 LLM explanation
-news correlation
 background worker execution
 ```
 
@@ -39,6 +38,8 @@ GET /analysis-runs/{analysis_run_id}/audit-logs
 GET /analysis-runs/{analysis_run_id}/features
 GET /analysis-runs/{analysis_run_id}/indicators
 GET /analysis-runs/{analysis_run_id}/patterns
+POST /analysis-runs/{analysis_run_id}/correlate-news
+GET /analysis-runs/{analysis_run_id}/news-correlations
 POST /analysis-runs/{analysis_run_id}/retry
 POST /analysis-runs/{analysis_run_id}/replay
 GET /analysis-runs/{analysis_run_id}/replays
@@ -166,10 +167,12 @@ feature snapshot was calculated and persisted
 indicator snapshot was calculated and persisted
 pattern candidates were calculated and persisted
 deterministic signal classification was calculated and persisted
+optional deterministic news correlations were calculated when requested
 deterministic explanation was generated and persisted
 ```
 
-Future engine phases continue from stored artifacts into optional LLM explanations and optional news correlation.
+Future engine phases continue from stored artifacts into optional LLM explanations, scanners,
+and external provider integrations.
 
 ## Data Sufficiency Policy
 

@@ -266,6 +266,17 @@ Stores deterministic signal evidence copied from selected pattern candidate evid
 
 Stores normalized risk and no-signal notes from candidate risk notes and deterministic classifier rules.
 
+### `news_events`
+
+Stores manual/imported market, economic, crypto, earnings, central-bank, and generic news events.
+Events can be global or scoped to a workspace and can map by currency, asset, or symbol id.
+
+### `signal_news_correlations`
+
+Stores deterministic context linking completed signals to nearby relevant news events. Rows include
+component scores, cautious reason text, scorer version metadata, and event-window configuration.
+These rows do not override signal classification or confidence.
+
 ### `deterministic_explanations`
 
 Stores one current safe deterministic explanation per signal. The row includes explanation sections, source artifact snapshots, safety status, and blocked terms when fallback text is used.
@@ -292,4 +303,3 @@ It is intentionally hand-written so the first schema captures the exact Phase 2 
 - candle upsert behavior
 - analysis workers
 - feature/indicator/pattern/signal engines
-- news correlation

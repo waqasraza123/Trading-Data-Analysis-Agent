@@ -27,4 +27,12 @@ def default_data_sources(workspace_id: UUID) -> tuple[DataSourceCreate, ...]:
             provider="mock",
             status=DataSourceStatus.ACTIVE,
         ),
+        DataSourceCreate(
+            workspace_id=workspace_id,
+            name="manual_news",
+            source_type=DataSourceType.MANUAL_SEED,
+            provider="manual_news",
+            status=DataSourceStatus.ACTIVE,
+            config_json={"purpose": "manual_news_event_context"},
+        ),
     )

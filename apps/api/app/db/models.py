@@ -8,6 +8,7 @@ from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
+from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.patterns.models import PatternCandidate
 from app.modules.signals.models import (
     Signal,
@@ -36,7 +37,9 @@ __all__ = [
     "ImportError",
     "LiveFeedEvent",
     "LiveFeedSubscription",
+    "NewsEvent",
     "PatternCandidate",
+    "SignalNewsCorrelation",
     "Signal",
     "SignalConfidenceComponent",
     "SignalEvidence",
