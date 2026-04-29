@@ -12,6 +12,8 @@ from app.modules.candles.routes import router as candles_router
 from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.live.routes import router as live_router
+from app.modules.signals.routes import router as signals_router
+from app.modules.strategy_profiles.routes import router as strategy_profiles_router
 from app.modules.symbols.routes import router as symbols_router
 from app.routes.health import router as health_router
 
@@ -50,6 +52,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
     app.include_router(analysis_router, prefix=resolved_settings.api_prefix)
+    app.include_router(strategy_profiles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(signals_router, prefix=resolved_settings.api_prefix)
     return app
 
 

@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle, feature snapshot, indicator snapshot, and pattern candidate endpoints; no signal classification logic exists yet.
+- The API currently exposes health, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle, feature snapshot, indicator snapshot, pattern candidate, strategy profile, and deterministic signal classification endpoints.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
@@ -53,11 +53,12 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Historical CSV/JSON import pipeline wiring is implemented.
 - Live feed ingestion foundation is implemented with provider adapters, subscription lifecycle APIs, raw event audit storage, stale checks, and shared candle normalization.
 - Candle query and data quality APIs are implemented.
-- Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, insufficient-data status, feature snapshot persistence, indicator snapshot persistence, and pattern candidate persistence.
+- Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, insufficient-data status, feature snapshot persistence, indicator snapshot persistence, pattern candidate persistence, and deterministic signal classification persistence.
 - Deterministic feature engineering snapshots are implemented.
 - Deterministic indicator snapshots are implemented.
 - Deterministic pattern candidates are implemented.
-- Next core milestone is the intelligence layer: deterministic strategy profiles, signal classification, signal evidence, confidence components, risk notes, deterministic explanations, and golden intelligence tests.
+- Deterministic strategy profiles, signal classification, signal evidence, confidence components, risk notes, and golden intelligence tests are implemented.
+- Next core milestone is deterministic explanations on top of persisted signals, evidence, confidence components, and risk notes.
 - Later phases add replay/versioning, optional LLM explanations, news correlation, live scanning, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
@@ -79,6 +80,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented feature_snapshots migration/model, deterministic movement/candle-shape/range/volatility/trend feature engines, feature persistence wiring, feature retrieval route, and documentation.
 - Implemented indicator_snapshots migration/model, deterministic EMA/RSI/MACD/ATR engines, indicator persistence wiring, indicator retrieval route, and documentation.
 - Implemented pattern_candidates migration/model, deterministic rule detectors, pattern persistence wiring, pattern retrieval route, and documentation.
+- Implemented strategy_profiles, signals, signal_confidence_components, signal_evidence, and signal_risk_notes migrations/models, default profile seed data, deterministic classifier service, lifecycle integration, retrieval APIs, audit events, documentation, and intelligence tests.
 
 ## Important Decisions
 
@@ -102,7 +104,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - The current Binance adapter normalizes kline payloads only; persistent websocket lifecycle remains a later worker slice.
 - Candle read APIs default to final candles; partial candles are returned only when `is_final=false` or inspected through quality reporting.
 - Future analysis code should use `CandleService` read helpers instead of querying candle models directly.
-- Analysis run `completed` currently means lifecycle preflight, deterministic feature snapshot, deterministic indicator snapshot, and deterministic pattern candidates completed; signal engines are not implemented yet.
+- Analysis run `completed` currently means lifecycle preflight, deterministic feature snapshot, deterministic indicator snapshot, deterministic pattern candidates, and deterministic signal classification completed.
 - Analysis preflight writes audit logs and marks runs `insufficient_data` when candle windows lack required final candles.
 - Feature snapshots serialize Decimal market values as strings in JSONB to preserve precision.
 - Indicator snapshots serialize Decimal market values as strings in JSONB and use `isReady` flags instead of guessing when warmup/baseline data is thin.
@@ -118,7 +120,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Workspace and user API routes.
 - Seed execution command.
 - Persistent live provider websocket workers and reconnect loops.
-- Signal, strategy profile, evidence, confidence, risk note, deterministic explanation, news, replay, and scanner modules.
+- Deterministic explanation, news, replay, and scanner modules.
 - Background workers, storage orchestration, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 

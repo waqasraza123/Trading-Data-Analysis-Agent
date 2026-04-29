@@ -70,4 +70,7 @@ def datetime_from_event(payload: dict[str, Any]) -> datetime | None:
 
 
 def datetime_from_milliseconds(value: object) -> datetime:
+    if not isinstance(value, int | float | str):
+        msg = "timestamp value must be numeric"
+        raise ValueError(msg)
     return datetime.fromtimestamp(int(value) / 1000, tz=UTC)

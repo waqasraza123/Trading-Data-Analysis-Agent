@@ -102,3 +102,9 @@ Pattern candidates are documented in:
 ```txt
 docs/pattern-engine.md
 ```
+
+Deterministic signal classification is documented in:
+
+```txt
+docs/signal-classification.md
+```

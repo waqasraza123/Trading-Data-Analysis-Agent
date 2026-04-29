@@ -18,6 +18,8 @@ from app.modules.analysis.service import AnalysisService
 from app.modules.features.schemas import FeatureSnapshotRead
 from app.modules.indicators.schemas import IndicatorSnapshotRead
 from app.modules.patterns.schemas import PatternCandidateRead
+from app.modules.signals.schemas import SignalClassificationRead
+from app.modules.signals.service import SignalClassificationService
 
 router = APIRouter(prefix="/analysis-runs", tags=["analysis-runs"])
 
@@ -26,6 +28,12 @@ def get_analysis_service(
     session: Annotated[AsyncSession, Depends(database_session)],
 ) -> AnalysisService:
     return AnalysisService(session)
+
+
+def get_signal_classification_service(
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> SignalClassificationService:
+    return SignalClassificationService(session)
 
 
 @router.post("", response_model=AnalysisRunRead, status_code=status.HTTP_201_CREATED)
@@ -115,6 +123,28 @@ async def list_analysis_patterns(
 ) -> list[PatternCandidateRead]:
     candidates = await service.list_pattern_candidates(analysis_run_id)
     return [PatternCandidateRead.model_validate(candidate) for candidate in candidates]
+
+
+@router.post("/{analysis_run_id}/classify", response_model=SignalClassificationRead)
+async def classify_analysis_run(
+    analysis_run_id: UUID,
+    service: Annotated[
+        SignalClassificationService,
+        Depends(get_signal_classification_service),
+    ],
+) -> SignalClassificationRead:
+    return await service.classify_analysis_run(analysis_run_id)
+
+
+@router.get("/{analysis_run_id}/signal", response_model=SignalClassificationRead)
+async def get_analysis_signal(
+    analysis_run_id: UUID,
+    service: Annotated[
+        SignalClassificationService,
+        Depends(get_signal_classification_service),
+    ],
+) -> SignalClassificationRead:
+    return await service.get_by_analysis_run_id(analysis_run_id)
 
 
 @router.post("/{analysis_run_id}/retry", response_model=AnalysisRunRead)

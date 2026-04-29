@@ -8,6 +8,13 @@ from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.patterns.models import PatternCandidate
+from app.modules.signals.models import (
+    Signal,
+    SignalConfidenceComponent,
+    SignalEvidence,
+    SignalRiskNote,
+)
+from app.modules.strategy_profiles.models import StrategyProfile
 from app.modules.symbols.models import Symbol
 from app.modules.users.models import User
 from app.modules.workspaces.models import Workspace
@@ -28,6 +35,11 @@ __all__ = [
     "LiveFeedEvent",
     "LiveFeedSubscription",
     "PatternCandidate",
+    "Signal",
+    "SignalConfidenceComponent",
+    "SignalEvidence",
+    "SignalRiskNote",
+    "StrategyProfile",
     "Symbol",
     "User",
     "Workspace",

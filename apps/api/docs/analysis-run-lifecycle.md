@@ -135,10 +135,10 @@ audit logs were written
 feature snapshot was calculated and persisted
 indicator snapshot was calculated and persisted
 pattern candidates were calculated and persisted
-later signal engines have not run yet
+deterministic signal classification was calculated and persisted
 ```
 
-Future engine phases will continue from stored artifacts into signals and explanations.
+Future engine phases continue from stored artifacts into deterministic explanations, optional LLM explanations, and optional news correlation.
 
 ## Data Sufficiency Policy
 
@@ -172,6 +172,13 @@ analysis_windows_resolved
 features_calculated
 indicators_calculated
 patterns_detected
+signal_classification_started
+strategy_profiles_loaded
+pattern_candidates_ranked
+signal_selected
+no_signal_generated
+signal_classification_completed
+signals_calculated
 insufficient_data
 analysis_completed
 analysis_failed

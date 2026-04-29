@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -26,6 +27,7 @@ from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.indicators.service import IndicatorSnapshotService
 from app.modules.patterns.models import PatternCandidate
 from app.modules.patterns.service import PatternCandidateService
+from app.modules.signals.service import SignalClassificationService
 from app.modules.symbols.repository import SymbolRepository
 
 ANALYSIS_LIFECYCLE_ENGINE_VERSION = "analysis_lifecycle_0.1.0"
@@ -42,6 +44,7 @@ class AnalysisService:
         self.feature_snapshot_service = FeatureSnapshotService(session)
         self.indicator_snapshot_service = IndicatorSnapshotService(session)
         self.pattern_candidate_service = PatternCandidateService(session)
+        self.signal_classification_service = SignalClassificationService(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
 
@@ -294,7 +297,9 @@ class AnalysisService:
                 "Indicator snapshot calculated and persisted",
                 {
                     "indicatorSnapshotId": str(indicator_snapshot.id),
-                    "isReady": indicator_snapshot.indicators_json["calculation"]["isReady"],
+                    "isReady": indicator_snapshot_is_ready(
+                        indicator_snapshot.indicators_json
+                    ),
                 },
             )
             pattern_candidates = await self.pattern_candidate_service.create_candidates(
@@ -324,13 +329,30 @@ class AnalysisService:
                     ),
                 },
             )
+            signal = await self.signal_classification_service.classify_run(
+                run,
+                require_completed=False,
+            )
+            await self.add_audit_log(
+                run.id,
+                "signals_calculated",
+                "Deterministic signal classification completed and persisted",
+                {
+                    "signalId": str(signal.id),
+                    "classificationStatus": signal.classification_status,
+                    "bias": signal.bias,
+                    "strategyProfileKey": signal.strategy_profile_key,
+                },
+            )
             run.status = AnalysisRunStatus.COMPLETED
             run.completed_at = utc_now()
             await self.add_audit_log(
                 run.id,
                 "analysis_completed",
-                "Analysis feature, indicator, and pattern candidate snapshots completed",
-                {"nextEngine": "signal_classification"},
+                (
+                    "Analysis feature, indicator, pattern, and signal classification "
+                    "artifacts completed"
+                ),
             )
         except AppError as error:
             run.status = AnalysisRunStatus.FAILED
@@ -458,3 +480,10 @@ class AnalysisService:
                 metadata_json=metadata_json,
             )
         )
+
+
+def indicator_snapshot_is_ready(indicators_json: Mapping[str, object]) -> object:
+    calculation = indicators_json.get("calculation")
+    if isinstance(calculation, Mapping):
+        return calculation.get("isReady")
+    return None

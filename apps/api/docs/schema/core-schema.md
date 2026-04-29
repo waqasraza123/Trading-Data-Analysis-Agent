@@ -192,6 +192,70 @@ Allowed bias values:
 
 `strength_score` is constrained from 0 to 1. One candidate may be marked selected when a detector score clears the current selection threshold.
 
+### `strategy_profiles`
+
+Stores deterministic analysis profile configuration for signal classification.
+
+Important fields:
+
+- `key`
+- `version`
+- `is_active`
+- allowed and excluded pattern JSON
+- minimum candidate strength and confidence
+- component weights
+- risk filters
+- no-signal rules
+
+`key` and `version` are unique together. Default profiles are seeded for breakout/continuation, reversal/rejection, range/chop avoidance, and fakeout protection.
+
+### `signals`
+
+Stores one current deterministic classification output per analysis run.
+
+Important fields:
+
+- analysis run, workspace, symbol, and timeframe
+- selected strategy profile id/key/version and config snapshot
+- classification status, bias, pattern type, confidence score, and confidence label
+- selected pattern candidate id
+- movement, volatility, trend, and range state fields
+- summary and stable no-signal reason
+
+Allowed statuses:
+
+- `signal`
+- `no_signal`
+- `unclear`
+- `insufficient_evidence`
+
+Allowed bias values:
+
+- `bullish`
+- `bearish`
+- `neutral`
+- `unclear`
+
+### `signal_confidence_components`
+
+Stores every weighted confidence component for the selected signal output.
+
+Components currently include:
+
+- `pattern_strength`
+- `trend_alignment`
+- `volatility_confirmation`
+- `indicator_support`
+- `data_quality`
+
+### `signal_evidence`
+
+Stores deterministic signal evidence copied from selected pattern candidate evidence and classifier/conflict reasons.
+
+### `signal_risk_notes`
+
+Stores normalized risk and no-signal notes from candidate risk notes and deterministic classifier rules.
+
 ## Migration
 
 The initial schema migration is:
