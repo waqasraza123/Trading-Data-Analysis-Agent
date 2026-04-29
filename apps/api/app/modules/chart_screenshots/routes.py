@@ -16,10 +16,13 @@ from app.modules.chart_screenshots.parser import (
     CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
     ChartImageBounds,
     ChartImageExtractionConfig,
+    ChartImageExtractionResult,
+    build_trend_hypothesis,
     extract_candles_from_png,
 )
 from app.modules.chart_screenshots.schemas import (
     ChartScreenshotDecisionRead,
+    ChartScreenshotImageExtractionPreviewRead,
     ChartScreenshotPredictionCreate,
     ChartScreenshotRunListRead,
     ChartScreenshotRunRead,
@@ -29,6 +32,7 @@ from app.modules.chart_screenshots.schemas import (
 from app.modules.chart_screenshots.service import ChartScreenshotPredictionService
 
 router = APIRouter(prefix="/chart-screenshot-runs", tags=["chart-screenshot-runs"])
+PREVIEW_HUMAN_REVIEW_CONFIDENCE_THRESHOLD = Decimal("0.7500")
 
 
 def get_chart_screenshot_service(
@@ -79,22 +83,17 @@ async def create_chart_screenshot_run_from_image(
     analysis_warmup_start_time: Annotated[datetime | None, Form()] = None,
     analysis_baseline_start_time: Annotated[datetime | None, Form()] = None,
 ) -> ChartScreenshotRunRead:
-    file_bytes = await file.read()
-    settings = request.app.state.settings
-    if len(file_bytes) > settings.max_upload_file_bytes:
-        raise AppError(413, "upload_file_too_large", "Upload file is too large")
-    if price_max <= price_min:
-        raise AppError(422, "invalid_chart_price_range", "price_max must be greater than price_min")
-    bounds = parse_chart_bounds(chart_left, chart_top, chart_right, chart_bottom)
-    extraction = extract_candles_from_png(
-        image_bytes=file_bytes,
-        config=ChartImageExtractionConfig(
-            timeframe=timeframe,
-            window_start=window_start,
-            price_min=price_min,
-            price_max=price_max,
-            bounds=bounds,
-        ),
+    extraction = await extract_chart_image_from_upload(
+        request=request,
+        file=file,
+        timeframe=timeframe,
+        window_start=window_start,
+        price_min=price_min,
+        price_max=price_max,
+        chart_left=chart_left,
+        chart_top=chart_top,
+        chart_right=chart_right,
+        chart_bottom=chart_bottom,
     )
     metadata = extraction.parser_metadata_json
     if extraction.warnings:
@@ -120,6 +119,89 @@ async def create_chart_screenshot_run_from_image(
     )
     run = await service.create_prediction_run(payload)
     return ChartScreenshotRunRead.model_validate(run)
+
+
+@router.post("/image/preview", response_model=ChartScreenshotImageExtractionPreviewRead)
+async def preview_chart_screenshot_image_extraction(
+    request: Request,
+    timeframe: Annotated[Timeframe, Form()],
+    window_start: Annotated[datetime, Form()],
+    price_min: Annotated[Decimal, Form(gt=0)],
+    price_max: Annotated[Decimal, Form(gt=0)],
+    file: Annotated[UploadFile, File()],
+    chart_left: Annotated[int | None, Form(ge=0)] = None,
+    chart_top: Annotated[int | None, Form(ge=0)] = None,
+    chart_right: Annotated[int | None, Form(ge=0)] = None,
+    chart_bottom: Annotated[int | None, Form(ge=0)] = None,
+) -> ChartScreenshotImageExtractionPreviewRead:
+    extraction = await extract_chart_image_from_upload(
+        request=request,
+        file=file,
+        timeframe=timeframe,
+        window_start=window_start,
+        price_min=price_min,
+        price_max=price_max,
+        chart_left=chart_left,
+        chart_top=chart_top,
+        chart_right=chart_right,
+        chart_bottom=chart_bottom,
+    )
+    hypothesis = build_trend_hypothesis(extraction.candles, extraction.confidence)
+    warnings = [*extraction.warnings, *hypothesis.warnings]
+    metadata = extraction.parser_metadata_json
+    if extraction.warnings:
+        metadata["imageExtractionWarnings"] = extraction.warnings
+    return ChartScreenshotImageExtractionPreviewRead(
+        file_name=file.filename,
+        parser_name=CHART_SCREENSHOT_IMAGE_PARSER_NAME,
+        parser_version=CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
+        timeframe=timeframe,
+        window_start=window_start,
+        price_min=price_min,
+        price_max=price_max,
+        extraction_confidence=extraction.confidence,
+        candles=extraction.candles,
+        analysis_hypothesis=hypothesis.direction,
+        analysis_hypothesis_confidence=hypothesis.confidence,
+        trend_metrics_json=hypothesis.metrics_json,
+        warnings=warnings,
+        requires_human_review=(
+            extraction.confidence < PREVIEW_HUMAN_REVIEW_CONFIDENCE_THRESHOLD
+            or bool(warnings)
+        ),
+        parser_metadata_json=metadata,
+    )
+
+
+async def extract_chart_image_from_upload(
+    request: Request,
+    file: UploadFile,
+    timeframe: Timeframe,
+    window_start: datetime,
+    price_min: Decimal,
+    price_max: Decimal,
+    chart_left: int | None,
+    chart_top: int | None,
+    chart_right: int | None,
+    chart_bottom: int | None,
+) -> ChartImageExtractionResult:
+    file_bytes = await file.read()
+    settings = request.app.state.settings
+    if len(file_bytes) > settings.max_upload_file_bytes:
+        raise AppError(413, "upload_file_too_large", "Upload file is too large")
+    if price_max <= price_min:
+        raise AppError(422, "invalid_chart_price_range", "price_max must be greater than price_min")
+    bounds = parse_chart_bounds(chart_left, chart_top, chart_right, chart_bottom)
+    return extract_candles_from_png(
+        image_bytes=file_bytes,
+        config=ChartImageExtractionConfig(
+            timeframe=timeframe,
+            window_start=window_start,
+            price_min=price_min,
+            price_max=price_max,
+            bounds=bounds,
+        ),
+    )
 
 
 def parse_chart_bounds(

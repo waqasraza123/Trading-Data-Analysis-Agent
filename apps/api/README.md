@@ -287,6 +287,7 @@ optionally trigger the existing deterministic analysis lifecycle after extractio
 
 ```txt
 POST /chart-screenshot-runs
+POST /chart-screenshot-runs/image/preview
 POST /chart-screenshot-runs/image
 GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}

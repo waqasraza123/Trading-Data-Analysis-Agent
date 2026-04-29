@@ -10,10 +10,11 @@ is deterministic and conservative: it detects candle geometry from visible color
 then refuses the request when at least three candle shapes cannot be found.
 The expected production flow is:
 
-1. Upload a supported chart PNG to `POST /chart-screenshot-runs/image`, or submit reviewed OHLC
+1. Preview a supported chart PNG with `POST /chart-screenshot-runs/image/preview`, upload it to
+   `POST /chart-screenshot-runs/image`, or submit reviewed OHLC
    rows to `POST /chart-screenshot-runs`.
-2. Provide symbol, source, timeframe, start timestamp, and price range metadata.
-3. Review stored counts, warnings, and the deterministic trend hypothesis.
+2. Provide timeframe, start timestamp, and price range metadata for image extraction.
+3. Review extracted candles, warnings, and the deterministic trend hypothesis before storage.
 4. Optionally set `trigger_analysis=true` to run the existing deterministic analysis lifecycle over
    the extracted candle window.
 5. Use the persisted candle rows with existing candle/query/analysis APIs as needed.
@@ -34,6 +35,7 @@ configured.
 
 ```txt
 POST /chart-screenshot-runs
+POST /chart-screenshot-runs/image/preview
 POST /chart-screenshot-runs/image
 GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}
@@ -118,6 +120,43 @@ chart_bottom=520
 
 If bounds are omitted, the parser infers them from foreground pixels and records a warning in
 `parserMetadataJson.imageExtractionWarnings`.
+
+## Preview PNG Image Extraction
+
+`POST /chart-screenshot-runs/image/preview` runs deterministic PNG extraction without writing a
+chart screenshot run, inserting candles, or triggering analysis. It is intended for UI review,
+operator QA, and manual correction before persistence.
+
+Submit the same image calibration fields used by the persisted PNG endpoint, except workspace,
+source, and symbol identifiers are not required:
+
+```txt
+timeframe=15m
+window_start=2026-04-29T08:00:00Z
+price_min=63000
+price_max=64000
+file=@btc-chart.png
+chart_left=48
+chart_top=20
+chart_right=900
+chart_bottom=520
+```
+
+Preview responses include:
+
+- `candles`: extracted OHLC rows with timestamps and calibrated prices.
+- `extractionConfidence`: deterministic extraction confidence from detected geometry.
+- `analysisHypothesis`: lightweight trend hypothesis from the extracted closes.
+- `analysisHypothesisConfidence`: hypothesis confidence after extraction confidence is applied.
+- `trendMetricsJson`: first/last close, move ratio, directional step counts, and close consistency.
+- `warnings`: extraction and hypothesis warnings.
+- `requiresHumanReview`: `true` when confidence is below the production review threshold or warnings
+  are present.
+- `parserMetadataJson`: parser, image size, inferred/provided bounds, and detected candle count.
+
+The preview endpoint is not an analysis endpoint. It does not persist artifacts and does not return
+a trade decision. Persist the reviewed rows with `POST /chart-screenshot-runs` or persist the image
+with `POST /chart-screenshot-runs/image`, then use the review and decision endpoints as needed.
 
 ## Response Semantics
 

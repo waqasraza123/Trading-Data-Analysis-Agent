@@ -135,6 +135,24 @@ class ChartScreenshotRunReviewRead(ApiSchema):
     corrected_run: ChartScreenshotRunRead | None
 
 
+class ChartScreenshotImageExtractionPreviewRead(ApiSchema):
+    file_name: str | None
+    parser_name: str
+    parser_version: str
+    timeframe: Timeframe
+    window_start: datetime
+    price_min: Decimal
+    price_max: Decimal
+    extraction_confidence: Decimal
+    candles: list[ChartScreenshotCandle]
+    analysis_hypothesis: ChartTrendDirection
+    analysis_hypothesis_confidence: Decimal
+    trend_metrics_json: dict[str, Any]
+    warnings: list[str]
+    requires_human_review: bool
+    parser_metadata_json: dict[str, Any]
+
+
 class ChartScreenshotDecisionRead(ApiSchema):
     chart_screenshot_run: ChartScreenshotRunRead
     decision_source: str
