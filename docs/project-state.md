@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health endpoints only; no trading intelligence logic exists yet.
+- The API currently exposes health, symbol configuration, and data source configuration endpoints; no trading intelligence logic exists yet.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
 - The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
@@ -42,8 +42,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Use `docs/backend-only-implementation-plan.md` as the phase-by-phase roadmap.
 - Phase 1 FastAPI + Neon foundation is implemented.
 - Phase 2 core database schema is implemented for workspaces, users, symbols, data_sources, import_batches, import_errors, candles, live_feed_subscriptions, live_feed_events, analysis_runs, analysis_audit_logs, and engine_versions.
-- Next phase is Phase 3: symbol and data source configuration services.
-- Later phases add unified candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
+- Phase 3 symbol and data source configuration services are implemented.
+- Next phase is the unified candle validation and normalization layer.
+- Later phases add candle imports/live feed storage/quality, analysis lifecycle, deterministic feature/indicator/pattern/signal engines, evidence/confidence/risk notes, explanations, news correlation, live scanning, replay/versioning, golden tests, observability, security, and performance tuning.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -55,6 +56,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Added Phase 0 backend architecture plan covering the FastAPI + Neon foundation and unified CSV/live ingestion boundary.
 - Implemented Phase 1 FastAPI + Neon backend foundation under `apps/api/`.
 - Implemented Phase 2 core SQLAlchemy models, Alembic migration, and schema documentation.
+- Implemented Phase 3 symbol and data source schemas, repositories, services, routes, seed payloads, and documentation.
 
 ## Important Decisions
 
@@ -68,12 +70,14 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Phase 1 intentionally keeps `DATABASE_URL` optional at app startup so local health can run without secrets; `/health/db` reports unhealthy until a database URL is configured.
 - Async SQLAlchemy normalizes `postgresql://` and `postgres://` URLs to `postgresql+asyncpg://` for Neon compatibility.
 - Phase 2 owns the first business schema; Phase 3 should add services/routes without changing the ingestion truth boundary.
+- Symbol and data source services are the first business configuration APIs; they do not perform imports, live ingestion, or analysis.
 
 ## Deferred / Not Yet Implemented
 
 - README and product usage documentation.
 - Lockfile.
-- Core schema API routes, repositories, services, and seed data.
+- Workspace and user API routes.
+- Seed execution command.
 - Data ingestion, analysis workflow, deterministic engines, workers, storage, and external API integrations.
 - Deployment configuration beyond the API Dockerfile and CI workflow.
 

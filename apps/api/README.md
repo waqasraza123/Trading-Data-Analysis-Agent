@@ -48,3 +48,9 @@ The Phase 2 core schema is documented in:
 ```txt
 docs/schema/core-schema.md
 ```
+
+The Phase 3 configuration services are documented in:
+
+```txt
+docs/configuration-services.md
+```

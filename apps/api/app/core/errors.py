@@ -22,6 +22,14 @@ class ErrorResponse(BaseModel):
     error: ErrorDetail
 
 
+class AppError(Exception):
+    def __init__(self, status_code: int, code: str, message: str) -> None:
+        self.status_code = status_code
+        self.code = code
+        self.message = message
+        super().__init__(message)
+
+
 class RequestIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self,
@@ -74,6 +82,17 @@ async def handle_http_exception(request: Request, exception: Exception) -> JSONR
     )
 
 
+async def handle_app_error(request: Request, exception: Exception) -> JSONResponse:
+    if not isinstance(exception, AppError):
+        return await handle_unexpected_exception(request, exception)
+    return create_error_response(
+        request=request,
+        status_code=exception.status_code,
+        code=exception.code,
+        message=exception.message,
+    )
+
+
 async def handle_validation_exception(
     request: Request,
     exception: Exception,
@@ -111,6 +130,7 @@ async def handle_unexpected_exception(request: Request, exception: Exception) ->
 
 
 def register_error_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(AppError, handle_app_error)
     app.add_exception_handler(HTTPException, handle_http_exception)
     app.add_exception_handler(RequestValidationError, handle_validation_exception)
     app.add_exception_handler(Exception, handle_unexpected_exception)
