@@ -37,6 +37,7 @@ POST /chart-screenshot-runs
 POST /chart-screenshot-runs/image
 GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}
+POST /chart-screenshot-runs/{run_id}/review
 GET /chart-screenshot-runs/{run_id}/decision
 ```
 
@@ -175,6 +176,86 @@ When analysis is triggered:
 The analysis lifecycle still enforces normal candle sufficiency, final-candle reads, deterministic
 feature/indicator/pattern/signal generation, deterministic explanation generation, and optional
 news/LLM behavior.
+
+## Human Review And Correction
+
+`POST /chart-screenshot-runs/{run_id}/review` records human review metadata for a screenshot run.
+This is the production safety path for low-confidence image extraction, platform-specific chart
+styles, or cases where a user manually corrects extracted candles before relying on analysis.
+
+Supported review statuses:
+
+```txt
+accepted
+rejected
+needs_correction
+corrected
+```
+
+Accepted, rejected, and needs-correction reviews update `parserMetadataJson.humanReview` on the
+original run. They do not mutate extracted candles and do not rewrite the original audit payload.
+Accepted reviews may set `triggerAnalysis=true` to create an analysis run for the reviewed original
+extraction. Rejected and needs-correction reviews cannot trigger analysis.
+
+Corrected reviews require `correctedCandles`. The service creates a new chart screenshot run with:
+
+- `parserName=human_review_correction`;
+- `parserSourcePath=correction:{originalRunId}`;
+- `extractionConfidence=1.0000`;
+- `parserMetadataJson.correctedFromChartScreenshotRunId`;
+- optional `triggerAnalysis`, news correlation, AI explanation, warmup, and baseline settings.
+
+The original run is updated with `parserMetadataJson.humanReview.correctedChartScreenshotRunId`.
+This preserves the original extraction and creates a separate auditable corrected run that flows
+through the same candle validation, storage, hypothesis, and optional analysis lifecycle.
+
+Example accepted review:
+
+```json
+{
+  "reviewStatus": "accepted",
+  "reviewerUserId": "00000000-0000-0000-0000-000000000000",
+  "reviewNotes": "Candles match the uploaded chart closely enough for analysis.",
+  "triggerAnalysis": true
+}
+```
+
+Example corrected review:
+
+```json
+{
+  "reviewStatus": "corrected",
+  "reviewerUserId": "00000000-0000-0000-0000-000000000000",
+  "reviewNotes": "Corrected the first candle high and final candle close.",
+  "triggerAnalysis": true,
+  "correctedCandles": [
+    {
+      "timestamp": "2026-04-29T08:00:00Z",
+      "open": "63000",
+      "high": "63300",
+      "low": "62800",
+      "close": "63250",
+      "volume": "120"
+    },
+    {
+      "timestamp": "2026-04-29T08:15:00Z",
+      "open": "63250",
+      "high": "63600",
+      "low": "63100",
+      "close": "63520",
+      "volume": "140"
+    },
+    {
+      "timestamp": "2026-04-29T08:30:00Z",
+      "open": "63520",
+      "high": "63750",
+      "low": "63400",
+      "close": "63700",
+      "volume": "132"
+    }
+  ]
+}
+```
 
 ## Decision Response
 

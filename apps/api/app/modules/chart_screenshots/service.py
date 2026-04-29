@@ -13,6 +13,7 @@ from app.modules.analysis.service import AnalysisService
 from app.modules.candles.normalizer import RawCandlePayload, normalize_candle_payload
 from app.modules.candles.repository import CandleRepository
 from app.modules.candles.schemas import CandleOriginType, CandleUpsertStatus
+from app.modules.candles.timeframes import Timeframe
 from app.modules.candles.validator import validate_candle
 from app.modules.chart_screenshots.models import (
     ChartScreenshotRun,
@@ -28,6 +29,9 @@ from app.modules.chart_screenshots.repository import ChartScreenshotRunRepositor
 from app.modules.chart_screenshots.schemas import (
     ChartScreenshotDecisionRead,
     ChartScreenshotPredictionCreate,
+    ChartScreenshotReviewStatus,
+    ChartScreenshotRunReviewRead,
+    ChartScreenshotRunReviewRequest,
     ChartScreenshotRunRead,
 )
 from app.modules.data_sources.models import DataSource, DataSourceType
@@ -172,6 +176,65 @@ class ChartScreenshotPredictionService:
         if run is None:
             raise AppError(404, "chart_screenshot_run_not_found", "Chart screenshot run not found")
         return run
+
+    async def review_run(
+        self,
+        run_id: UUID,
+        payload: ChartScreenshotRunReviewRequest,
+    ) -> ChartScreenshotRunReviewRead:
+        original_run = await self.get_run(run_id)
+        corrected_run: ChartScreenshotRun | None = None
+        if payload.review_status == ChartScreenshotReviewStatus.CORRECTED:
+            if not payload.corrected_candles:
+                raise AppError(
+                    422,
+                    "corrected_candles_required",
+                    "Corrected review status requires corrected_candles",
+                )
+            corrected_run = await self.create_correction_run(original_run, payload)
+            original_run = await self.get_run(run_id)
+        elif payload.corrected_candles:
+            raise AppError(
+                422,
+                "invalid_review_correction",
+                "corrected_candles can only be provided when review_status is corrected",
+            )
+        if (
+            payload.trigger_analysis
+            and payload.review_status
+            not in {
+                ChartScreenshotReviewStatus.ACCEPTED,
+                ChartScreenshotReviewStatus.CORRECTED,
+            }
+        ):
+            raise AppError(
+                422,
+                "invalid_review_analysis_trigger",
+                "Only accepted or corrected reviews can trigger analysis",
+            )
+        if (
+            payload.review_status == ChartScreenshotReviewStatus.ACCEPTED
+            and payload.trigger_analysis
+            and original_run.analysis_run_id is None
+        ):
+            original_run = await self.trigger_analysis_for_reviewed_run(original_run, payload)
+        original_run.parser_metadata_json = self.with_human_review_metadata(
+            original_run.parser_metadata_json,
+            payload,
+            corrected_run,
+        )
+        await self.session.commit()
+        await self.session.refresh(original_run)
+        if corrected_run is not None:
+            await self.session.refresh(corrected_run)
+        return ChartScreenshotRunReviewRead(
+            reviewed_run=ChartScreenshotRunRead.model_validate(original_run),
+            corrected_run=(
+                ChartScreenshotRunRead.model_validate(corrected_run)
+                if corrected_run is not None
+                else None
+            ),
+        )
 
     async def get_decision(self, run_id: UUID) -> ChartScreenshotDecisionRead:
         run = await self.get_run(run_id)
@@ -434,3 +497,134 @@ class ChartScreenshotPredictionService:
         if not isinstance(raw_warnings, list):
             return []
         return [str(item) for item in raw_warnings]
+
+    async def create_correction_run(
+        self,
+        original_run: ChartScreenshotRun,
+        payload: ChartScreenshotRunReviewRequest,
+    ) -> ChartScreenshotRun:
+        if payload.corrected_candles is None:
+            raise AppError(
+                422,
+                "corrected_candles_required",
+                "Corrected review status requires corrected_candles",
+            )
+        correction_payload = ChartScreenshotPredictionCreate(
+            workspace_id=original_run.workspace_id,
+            user_id=payload.reviewer_user_id or original_run.user_id,
+            source_id=original_run.source_id,
+            symbol_id=original_run.symbol_id,
+            timeframe=original_run_timeframe(original_run),
+            file_name=original_run.file_name,
+            parser_source_path=f"correction:{original_run.id}",
+            parser_name="human_review_correction",
+            parser_version="0.1.0",
+            extraction_confidence=Decimal("1.0000"),
+            candles=payload.corrected_candles,
+            parser_metadata_json={
+                "correctedFromChartScreenshotRunId": str(original_run.id),
+                "reviewerUserId": (
+                    str(payload.reviewer_user_id)
+                    if payload.reviewer_user_id is not None
+                    else None
+                ),
+                "reviewNotes": payload.review_notes,
+            },
+            trigger_analysis=payload.trigger_analysis,
+            include_news_correlation=payload.include_news_correlation,
+            include_ai_explanation=payload.include_ai_explanation,
+            analysis_warmup_start_time=payload.analysis_warmup_start_time,
+            analysis_baseline_start_time=payload.analysis_baseline_start_time,
+        )
+        return await self.create_prediction_run(correction_payload)
+
+    async def trigger_analysis_for_reviewed_run(
+        self,
+        run: ChartScreenshotRun,
+        payload: ChartScreenshotRunReviewRequest,
+    ) -> ChartScreenshotRun:
+        if run.extracted_window_start is None or run.extracted_window_end is None:
+            raise AppError(
+                422,
+                "chart_screenshot_window_missing",
+                "Chart screenshot run has no extracted analysis window",
+            )
+        try:
+            analysis_run = await AnalysisService(self.session).create_historical_run(
+                AnalysisRunCreate(
+                    workspace_id=run.workspace_id,
+                    user_id=payload.reviewer_user_id or run.user_id,
+                    symbol_id=run.symbol_id,
+                    source_id=run.source_id,
+                    timeframe=original_run_timeframe(run),
+                    start_time=run.extracted_window_start,
+                    end_time=run.extracted_window_end,
+                    warmup_start_time=payload.analysis_warmup_start_time,
+                    baseline_start_time=payload.analysis_baseline_start_time,
+                    include_news_correlation=payload.include_news_correlation,
+                    include_ai_explanation=payload.include_ai_explanation,
+                )
+            )
+        except AppError as error:
+            await self.session.rollback()
+            latest_run = await self.get_run(run.id)
+            latest_run.status = ChartScreenshotRunStatus.ANALYSIS_FAILED.value
+            latest_run.last_error_code = error.code
+            latest_run.last_error_message = error.message
+            await self.session.commit()
+            await self.session.refresh(latest_run)
+            return latest_run
+        latest_run = await self.get_run(run.id)
+        latest_run.analysis_run_id = analysis_run.id
+        latest_run.status = ChartScreenshotRunStatus.ANALYSIS_TRIGGERED.value
+        latest_run.parser_metadata_json = {
+            **latest_run.parser_metadata_json,
+            "analysisTrigger": {
+                "analysisRunId": str(analysis_run.id),
+                "analysisStatus": str(analysis_run.status),
+                "includeNewsCorrelation": payload.include_news_correlation,
+                "includeAiExplanation": payload.include_ai_explanation,
+                "triggeredByHumanReview": True,
+            },
+        }
+        await self.session.commit()
+        await self.session.refresh(latest_run)
+        return latest_run
+
+    def with_human_review_metadata(
+        self,
+        metadata_json: dict[str, object],
+        payload: ChartScreenshotRunReviewRequest,
+        corrected_run: ChartScreenshotRun | None,
+    ) -> dict[str, object]:
+        return {
+            **metadata_json,
+            "humanReview": {
+                "status": payload.review_status.value,
+                "reviewerUserId": (
+                    str(payload.reviewer_user_id)
+                    if payload.reviewer_user_id is not None
+                    else None
+                ),
+                "reviewNotes": payload.review_notes,
+                "reviewedAt": utc_now().isoformat(),
+                "correctedChartScreenshotRunId": (
+                    str(corrected_run.id) if corrected_run is not None else None
+                ),
+                "triggeredAnalysis": payload.trigger_analysis,
+                "analysisTarget": (
+                    "corrected_run"
+                    if corrected_run is not None and payload.trigger_analysis
+                    else (
+                        "reviewed_run"
+                        if payload.review_status == ChartScreenshotReviewStatus.ACCEPTED
+                        and payload.trigger_analysis
+                        else None
+                    )
+                ),
+            },
+        }
+
+
+def original_run_timeframe(run: ChartScreenshotRun) -> Timeframe:
+    return Timeframe(run.timeframe)

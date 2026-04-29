@@ -23,6 +23,8 @@ from app.modules.chart_screenshots.schemas import (
     ChartScreenshotPredictionCreate,
     ChartScreenshotRunListRead,
     ChartScreenshotRunRead,
+    ChartScreenshotRunReviewRead,
+    ChartScreenshotRunReviewRequest,
 )
 from app.modules.chart_screenshots.service import ChartScreenshotPredictionService
 
@@ -185,6 +187,18 @@ async def get_chart_screenshot_run(
 ) -> ChartScreenshotRunRead:
     run = await service.get_run(run_id)
     return ChartScreenshotRunRead.model_validate(run)
+
+
+@router.post("/{run_id}/review", response_model=ChartScreenshotRunReviewRead)
+async def review_chart_screenshot_run(
+    run_id: UUID,
+    payload: ChartScreenshotRunReviewRequest,
+    service: Annotated[
+        ChartScreenshotPredictionService,
+        Depends(get_chart_screenshot_service),
+    ],
+) -> ChartScreenshotRunReviewRead:
+    return await service.review_run(run_id, payload)
 
 
 @router.get("/{run_id}/decision", response_model=ChartScreenshotDecisionRead)

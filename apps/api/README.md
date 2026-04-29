@@ -290,6 +290,7 @@ POST /chart-screenshot-runs
 POST /chart-screenshot-runs/image
 GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}
+POST /chart-screenshot-runs/{run_id}/review
 GET /chart-screenshot-runs/{run_id}/decision
 ```
 

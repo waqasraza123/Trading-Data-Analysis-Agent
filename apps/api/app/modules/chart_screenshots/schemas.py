@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
@@ -60,6 +61,37 @@ class ChartScreenshotPredictionCreate(ApiSchema):
         return normalized or None
 
 
+class ChartScreenshotReviewStatus(StrEnum):
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    NEEDS_CORRECTION = "needs_correction"
+    CORRECTED = "corrected"
+
+
+class ChartScreenshotRunReviewRequest(ApiSchema):
+    review_status: ChartScreenshotReviewStatus
+    reviewer_user_id: UUID | None = None
+    review_notes: str | None = Field(default=None, max_length=1000)
+    corrected_candles: list[ChartScreenshotCandle] | None = Field(
+        default=None,
+        min_length=3,
+        max_length=1000,
+    )
+    trigger_analysis: bool = False
+    include_news_correlation: bool = False
+    include_ai_explanation: bool = False
+    analysis_warmup_start_time: datetime | None = None
+    analysis_baseline_start_time: datetime | None = None
+
+    @field_validator("review_notes")
+    @classmethod
+    def normalize_review_notes(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
 class ChartScreenshotRunRead(ApiReadSchema):
     id: UUID
     workspace_id: UUID
@@ -96,6 +128,11 @@ class ChartScreenshotRunRead(ApiReadSchema):
 class ChartScreenshotRunListRead(ApiSchema):
     count: int
     runs: list[ChartScreenshotRunRead]
+
+
+class ChartScreenshotRunReviewRead(ApiSchema):
+    reviewed_run: ChartScreenshotRunRead
+    corrected_run: ChartScreenshotRunRead | None
 
 
 class ChartScreenshotDecisionRead(ApiSchema):
