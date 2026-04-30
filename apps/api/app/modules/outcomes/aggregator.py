@@ -122,8 +122,12 @@ def performance_from_group(
         continuation_rate=rate(continuation_count, evaluated_count),
         reversal_rate=rate(reversal_count, evaluated_count),
         historical_follow_through_rate=rate(continuation_count + partial_count, evaluated_count),
-        average_max_favorable_move=average_decimal([outcome.max_favorable_move for outcome in evaluated]),
-        average_max_adverse_move=average_decimal([outcome.max_adverse_move for outcome in evaluated]),
+        average_max_favorable_move=average_decimal(
+            [outcome.max_favorable_move for outcome in evaluated]
+        ),
+        average_max_adverse_move=average_decimal(
+            [outcome.max_adverse_move for outcome in evaluated]
+        ),
         average_net_move=average_decimal([outcome.net_move for outcome in evaluated]),
         average_max_favorable_pips=average_optional_decimal(
             [outcome.max_favorable_pips for outcome in evaluated]

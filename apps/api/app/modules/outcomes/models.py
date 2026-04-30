@@ -76,7 +76,8 @@ class SignalOutcome(Base):
         ),
         CheckConstraint(
             "outcome_label in ('continuation', 'partial_follow_through', 'no_follow_through', "
-            "'reversal', 'sideways_after_signal', 'insufficient_data', 'not_directional', 'failed')",
+            "'reversal', 'sideways_after_signal', 'insufficient_data', 'not_directional', "
+            "'failed')",
             name="signal_outcomes_outcome_label_allowed",
         ),
         CheckConstraint("horizon_minutes > 0", name="signal_outcomes_horizon_positive"),

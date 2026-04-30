@@ -134,7 +134,10 @@ class OutcomeCalculator:
             reversal_detected=reversal_detected,
         )
 
-    def calculate_not_directional(self, payload: OutcomeCalculationInput) -> OutcomeCalculationResult:
+    def calculate_not_directional(
+        self,
+        payload: OutcomeCalculationInput,
+    ) -> OutcomeCalculationResult:
         highest_high = max(candle.high for candle in payload.future_candles)
         lowest_low = min(candle.low for candle in payload.future_candles)
         final_close = payload.future_candles[-1].close
@@ -154,7 +157,9 @@ class OutcomeCalculator:
             net=net,
             direction_followed=None,
             reversal_detected=False,
-            extra_metadata={"notDirectionalReason": "bias_or_classification_status_not_directional"},
+            extra_metadata={
+                "notDirectionalReason": "bias_or_classification_status_not_directional"
+            },
         )
 
 

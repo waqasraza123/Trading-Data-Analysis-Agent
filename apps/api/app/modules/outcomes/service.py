@@ -37,7 +37,6 @@ from app.modules.outcomes.schemas import (
 )
 from app.modules.signals.models import Signal
 from app.modules.signals.repository import SignalRepository
-from app.modules.symbols.models import Symbol
 from app.modules.symbols.repository import SymbolRepository
 
 
@@ -235,7 +234,11 @@ class OutcomeEvaluationService:
     async def get_evaluation_run(self, run_id: UUID) -> OutcomeEvaluationRun:
         run = await self.outcome_repository.get_evaluation_run(run_id)
         if run is None:
-            raise AppError(404, "outcome_evaluation_run_not_found", "Outcome evaluation run not found")
+            raise AppError(
+                404,
+                "outcome_evaluation_run_not_found",
+                "Outcome evaluation run not found",
+            )
         return run
 
     async def aggregate_by_patterns(

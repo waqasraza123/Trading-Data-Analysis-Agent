@@ -35,9 +35,9 @@ from app.modules.chart_screenshots.schemas import (
     ChartScreenshotPredictionCreate,
     ChartScreenshotReportRead,
     ChartScreenshotReviewStatus,
+    ChartScreenshotRunRead,
     ChartScreenshotRunReviewRead,
     ChartScreenshotRunReviewRequest,
-    ChartScreenshotRunRead,
 )
 from app.modules.data_sources.models import DataSource, DataSourceType
 from app.modules.data_sources.repository import DataSourceRepository
@@ -86,9 +86,7 @@ class ChartScreenshotPredictionService:
                     extracted_window_start=min(candle.timestamp for candle in payload.candles),
                     extracted_window_end=max(candle.timestamp for candle in payload.candles),
                     extracted_payload_json={
-                        "candles": [
-                            candle.model_dump(mode="json") for candle in payload.candles
-                        ],
+                        "candles": [candle.model_dump(mode="json") for candle in payload.candles],
                         "trendMetrics": hypothesis.metrics_json,
                     },
                     extraction_warnings_json={"warnings": hypothesis.warnings},
@@ -204,14 +202,10 @@ class ChartScreenshotPredictionService:
                 "invalid_review_correction",
                 "corrected_candles can only be provided when review_status is corrected",
             )
-        if (
-            payload.trigger_analysis
-            and payload.review_status
-            not in {
-                ChartScreenshotReviewStatus.ACCEPTED,
-                ChartScreenshotReviewStatus.CORRECTED,
-            }
-        ):
+        if payload.trigger_analysis and payload.review_status not in {
+            ChartScreenshotReviewStatus.ACCEPTED,
+            ChartScreenshotReviewStatus.CORRECTED,
+        }:
             raise AppError(
                 422,
                 "invalid_review_analysis_trigger",
@@ -259,7 +253,8 @@ class ChartScreenshotPredictionService:
         analysis_run = await analysis_service.get_run(run.analysis_run_id)
         if analysis_run.status != AnalysisRunStatus.COMPLETED.value:
             warnings.append(
-                f"Linked analysis run is {analysis_run.status}; returning screenshot-only hypothesis"
+                "Linked analysis run is "
+                f"{analysis_run.status}; returning screenshot-only hypothesis"
             )
             return self.build_screenshot_hypothesis_decision(
                 run=run,
@@ -346,9 +341,7 @@ class ChartScreenshotPredictionService:
                 if parent_run is not None
                 else None
             ),
-            correction_runs=[
-                ChartScreenshotRunRead.model_validate(run) for run in correction_runs
-            ],
+            correction_runs=[ChartScreenshotRunRead.model_validate(run) for run in correction_runs],
             latest_correction_run=(
                 ChartScreenshotRunRead.model_validate(latest_correction_run)
                 if latest_correction_run is not None
@@ -410,9 +403,7 @@ class ChartScreenshotPredictionService:
     ) -> None:
         raw_warning_items = run.extraction_warnings_json.get("warnings")
         warning_items = (
-            [str(item) for item in raw_warning_items]
-            if isinstance(raw_warning_items, list)
-            else []
+            [str(item) for item in raw_warning_items] if isinstance(raw_warning_items, list) else []
         )
         stored_count = 0
         duplicate_count = 0
@@ -555,9 +546,7 @@ class ChartScreenshotPredictionService:
                 ]
             )
         if signal_classification.evidence:
-            reasoning.extend(
-                item.message for item in signal_classification.evidence[:5]
-            )
+            reasoning.extend(item.message for item in signal_classification.evidence[:5])
         return [item for item in reasoning if item]
 
     def extract_warning_items(self, warnings_json: dict[str, object]) -> list[str]:
@@ -684,9 +673,7 @@ class ChartScreenshotPredictionService:
             parser_metadata_json={
                 "correctedFromChartScreenshotRunId": str(original_run.id),
                 "reviewerUserId": (
-                    str(payload.reviewer_user_id)
-                    if payload.reviewer_user_id is not None
-                    else None
+                    str(payload.reviewer_user_id) if payload.reviewer_user_id is not None else None
                 ),
                 "reviewNotes": payload.review_notes,
             },
@@ -762,9 +749,7 @@ class ChartScreenshotPredictionService:
             "humanReview": {
                 "status": payload.review_status.value,
                 "reviewerUserId": (
-                    str(payload.reviewer_user_id)
-                    if payload.reviewer_user_id is not None
-                    else None
+                    str(payload.reviewer_user_id) if payload.reviewer_user_id is not None else None
                 ),
                 "reviewNotes": payload.review_notes,
                 "reviewedAt": utc_now().isoformat(),

@@ -11,7 +11,6 @@ from app.modules.outcomes.calculator import (
 from app.modules.signals.models import SignalBias, SignalClassificationStatus
 from app.modules.symbols.models import MarketType
 
-
 BASE_TIME = datetime(2026, 1, 1, tzinfo=UTC)
 
 

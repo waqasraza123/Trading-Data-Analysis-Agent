@@ -13,12 +13,13 @@ from app.modules.outcomes.models import (
     OutcomeLabel,
 )
 
-
 DEFAULT_OUTCOME_HORIZONS_MINUTES = [5, 15, 30, 60]
 
 
 class OutcomeEvaluationRequest(ApiSchema):
-    horizons_minutes: list[int] = Field(default_factory=lambda: DEFAULT_OUTCOME_HORIZONS_MINUTES.copy())
+    horizons_minutes: list[int] = Field(
+        default_factory=lambda: DEFAULT_OUTCOME_HORIZONS_MINUTES.copy()
+    )
     force_recompute: bool = False
 
     @model_validator(mode="after")
@@ -31,7 +32,9 @@ class OutcomeBackfillRequest(ApiSchema):
     workspace_id: UUID
     symbol_id: UUID | None = None
     timeframe: str | None = None
-    horizons_minutes: list[int] = Field(default_factory=lambda: DEFAULT_OUTCOME_HORIZONS_MINUTES.copy())
+    horizons_minutes: list[int] = Field(
+        default_factory=lambda: DEFAULT_OUTCOME_HORIZONS_MINUTES.copy()
+    )
     force_recompute: bool = False
     limit: int = Field(default=500, ge=1, le=5000)
     include_replay: bool = False
@@ -54,7 +57,11 @@ class OutcomePerformanceQuery(ApiSchema):
 
     @model_validator(mode="after")
     def validate_window(self) -> "OutcomePerformanceQuery":
-        if self.start_time is not None and self.end_time is not None and self.start_time > self.end_time:
+        if (
+            self.start_time is not None
+            and self.end_time is not None
+            and self.start_time > self.end_time
+        ):
             msg = "start_time must be before end_time"
             raise ValueError(msg)
         return self

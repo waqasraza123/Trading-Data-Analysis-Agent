@@ -112,6 +112,16 @@ Statuses:
 Recommendations never auto-apply. Suggested changes are written as review payloads for an operator
 or future UI, not as mutations to `strategy_profiles`.
 
+## Worker Interaction
+
+Diagnostics read whatever persisted `signal_outcomes` match the requested workspace, horizons, and
+filters. Outcomes may have been created manually through outcome APIs, by backfill, or by the
+reasoning action worker's `evaluate_outcome_after_horizon` action.
+
+Diagnostics do not start the action worker, claim action items, create executable action items, or
+apply calibration recommendations. Recommendation records remain advisory even when they are based
+on fresh outcomes produced by due action execution.
+
 ## Configuration
 
 Defaults:

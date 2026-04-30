@@ -42,6 +42,10 @@ The worker can execute:
 `request_human_review` stays pending for a manual workflow. The worker does not send notifications
 or auto-complete review items.
 
+The worker does not run profile diagnostics and does not apply calibration recommendations. Stored
+outcomes produced by worker-executed evaluation actions can later be read by diagnostics through the
+normal diagnostics API.
+
 Rejected trading actions include `buy`, `sell`, `enter_trade`, `exit_trade`, `place_order`,
 `set_stop_loss`, `set_take_profit`, `use_leverage`, `open_position`, `close_position`,
 `copy_trade`, and `execute_trade`. They are not selected by the worker and are never broker/order

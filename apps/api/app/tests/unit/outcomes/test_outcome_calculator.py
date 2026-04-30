@@ -77,7 +77,9 @@ def test_neutral_no_signal_is_not_directional() -> None:
 
 
 def test_insufficient_future_candles() -> None:
-    result = OutcomeCalculator().calculate(calculation_input(candles=[candle(1, "101", "100", "100.5")]))
+    result = OutcomeCalculator().calculate(
+        calculation_input(candles=[candle(1, "101", "100", "100.5")])
+    )
 
     assert result.evaluation_status == OutcomeEvaluationStatus.INSUFFICIENT_FUTURE_DATA
     assert result.outcome_label == OutcomeLabel.INSUFFICIENT_DATA
@@ -85,11 +87,14 @@ def test_insufficient_future_candles() -> None:
 
 def test_forex_pip_conversion() -> None:
     result = OutcomeCalculator().calculate(
-        calculation_input(reference_price="1.1000", candles=[
-            candle(1, "1.1010", "1.0998", "1.1005"),
-            candle(2, "1.1020", "1.1004", "1.1014"),
-            candle(3, "1.1030", "1.1012", "1.1022"),
-        ])
+        calculation_input(
+            reference_price="1.1000",
+            candles=[
+                candle(1, "1.1010", "1.0998", "1.1005"),
+                candle(2, "1.1020", "1.1004", "1.1014"),
+                candle(3, "1.1030", "1.1012", "1.1022"),
+            ],
+        )
     )
 
     assert result.max_favorable_pips == Decimal("30")
@@ -112,9 +117,13 @@ def test_missing_pip_or_tick_metadata_degrades_gracefully() -> None:
     )
 
     assert forex_result.max_favorable_pips is None
-    assert "missing_pip_size" in forex_result.metadata_json["warnings"]
+    forex_warnings = forex_result.metadata_json.get("warnings")
+    assert isinstance(forex_warnings, list)
+    assert "missing_pip_size" in forex_warnings
     assert crypto_result.max_favorable_ticks is None
-    assert "missing_tick_size" in crypto_result.metadata_json["warnings"]
+    crypto_warnings = crypto_result.metadata_json.get("warnings")
+    assert isinstance(crypto_warnings, list)
+    assert "missing_tick_size" in crypto_warnings
 
 
 def test_no_follow_through_threshold_behavior() -> None:

@@ -1,7 +1,7 @@
 """add signal outcome evaluation tables
 
 Revision ID: 202604301030
-Revises: 202604291430
+Revises: 202604291530
 Create Date: 2026-04-30 10:30:00.000000
 """
 
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 revision: str = "202604301030"
-down_revision: str | tuple[str, str] | None = "202604291430"
+down_revision: str | tuple[str, str] | None = "202604291530"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -99,7 +99,8 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "outcome_label in ('continuation', 'partial_follow_through', 'no_follow_through', "
-            "'reversal', 'sideways_after_signal', 'insufficient_data', 'not_directional', 'failed')",
+            "'reversal', 'sideways_after_signal', 'insufficient_data', 'not_directional', "
+            "'failed')",
             name=op.f("ck_signal_outcomes_signal_outcomes_outcome_label_allowed"),
         ),
         sa.ForeignKeyConstraint(
@@ -192,11 +193,15 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "evaluated_count >= 0",
-            name=op.f("ck_outcome_evaluation_runs_outcome_evaluation_runs_evaluated_count_non_negative"),
+            name=op.f(
+                "ck_outcome_evaluation_runs_outcome_evaluation_runs_evaluated_count_non_negative"
+            ),
         ),
         sa.CheckConstraint(
             "failed_count >= 0",
-            name=op.f("ck_outcome_evaluation_runs_outcome_evaluation_runs_failed_count_non_negative"),
+            name=op.f(
+                "ck_outcome_evaluation_runs_outcome_evaluation_runs_failed_count_non_negative"
+            ),
         ),
         sa.CheckConstraint(
             "scope_type in ('single_signal', 'analysis_run', 'workspace_backfill', "
@@ -205,7 +210,9 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "skipped_count >= 0",
-            name=op.f("ck_outcome_evaluation_runs_outcome_evaluation_runs_skipped_count_non_negative"),
+            name=op.f(
+                "ck_outcome_evaluation_runs_outcome_evaluation_runs_skipped_count_non_negative"
+            ),
         ),
         sa.CheckConstraint(
             "status in ('pending', 'running', 'completed', 'completed_with_warnings', 'failed')",
