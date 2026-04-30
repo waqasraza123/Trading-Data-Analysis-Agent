@@ -1,4 +1,9 @@
 from app.db.base import Base
+from app.modules.action_plans.models import (
+    ReasoningActionItem,
+    ReasoningActionPlan,
+    ReasoningActionWorkerRun,
+)
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.candles.models import Candle
 from app.modules.chart_screenshots.models import ChartScreenshotRun
@@ -47,6 +52,9 @@ __all__ = [
     "NewsEvent",
     "OutcomeEvaluationRun",
     "PatternCandidate",
+    "ReasoningActionItem",
+    "ReasoningActionPlan",
+    "ReasoningActionWorkerRun",
     "SignalNewsCorrelation",
     "Signal",
     "SignalOutcome",

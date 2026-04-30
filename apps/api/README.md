@@ -130,6 +130,12 @@ Run the stale monitor:
 .venv/bin/python -m app.workers.live_stale_monitor
 ```
 
+Run the reasoning action worker:
+
+```sh
+REASONING_ACTION_WORKER_ENABLED=true .venv/bin/python -m app.workers.reasoning_actions_worker
+```
+
 Security and traffic controls are configured through environment variables:
 
 ```txt
@@ -145,6 +151,13 @@ MAX_UPLOAD_FILE_BYTES=10485760
 OUTCOME_DEFAULT_HORIZONS_MINUTES=5,15,30,60
 OUTCOME_MIN_FUTURE_CANDLES=3
 OUTCOME_EVALUATION_VERSION=v1
+REASONING_ACTION_WORKER_ENABLED=false
+REASONING_ACTION_WORKER_POLL_SECONDS=10
+REASONING_ACTION_WORKER_BATCH_SIZE=25
+REASONING_ACTION_WORKER_MAX_CONCURRENCY=4
+REASONING_ACTION_WORKER_LOCK_SECONDS=120
+REASONING_ACTION_WORKER_MAX_ATTEMPTS=3
+REASONING_ACTION_WORKER_JITTER_SECONDS=2
 ```
 
 `AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
@@ -262,6 +275,13 @@ Multi-LLM scenario reasoning is documented in:
 docs/llm-reasoning.md
 ```
 
+Backend-safe reasoning action plans are documented in:
+
+```txt
+docs/reasoning-action-plans.md
+docs/reasoning-action-worker.md
+```
+
 Signal outcome evaluation is documented in:
 
 ```txt
@@ -340,6 +360,21 @@ POST /signals/{signal_id}/reasoning/scenarios
 GET /signals/{signal_id}/reasoning/runs
 GET /signals/{signal_id}/reasoning/scenarios/latest
 GET /reasoning/runs/{reasoning_run_id}
+```
+
+Reasoning action plan APIs convert persisted scenario suggestions into bounded backend-safe
+follow-up items and can manually execute due deterministic work:
+
+```txt
+POST /reasoning/runs/{reasoning_run_id}/action-plan
+GET /reasoning/runs/{reasoning_run_id}/action-plan
+GET /action-plans/{action_plan_id}
+GET /action-plans/{action_plan_id}/items
+POST /action-items/{action_item_id}/execute
+POST /action-items/mark-due
+POST /action-items/execute-due
+GET /action-items/due
+GET /action-items/worker/status
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:

@@ -13,7 +13,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
-- Backend operational hardening now includes production-safe settings validation, configurable CORS, optional API key guard, request/rate limits, structured request logs, readiness/liveness/worker health routes, and live/stale worker process entrypoints.
+- Backend operational hardening now includes production-safe settings validation, configurable CORS, optional API key guard, request/rate limits, structured request logs, readiness/liveness/worker health routes, and live/stale/reasoning-action worker process entrypoints.
 - The analysis run lifecycle exists under `apps/api/app/modules/analysis/`.
 - Deterministic feature engineering exists under `apps/api/app/modules/features/`.
 - Deterministic indicator calculation exists under `apps/api/app/modules/indicators/`.
@@ -64,6 +64,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Deterministic news/event correlation is implemented on top of manually/imported events and persisted signals. It is contextual only, avoids causation language, and does not override signal classification or confidence.
 - Grounded LLM explanations are implemented as an optional layer on top of deterministic explanation artifacts, with mock/OpenAI provider abstraction, safety checks, grounding checks, and deterministic fallback behavior.
 - Multi-LLM scenario reasoning is implemented as an optional manual layer on top of persisted deterministic artifacts, with provider-agnostic adapters, bounded grounded inputs, safety checks, grounding checks, fallback persistence, and scenario hypotheses that never classify, override, advise, execute, or predict guaranteed outcomes.
+- Backend-safe reasoning action planning is implemented as an optional manual layer that converts persisted scenario suggestions into validated, idempotent, auditable backend follow-up items for outcome evaluation, replay, news correlation, waiting for final candles, human review, or no action.
 - Signal outcome evaluation is implemented as a separate truth loop after persisted deterministic signals. It measures observed final-candle follow-through, favorable movement, adverse movement, reversal, insufficient data, and historical behavior by horizon without calculating broker PnL or changing signal classification.
 - Later phases add live scanning, deeper external integrations, and performance tuning.
 - Chart screenshot ingestion accepts manually or externally extracted OHLC rows and deterministic PNG candlestick image uploads, supports write-free PNG extraction preview with request-scoped parser tuning, stores valid extracted rows through the shared candle path, persists deterministic trend hypotheses, supports human review/correction without mutating the original extraction audit trail, can optionally trigger the existing deterministic analysis lifecycle over the extracted candle window, exposes a decision endpoint that returns either analysis-backed reasoning or screenshot-hypothesis fallback reasoning, exposes an audit report endpoint that bundles run/candle/quality/review/decision/correction artifacts, and exposes a lineage endpoint for original/corrected run chains.
@@ -92,6 +93,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented news_events and signal_news_correlations migration/models, manual/import JSON event ingestion APIs, deterministic relevance/scoring service, manual correlation APIs, optional include_news_correlation lifecycle hook, cautious risk-note integration, documentation, and tests.
 - Implemented llm_explanations migration/model, grounded LLM input builder, prompt, mock/OpenAI provider abstraction, safety and grounding checks, LLM explanation APIs, optional include_ai_explanation lifecycle hook, documentation, and tests.
 - Implemented llm_reasoning_runs and scenario_hypotheses persistence, multi-LLM adapter layer, scenario reasoning input/prompt/parser/safety/grounding/service/repository/routes, documentation, and tests.
+- Implemented reasoning_action_plans and reasoning_action_items persistence, backend-safe action validation, scenario-to-action planner, due action executor, scheduled reasoning action worker, action plan APIs, audit events, documentation, and unit tests.
 - Implemented signal_outcomes and outcome_evaluation_runs migration/models, deterministic outcome calculator, bounded backfill service, signal/analysis outcome APIs, on-demand aggregation APIs for patterns/strategy profiles/symbols, audit events, documentation, and unit tests.
 - Implemented chart_screenshot_runs migration/model, chart_screenshot data source type, screenshot-derived candle storage linkage, deterministic trend-hypothesis service, manual/external OHLC APIs, deterministic PNG candlestick extraction preview and persistence APIs with request-scoped parser tuning, human review/correction workflow, optional analysis-run triggering, chart decision response API, chart audit report API, chart correction lineage API, and documentation.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
@@ -130,6 +132,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Strategy profiles are deterministic market-reading configurations for signal classification; they are not broker strategies, trade execution, auto-trading, or financial advice.
 - Optional LLM explanations must remain downstream of deterministic artifacts and must not classify, override signals, invent news, claim causation, or provide trade instructions.
 - Optional LLM scenario reasoning must remain manual by default, downstream of deterministic artifacts, and limited to scenario monitoring language plus backend-safe follow-up actions.
+- Reasoning action plans may persist and execute only backend-safe follow-up work. Trading actions such as buy, sell, enter, exit, order placement, leverage, position management, copy trading, or trade execution are rejected and never persisted as executable items.
+- Due reasoning action execution is operational through a separate scheduled worker and the shared `POST /action-items/execute-due` API path. It claims items with database leases, executes only backend-safe deterministic work, records worker runs, skips replay-of-replay by default, and leaves human review pending for a person or future review workflow.
 - Outcome evaluation is downstream of persisted signals and final candles only. It evaluates observed historical behavior after classification, does not mutate original signals, does not calculate broker PnL, and does not produce financial advice.
 - Replay signal outcomes are stored separately for replay signals and must not mutate original signal outcomes.
 - Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, `replay_mode`, `engine_snapshot_json`, and `rule_set_snapshot_json`; `latest_engine_version` uses current registered engines/profiles, and `same_engine_version` supports registered current v1 snapshots or returns `unsupported_engine_version`.
@@ -140,12 +144,13 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - `AUTH_ENABLED=false` remains the local/test default; when enabled, mutating routes require the configured API key header while health/readiness routes stay public.
 - Rate limiting is disabled by default; the current implementation is an in-memory local/test foundation and production should use Redis-backed enforcement before enabling it across multiple API instances.
 - API readiness requires database connectivity and critical configuration, but does not require the live worker to be running.
-- Worker process entrypoints are `python -m app.workers.live_feed_worker` and `python -m app.workers.live_stale_monitor`.
+- Worker process entrypoints are `python -m app.workers.live_feed_worker`, `python -m app.workers.live_stale_monitor`, and `python -m app.workers.reasoning_actions_worker`.
 
 ## Deferred / Not Yet Implemented
 
 - Lockfile.
 - Production Redis-backed rate limiting and worker orchestration.
+- Notification system.
 - Full external live provider websocket integrations beyond the current runtime/provider foundation.
 - Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
 - External API integrations beyond current live provider adapters.
