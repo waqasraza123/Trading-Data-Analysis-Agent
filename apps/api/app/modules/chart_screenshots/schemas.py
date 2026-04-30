@@ -181,3 +181,14 @@ class ChartScreenshotReportRead(ApiSchema):
     parser_tuning_json: dict[str, Any] | None
     audit_warnings: list[str]
     report_limitations: list[str]
+
+
+class ChartScreenshotLineageRead(ApiSchema):
+    requested_run: ChartScreenshotRunRead
+    root_run: ChartScreenshotRunRead
+    parent_run: ChartScreenshotRunRead | None
+    correction_runs: list[ChartScreenshotRunRead]
+    latest_correction_run: ChartScreenshotRunRead | None
+    recommended_run: ChartScreenshotRunRead
+    recommended_decision: ChartScreenshotDecisionRead
+    lineage_warnings: list[str]

@@ -31,6 +31,7 @@ from app.modules.chart_screenshots.parser import (
 from app.modules.chart_screenshots.repository import ChartScreenshotRunRepository
 from app.modules.chart_screenshots.schemas import (
     ChartScreenshotDecisionRead,
+    ChartScreenshotLineageRead,
     ChartScreenshotPredictionCreate,
     ChartScreenshotReportRead,
     ChartScreenshotReviewStatus,
@@ -328,6 +329,36 @@ class ChartScreenshotPredictionService:
             ],
         )
 
+    async def get_lineage(self, run_id: UUID) -> ChartScreenshotLineageRead:
+        requested_run = await self.get_run(run_id)
+        lineage_warnings: list[str] = []
+        parent_run = await self.resolve_parent_run(requested_run, lineage_warnings)
+        root_run = await self.resolve_root_run(requested_run, lineage_warnings)
+        correction_runs = await self.collect_correction_runs(root_run.id, lineage_warnings)
+        latest_correction_run = correction_runs[-1] if correction_runs else None
+        recommended_run = latest_correction_run or root_run
+        recommended_decision = await self.get_decision(recommended_run.id)
+        return ChartScreenshotLineageRead(
+            requested_run=ChartScreenshotRunRead.model_validate(requested_run),
+            root_run=ChartScreenshotRunRead.model_validate(root_run),
+            parent_run=(
+                ChartScreenshotRunRead.model_validate(parent_run)
+                if parent_run is not None
+                else None
+            ),
+            correction_runs=[
+                ChartScreenshotRunRead.model_validate(run) for run in correction_runs
+            ],
+            latest_correction_run=(
+                ChartScreenshotRunRead.model_validate(latest_correction_run)
+                if latest_correction_run is not None
+                else None
+            ),
+            recommended_run=ChartScreenshotRunRead.model_validate(recommended_run),
+            recommended_decision=recommended_decision,
+            lineage_warnings=lineage_warnings,
+        )
+
     async def list_runs(
         self,
         limit: int,
@@ -561,6 +592,65 @@ class ChartScreenshotPredictionService:
         if correction_run_id is None:
             return None
         return await self.repository.get_by_id(correction_run_id)
+
+    async def resolve_parent_run(
+        self,
+        run: ChartScreenshotRun,
+        lineage_warnings: list[str],
+    ) -> ChartScreenshotRun | None:
+        parent_run_id = parse_optional_uuid(
+            run.parser_metadata_json.get("correctedFromChartScreenshotRunId")
+        )
+        if parent_run_id is None:
+            return None
+        parent_run = await self.repository.get_by_id(parent_run_id)
+        if parent_run is None:
+            lineage_warnings.append(
+                f"Parent correction run {parent_run_id} was referenced but not found"
+            )
+        return parent_run
+
+    async def resolve_root_run(
+        self,
+        run: ChartScreenshotRun,
+        lineage_warnings: list[str],
+    ) -> ChartScreenshotRun:
+        current_run = run
+        visited_run_ids: set[UUID] = set()
+        while True:
+            if current_run.id in visited_run_ids:
+                lineage_warnings.append("Correction lineage loop detected")
+                return current_run
+            visited_run_ids.add(current_run.id)
+            parent_run = await self.resolve_parent_run(current_run, lineage_warnings)
+            if parent_run is None:
+                return current_run
+            current_run = parent_run
+
+    async def collect_correction_runs(
+        self,
+        root_run_id: UUID,
+        lineage_warnings: list[str],
+    ) -> list[ChartScreenshotRun]:
+        correction_runs: list[ChartScreenshotRun] = []
+        visited_run_ids: set[UUID] = {root_run_id}
+        pending_run_ids: list[UUID] = [root_run_id]
+        while pending_run_ids:
+            current_run_id = pending_run_ids.pop(0)
+            direct_corrections = await self.repository.list_by_parser_source_path(
+                f"correction:{current_run_id}"
+            )
+            for correction_run in direct_corrections:
+                if correction_run.id in visited_run_ids:
+                    lineage_warnings.append(
+                        f"Correction lineage loop skipped at {correction_run.id}"
+                    )
+                    continue
+                visited_run_ids.add(correction_run.id)
+                correction_runs.append(correction_run)
+                pending_run_ids.append(correction_run.id)
+        correction_runs.sort(key=lambda run: run.created_at)
+        return correction_runs
 
     def extract_trend_metrics(self, run: ChartScreenshotRun) -> dict[str, object]:
         if run.extracted_payload_json is None:

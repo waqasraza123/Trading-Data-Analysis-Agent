@@ -296,6 +296,7 @@ GET /chart-screenshot-runs/{run_id}
 POST /chart-screenshot-runs/{run_id}/review
 GET /chart-screenshot-runs/{run_id}/decision
 GET /chart-screenshot-runs/{run_id}/report
+GET /chart-screenshot-runs/{run_id}/lineage
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:

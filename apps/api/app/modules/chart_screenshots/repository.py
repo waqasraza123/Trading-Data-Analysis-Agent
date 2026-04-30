@@ -44,3 +44,15 @@ class ChartScreenshotRunRepository:
             statement = statement.where(ChartScreenshotRun.status == status)
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def list_by_parser_source_path(
+        self,
+        parser_source_path: str,
+    ) -> list[ChartScreenshotRun]:
+        statement: Select[tuple[ChartScreenshotRun]] = (
+            select(ChartScreenshotRun)
+            .where(ChartScreenshotRun.parser_source_path == parser_source_path)
+            .order_by(ChartScreenshotRun.created_at.asc())
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())

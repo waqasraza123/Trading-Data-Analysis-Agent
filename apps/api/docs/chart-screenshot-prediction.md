@@ -42,6 +42,7 @@ GET /chart-screenshot-runs/{run_id}
 POST /chart-screenshot-runs/{run_id}/review
 GET /chart-screenshot-runs/{run_id}/decision
 GET /chart-screenshot-runs/{run_id}/report
+GET /chart-screenshot-runs/{run_id}/lineage
 ```
 
 ## Create Request With Extracted Candles
@@ -454,6 +455,53 @@ Example response shape:
   "reportLimitations": [
     "Report data is an audit bundle of persisted backend artifacts"
   ]
+}
+```
+
+## Correction Lineage
+
+`GET /chart-screenshot-runs/{run_id}/lineage` returns the correction chain for a chart screenshot
+run. It is intended for UI navigation, support review, and safe handling of multiple corrections.
+
+The lineage response includes:
+
+- `requestedRun`: the run from the request path.
+- `rootRun`: the earliest original run in the correction chain.
+- `parentRun`: the immediate parent when the requested run is itself a correction.
+- `correctionRuns`: all known correction runs below the root run, sorted by creation time.
+- `latestCorrectionRun`: the newest correction run in the chain.
+- `recommendedRun`: the latest correction run when one exists, otherwise the root run.
+- `recommendedDecision`: the decision response for the recommended run.
+- `lineageWarnings`: missing parent references, skipped loops, or other lineage integrity warnings.
+
+Correction linkage is intentionally derived from persisted audit metadata:
+
+- correction runs use `parserSourcePath=correction:{parentRunId}`;
+- correction runs store `parserMetadataJson.correctedFromChartScreenshotRunId`;
+- original runs store `parserMetadataJson.humanReview.correctedChartScreenshotRunId` when the
+  review action created a correction.
+
+Important semantics:
+
+- The endpoint does not mutate runs or candles.
+- It does not merge candles across runs. Use the report endpoint for run-specific candle audit data.
+- When multiple correction generations exist, `recommendedRun` points to the latest correction by
+  creation time.
+- Lineage warnings should be preserved in UI/export flows because they indicate incomplete or
+  inconsistent audit metadata.
+
+Example response shape:
+
+```json
+{
+  "requestedRun": {},
+  "rootRun": {},
+  "parentRun": null,
+  "correctionRuns": [],
+  "latestCorrectionRun": null,
+  "recommendedRun": {},
+  "recommendedDecision": {},
+  "lineageWarnings": []
 }
 ```
 
