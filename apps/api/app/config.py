@@ -1,3 +1,4 @@
+from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
 from typing import Self
@@ -74,6 +75,23 @@ class Settings(BaseSettings):
     outcome_default_horizons_minutes: list[int] = Field(default_factory=lambda: [5, 15, 30, 60])
     outcome_min_future_candles: int = Field(default=3, ge=1, le=500)
     outcome_evaluation_version: str = "v1"
+    profile_diagnostics_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    profile_diagnostics_strong_follow_through_rate: Decimal = Field(
+        default=Decimal("0.65"),
+        ge=0,
+        le=1,
+    )
+    profile_diagnostics_high_reversal_rate: Decimal = Field(default=Decimal("0.35"), ge=0, le=1)
+    profile_diagnostics_high_no_follow_through_rate: Decimal = Field(
+        default=Decimal("0.40"),
+        ge=0,
+        le=1,
+    )
+    profile_diagnostics_confidence_misalignment_threshold: Decimal = Field(
+        default=Decimal("0.45"),
+        ge=0,
+        le=1,
+    )
     reasoning_action_worker_enabled: bool = False
     reasoning_action_worker_poll_seconds: float = Field(default=10, gt=0)
     reasoning_action_worker_batch_size: int = Field(default=25, ge=1, le=500)

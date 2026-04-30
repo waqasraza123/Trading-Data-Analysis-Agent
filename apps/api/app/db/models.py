@@ -18,6 +18,12 @@ from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.outcomes.models import OutcomeEvaluationRun, SignalOutcome
 from app.modules.patterns.models import PatternCandidate
+from app.modules.profile_diagnostics.models import (
+    CalibrationRecommendation,
+    PatternOutcomeDiagnostic,
+    StrategyProfileDiagnostic,
+    StrategyProfileDiagnosticRun,
+)
 from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
 from app.modules.signals.models import (
     Signal,
@@ -52,6 +58,8 @@ __all__ = [
     "NewsEvent",
     "OutcomeEvaluationRun",
     "PatternCandidate",
+    "CalibrationRecommendation",
+    "PatternOutcomeDiagnostic",
     "ReasoningActionItem",
     "ReasoningActionPlan",
     "ReasoningActionWorkerRun",
@@ -62,6 +70,8 @@ __all__ = [
     "SignalEvidence",
     "SignalRiskNote",
     "ScenarioHypothesis",
+    "StrategyProfileDiagnostic",
+    "StrategyProfileDiagnosticRun",
     "StrategyProfile",
     "Symbol",
     "User",

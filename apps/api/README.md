@@ -4,8 +4,9 @@ FastAPI backend for deterministic market intelligence over imported and live-ori
 candle data. The backend stores market data, calculates features and indicators, classifies
 signals with rules, generates safe deterministic and optional grounded LLM explanations from
 persisted artifacts, supports optional multi-LLM grounded scenario reasoning, supports replay from
-stored candles, persists deterministic news/event context, and evaluates observed historical
-outcomes after persisted signals. It also accepts
+stored candles, persists deterministic news/event context, evaluates observed historical outcomes
+after persisted signals, stores outcome-based profile diagnostics and advisory calibration
+recommendations. It also accepts
 manually or externally extracted trading chart screenshot candles and persists deterministic
 next-trend hypotheses.
 
@@ -288,6 +289,12 @@ Signal outcome evaluation is documented in:
 docs/outcome-evaluation.md
 ```
 
+Outcome-based profile diagnostics are documented in:
+
+```txt
+docs/profile-diagnostics.md
+```
+
 When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs
 before LLM explanation generation so the LLM can only use persisted correlation context.
 
@@ -350,6 +357,18 @@ GET /outcome-evaluation-runs/{run_id}
 GET /outcomes/performance/patterns
 GET /outcomes/performance/strategy-profiles
 GET /outcomes/performance/symbols
+```
+
+Outcome-based profile diagnostics read stored outcomes and generate advisory calibration
+recommendations without auto-changing strategy profiles or classifier thresholds:
+
+```txt
+POST /profile-diagnostics/run
+GET /profile-diagnostics/runs/{run_id}
+GET /profile-diagnostics/strategy-profiles
+GET /profile-diagnostics/patterns
+GET /profile-diagnostics/recommendations
+PATCH /profile-diagnostics/recommendations/{recommendation_id}
 ```
 
 Scenario reasoning APIs generate structured, auditable scenario hypotheses from persisted
