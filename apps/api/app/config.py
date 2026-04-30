@@ -23,6 +23,13 @@ class LogLevel(StrEnum):
     CRITICAL = "CRITICAL"
 
 
+class WorkerSupervisorComponent(StrEnum):
+    LIVE_FEED = "live_feed"
+    STALE_MONITOR = "stale_monitor"
+    REASONING_ACTIONS = "reasoning_actions"
+    NOTIFICATIONS = "notifications"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -107,6 +114,8 @@ class Settings(BaseSettings):
     notification_worker_lock_seconds: int = Field(default=120, ge=1)
     notification_worker_max_attempts: int = Field(default=3, ge=1, le=100)
     notification_worker_jitter_seconds: float = Field(default=2, ge=0)
+    worker_supervisor_components: list[WorkerSupervisorComponent] = Field(default_factory=list)
+    worker_supervisor_shutdown_timeout_seconds: float = Field(default=20, gt=0)
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"
@@ -190,6 +199,13 @@ class Settings(BaseSettings):
     def parse_outcome_default_horizons_minutes(cls, value: object) -> object:
         if isinstance(value, str):
             return [int(item.strip()) for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("worker_supervisor_components", mode="before")
+    @classmethod
+    def parse_worker_supervisor_components(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [item.strip().lower() for item in value.split(",") if item.strip()]
         return value
 
     @field_validator("outcome_default_horizons_minutes")

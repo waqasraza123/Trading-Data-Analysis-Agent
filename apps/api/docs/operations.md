@@ -56,6 +56,8 @@ NOTIFICATION_WORKER_BATCH_SIZE=100
 NOTIFICATION_WORKER_LOCK_SECONDS=120
 NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
+WORKER_SUPERVISOR_COMPONENTS=
+WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
 SEED_DEFAULT_WORKSPACE_NAME=
 SEED_DEFAULT_ADMIN_EMAIL=
 SEED_DEFAULT_ADMIN_NAME=
@@ -94,10 +96,17 @@ python -m app.workers.live_feed_worker
 python -m app.workers.live_stale_monitor
 REASONING_ACTION_WORKER_ENABLED=true python -m app.workers.reasoning_actions_worker
 NOTIFICATION_WORKER_ENABLED=true python -m app.workers.notification_worker
+WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications \
+REASONING_ACTION_WORKER_ENABLED=true \
+NOTIFICATION_WORKER_ENABLED=true \
+python -m app.workers.supervisor
 ```
 
 Workers require `DATABASE_URL`. They emit structured lifecycle logs and stop gracefully on
 `SIGINT` or `SIGTERM`.
+
+The supervisor entrypoint is optional and coordinates multiple worker runtimes in one process.
+Details are documented in `docs/worker-supervisor.md`.
 
 ## Health Endpoints
 

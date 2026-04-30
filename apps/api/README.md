@@ -144,6 +144,15 @@ Run the notification worker:
 NOTIFICATION_WORKER_ENABLED=true .venv/bin/python -m app.workers.notification_worker
 ```
 
+Run a supervised worker process:
+
+```sh
+WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications \
+REASONING_ACTION_WORKER_ENABLED=true \
+NOTIFICATION_WORKER_ENABLED=true \
+.venv/bin/python -m app.workers.supervisor
+```
+
 Security and traffic controls are configured through environment variables:
 
 ```txt
@@ -178,6 +187,8 @@ NOTIFICATION_WORKER_BATCH_SIZE=100
 NOTIFICATION_WORKER_LOCK_SECONDS=120
 NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
+WORKER_SUPERVISOR_COMPONENTS=
+WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
 ```
 
 `AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the

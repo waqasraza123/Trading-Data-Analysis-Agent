@@ -39,6 +39,8 @@ def test_settings_load_defaults() -> None:
     assert settings.seed_default_admin_name is None
     assert settings.notification_worker_enabled is False
     assert settings.notification_worker_batch_size == 100
+    assert settings.worker_supervisor_components == []
+    assert settings.worker_supervisor_shutdown_timeout_seconds == 20
 
 
 def test_settings_validate_api_prefix() -> None:

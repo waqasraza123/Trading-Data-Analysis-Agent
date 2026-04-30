@@ -13,7 +13,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
-- Backend operational hardening now includes production-safe settings validation, configurable CORS, optional API key guard, request limits, Redis-backed rate limits, structured request logs, readiness/liveness/Redis/worker health routes, and live/stale/reasoning-action worker process entrypoints.
+- Backend operational hardening now includes production-safe settings validation, configurable CORS, optional API key guard, request limits, Redis-backed rate limits, structured request logs, readiness/liveness/Redis/worker health routes, standalone worker entrypoints, and an optional supervised multi-worker process entrypoint.
 - The analysis run lifecycle exists under `apps/api/app/modules/analysis/`.
 - Deterministic feature engineering exists under `apps/api/app/modules/features/`.
 - Deterministic indicator calculation exists under `apps/api/app/modules/indicators/`.
@@ -110,6 +110,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented disposable DB validation hardening, backend integration smoke coverage, and a safe `python -m app.cli smoke` command for read-only or explicit write checks against non-production databases.
 - Implemented backend security and observability hardening: settings validation, CORS configuration, optional API key guard, request/upload limits, rate-limit foundation, request duration logs, safe error responses with request IDs, health/readiness/worker health endpoints, live worker/stale monitor process hardening, operational docs, and env examples.
 - Implemented production Redis-backed rate limiting with local/test in-memory fallback, staging/production Redis configuration validation, Redis health checks, operational docs, and unit coverage.
+- Implemented production worker supervisor orchestration for live feed, stale monitor, reasoning action, and notification runtimes with component selection, graceful shutdown, fail-fast child monitoring, docs, and unit tests.
 
 ## Important Decisions
 
@@ -158,12 +159,11 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - `AUTH_ENABLED=false` remains the local/test default; when enabled, mutating routes require the configured API key header while health/readiness routes stay public.
 - Rate limiting is disabled by default; local/test can use the in-memory fallback, while staging/production require `REDIS_URL` when rate limiting is enabled and return a stable backend-unavailable error if Redis cannot be reached.
 - API readiness requires database connectivity and critical configuration, but does not require the live worker to be running.
-- Worker process entrypoints are `python -m app.workers.live_feed_worker`, `python -m app.workers.live_stale_monitor`, `python -m app.workers.reasoning_actions_worker`, and `python -m app.workers.notification_worker`.
+- Worker process entrypoints are `python -m app.workers.live_feed_worker`, `python -m app.workers.live_stale_monitor`, `python -m app.workers.reasoning_actions_worker`, `python -m app.workers.notification_worker`, and optional orchestrator `python -m app.workers.supervisor`.
 
 ## Deferred / Not Yet Implemented
 
 - Lockfile.
-- Production worker orchestration.
 - Full external live provider websocket integrations beyond the current runtime/provider foundation.
 - Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
 - External API integrations beyond current live provider adapters.
