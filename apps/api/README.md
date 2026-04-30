@@ -6,7 +6,8 @@ signals with rules, generates safe deterministic and optional grounded LLM expla
 persisted artifacts, supports optional multi-LLM grounded scenario reasoning, supports replay from
 stored candles, persists deterministic news/event context, evaluates observed historical outcomes
 after persisted signals, stores outcome-based profile diagnostics and advisory calibration
-recommendations. It also accepts
+recommendations, and composes read-only intelligence reports from existing persisted artifacts.
+It also accepts
 manually or externally extracted trading chart screenshot candles and persists deterministic
 next-trend hypotheses.
 
@@ -300,6 +301,12 @@ Outcome-based profile diagnostics are documented in:
 docs/profile-diagnostics.md
 ```
 
+Read-only intelligence reports are documented in:
+
+```txt
+docs/intelligence-reports.md
+```
+
 When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs
 before LLM explanation generation so the LLM can only use persisted correlation context.
 
@@ -349,7 +356,8 @@ GET /chart-screenshot-runs/{run_id}/lineage
 ```
 
 Signal outcome evaluation APIs measure observed final-candle behavior after persisted deterministic
-signals. They do not calculate broker PnL, produce financial advice, or trigger execution:
+signals. They do not calculate broker accounting metrics, produce financial advice, or trigger
+execution:
 
 ```txt
 POST /signals/{signal_id}/outcomes/evaluate
@@ -399,6 +407,19 @@ POST /action-items/mark-due
 POST /action-items/execute-due
 GET /action-items/due
 GET /action-items/worker/status
+```
+
+Intelligence report APIs compose persisted artifacts into future UI/operator payloads. They are
+read-only and do not run analysis, replay, diagnostics, outcome evaluation, LLM generation, action
+execution, alerts, or broker workflows:
+
+```txt
+GET /intelligence-reports/signals/{signal_id}
+GET /intelligence-reports/analysis-runs/{analysis_run_id}
+GET /intelligence-reports/reasoning-runs/{reasoning_run_id}
+GET /intelligence-reports/outcomes/{outcome_id}
+GET /intelligence-reports/signals/{signal_id}/outcomes
+GET /intelligence-reports/screenshot-decisions/{decision_id}
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:
