@@ -101,6 +101,12 @@ class Settings(BaseSettings):
     reasoning_action_worker_lock_seconds: int = Field(default=120, ge=1)
     reasoning_action_worker_max_attempts: int = Field(default=3, ge=1, le=100)
     reasoning_action_worker_jitter_seconds: float = Field(default=2, ge=0)
+    notification_worker_enabled: bool = False
+    notification_worker_poll_seconds: float = Field(default=10, gt=0)
+    notification_worker_batch_size: int = Field(default=100, ge=1, le=500)
+    notification_worker_lock_seconds: int = Field(default=120, ge=1)
+    notification_worker_max_attempts: int = Field(default=3, ge=1, le=100)
+    notification_worker_jitter_seconds: float = Field(default=2, ge=0)
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"

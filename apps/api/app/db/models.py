@@ -21,6 +21,11 @@ from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
+from app.modules.notifications.models import (
+    NotificationMessage,
+    NotificationPreference,
+    NotificationWorkerRun,
+)
 from app.modules.outcomes.models import OutcomeEvaluationRun, SignalOutcome
 from app.modules.patterns.models import PatternCandidate
 from app.modules.profile_diagnostics.models import (
@@ -64,6 +69,9 @@ __all__ = [
     "LlmExplanation",
     "LlmReasoningRun",
     "NewsEvent",
+    "NotificationMessage",
+    "NotificationPreference",
+    "NotificationWorkerRun",
     "OutcomeEvaluationRun",
     "PatternCandidate",
     "CalibrationRecommendation",

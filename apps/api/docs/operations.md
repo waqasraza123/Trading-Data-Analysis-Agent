@@ -50,6 +50,12 @@ LLM_MAX_OUTPUT_TOKENS=450
 OPENAI_API_KEY=
 LLM_STORE_INPUTS=false
 LLM_STORE_OUTPUTS=true
+NOTIFICATION_WORKER_ENABLED=false
+NOTIFICATION_WORKER_POLL_SECONDS=10
+NOTIFICATION_WORKER_BATCH_SIZE=100
+NOTIFICATION_WORKER_LOCK_SECONDS=120
+NOTIFICATION_WORKER_MAX_ATTEMPTS=3
+NOTIFICATION_WORKER_JITTER_SECONDS=2
 SEED_DEFAULT_WORKSPACE_NAME=
 SEED_DEFAULT_ADMIN_EMAIL=
 SEED_DEFAULT_ADMIN_NAME=
@@ -86,6 +92,8 @@ Seed logs `seed_started` and `seed_completed` without logging credentials.
 cd apps/api
 python -m app.workers.live_feed_worker
 python -m app.workers.live_stale_monitor
+REASONING_ACTION_WORKER_ENABLED=true python -m app.workers.reasoning_actions_worker
+NOTIFICATION_WORKER_ENABLED=true python -m app.workers.notification_worker
 ```
 
 Workers require `DATABASE_URL`. They emit structured lifecycle logs and stop gracefully on

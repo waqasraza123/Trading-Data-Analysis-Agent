@@ -138,6 +138,12 @@ Run the reasoning action worker:
 REASONING_ACTION_WORKER_ENABLED=true .venv/bin/python -m app.workers.reasoning_actions_worker
 ```
 
+Run the notification worker:
+
+```sh
+NOTIFICATION_WORKER_ENABLED=true .venv/bin/python -m app.workers.notification_worker
+```
+
 Security and traffic controls are configured through environment variables:
 
 ```txt
@@ -166,6 +172,12 @@ REASONING_ACTION_WORKER_MAX_CONCURRENCY=4
 REASONING_ACTION_WORKER_LOCK_SECONDS=120
 REASONING_ACTION_WORKER_MAX_ATTEMPTS=3
 REASONING_ACTION_WORKER_JITTER_SECONDS=2
+NOTIFICATION_WORKER_ENABLED=false
+NOTIFICATION_WORKER_POLL_SECONDS=10
+NOTIFICATION_WORKER_BATCH_SIZE=100
+NOTIFICATION_WORKER_LOCK_SECONDS=120
+NOTIFICATION_WORKER_MAX_ATTEMPTS=3
+NOTIFICATION_WORKER_JITTER_SECONDS=2
 ```
 
 `AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
@@ -437,6 +449,24 @@ action items, send alerts, or perform broker/order/position work:
 POST /ai-intelligence/signals/{signal_id}/analyze
 GET /ai-intelligence/runs/{run_id}
 GET /ai-intelligence/signals/{signal_id}/runs
+```
+
+Notification APIs persist safe operator-facing outbox messages, user preferences, in-app delivery
+state, and worker dispatch state. They do not send trade instructions, create broker actions, or
+deliver external email/webhook messages yet:
+
+```txt
+PUT /notifications/preferences
+POST /notifications
+GET /notifications
+POST /notifications/dispatch-due
+GET /notifications/worker/status
+```
+
+Notification behavior is documented in:
+
+```txt
+docs/notifications.md
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:

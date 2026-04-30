@@ -37,6 +37,8 @@ def test_settings_load_defaults() -> None:
     assert settings.seed_default_workspace_name is None
     assert settings.seed_default_admin_email is None
     assert settings.seed_default_admin_name is None
+    assert settings.notification_worker_enabled is False
+    assert settings.notification_worker_batch_size == 100
 
 
 def test_settings_validate_api_prefix() -> None:
