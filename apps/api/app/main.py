@@ -10,6 +10,7 @@ from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import OperationsMiddleware
 from app.modules.action_plans.routes import router as action_plans_router
+from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
@@ -90,6 +91,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reasoning_router, prefix=resolved_settings.api_prefix)
     app.include_router(action_plans_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_reports_router, prefix=resolved_settings.api_prefix)
+    app.include_router(ai_intelligence_router, prefix=resolved_settings.api_prefix)
     return app
 
 

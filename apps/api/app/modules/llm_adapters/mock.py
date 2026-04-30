@@ -14,7 +14,11 @@ class MockLlmAdapter:
 
     async def generate_structured(self, request: LlmAdapterRequest) -> LlmAdapterResponse:
         started = time.perf_counter()
-        output_json = build_mock_scenario_output(request.input_json)
+        output_json = (
+            build_mock_ai_intelligence_output(request.input_json)
+            if request.response_schema_name == "ai_intelligence_v1"
+            else build_mock_scenario_output(request.input_json)
+        )
         output_text = json_summary(output_json)
         latency_ms = int((time.perf_counter() - started) * 1000)
         return LlmAdapterResponse(
@@ -77,6 +81,45 @@ def build_mock_scenario_output(input_json: dict[str, Any]) -> dict[str, Any]:
         "limitations": [
             "Mock provider output is deterministic test output.",
             "Scenarios are possibilities, not predictions or recommendations.",
+        ],
+    }
+
+
+def build_mock_ai_intelligence_output(input_json: dict[str, Any]) -> dict[str, Any]:
+    refs = input_json.get("artifactRefs")
+    evidence_refs = refs[:1] if isinstance(refs, list) and refs else []
+    return {
+        "summary": (
+            "AI intelligence reviewed persisted artifacts and produced advisory, cited "
+            "operator insights only."
+        ),
+        "insights": [
+            {
+                "insightType": "evidence_consistency",
+                "severity": "info",
+                "title": "Persisted artifact context is available",
+                "summary": (
+                    "The report contains stored backend artifacts that can support operator review."
+                ),
+                "rationale": (
+                    "The model used only the supplied intelligence report and artifact references."
+                ),
+                "evidenceRefs": evidence_refs,
+                "limitations": ["Mock provider output is deterministic test output."],
+                "safeFollowUpActions": ["request_human_review"],
+                "claims": [
+                    {
+                        "claim": (
+                            "This advisory insight is grounded in supplied artifact references."
+                        ),
+                        "evidenceRefs": evidence_refs,
+                        "supportStatus": "supported",
+                    }
+                ],
+            }
+        ],
+        "limitations": [
+            "AI intelligence is advisory and does not classify signals or recommend trades."
         ],
     }
 

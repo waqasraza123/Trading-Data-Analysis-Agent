@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     llm_default_model: str = "mock-scenario-v1"
     llm_provider_timeout_seconds: float = Field(default=12.0, gt=0)
     llm_temperature: float = Field(default=0.2, ge=0, le=2)
+    ai_intelligence_enabled: bool = False
+    ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False

@@ -4,6 +4,11 @@ from app.modules.action_plans.models import (
     ReasoningActionPlan,
     ReasoningActionWorkerRun,
 )
+from app.modules.ai_intelligence.models import (
+    AiIntelligenceClaim,
+    AiIntelligenceInsight,
+    AiIntelligenceRun,
+)
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.candles.models import Candle
 from app.modules.chart_screenshots.models import ChartScreenshotRun
@@ -41,6 +46,9 @@ metadata = Base.metadata
 __all__ = [
     "AnalysisAuditLog",
     "AnalysisRun",
+    "AiIntelligenceClaim",
+    "AiIntelligenceInsight",
+    "AiIntelligenceRun",
     "Base",
     "Candle",
     "ChartScreenshotRun",

@@ -6,8 +6,8 @@ signals with rules, generates safe deterministic and optional grounded LLM expla
 persisted artifacts, supports optional multi-LLM grounded scenario reasoning, supports replay from
 stored candles, persists deterministic news/event context, evaluates observed historical outcomes
 after persisted signals, stores outcome-based profile diagnostics and advisory calibration
-recommendations, and composes read-only intelligence reports from existing persisted artifacts.
-It also accepts
+recommendations, converts persisted reasoning scenarios into backend-safe follow-up action plans,
+and composes read-only intelligence reports from existing persisted artifacts. It also accepts
 manually or externally extracted trading chart screenshot candles and persists deterministic
 next-trend hypotheses.
 
@@ -307,6 +307,12 @@ Read-only intelligence reports are documented in:
 docs/intelligence-reports.md
 ```
 
+Grounded AI intelligence analyst runs are documented in:
+
+```txt
+docs/ai-intelligence.md
+```
+
 When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs
 before LLM explanation generation so the LLM can only use persisted correlation context.
 
@@ -420,6 +426,16 @@ GET /intelligence-reports/reasoning-runs/{reasoning_run_id}
 GET /intelligence-reports/outcomes/{outcome_id}
 GET /intelligence-reports/signals/{signal_id}/outcomes
 GET /intelligence-reports/screenshot-decisions/{decision_id}
+```
+
+AI intelligence APIs generate persisted advisory insight cards from cited backend artifacts. They do
+not classify signals, override deterministic outputs, mutate strategy profiles, create executable
+action items, send alerts, or perform broker/order/position work:
+
+```txt
+POST /ai-intelligence/signals/{signal_id}/analyze
+GET /ai-intelligence/runs/{run_id}
+GET /ai-intelligence/signals/{signal_id}/runs
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:
