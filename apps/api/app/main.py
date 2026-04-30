@@ -21,6 +21,7 @@ from app.modules.llm_explanations.routes import router as llm_explanations_route
 from app.modules.news.routes import news_events_router
 from app.modules.news.routes import router as news_router
 from app.modules.outcomes.routes import router as outcomes_router
+from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.signals.routes import router as signals_router
 from app.modules.strategy_profiles.routes import router as strategy_profiles_router
 from app.modules.symbols.routes import router as symbols_router
@@ -82,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(llm_explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(outcomes_router, prefix=resolved_settings.api_prefix)
+    app.include_router(reasoning_router, prefix=resolved_settings.api_prefix)
     return app
 
 

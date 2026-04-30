@@ -13,6 +13,7 @@ from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.outcomes.models import OutcomeEvaluationRun, SignalOutcome
 from app.modules.patterns.models import PatternCandidate
+from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
 from app.modules.signals.models import (
     Signal,
     SignalConfidenceComponent,
@@ -42,6 +43,7 @@ __all__ = [
     "LiveFeedEvent",
     "LiveFeedSubscription",
     "LlmExplanation",
+    "LlmReasoningRun",
     "NewsEvent",
     "OutcomeEvaluationRun",
     "PatternCandidate",
@@ -51,6 +53,7 @@ __all__ = [
     "SignalConfidenceComponent",
     "SignalEvidence",
     "SignalRiskNote",
+    "ScenarioHypothesis",
     "StrategyProfile",
     "Symbol",
     "User",

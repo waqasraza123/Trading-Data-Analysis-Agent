@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     redis_url: SecretStr | None = None
     openai_api_key: SecretStr | None = None
+    openai_base_url: str | None = None
+    anthropic_api_key: SecretStr | None = None
     llm_explanations_enabled: bool = False
     llm_provider: str = "mock"
     llm_model: str = "gpt-4o-mini"
@@ -44,6 +46,11 @@ class Settings(BaseSettings):
     llm_max_output_tokens: int = Field(default=450, ge=1)
     llm_store_inputs: bool = False
     llm_store_outputs: bool = True
+    llm_reasoning_enabled: bool = False
+    llm_default_provider: str = "mock"
+    llm_default_model: str = "mock-scenario-v1"
+    llm_provider_timeout_seconds: float = Field(default=12.0, gt=0)
+    llm_temperature: float = Field(default=0.2, ge=0, le=2)
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
@@ -114,6 +121,11 @@ class Settings(BaseSettings):
     def normalize_llm_provider(cls, value: str) -> str:
         return value.strip().lower()
 
+    @field_validator("llm_default_provider")
+    @classmethod
+    def normalize_llm_default_provider(cls, value: str) -> str:
+        return value.strip().lower()
+
     @field_validator("llm_model")
     @classmethod
     def normalize_llm_model(cls, value: str) -> str:
@@ -122,6 +134,23 @@ class Settings(BaseSettings):
             msg = "LLM_MODEL must not be empty when LLM explanations are enabled"
             raise ValueError(msg)
         return normalized_value
+
+    @field_validator("llm_default_model")
+    @classmethod
+    def normalize_llm_default_model(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "LLM_DEFAULT_MODEL must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("openai_base_url")
+    @classmethod
+    def normalize_openai_base_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized_value = value.strip().rstrip("/")
+        return normalized_value or None
 
     @field_validator("outcome_default_horizons_minutes", mode="before")
     @classmethod

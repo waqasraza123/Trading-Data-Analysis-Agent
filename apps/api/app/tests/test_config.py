@@ -12,11 +12,18 @@ def test_settings_load_defaults() -> None:
     assert settings.database_url is None
     assert settings.redis_url is None
     assert settings.openai_api_key is None
+    assert settings.openai_base_url is None
+    assert settings.anthropic_api_key is None
     assert settings.llm_explanations_enabled is False
     assert settings.llm_provider == "mock"
     assert settings.llm_model == "gpt-4o-mini"
     assert settings.llm_store_inputs is False
     assert settings.llm_store_outputs is True
+    assert settings.llm_reasoning_enabled is False
+    assert settings.llm_default_provider == "mock"
+    assert settings.llm_default_model == "mock-scenario-v1"
+    assert settings.llm_provider_timeout_seconds == 12
+    assert settings.llm_temperature == 0.2
     assert settings.news_correlation_pre_event_minutes == 5
     assert settings.news_correlation_post_event_minutes == 30
     assert settings.news_correlation_max_events_per_signal == 10

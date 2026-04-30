@@ -3,13 +3,14 @@
 FastAPI backend for deterministic market intelligence over imported and live-originated
 candle data. The backend stores market data, calculates features and indicators, classifies
 signals with rules, generates safe deterministic and optional grounded LLM explanations from
-persisted artifacts, supports replay from stored candles, persists deterministic news/event
-context, and evaluates observed historical outcomes after persisted signals. It also accepts
+persisted artifacts, supports optional multi-LLM grounded scenario reasoning, supports replay from
+stored candles, persists deterministic news/event context, and evaluates observed historical
+outcomes after persisted signals. It also accepts
 manually or externally extracted trading chart screenshot candles and persists deterministic
 next-trend hypotheses.
 
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
-The LLM explanation layer is optional and may only explain persisted deterministic output.
+LLM layers are optional and may only explain or reason from persisted deterministic output.
 
 ## Commands
 
@@ -255,6 +256,12 @@ Grounded LLM explanations are documented in:
 docs/llm-explanations.md
 ```
 
+Multi-LLM scenario reasoning is documented in:
+
+```txt
+docs/llm-reasoning.md
+```
+
 Signal outcome evaluation is documented in:
 
 ```txt
@@ -323,6 +330,16 @@ GET /outcome-evaluation-runs/{run_id}
 GET /outcomes/performance/patterns
 GET /outcomes/performance/strategy-profiles
 GET /outcomes/performance/symbols
+```
+
+Scenario reasoning APIs generate structured, auditable scenario hypotheses from persisted
+deterministic artifacts only. They are manual and do not run automatically during analysis:
+
+```txt
+POST /signals/{signal_id}/reasoning/scenarios
+GET /signals/{signal_id}/reasoning/runs
+GET /signals/{signal_id}/reasoning/scenarios/latest
+GET /reasoning/runs/{reasoning_run_id}
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:
