@@ -13,6 +13,7 @@ from app.core.rate_limit import create_rate_limiter
 from app.modules.action_plans.routes import router as action_plans_router
 from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.analysis.routes import router as analysis_router
+from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
 from app.modules.data_sources.routes import router as data_sources_router
@@ -88,6 +89,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
     app.include_router(chart_screenshot_router, prefix=resolved_settings.api_prefix)
     app.include_router(analysis_router, prefix=resolved_settings.api_prefix)
+    app.include_router(audit_timeline_router, prefix=resolved_settings.api_prefix)
     app.include_router(strategy_profiles_router, prefix=resolved_settings.api_prefix)
     app.include_router(signals_router, prefix=resolved_settings.api_prefix)
     app.include_router(news_events_router, prefix=resolved_settings.api_prefix)

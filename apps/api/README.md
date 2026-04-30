@@ -9,7 +9,8 @@ after persisted signals, stores outcome-based profile diagnostics and advisory c
 recommendations, converts persisted reasoning scenarios into backend-safe follow-up action plans,
 and composes read-only intelligence reports from existing persisted artifacts. It also accepts
 manually or externally extracted trading chart screenshot candles and persists deterministic
-next-trend hypotheses.
+next-trend hypotheses. A read-only audit timeline API composes persisted artifacts into
+chronological traceability and lineage views for operator review.
 
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 LLM layers are optional and may only explain or reason from persisted deterministic output.
@@ -336,6 +337,12 @@ Read-only intelligence reports are documented in:
 docs/intelligence-reports.md
 ```
 
+Audit timeline traceability APIs are documented in:
+
+```txt
+docs/audit-timeline.md
+```
+
 Grounded AI intelligence analyst runs are documented in:
 
 ```txt
@@ -455,6 +462,20 @@ GET /intelligence-reports/reasoning-runs/{reasoning_run_id}
 GET /intelligence-reports/outcomes/{outcome_id}
 GET /intelligence-reports/signals/{signal_id}/outcomes
 GET /intelligence-reports/screenshot-decisions/{decision_id}
+```
+
+Audit timeline APIs compose persisted artifacts into chronological traceability views with artifact
+graphs, missing-section reporting, bounded metadata, and deterministic completeness scores. They are
+read-only and do not run analysis, replay, diagnostics, outcome evaluation, reasoning, LLM
+generation, action execution, alerts, or broker workflows:
+
+```txt
+GET /audit-timeline/analysis-runs/{analysis_run_id}
+GET /audit-timeline/signals/{signal_id}
+GET /audit-timeline/reasoning-runs/{reasoning_run_id}
+GET /audit-timeline/action-plans/{action_plan_id}
+GET /audit-timeline/outcomes/{outcome_id}
+GET /audit-timeline/chart-screenshot-runs/{run_id}
 ```
 
 AI intelligence APIs generate persisted advisory insight cards from cited backend artifacts. They do
