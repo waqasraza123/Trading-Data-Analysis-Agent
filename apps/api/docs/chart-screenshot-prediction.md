@@ -121,6 +121,27 @@ chart_bottom=520
 If bounds are omitted, the parser infers them from foreground pixels and records a warning in
 `parserMetadataJson.imageExtractionWarnings`.
 
+Optional parser tuning fields can be provided to both PNG endpoints:
+
+```txt
+foreground_distance_threshold=90
+candle_color_delta_threshold=35
+min_candle_channel=80
+candle_blue_tolerance=20
+active_column_min_pixels=2
+column_gap_tolerance=3
+min_cluster_width=2
+body_row_coverage_percent=50
+max_detected_candles=240
+bullish_color_hex=#14a35c
+bearish_color_hex=#d64b4b
+color_profile_tolerance=80
+```
+
+Use these fields when exported charts have dark themes, muted candle colors, thick gridlines, or
+platform-specific candle palettes. The parser stores the applied values in
+`parserMetadataJson.parserTuning` so extraction can be audited and replayed.
+
 ## Preview PNG Image Extraction
 
 `POST /chart-screenshot-runs/image/preview` runs deterministic PNG extraction without writing a
@@ -140,6 +161,8 @@ chart_left=48
 chart_top=20
 chart_right=900
 chart_bottom=520
+bullish_color_hex=#14a35c
+bearish_color_hex=#d64b4b
 ```
 
 Preview responses include:
@@ -158,6 +181,44 @@ The preview endpoint is not an analysis endpoint. It does not persist artifacts 
 a trade decision. Persist the reviewed rows with `POST /chart-screenshot-runs` or persist the image
 with `POST /chart-screenshot-runs/image`, then use the review and decision endpoints as needed.
 
+## Parser Tuning
+
+The default PNG parser is intentionally conservative and works best when candle pixels contrast
+clearly from the chart background. Parser tuning is deterministic and request-scoped; it does not
+change global service behavior.
+
+Field semantics:
+
+- `foreground_distance_threshold`: minimum RGB distance from the inferred background before a pixel
+  is considered foreground. Lower values include more subtle pixels; higher values reject more
+  gridlines and labels.
+- `candle_color_delta_threshold`: minimum red/green channel difference for generic colored candle
+  detection.
+- `min_candle_channel`: minimum red or green channel value for generic colored candle detection.
+- `candle_blue_tolerance`: allowed blue-channel slack relative to the dominant red/green channel.
+- `active_column_min_pixels`: minimum foreground pixels required before an x-axis column can
+  contribute to a candle cluster.
+- `column_gap_tolerance`: maximum horizontal empty-pixel gap still treated as part of the same
+  candle cluster.
+- `min_cluster_width`: minimum width for a detected candle cluster.
+- `body_row_coverage_percent`: percentage of candle-cluster width required for a row to be treated
+  as candle body rather than wick.
+- `max_detected_candles`: caps the number of extracted candles; when exceeded, the parser keeps the
+  latest candles from the right side of the chart.
+- `bullish_color_hex` / `bearish_color_hex`: optional exact candle colors for platforms that do not
+  use a simple green/red palette.
+- `color_profile_tolerance`: RGB distance tolerance for matching the optional bullish/bearish colors.
+
+Recommended production workflow:
+
+1. Call `/image/preview` with defaults.
+2. If candles are missed, provide chart bounds and platform candle colors.
+3. If gridlines or labels are included, increase `foreground_distance_threshold`,
+   `active_column_min_pixels`, or `min_cluster_width`.
+4. If candle bodies are split, increase `column_gap_tolerance`.
+5. Persist the image only after preview output is acceptable, or submit corrected candles through
+   the manual review path.
+
 ## Response Semantics
 
 The response persists:
@@ -172,7 +233,7 @@ The response persists:
 - `extractionWarningsJson`: parser, validation, duplicate, and conflict warnings.
 - `extractedPayloadJson`: submitted candles and trend metrics for audit/replay.
 - `parserMetadataJson`: parser name/version, detected image size, chart bounds, detected candle
-  count, image extraction warnings, and triggered analysis metadata when applicable.
+  count, parser tuning, image extraction warnings, and triggered analysis metadata when applicable.
 
 The hypothesis is an evidence artifact for the backend and must not be presented as financial
 advice or a guaranteed prediction.
@@ -350,5 +411,7 @@ Example response shape:
 - Supported chart type: visible candlestick shapes with foreground pixels that contrast from the
   chart background.
 - Required calibration: `price_min`, `price_max`, `window_start`, and `timeframe`.
+- Parser tuning can improve dark themes, muted colors, and gridline-heavy screenshots, but it does
+  not replace review for low-confidence extraction.
 - The parser does not read axis text, infer symbol metadata from the image, or classify directly
   from pixels.

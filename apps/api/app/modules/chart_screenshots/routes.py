@@ -15,8 +15,11 @@ from app.modules.chart_screenshots.parser import (
     CHART_SCREENSHOT_IMAGE_PARSER_NAME,
     CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
     ChartImageBounds,
+    ChartImageColorProfile,
     ChartImageExtractionConfig,
     ChartImageExtractionResult,
+    ChartImageExtractionTuning,
+    RgbPixel,
     build_trend_hypothesis,
     extract_candles_from_png,
 )
@@ -77,6 +80,18 @@ async def create_chart_screenshot_run_from_image(
     chart_top: Annotated[int | None, Form(ge=0)] = None,
     chart_right: Annotated[int | None, Form(ge=0)] = None,
     chart_bottom: Annotated[int | None, Form(ge=0)] = None,
+    foreground_distance_threshold: Annotated[int, Form(ge=1, le=765)] = 90,
+    candle_color_delta_threshold: Annotated[int, Form(ge=0, le=255)] = 35,
+    min_candle_channel: Annotated[int, Form(ge=0, le=255)] = 80,
+    candle_blue_tolerance: Annotated[int, Form(ge=0, le=255)] = 20,
+    active_column_min_pixels: Annotated[int, Form(ge=1, le=1000)] = 2,
+    column_gap_tolerance: Annotated[int, Form(ge=0, le=1000)] = 3,
+    min_cluster_width: Annotated[int, Form(ge=1, le=1000)] = 2,
+    body_row_coverage_percent: Annotated[int, Form(ge=1, le=100)] = 50,
+    max_detected_candles: Annotated[int, Form(ge=3, le=240)] = 240,
+    bullish_color_hex: Annotated[str | None, Form(max_length=7)] = None,
+    bearish_color_hex: Annotated[str | None, Form(max_length=7)] = None,
+    color_profile_tolerance: Annotated[int, Form(ge=0, le=765)] = 80,
     trigger_analysis: Annotated[bool, Form()] = False,
     include_news_correlation: Annotated[bool, Form()] = False,
     include_ai_explanation: Annotated[bool, Form()] = False,
@@ -94,6 +109,20 @@ async def create_chart_screenshot_run_from_image(
         chart_top=chart_top,
         chart_right=chart_right,
         chart_bottom=chart_bottom,
+        tuning=build_chart_image_tuning(
+            foreground_distance_threshold=foreground_distance_threshold,
+            candle_color_delta_threshold=candle_color_delta_threshold,
+            min_candle_channel=min_candle_channel,
+            candle_blue_tolerance=candle_blue_tolerance,
+            active_column_min_pixels=active_column_min_pixels,
+            column_gap_tolerance=column_gap_tolerance,
+            min_cluster_width=min_cluster_width,
+            body_row_coverage_percent=body_row_coverage_percent,
+            max_detected_candles=max_detected_candles,
+            bullish_color_hex=bullish_color_hex,
+            bearish_color_hex=bearish_color_hex,
+            color_profile_tolerance=color_profile_tolerance,
+        ),
     )
     metadata = extraction.parser_metadata_json
     if extraction.warnings:
@@ -133,6 +162,18 @@ async def preview_chart_screenshot_image_extraction(
     chart_top: Annotated[int | None, Form(ge=0)] = None,
     chart_right: Annotated[int | None, Form(ge=0)] = None,
     chart_bottom: Annotated[int | None, Form(ge=0)] = None,
+    foreground_distance_threshold: Annotated[int, Form(ge=1, le=765)] = 90,
+    candle_color_delta_threshold: Annotated[int, Form(ge=0, le=255)] = 35,
+    min_candle_channel: Annotated[int, Form(ge=0, le=255)] = 80,
+    candle_blue_tolerance: Annotated[int, Form(ge=0, le=255)] = 20,
+    active_column_min_pixels: Annotated[int, Form(ge=1, le=1000)] = 2,
+    column_gap_tolerance: Annotated[int, Form(ge=0, le=1000)] = 3,
+    min_cluster_width: Annotated[int, Form(ge=1, le=1000)] = 2,
+    body_row_coverage_percent: Annotated[int, Form(ge=1, le=100)] = 50,
+    max_detected_candles: Annotated[int, Form(ge=3, le=240)] = 240,
+    bullish_color_hex: Annotated[str | None, Form(max_length=7)] = None,
+    bearish_color_hex: Annotated[str | None, Form(max_length=7)] = None,
+    color_profile_tolerance: Annotated[int, Form(ge=0, le=765)] = 80,
 ) -> ChartScreenshotImageExtractionPreviewRead:
     extraction = await extract_chart_image_from_upload(
         request=request,
@@ -145,6 +186,20 @@ async def preview_chart_screenshot_image_extraction(
         chart_top=chart_top,
         chart_right=chart_right,
         chart_bottom=chart_bottom,
+        tuning=build_chart_image_tuning(
+            foreground_distance_threshold=foreground_distance_threshold,
+            candle_color_delta_threshold=candle_color_delta_threshold,
+            min_candle_channel=min_candle_channel,
+            candle_blue_tolerance=candle_blue_tolerance,
+            active_column_min_pixels=active_column_min_pixels,
+            column_gap_tolerance=column_gap_tolerance,
+            min_cluster_width=min_cluster_width,
+            body_row_coverage_percent=body_row_coverage_percent,
+            max_detected_candles=max_detected_candles,
+            bullish_color_hex=bullish_color_hex,
+            bearish_color_hex=bearish_color_hex,
+            color_profile_tolerance=color_profile_tolerance,
+        ),
     )
     hypothesis = build_trend_hypothesis(extraction.candles, extraction.confidence)
     warnings = [*extraction.warnings, *hypothesis.warnings]
@@ -184,6 +239,7 @@ async def extract_chart_image_from_upload(
     chart_top: int | None,
     chart_right: int | None,
     chart_bottom: int | None,
+    tuning: ChartImageExtractionTuning,
 ) -> ChartImageExtractionResult:
     file_bytes = await file.read()
     settings = request.app.state.settings
@@ -200,8 +256,58 @@ async def extract_chart_image_from_upload(
             price_min=price_min,
             price_max=price_max,
             bounds=bounds,
+            tuning=tuning,
         ),
     )
+
+
+def build_chart_image_tuning(
+    foreground_distance_threshold: int,
+    candle_color_delta_threshold: int,
+    min_candle_channel: int,
+    candle_blue_tolerance: int,
+    active_column_min_pixels: int,
+    column_gap_tolerance: int,
+    min_cluster_width: int,
+    body_row_coverage_percent: int,
+    max_detected_candles: int,
+    bullish_color_hex: str | None,
+    bearish_color_hex: str | None,
+    color_profile_tolerance: int,
+) -> ChartImageExtractionTuning:
+    return ChartImageExtractionTuning(
+        foreground_distance_threshold=foreground_distance_threshold,
+        candle_color_delta_threshold=candle_color_delta_threshold,
+        min_candle_channel=min_candle_channel,
+        candle_blue_tolerance=candle_blue_tolerance,
+        active_column_min_pixels=active_column_min_pixels,
+        column_gap_tolerance=column_gap_tolerance,
+        min_cluster_width=min_cluster_width,
+        body_row_coverage_percent=body_row_coverage_percent,
+        max_detected_candles=max_detected_candles,
+        color_profile=ChartImageColorProfile(
+            bullish=parse_rgb_hex_color(bullish_color_hex, "bullish_color_hex"),
+            bearish=parse_rgb_hex_color(bearish_color_hex, "bearish_color_hex"),
+            tolerance=color_profile_tolerance,
+        ),
+    )
+
+
+def parse_rgb_hex_color(value: str | None, field_name: str) -> RgbPixel | None:
+    if value is None or value.strip() == "":
+        return None
+    normalized = value.strip()
+    if normalized.startswith("#"):
+        normalized = normalized[1:]
+    if len(normalized) != 6:
+        raise AppError(422, "invalid_chart_color", f"{field_name} must be a 6-digit hex color")
+    try:
+        red = int(normalized[0:2], 16)
+        green = int(normalized[2:4], 16)
+        blue = int(normalized[4:6], 16)
+    except ValueError as error:
+        raise AppError(422, "invalid_chart_color", f"{field_name} must be a hex color") from error
+    return RgbPixel(red=red, green=green, blue=blue)
 
 
 def parse_chart_bounds(

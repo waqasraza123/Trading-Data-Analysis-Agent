@@ -1,6 +1,6 @@
 import struct
 import zlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -34,6 +34,9 @@ class ChartImageExtractionConfig:
     price_min: Decimal
     price_max: Decimal
     bounds: ChartImageBounds | None
+    tuning: "ChartImageExtractionTuning" = field(
+        default_factory=lambda: ChartImageExtractionTuning()
+    )
 
 
 @dataclass(frozen=True)
@@ -41,6 +44,27 @@ class RgbPixel:
     red: int
     green: int
     blue: int
+
+
+@dataclass(frozen=True)
+class ChartImageColorProfile:
+    bullish: RgbPixel | None = None
+    bearish: RgbPixel | None = None
+    tolerance: int = 80
+
+
+@dataclass(frozen=True)
+class ChartImageExtractionTuning:
+    foreground_distance_threshold: int = 90
+    candle_color_delta_threshold: int = 35
+    min_candle_channel: int = 80
+    candle_blue_tolerance: int = 20
+    active_column_min_pixels: int = 2
+    column_gap_tolerance: int = 3
+    min_cluster_width: int = 2
+    body_row_coverage_percent: int = 50
+    max_detected_candles: int = MAX_DETECTED_CANDLES
+    color_profile: ChartImageColorProfile = field(default_factory=ChartImageColorProfile)
 
 
 @dataclass(frozen=True)
@@ -143,18 +167,24 @@ def extract_candles_from_png(
     config: ChartImageExtractionConfig,
 ) -> ChartImageExtractionResult:
     image = decode_png(image_bytes)
-    bounds = config.bounds or detect_chart_bounds(image)
+    validate_tuning(config.tuning)
+    bounds = config.bounds or detect_chart_bounds(image, config.tuning)
     validate_bounds(bounds, image)
-    foreground_mask = build_foreground_mask(image, bounds)
-    clusters = detect_pixel_clusters(image=image, bounds=bounds, foreground_mask=foreground_mask)
+    foreground_mask = build_foreground_mask(image, bounds, config.tuning)
+    clusters = detect_pixel_clusters(
+        image=image,
+        bounds=bounds,
+        foreground_mask=foreground_mask,
+        tuning=config.tuning,
+    )
     if len(clusters) < MIN_DETECTED_CANDLES:
         raise AppError(
             422,
             "chart_image_candles_not_detected",
             "At least three candle shapes could not be detected in the chart image",
         )
-    if len(clusters) > MAX_DETECTED_CANDLES:
-        clusters = clusters[-MAX_DETECTED_CANDLES:]
+    if len(clusters) > config.tuning.max_detected_candles:
+        clusters = clusters[-config.tuning.max_detected_candles :]
     candles = clusters_to_candles(clusters=clusters, bounds=bounds, config=config)
     confidence = calculate_image_extraction_confidence(clusters=clusters, bounds=bounds)
     warnings: list[str] = []
@@ -175,9 +205,66 @@ def extract_candles_from_png(
                 "bottom": bounds.bottom,
             },
             "detectedCandleCount": len(candles),
+            "parserTuning": serialize_tuning(config.tuning),
         },
         warnings=warnings,
     )
+
+
+def validate_tuning(tuning: ChartImageExtractionTuning) -> None:
+    if not 1 <= tuning.foreground_distance_threshold <= 765:
+        raise AppError(
+            422,
+            "invalid_chart_parser_tuning",
+            "foreground distance threshold is invalid",
+        )
+    if not 0 <= tuning.candle_color_delta_threshold <= 255:
+        raise AppError(
+            422,
+            "invalid_chart_parser_tuning",
+            "candle color delta threshold is invalid",
+        )
+    if not 0 <= tuning.min_candle_channel <= 255:
+        raise AppError(422, "invalid_chart_parser_tuning", "minimum candle channel is invalid")
+    if not 0 <= tuning.candle_blue_tolerance <= 255:
+        raise AppError(422, "invalid_chart_parser_tuning", "candle blue tolerance is invalid")
+    if not 1 <= tuning.active_column_min_pixels <= 1000:
+        raise AppError(422, "invalid_chart_parser_tuning", "active column minimum is invalid")
+    if not 0 <= tuning.column_gap_tolerance <= 1000:
+        raise AppError(422, "invalid_chart_parser_tuning", "column gap tolerance is invalid")
+    if not 1 <= tuning.min_cluster_width <= 1000:
+        raise AppError(422, "invalid_chart_parser_tuning", "minimum cluster width is invalid")
+    if not 1 <= tuning.body_row_coverage_percent <= 100:
+        raise AppError(422, "invalid_chart_parser_tuning", "body row coverage is invalid")
+    if not MIN_DETECTED_CANDLES <= tuning.max_detected_candles <= MAX_DETECTED_CANDLES:
+        raise AppError(422, "invalid_chart_parser_tuning", "maximum detected candles is invalid")
+    if not 0 <= tuning.color_profile.tolerance <= 765:
+        raise AppError(422, "invalid_chart_parser_tuning", "color profile tolerance is invalid")
+
+
+def serialize_tuning(tuning: ChartImageExtractionTuning) -> dict[str, object]:
+    return {
+        "foregroundDistanceThreshold": tuning.foreground_distance_threshold,
+        "candleColorDeltaThreshold": tuning.candle_color_delta_threshold,
+        "minCandleChannel": tuning.min_candle_channel,
+        "candleBlueTolerance": tuning.candle_blue_tolerance,
+        "activeColumnMinPixels": tuning.active_column_min_pixels,
+        "columnGapTolerance": tuning.column_gap_tolerance,
+        "minClusterWidth": tuning.min_cluster_width,
+        "bodyRowCoveragePercent": tuning.body_row_coverage_percent,
+        "maxDetectedCandles": tuning.max_detected_candles,
+        "colorProfile": {
+            "bullish": serialize_pixel(tuning.color_profile.bullish),
+            "bearish": serialize_pixel(tuning.color_profile.bearish),
+            "tolerance": tuning.color_profile.tolerance,
+        },
+    }
+
+
+def serialize_pixel(pixel: RgbPixel | None) -> dict[str, int] | None:
+    if pixel is None:
+        return None
+    return {"red": pixel.red, "green": pixel.green, "blue": pixel.blue}
 
 
 def decode_png(image_bytes: bytes) -> DecodedPngImage:
@@ -289,9 +376,12 @@ def paeth_predictor(left: int, up: int, up_left: int) -> int:
     return up_left
 
 
-def detect_chart_bounds(image: DecodedPngImage) -> ChartImageBounds:
+def detect_chart_bounds(
+    image: DecodedPngImage,
+    tuning: ChartImageExtractionTuning,
+) -> ChartImageBounds:
     full_bounds = ChartImageBounds(left=0, top=0, right=image.width - 1, bottom=image.height - 1)
-    mask = build_foreground_mask(image, full_bounds)
+    mask = build_foreground_mask(image, full_bounds, tuning)
     active_points = [
         (x, y)
         for y in range(image.height)
@@ -326,6 +416,7 @@ def validate_bounds(bounds: ChartImageBounds, image: DecodedPngImage) -> None:
 def build_foreground_mask(
     image: DecodedPngImage,
     bounds: ChartImageBounds,
+    tuning: ChartImageExtractionTuning,
 ) -> list[list[bool]]:
     background = estimate_background_color(image)
     mask = [[False for _ in range(image.width)] for _ in range(image.height)]
@@ -333,13 +424,37 @@ def build_foreground_mask(
         for x in range(bounds.left, bounds.right + 1):
             pixel = image.pixels[y][x]
             distance = color_distance(pixel, background)
-            is_colored_candle = (
-                abs(pixel.green - pixel.red) >= 35
-                and max(pixel.red, pixel.green) >= 80
-                and pixel.blue <= max(pixel.red, pixel.green) + 20
+            mask[y][x] = (
+                distance >= tuning.foreground_distance_threshold
+                or is_colored_candle(pixel, tuning)
+                or matches_color_profile(pixel, tuning.color_profile)
             )
-            mask[y][x] = distance >= 90 or is_colored_candle
     return mask
+
+
+def is_colored_candle(pixel: RgbPixel, tuning: ChartImageExtractionTuning) -> bool:
+    return (
+        abs(pixel.green - pixel.red) >= tuning.candle_color_delta_threshold
+        and max(pixel.red, pixel.green) >= tuning.min_candle_channel
+        and pixel.blue <= max(pixel.red, pixel.green) + tuning.candle_blue_tolerance
+    )
+
+
+def matches_color_profile(pixel: RgbPixel, profile: ChartImageColorProfile) -> bool:
+    return (
+        pixel_within_tolerance(pixel, profile.bullish, profile.tolerance)
+        or pixel_within_tolerance(pixel, profile.bearish, profile.tolerance)
+    )
+
+
+def pixel_within_tolerance(
+    pixel: RgbPixel,
+    target: RgbPixel | None,
+    tolerance: int,
+) -> bool:
+    if target is None:
+        return False
+    return color_distance(pixel, target) <= tolerance
 
 
 def estimate_background_color(image: DecodedPngImage) -> RgbPixel:
@@ -374,34 +489,43 @@ def detect_pixel_clusters(
     image: DecodedPngImage,
     bounds: ChartImageBounds,
     foreground_mask: list[list[bool]],
+    tuning: ChartImageExtractionTuning,
 ) -> list[PixelCluster]:
     active_columns = [
         x
         for x in range(bounds.left, bounds.right + 1)
-        if sum(1 for y in range(bounds.top, bounds.bottom + 1) if foreground_mask[y][x]) >= 2
+        if sum(1 for y in range(bounds.top, bounds.bottom + 1) if foreground_mask[y][x])
+        >= tuning.active_column_min_pixels
     ]
-    groups = group_active_columns(active_columns)
+    groups = group_active_columns(active_columns, tuning)
     clusters: list[PixelCluster] = []
     for left, right in groups:
-        cluster = build_pixel_cluster(image, foreground_mask, bounds, left, right)
+        cluster = build_pixel_cluster(image, foreground_mask, bounds, left, right, tuning)
         if cluster is not None:
             clusters.append(cluster)
     return clusters
 
 
-def group_active_columns(active_columns: list[int]) -> list[tuple[int, int]]:
+def group_active_columns(
+    active_columns: list[int],
+    tuning: ChartImageExtractionTuning,
+) -> list[tuple[int, int]]:
     if not active_columns:
         return []
     groups: list[tuple[int, int]] = []
     group_left = active_columns[0]
     previous = active_columns[0]
     for column in active_columns[1:]:
-        if column - previous > 3:
+        if column - previous > tuning.column_gap_tolerance + 1:
             groups.append((group_left, previous))
             group_left = column
         previous = column
     groups.append((group_left, previous))
-    return [(left, right) for left, right in groups if right - left + 1 >= 2]
+    return [
+        (left, right)
+        for left, right in groups
+        if right - left + 1 >= tuning.min_cluster_width
+    ]
 
 
 def build_pixel_cluster(
@@ -410,6 +534,7 @@ def build_pixel_cluster(
     bounds: ChartImageBounds,
     left: int,
     right: int,
+    tuning: ChartImageExtractionTuning,
 ) -> PixelCluster | None:
     active_points = [
         (x, y)
@@ -426,7 +551,7 @@ def build_pixel_cluster(
         y
         for y in range(high_y, low_y + 1)
         if sum(1 for x in range(left, right + 1) if foreground_mask[y][x])
-        >= max(2, width // 2)
+        >= max(2, (width * tuning.body_row_coverage_percent) // 100)
     ]
     if body_rows:
         body_top_y = min(body_rows)
@@ -434,7 +559,15 @@ def build_pixel_cluster(
     else:
         body_top_y = high_y
         body_bottom_y = low_y
-    direction = detect_cluster_direction(image, foreground_mask, left, right, high_y, low_y)
+    direction = detect_cluster_direction(
+        image,
+        foreground_mask,
+        left,
+        right,
+        high_y,
+        low_y,
+        tuning.color_profile,
+    )
     return PixelCluster(
         left=left,
         right=right,
@@ -453,6 +586,7 @@ def detect_cluster_direction(
     right: int,
     high_y: int,
     low_y: int,
+    color_profile: ChartImageColorProfile,
 ) -> ChartTrendDirection:
     red_score = 0
     green_score = 0
@@ -461,7 +595,11 @@ def detect_cluster_direction(
             if not foreground_mask[y][x]:
                 continue
             pixel = image.pixels[y][x]
-            if pixel.green > pixel.red + 20:
+            if pixel_within_tolerance(pixel, color_profile.bullish, color_profile.tolerance):
+                green_score += 1
+            elif pixel_within_tolerance(pixel, color_profile.bearish, color_profile.tolerance):
+                red_score += 1
+            elif pixel.green > pixel.red + 20:
                 green_score += 1
             elif pixel.red > pixel.green + 20:
                 red_score += 1
