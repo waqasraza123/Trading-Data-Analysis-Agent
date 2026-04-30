@@ -10,9 +10,12 @@ from app.core.time import utc_now
 from app.modules.analysis.models import AnalysisRun, AnalysisRunStatus
 from app.modules.analysis.schemas import AnalysisRunCreate, AnalysisRunRead
 from app.modules.analysis.service import AnalysisService
+from app.modules.candles.models import Candle
 from app.modules.candles.normalizer import RawCandlePayload, normalize_candle_payload
+from app.modules.candles.quality import CandleQualityReport
 from app.modules.candles.repository import CandleRepository
-from app.modules.candles.schemas import CandleOriginType, CandleUpsertStatus
+from app.modules.candles.schemas import CandleOriginType, CandleRead, CandleUpsertStatus
+from app.modules.candles.service import CandleService
 from app.modules.candles.timeframes import Timeframe
 from app.modules.candles.validator import validate_candle
 from app.modules.chart_screenshots.models import (
@@ -29,6 +32,7 @@ from app.modules.chart_screenshots.repository import ChartScreenshotRunRepositor
 from app.modules.chart_screenshots.schemas import (
     ChartScreenshotDecisionRead,
     ChartScreenshotPredictionCreate,
+    ChartScreenshotReportRead,
     ChartScreenshotReviewStatus,
     ChartScreenshotRunReviewRead,
     ChartScreenshotRunReviewRequest,
@@ -291,6 +295,39 @@ class ChartScreenshotPredictionService:
             signal_classification=signal_classification,
         )
 
+    async def get_report(self, run_id: UUID) -> ChartScreenshotReportRead:
+        run = await self.get_run(run_id)
+        stored_candles = await self.candle_repository.list_by_chart_screenshot_run_id(run.id)
+        candle_quality = self.build_report_quality(run, stored_candles)
+        decision = await self.get_decision(run.id)
+        review_metadata = object_dict(run.parser_metadata_json.get("humanReview"))
+        correction_run = await self.resolve_correction_run(review_metadata)
+        corrected_from_run_id = parse_optional_uuid(
+            run.parser_metadata_json.get("correctedFromChartScreenshotRunId")
+        )
+        return ChartScreenshotReportRead(
+            chart_screenshot_run=ChartScreenshotRunRead.model_validate(run),
+            stored_candles=[CandleRead.model_validate(candle) for candle in stored_candles],
+            candle_quality=candle_quality,
+            decision=decision,
+            review_metadata_json=review_metadata,
+            correction_run=(
+                ChartScreenshotRunRead.model_validate(correction_run)
+                if correction_run is not None
+                else None
+            ),
+            corrected_from_run_id=corrected_from_run_id,
+            trend_metrics_json=self.extract_trend_metrics(run),
+            parser_tuning_json=object_dict(run.parser_metadata_json.get("parserTuning")),
+            audit_warnings=self.extract_warning_items(run.extraction_warnings_json),
+            report_limitations=[
+                "Report data is an audit bundle of persisted backend artifacts",
+                "Stored candles only include candles linked directly to this chart screenshot run",
+                "Duplicate candles may be counted on the run without being linked to this run",
+                "Outputs are market-analysis artifacts, not financial advice or trade instructions",
+            ],
+        )
+
     async def list_runs(
         self,
         limit: int,
@@ -498,6 +535,39 @@ class ChartScreenshotPredictionService:
             return []
         return [str(item) for item in raw_warnings]
 
+    def build_report_quality(
+        self,
+        run: ChartScreenshotRun,
+        stored_candles: list[Candle],
+    ) -> CandleQualityReport | None:
+        if run.extracted_window_start is None or run.extracted_window_end is None:
+            return None
+        return CandleService(self.session).calculate_quality_report(
+            candles=stored_candles,
+            timeframe=Timeframe(run.timeframe),
+            start_time=run.extracted_window_start,
+            end_time=run.extracted_window_end,
+        )
+
+    async def resolve_correction_run(
+        self,
+        review_metadata: dict[str, object] | None,
+    ) -> ChartScreenshotRun | None:
+        if review_metadata is None:
+            return None
+        correction_run_id = parse_optional_uuid(
+            review_metadata.get("correctedChartScreenshotRunId")
+        )
+        if correction_run_id is None:
+            return None
+        return await self.repository.get_by_id(correction_run_id)
+
+    def extract_trend_metrics(self, run: ChartScreenshotRun) -> dict[str, object]:
+        if run.extracted_payload_json is None:
+            return {}
+        raw_metrics = run.extracted_payload_json.get("trendMetrics")
+        return object_dict(raw_metrics) or {}
+
     async def create_correction_run(
         self,
         original_run: ChartScreenshotRun,
@@ -628,3 +698,18 @@ class ChartScreenshotPredictionService:
 
 def original_run_timeframe(run: ChartScreenshotRun) -> Timeframe:
     return Timeframe(run.timeframe)
+
+
+def object_dict(value: object) -> dict[str, object] | None:
+    if not isinstance(value, dict):
+        return None
+    return {str(key): item for key, item in value.items()}
+
+
+def parse_optional_uuid(value: object) -> UUID | None:
+    if value is None:
+        return None
+    try:
+        return UUID(str(value))
+    except ValueError:
+        return None

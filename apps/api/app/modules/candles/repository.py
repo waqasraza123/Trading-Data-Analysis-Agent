@@ -165,6 +165,18 @@ class CandleRepository:
         result = await self.session.execute(statement.limit(1))
         return result.scalar_one_or_none()
 
+    async def list_by_chart_screenshot_run_id(
+        self,
+        chart_screenshot_run_id: UUID,
+    ) -> list[Candle]:
+        statement: Select[tuple[Candle]] = (
+            select(Candle)
+            .where(Candle.chart_screenshot_run_id == chart_screenshot_run_id)
+            .order_by(Candle.timestamp.asc())
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
     def window_statement(
         self,
         workspace_id: UUID,

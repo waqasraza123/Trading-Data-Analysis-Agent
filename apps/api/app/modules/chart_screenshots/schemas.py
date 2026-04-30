@@ -9,6 +9,8 @@ from pydantic import Field, field_validator
 from app.core.schemas import ApiReadSchema, ApiSchema
 from app.modules.analysis.models import AnalysisRunStatus
 from app.modules.analysis.schemas import AnalysisRunRead
+from app.modules.candles.quality import CandleQualityReport
+from app.modules.candles.schemas import CandleRead
 from app.modules.candles.timeframes import Timeframe
 from app.modules.chart_screenshots.models import (
     ChartScreenshotRunStatus,
@@ -165,3 +167,17 @@ class ChartScreenshotDecisionRead(ApiSchema):
     analysis_status: AnalysisRunStatus | None
     analysis_run: AnalysisRunRead | None
     signal_classification: SignalClassificationRead | None
+
+
+class ChartScreenshotReportRead(ApiSchema):
+    chart_screenshot_run: ChartScreenshotRunRead
+    stored_candles: list[CandleRead]
+    candle_quality: CandleQualityReport | None
+    decision: ChartScreenshotDecisionRead
+    review_metadata_json: dict[str, Any] | None
+    correction_run: ChartScreenshotRunRead | None
+    corrected_from_run_id: UUID | None
+    trend_metrics_json: dict[str, Any]
+    parser_tuning_json: dict[str, Any] | None
+    audit_warnings: list[str]
+    report_limitations: list[str]

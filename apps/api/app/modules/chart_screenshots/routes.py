@@ -27,6 +27,7 @@ from app.modules.chart_screenshots.schemas import (
     ChartScreenshotDecisionRead,
     ChartScreenshotImageExtractionPreviewRead,
     ChartScreenshotPredictionCreate,
+    ChartScreenshotReportRead,
     ChartScreenshotRunListRead,
     ChartScreenshotRunRead,
     ChartScreenshotRunReviewRead,
@@ -398,3 +399,14 @@ async def get_chart_screenshot_decision(
     ],
 ) -> ChartScreenshotDecisionRead:
     return await service.get_decision(run_id)
+
+
+@router.get("/{run_id}/report", response_model=ChartScreenshotReportRead)
+async def get_chart_screenshot_report(
+    run_id: UUID,
+    service: Annotated[
+        ChartScreenshotPredictionService,
+        Depends(get_chart_screenshot_service),
+    ],
+) -> ChartScreenshotReportRead:
+    return await service.get_report(run_id)

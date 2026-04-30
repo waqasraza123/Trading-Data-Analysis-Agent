@@ -41,6 +41,7 @@ GET /chart-screenshot-runs
 GET /chart-screenshot-runs/{run_id}
 POST /chart-screenshot-runs/{run_id}/review
 GET /chart-screenshot-runs/{run_id}/decision
+GET /chart-screenshot-runs/{run_id}/report
 ```
 
 ## Create Request With Extracted Candles
@@ -402,6 +403,57 @@ Example response shape:
   "analysisRun": {},
   "signalClassification": {},
   "chartScreenshotRun": {}
+}
+```
+
+## Audit Report
+
+`GET /chart-screenshot-runs/{run_id}/report` returns a read-only audit bundle for a chart
+screenshot run. It is intended for UI detail pages, support workflows, export pipelines, and
+debugging extraction/analysis behavior without making multiple API calls.
+
+The report includes:
+
+- `chartScreenshotRun`: the persisted screenshot run.
+- `storedCandles`: candles directly linked to the screenshot run through `chartScreenshotRunId`.
+- `candleQuality`: quality report calculated over the extracted window from the directly linked
+  candles.
+- `decision`: the same response returned by `GET /chart-screenshot-runs/{run_id}/decision`.
+- `reviewMetadataJson`: human review metadata when the run has been reviewed.
+- `correctionRun`: the corrected chart screenshot run when a corrected review created one.
+- `correctedFromRunId`: the original run when this report is for a human correction run.
+- `trendMetricsJson`: persisted lightweight trend metrics from the extraction payload.
+- `parserTuningJson`: parser tuning used for PNG extraction, when present.
+- `auditWarnings`: extraction/storage warnings recorded on the run.
+- `reportLimitations`: caveats that consumers should show or preserve in exports.
+
+Important report semantics:
+
+- `storedCandles` is intentionally limited to candles linked directly to the run; it does not fetch
+  all candles in the same symbol/timeframe/window.
+- Duplicate candles can be counted on `duplicateCount` without appearing in `storedCandles`, because
+  duplicate storage reuses the existing candle row and does not rewrite its provenance.
+- A corrected run is separate from the original run. Use `correctionRun` or `correctedFromRunId` to
+  follow the review chain.
+- The report is not a new analysis engine; it packages persisted backend artifacts for traceability.
+
+Example response shape:
+
+```json
+{
+  "chartScreenshotRun": {},
+  "storedCandles": [],
+  "candleQuality": {},
+  "decision": {},
+  "reviewMetadataJson": {},
+  "correctionRun": null,
+  "correctedFromRunId": null,
+  "trendMetricsJson": {},
+  "parserTuningJson": {},
+  "auditWarnings": [],
+  "reportLimitations": [
+    "Report data is an audit bundle of persisted backend artifacts"
+  ]
 }
 ```
 
