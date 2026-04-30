@@ -67,6 +67,26 @@ def test_auth_enabled_requires_admin_api_key() -> None:
         Settings(_env_file=None, auth_enabled=True)
 
 
+def test_production_rate_limit_requires_redis_url() -> None:
+    with pytest.raises(ValueError, match="REDIS_URL"):
+        Settings(
+            _env_file=None,
+            app_env=AppEnvironment.PRODUCTION,
+            rate_limit_enabled=True,
+        )
+
+
+def test_production_rate_limit_accepts_redis_url() -> None:
+    settings = Settings(
+        _env_file=None,
+        app_env=AppEnvironment.PRODUCTION,
+        rate_limit_enabled=True,
+        redis_url=SecretStr("redis://localhost:6379/0"),
+    )
+
+    assert settings.redis_url is not None
+
+
 def test_production_rejects_wildcard_cors_origin() -> None:
     with pytest.raises(ValueError, match="CORS_ALLOWED_ORIGINS"):
         Settings(

@@ -219,6 +219,13 @@ class Settings(BaseSettings):
         ):
             msg = "CORS_ALLOWED_ORIGINS is required in production when credentials are enabled"
             raise ValueError(msg)
+        if (
+            self.rate_limit_enabled
+            and self.app_env in {AppEnvironment.STAGING, AppEnvironment.PRODUCTION}
+            and secret_is_empty(self.redis_url)
+        ):
+            msg = "REDIS_URL is required for rate limiting in staging and production"
+            raise ValueError(msg)
         if provider_requires_api_key(self.live_feed_provider) and secret_is_empty(
             self.live_feed_api_key
         ):

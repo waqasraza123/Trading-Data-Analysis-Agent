@@ -58,6 +58,7 @@ SEED_DEFAULT_ADMIN_NAME=
 Optional secrets are not required at API startup. `ADMIN_API_KEY` is required only when
 `AUTH_ENABLED=true`. `LIVE_FEED_API_KEY` is required only for providers that require a key.
 `OPENAI_API_KEY` is required only when LLM explanations are enabled with `LLM_PROVIDER=openai`.
+`REDIS_URL` is required when rate limiting is enabled in staging or production.
 
 ## Running The API
 
@@ -97,13 +98,15 @@ GET /health
 GET /health/live
 GET /health/db
 GET /health/ready
+GET /health/redis
 GET /health/workers
 ```
 
 `/health` and `/health/live` report API process liveness. `/health/db` checks database
 connectivity. `/health/ready` is suitable for readiness probes because it requires database
-connectivity. `/health/workers` reports live worker and stale monitor status when the database is
-available and returns a degraded safe status otherwise.
+connectivity. `/health/redis` checks Redis connectivity when configured. `/health/workers` reports
+live worker, stale monitor, and Redis status when the database is available and returns a degraded
+safe status otherwise.
 
 The API does not require the live worker to be running for readiness.
 

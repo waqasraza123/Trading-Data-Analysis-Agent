@@ -146,6 +146,7 @@ CORS_ALLOW_CREDENTIALS=false
 AUTH_ENABLED=false
 ADMIN_API_KEY=
 API_KEY_HEADER_NAME=x-admin-api-key
+REDIS_URL=redis://localhost:6379/0
 RATE_LIMIT_ENABLED=false
 RATE_LIMIT_REQUESTS_PER_MINUTE=60
 MAX_REQUEST_BODY_BYTES=1048576
@@ -169,8 +170,8 @@ REASONING_ACTION_WORKER_JITTER_SECONDS=2
 
 `AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
 configured API key header; health/readiness endpoints stay public. Rate limiting is disabled by
-default and currently uses an in-memory local/test foundation unless a production Redis-backed
-implementation is added later.
+default, uses an in-memory fallback for local/test when Redis is not configured, and requires
+`REDIS_URL` when enabled in staging or production.
 
 Logs are JSON records with request id, method, path, status code, duration, safe client host, and
 error code when applicable. Request bodies, uploaded files, tokens, API keys, database URLs, and

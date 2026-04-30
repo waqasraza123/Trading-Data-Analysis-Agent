@@ -9,6 +9,7 @@ from app.config import Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import OperationsMiddleware
+from app.core.rate_limit import create_rate_limiter
 from app.modules.action_plans.routes import router as action_plans_router
 from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.analysis.routes import router as analysis_router
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         "app_shutdown",
         extra={"app_env": settings.app_env.value, "service": settings.service_name},
     )
+    await app.state.rate_limiter.close()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -59,6 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved_settings
     app.state.logger = logging.getLogger(resolved_settings.service_name)
+    app.state.rate_limiter = create_rate_limiter(resolved_settings)
     if resolved_settings.cors_allowed_origins:
         app.add_middleware(
             CORSMiddleware,
@@ -67,7 +70,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    app.add_middleware(OperationsMiddleware, settings=resolved_settings)
+    app.add_middleware(
+        OperationsMiddleware,
+        settings=resolved_settings,
+        rate_limiter=app.state.rate_limiter,
+    )
     register_error_handlers(app)
     app.include_router(health_router, prefix=resolved_settings.api_prefix)
     app.include_router(workspaces_router, prefix=resolved_settings.api_prefix)

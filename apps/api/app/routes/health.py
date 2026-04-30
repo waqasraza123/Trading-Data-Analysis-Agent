@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import Settings, build_async_database_url
+from app.core.rate_limit import check_redis_connection
 from app.db.session import check_database_connection
 from app.modules.live.operational import LiveWorkerHealth, collect_live_worker_health
 
@@ -32,6 +33,11 @@ class WorkerStatusResponse(BaseModel):
     live_feed_worker: LiveWorkerHealth | dict[str, str]
     stale_monitor: dict[str, str]
     redis: dict[str, str]
+
+
+class RedisHealthResponse(BaseModel):
+    status: str
+    redis: str
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -79,11 +85,22 @@ async def ready_health(request: Request, response: Response) -> ReadyHealthRespo
     )
 
 
+@router.get("/health/redis", response_model=RedisHealthResponse)
+async def redis_health(request: Request, response: Response) -> RedisHealthResponse:
+    settings: Settings = request.app.state.settings
+    redis_is_healthy, message = await check_redis_connection(settings.redis_url)
+    if redis_is_healthy:
+        return RedisHealthResponse(status="healthy", redis="healthy")
+    request.app.state.logger.warning("redis_health_failed", extra={"reason": message})
+    response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return RedisHealthResponse(status="unhealthy", redis="unhealthy")
+
+
 @router.get("/health/workers", response_model=WorkerStatusResponse)
 async def workers_health(request: Request, response: Response) -> WorkerStatusResponse:
     settings: Settings = request.app.state.settings
     database_is_healthy, _ = await check_database_connection(settings)
-    redis_status = "not_configured" if settings.redis_url is None else "not_checked"
+    redis_status = await resolve_redis_status(settings)
     if not database_is_healthy or settings.database_url is None:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return WorkerStatusResponse(
@@ -114,3 +131,10 @@ async def workers_health(request: Request, response: Response) -> WorkerStatusRe
         stale_monitor={"status": "available"},
         redis={"status": redis_status},
     )
+
+
+async def resolve_redis_status(settings: Settings) -> str:
+    if settings.redis_url is None:
+        return "not_configured"
+    redis_is_healthy, _ = await check_redis_connection(settings.redis_url)
+    return "healthy" if redis_is_healthy else "unhealthy"

@@ -37,12 +37,14 @@ temporary guard. This is an expansion point for real auth later, not OAuth or JW
 ```txt
 RATE_LIMIT_ENABLED=false
 RATE_LIMIT_REQUESTS_PER_MINUTE=60
+REDIS_URL=redis://localhost:6379/0
 ```
 
 Rate limiting is disabled by default to avoid local and test flakiness. When enabled, write routes
-are limited by client host, method, and path. Health endpoints are excluded. The current fallback is
-in-memory for local/test; production should use a Redis-backed implementation before enabling this
-for multiple API instances.
+are limited by client host, method, and path. Health endpoints are excluded. Local and test
+environments use the in-memory limiter when `REDIS_URL` is not configured. Staging and production
+require `REDIS_URL` before rate limiting can be enabled, and Redis backend failures return a stable
+`503 rate_limit_backend_unavailable` error instead of silently allowing traffic.
 
 ## Request Limits
 

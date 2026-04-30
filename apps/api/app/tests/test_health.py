@@ -70,6 +70,20 @@ async def test_ready_health_handles_missing_database_url() -> None:
 
 
 @pytest.mark.asyncio
+async def test_redis_health_handles_missing_redis_url() -> None:
+    test_app = create_app(Settings(_env_file=None, app_env=AppEnvironment.TEST))
+
+    async with AsyncClient(
+        transport=ASGITransport(app=test_app),
+        base_url="http://test",
+    ) as client:
+        response = await client.get("/health/redis")
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "unhealthy", "redis": "unhealthy"}
+
+
+@pytest.mark.asyncio
 async def test_worker_health_returns_safe_status_without_database() -> None:
     test_app = create_app(Settings(_env_file=None, app_env=AppEnvironment.TEST))
 

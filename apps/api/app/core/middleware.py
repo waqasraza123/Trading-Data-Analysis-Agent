@@ -2,7 +2,6 @@ import logging
 import secrets
 import time
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from uuid import uuid4
 
 from fastapi import Request
@@ -10,36 +9,16 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
-from app.config import AppEnvironment, Settings
+from app.config import Settings
 from app.core.errors import create_error_response, get_request_id
-
-
-@dataclass
-class RateLimitBucket:
-    window_started_at: float
-    request_count: int
-
-
-class InMemoryRateLimiter:
-    def __init__(self) -> None:
-        self.buckets: dict[str, RateLimitBucket] = {}
-
-    def allow(self, key: str, now: float, requests_per_minute: int) -> bool:
-        bucket = self.buckets.get(key)
-        if bucket is None or now - bucket.window_started_at >= 60:
-            self.buckets[key] = RateLimitBucket(window_started_at=now, request_count=1)
-            return True
-        if bucket.request_count >= requests_per_minute:
-            return False
-        bucket.request_count += 1
-        return True
+from app.core.rate_limit import RateLimitBackendUnavailable, RateLimiter, rate_limit_key
 
 
 class OperationsMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp, settings: Settings) -> None:
+    def __init__(self, app: ASGIApp, settings: Settings, rate_limiter: RateLimiter) -> None:
         super().__init__(app)
         self.settings = settings
-        self.rate_limiter = InMemoryRateLimiter()
+        self.rate_limiter = rate_limiter
         self.logger = logging.getLogger(settings.service_name)
 
     async def dispatch(
@@ -52,7 +31,7 @@ class OperationsMiddleware(BaseHTTPMiddleware):
         request.state.request_id = request_id
         response: Response | None = None
         try:
-            response = self.guard_request(request)
+            response = await self.guard_request(request)
             if response is None:
                 response = await call_next(request)
             response.headers["x-request-id"] = request_id
@@ -72,14 +51,14 @@ class OperationsMiddleware(BaseHTTPMiddleware):
             return str(uuid4())
         return header_value.strip()[:128]
 
-    def guard_request(self, request: Request) -> Response | None:
+    async def guard_request(self, request: Request) -> Response | None:
         size_response = self.enforce_request_size(request)
         if size_response is not None:
             return size_response
         auth_response = self.enforce_api_key(request)
         if auth_response is not None:
             return auth_response
-        rate_limit_response = self.enforce_rate_limit(request)
+        rate_limit_response = await self.enforce_rate_limit(request)
         if rate_limit_response is not None:
             return rate_limit_response
         return None
@@ -130,28 +109,29 @@ class OperationsMiddleware(BaseHTTPMiddleware):
         request.state.error_code = "invalid_api_key"
         return create_error_response(request, 401, "invalid_api_key", "Invalid API key")
 
-    def enforce_rate_limit(self, request: Request) -> Response | None:
+    async def enforce_rate_limit(self, request: Request) -> Response | None:
         if not self.settings.rate_limit_enabled:
             return None
         if self.is_public_path(request.url.path) or request.method in {"GET", "HEAD", "OPTIONS"}:
             return None
-        if self.settings.app_env not in {
-            AppEnvironment.DEVELOPMENT,
-            AppEnvironment.TEST,
-        }:
-            request.state.error_code = "rate_limit_backend_not_configured"
+        key = rate_limit_key(
+            self.client_host(request),
+            request.method,
+            request.url.path,
+        )
+        try:
+            allowed = await self.rate_limiter.allow(
+                key,
+                self.settings.rate_limit_requests_per_minute,
+            )
+        except RateLimitBackendUnavailable:
+            request.state.error_code = "rate_limit_backend_unavailable"
             return create_error_response(
                 request,
                 503,
-                "rate_limit_backend_not_configured",
-                "Rate limit backend is not configured",
+                "rate_limit_backend_unavailable",
+                "Rate limit backend is unavailable",
             )
-        key = f"{self.client_host(request)}:{request.method}:{request.url.path}"
-        allowed = self.rate_limiter.allow(
-            key,
-            time.monotonic(),
-            self.settings.rate_limit_requests_per_minute,
-        )
         if allowed:
             return None
         request.state.error_code = "rate_limit_exceeded"
