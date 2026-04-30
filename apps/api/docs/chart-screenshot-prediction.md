@@ -1,19 +1,22 @@
 # Chart Screenshot Prediction
 
 Chart screenshot prediction supports image-originated market analysis. The backend accepts either
-manually or externally extracted OHLC candles, or a simple PNG candlestick chart with price/time
-calibration metadata. In both paths, extracted candles are stored through the shared candle
-validation/upsert path and a deterministic trend hypothesis is persisted for the next direction.
+manually or externally extracted OHLC candles, or supported PNG/JPEG candlestick and OHLC bar chart
+screenshots with manual or OCR-assisted price/time calibration. In both paths, extracted candles are
+stored through the shared candle validation/upsert path and a deterministic trend hypothesis is
+persisted for the next direction.
 
-This slice does not perform OCR text reading, broker execution, or financial advice. The PNG parser
-is deterministic and conservative: it detects candle geometry from visible colored candle pixels,
-then refuses the request when at least three candle shapes cannot be found.
+This slice supports optional Google Vision OCR for axis text extraction. It does not store raw image
+bytes, perform broker execution, or provide financial advice. The parser is deterministic and
+conservative: it detects OHLC geometry from visible chart pixels, rejects non-OHLC chart types for
+persistence, and blocks deterministic analysis when extraction or OCR confidence requires human
+review.
 The expected production flow is:
 
-1. Preview a supported chart PNG with `POST /chart-screenshot-runs/image/preview`, upload it to
+1. Preview a supported chart image with `POST /chart-screenshot-runs/image/preview`, upload it to
    `POST /chart-screenshot-runs/image`, or submit reviewed OHLC
    rows to `POST /chart-screenshot-runs`.
-2. Provide timeframe, start timestamp, and price range metadata for image extraction.
+2. Provide timeframe plus manual calibration, OCR calibration, or manual calibration with OCR audit.
 3. Review extracted candles, warnings, and the deterministic trend hypothesis before storage.
 4. Optionally set `trigger_analysis=true` to run the existing deterministic analysis lifecycle over
    the extracted candle window.
@@ -92,7 +95,27 @@ GET /chart-screenshot-runs/{run_id}/lineage
 }
 ```
 
-## Create Request With PNG Image
+## Image OCR Configuration
+
+OCR is disabled by default. When enabled, Google Vision uses Application Default Credentials from
+the runtime environment.
+
+```txt
+CHART_OCR_ENABLED=false
+CHART_OCR_PROVIDER=google_vision
+CHART_OCR_TIMEOUT_SECONDS=10
+CHART_OCR_MIN_CONFIDENCE=0.6500
+CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE=0.7500
+```
+
+Supported calibration modes for image endpoints:
+
+- `manual`: `window_start`, `price_min`, and `price_max` are required; OCR is not called.
+- `ocr`: OCR must be enabled and must infer any missing calibration fields.
+- `manual_with_ocr_audit`: manual calibration is used while OCR output is stored for audit when
+  OCR is enabled.
+
+## Create Request With Image
 
 Submit `multipart/form-data` to `POST /chart-screenshot-runs/image`:
 
@@ -101,6 +124,7 @@ workspace_id=00000000-0000-0000-0000-000000000000
 source_id=00000000-0000-0000-0000-000000000000
 symbol_id=00000000-0000-0000-0000-000000000000
 timeframe=15m
+calibration_mode=manual
 window_start=2026-04-29T08:00:00Z
 price_min=63000
 price_max=64000
@@ -144,9 +168,13 @@ Use these fields when exported charts have dark themes, muted candle colors, thi
 platform-specific candle palettes. The parser stores the applied values in
 `parserMetadataJson.parserTuning` so extraction can be audited and replayed.
 
-## Preview PNG Image Extraction
+The persisted response includes `chartType`, `supportedForAnalysis`, `ocrStatus`,
+`ocrConfidence`, `axisCalibrationJson`, and `analysisBlockedReason`. Non-OHLC chart types such as
+line and area charts return `unsupported_chart_type` and cannot be persisted for analysis.
 
-`POST /chart-screenshot-runs/image/preview` runs deterministic PNG extraction without writing a
+## Preview Image Extraction
+
+`POST /chart-screenshot-runs/image/preview` runs deterministic image extraction without writing a
 chart screenshot run, inserting candles, or triggering analysis. It is intended for UI review,
 operator QA, and manual correction before persistence.
 
@@ -155,6 +183,7 @@ source, and symbol identifiers are not required:
 
 ```txt
 timeframe=15m
+calibration_mode=manual
 window_start=2026-04-29T08:00:00Z
 price_min=63000
 price_max=64000
@@ -177,7 +206,13 @@ Preview responses include:
 - `warnings`: extraction and hypothesis warnings.
 - `requiresHumanReview`: `true` when confidence is below the production review threshold or warnings
   are present.
-- `parserMetadataJson`: parser, image size, inferred/provided bounds, and detected candle count.
+- `chartType`: `candlestick`, `ohlc_bar`, `line_area`, or `unknown`.
+- `supportedForAnalysis`: `true` only for extracted OHLC candle/bar charts.
+- `ocrStatus`, `ocrConfidence`, `axisCalibrationJson`: OCR and calibration audit state.
+- `analysisBlockedReason`: `unsupported_chart_type`, `low_extraction_confidence`,
+  `low_ocr_confidence`, `axis_calibration_incomplete`, or `null`.
+- `parserMetadataJson`: parser, image size, bounds, chart type, OCR payload, calibration metadata,
+  and detected candle count.
 
 The preview endpoint is not an analysis endpoint. It does not persist artifacts and does not return
 a trade decision. Persist the reviewed rows with `POST /chart-screenshot-runs` or persist the image
@@ -185,7 +220,7 @@ with `POST /chart-screenshot-runs/image`, then use the review and decision endpo
 
 ## Parser Tuning
 
-The default PNG parser is intentionally conservative and works best when candle pixels contrast
+The default image parser is intentionally conservative and works best when candle pixels contrast
 clearly from the chart background. Parser tuning is deterministic and request-scoped; it does not
 change global service behavior.
 
@@ -211,6 +246,10 @@ Field semantics:
   use a simple green/red palette.
 - `color_profile_tolerance`: RGB distance tolerance for matching the optional bullish/bearish colors.
 
+Supported v1 chart styles are TradingView/MetaTrader-like candlestick and OHLC bar screenshots
+across light or dark themes. Line, area, and other non-OHLC charts may be previewed as unsupported
+but are not converted into synthetic candles.
+
 Recommended production workflow:
 
 1. Call `/image/preview` with defaults.
@@ -225,8 +264,8 @@ Recommended production workflow:
 
 The response persists:
 
-- `status`: `completed` when extracted candles were stored or already existed, `failed` when none
-  could be stored or matched.
+- `status`: `completed` when extracted candles were stored or already existed, `review_required`
+  when extraction/OCR confidence blocks analysis, and `failed` when none could be stored or matched.
 - `storedCandleCount`, `duplicateCount`, `conflictCount`: shared candle upsert outcomes.
 - `analysisHypothesis`: deterministic `bullish`, `bearish`, `neutral`, or `unclear` label.
 - `analysisHypothesisConfidence`: confidence from close-direction consistency, move magnitude, and
@@ -234,8 +273,9 @@ The response persists:
 - `analysisRunId`: populated when `triggerAnalysis` / `trigger_analysis` creates an analysis run.
 - `extractionWarningsJson`: parser, validation, duplicate, and conflict warnings.
 - `extractedPayloadJson`: submitted candles and trend metrics for audit/replay.
-- `parserMetadataJson`: parser name/version, detected image size, chart bounds, detected candle
-  count, parser tuning, image extraction warnings, and triggered analysis metadata when applicable.
+- `parserMetadataJson`: parser name/version, detected image size, chart bounds, chart type,
+  detected candle count, parser tuning, OCR provider payload, axis calibration metadata, image
+  extraction warnings, and triggered analysis metadata when applicable.
 
 The hypothesis is an evidence artifact for the backend and must not be presented as financial
 advice or a guaranteed prediction.
@@ -297,7 +337,8 @@ corrected
 Accepted, rejected, and needs-correction reviews update `parserMetadataJson.humanReview` on the
 original run. They do not mutate extracted candles and do not rewrite the original audit payload.
 Accepted reviews may set `triggerAnalysis=true` to create an analysis run for the reviewed original
-extraction. Rejected and needs-correction reviews cannot trigger analysis.
+extraction, including runs with `status=review_required`. Rejected and needs-correction reviews
+cannot trigger analysis.
 
 Corrected reviews require `correctedCandles`. The service creates a new chart screenshot run with:
 

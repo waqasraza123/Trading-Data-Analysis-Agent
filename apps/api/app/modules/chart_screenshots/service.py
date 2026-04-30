@@ -90,7 +90,7 @@ class ChartScreenshotPredictionService:
                         "trendMetrics": hypothesis.metrics_json,
                     },
                     extraction_warnings_json={"warnings": hypothesis.warnings},
-                    parser_metadata_json=payload.parser_metadata_json,
+                    parser_metadata_json=self.build_parser_metadata(payload),
                     started_at=now,
                 )
             )
@@ -124,6 +124,13 @@ class ChartScreenshotPredictionService:
     ) -> ChartScreenshotRun:
         run = await self.get_run(run_id)
         if run.status == ChartScreenshotRunStatus.FAILED.value:
+            return run
+        if self.requires_human_review_before_analysis(run):
+            run.status = ChartScreenshotRunStatus.REVIEW_REQUIRED.value
+            run.last_error_code = "chart_screenshot_review_required"
+            run.last_error_message = "Human review is required before analysis can be triggered"
+            await self.session.commit()
+            await self.session.refresh(run)
             return run
         if run.extracted_window_start is None or run.extracted_window_end is None:
             run.status = ChartScreenshotRunStatus.ANALYSIS_FAILED.value
@@ -464,9 +471,32 @@ class ChartScreenshotPredictionService:
             run.analysis_hypothesis_confidence = Decimal("0.0000")
             run.last_error_code = "no_extracted_candles_stored"
             run.last_error_message = "No extracted screenshot candles could be stored"
+        elif run.parser_metadata_json.get("analysisBlockedReason") is not None:
+            run.status = ChartScreenshotRunStatus.REVIEW_REQUIRED.value
+            run.last_error_code = "chart_screenshot_review_required"
+            run.last_error_message = "Human review is required before analysis can be triggered"
         else:
             run.status = ChartScreenshotRunStatus.COMPLETED.value
         run.completed_at = utc_now()
+
+    def build_parser_metadata(
+        self,
+        payload: ChartScreenshotPredictionCreate,
+    ) -> dict[str, object]:
+        if payload.analysis_blocked_reason is None:
+            return payload.parser_metadata_json
+        return {
+            **payload.parser_metadata_json,
+            "analysisBlockedReason": payload.analysis_blocked_reason,
+        }
+
+    def requires_human_review_before_analysis(self, run: ChartScreenshotRun) -> bool:
+        if run.parser_metadata_json.get("analysisBlockedReason") is None:
+            return False
+        review_metadata = run.parser_metadata_json.get("humanReview")
+        if not isinstance(review_metadata, dict):
+            return True
+        return review_metadata.get("status") != ChartScreenshotReviewStatus.ACCEPTED.value
 
     def format_candle_error(self, row_number: int, error: Exception) -> str:
         if isinstance(error, AppError):

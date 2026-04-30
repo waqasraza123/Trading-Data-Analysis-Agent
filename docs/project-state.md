@@ -72,7 +72,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Grounded AI intelligence analyst runs are implemented downstream of read-only intelligence reports. They persist advisory insight cards and claim-level citations to stored artifacts, but they do not classify signals, override deterministic outputs, create executable action items, mutate strategy profiles, send notifications, or perform broker/order/position work.
 - Operator notifications are implemented as a safe persisted outbox with user preferences, in-app delivery, idempotency, leases, and worker-ready dispatch state. They must not become trading alerts, financial-advice messages, broker workflows, or external delivery without explicit provider configuration and safety controls.
 - Later phases add live scanning, deeper external integrations, and performance tuning.
-- Chart screenshot ingestion accepts manually or externally extracted OHLC rows and deterministic PNG candlestick image uploads, supports write-free PNG extraction preview with request-scoped parser tuning, stores valid extracted rows through the shared candle path, persists deterministic trend hypotheses, supports human review/correction without mutating the original extraction audit trail, can optionally trigger the existing deterministic analysis lifecycle over the extracted candle window, exposes a decision endpoint that returns either analysis-backed reasoning or screenshot-hypothesis fallback reasoning, exposes an audit report endpoint that bundles run/candle/quality/review/decision/correction artifacts, and exposes a lineage endpoint for original/corrected run chains.
+- Chart screenshot ingestion accepts manually or externally extracted OHLC rows and deterministic PNG/JPEG candlestick or OHLC bar image uploads, supports write-free image extraction preview with request-scoped parser tuning, optional Google Vision OCR axis calibration, structured unsupported-chart rejection for non-OHLC charts, low-confidence review-required gating before deterministic analysis, shared candle storage, deterministic trend hypotheses, human review/correction, optional analysis triggering, decision/report/lineage endpoints, and OCR/calibration audit metadata without storing raw image bytes.
 - Add tests with the first meaningful code path and keep verification commands current here.
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
@@ -105,6 +105,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented read-only intelligence report builder and API contracts for signal, analysis run, reasoning run, outcome, signal outcome, and screenshot decision reports with bounded sections, redaction, missing-section metadata, docs, and unit tests.
 - Implemented grounded AI intelligence analyst runs, insights, and claims with citation validation, safety checks, mock-provider support, API routes, docs, and unit tests.
 - Implemented notification_preferences, notification_messages, and notification_worker_runs persistence, notification APIs, in-app outbox dispatch, safety checks, idempotency, worker runtime/entrypoint, docs, and unit tests.
+- Implemented chart screenshot hardening with Pillow/OpenCV image decoding, Google Vision OCR provider abstraction, axis calibration metadata, candlestick/OHLC bar extraction, line/area unsupported-chart handling, low-confidence review-required gating, docs, and unit tests.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
 - Implemented workspace/user APIs, idempotent backend seed command/service, engine version registry/query APIs, analysis engine/rule-set snapshots, and current-v1 same-engine replay support.
 - Implemented disposable DB validation hardening, backend integration smoke coverage, and a safe `python -m app.cli smoke` command for read-only or explicit write checks against non-production databases.
@@ -160,6 +161,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Rate limiting is disabled by default; local/test can use the in-memory fallback, while staging/production require `REDIS_URL` when rate limiting is enabled and return a stable backend-unavailable error if Redis cannot be reached.
 - API readiness requires database connectivity and critical configuration, but does not require the live worker to be running.
 - Worker process entrypoints are `python -m app.workers.live_feed_worker`, `python -m app.workers.live_stale_monitor`, `python -m app.workers.reasoning_actions_worker`, `python -m app.workers.notification_worker`, and optional orchestrator `python -m app.workers.supervisor`.
+- Chart screenshot OCR uses Google Vision through Application Default Credentials only when `CHART_OCR_ENABLED=true`; manual calibration remains supported and raw uploaded image bytes are not persisted.
+- Chart screenshot deterministic analysis can run only from normalized OHLC candles. Non-OHLC chart types are not converted into synthetic candles, and low extraction/OCR confidence requires accepted human review or correction before analysis triggering.
 
 ## Deferred / Not Yet Implemented
 
@@ -168,7 +171,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
 - External API integrations beyond current live provider adapters.
 - Deployment configuration beyond the API Dockerfile, CI workflow, and operational docs/env examples.
-- OCR, axis text reading, broad chart-style support, and chart geometry parsing hardening for chart screenshots.
+- Chart screenshot support is hardened for candlestick/OHLC bar images; broader non-OHLC chart families remain unsupported for analysis by design.
 
 ## Risks / Watchouts
 

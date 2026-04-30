@@ -16,6 +16,7 @@ from app.modules.chart_screenshots.models import (
     ChartScreenshotRunStatus,
     ChartTrendDirection,
 )
+from app.modules.chart_screenshots.types import ChartImageType, ChartOcrStatus
 from app.modules.signals.schemas import SignalClassificationRead
 
 
@@ -48,6 +49,7 @@ class ChartScreenshotPredictionCreate(ApiSchema):
     extraction_confidence: Decimal = Field(default=Decimal("1"), ge=0, le=1)
     candles: list[ChartScreenshotCandle] = Field(min_length=3, max_length=1000)
     parser_metadata_json: dict[str, Any] = Field(default_factory=dict)
+    analysis_blocked_reason: str | None = Field(default=None, max_length=120)
     trigger_analysis: bool = False
     include_news_correlation: bool = False
     include_ai_explanation: bool = False
@@ -119,6 +121,12 @@ class ChartScreenshotRunRead(ApiReadSchema):
     extracted_payload_json: dict[str, Any] | None
     extraction_warnings_json: dict[str, Any]
     parser_metadata_json: dict[str, Any]
+    chart_type: ChartImageType | None = None
+    supported_for_analysis: bool | None = None
+    ocr_status: ChartOcrStatus | None = None
+    ocr_confidence: Decimal | None = None
+    axis_calibration_json: dict[str, Any] | None = None
+    analysis_blocked_reason: str | None = None
     last_error_code: str | None
     last_error_message: str | None
     created_at: datetime
@@ -153,6 +161,12 @@ class ChartScreenshotImageExtractionPreviewRead(ApiSchema):
     warnings: list[str]
     requires_human_review: bool
     parser_metadata_json: dict[str, Any]
+    chart_type: ChartImageType
+    supported_for_analysis: bool
+    ocr_status: ChartOcrStatus
+    ocr_confidence: Decimal | None
+    axis_calibration_json: dict[str, Any] | None
+    analysis_blocked_reason: str | None
 
 
 class ChartScreenshotDecisionRead(ApiSchema):

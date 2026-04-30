@@ -243,6 +243,11 @@ Configuration is read from environment variables and `apps/api/.env`.
 | `TEST_DATABASE_URL` | For DB tests/smoke | empty | Explicit disposable database target for integration tests and smoke checks. |
 | `REDIS_URL` | Future workers | empty | Reserved for background processing and cache-backed workflows. |
 | `OPENAI_API_KEY` | Future explanation layer | empty | Reserved for explanation-only AI workflows. |
+| `CHART_OCR_ENABLED` | No | `false` | Enables Google Vision OCR for chart screenshot axis calibration. |
+| `CHART_OCR_PROVIDER` | No | `google_vision` | Chart OCR provider selector. `google_vision` uses Google ADC. |
+| `CHART_OCR_TIMEOUT_SECONDS` | No | `10` | OCR provider timeout for chart screenshot uploads. |
+| `CHART_OCR_MIN_CONFIDENCE` | No | `0.6500` | Minimum OCR confidence before analysis is allowed without review. |
+| `CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE` | No | `0.7500` | Minimum geometry extraction confidence before analysis is allowed without review. |
 | `CORS_ALLOWED_ORIGINS` | No | empty | Comma-separated allowed browser origins. Do not use `*` in production. |
 | `CORS_ALLOW_CREDENTIALS` | No | `false` | Enables credentialed CORS responses for configured origins. |
 | `AUTH_ENABLED` | No | `false` | Enables API key protection for mutating routes. |

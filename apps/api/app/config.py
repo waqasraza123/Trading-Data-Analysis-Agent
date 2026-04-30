@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=0.2, ge=0, le=2)
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
+    chart_ocr_enabled: bool = False
+    chart_ocr_provider: str = "google_vision"
+    chart_ocr_timeout_seconds: float = Field(default=10.0, gt=0)
+    chart_ocr_min_confidence: Decimal = Field(default=Decimal("0.6500"), ge=0, le=1)
+    chart_image_min_extraction_confidence: Decimal = Field(default=Decimal("0.7500"), ge=0, le=1)
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
@@ -193,6 +198,15 @@ class Settings(BaseSettings):
             return None
         normalized_value = value.strip().rstrip("/")
         return normalized_value or None
+
+    @field_validator("chart_ocr_provider")
+    @classmethod
+    def normalize_chart_ocr_provider(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"google_vision", "mock"}:
+            msg = "CHART_OCR_PROVIDER must be google_vision or mock"
+            raise ValueError(msg)
+        return normalized_value
 
     @field_validator("outcome_default_horizons_minutes", mode="before")
     @classmethod

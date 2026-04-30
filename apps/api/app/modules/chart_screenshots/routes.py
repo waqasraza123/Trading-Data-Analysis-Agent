@@ -1,3 +1,5 @@
+from asyncio import to_thread
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
@@ -6,11 +8,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings
 from app.core.errors import AppError
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
 from app.modules.candles.timeframes import Timeframe
+from app.modules.chart_screenshots.calibration import AxisCalibration, build_axis_calibration
 from app.modules.chart_screenshots.models import ChartScreenshotRunStatus
+from app.modules.chart_screenshots.ocr import (
+    ChartOcrResult,
+    get_chart_ocr_provider,
+    serialize_ocr_result,
+)
 from app.modules.chart_screenshots.parser import (
     CHART_SCREENSHOT_IMAGE_PARSER_NAME,
     CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
@@ -22,6 +31,7 @@ from app.modules.chart_screenshots.parser import (
     RgbPixel,
     build_trend_hypothesis,
     extract_candles_from_png,
+    probe_image_dimensions,
 )
 from app.modules.chart_screenshots.schemas import (
     ChartScreenshotDecisionRead,
@@ -35,9 +45,24 @@ from app.modules.chart_screenshots.schemas import (
     ChartScreenshotRunReviewRequest,
 )
 from app.modules.chart_screenshots.service import ChartScreenshotPredictionService
+from app.modules.chart_screenshots.types import ChartCalibrationMode, ChartOcrStatus
 
 router = APIRouter(prefix="/chart-screenshot-runs", tags=["chart-screenshot-runs"])
 PREVIEW_HUMAN_REVIEW_CONFIDENCE_THRESHOLD = Decimal("0.7500")
+
+
+@dataclass(frozen=True)
+class ChartImageUploadExtraction:
+    extraction: ChartImageExtractionResult
+    window_start: datetime
+    price_min: Decimal
+    price_max: Decimal
+    metadata_json: dict[str, object]
+    warnings: list[str]
+    ocr_status: ChartOcrStatus
+    ocr_confidence: Decimal | None
+    axis_calibration_json: dict[str, object] | None
+    analysis_blocked_reason: str | None
 
 
 def get_chart_screenshot_service(
@@ -73,11 +98,12 @@ async def create_chart_screenshot_run_from_image(
     source_id: Annotated[UUID, Form()],
     symbol_id: Annotated[UUID, Form()],
     timeframe: Annotated[Timeframe, Form()],
-    window_start: Annotated[datetime, Form()],
-    price_min: Annotated[Decimal, Form(gt=0)],
-    price_max: Annotated[Decimal, Form(gt=0)],
     file: Annotated[UploadFile, File()],
     user_id: Annotated[UUID | None, Form()] = None,
+    calibration_mode: Annotated[ChartCalibrationMode, Form()] = ChartCalibrationMode.MANUAL,
+    window_start: Annotated[datetime | None, Form()] = None,
+    price_min: Annotated[Decimal | None, Form(gt=0)] = None,
+    price_max: Annotated[Decimal | None, Form(gt=0)] = None,
     chart_left: Annotated[int | None, Form(ge=0)] = None,
     chart_top: Annotated[int | None, Form(ge=0)] = None,
     chart_right: Annotated[int | None, Form(ge=0)] = None,
@@ -100,9 +126,10 @@ async def create_chart_screenshot_run_from_image(
     analysis_warmup_start_time: Annotated[datetime | None, Form()] = None,
     analysis_baseline_start_time: Annotated[datetime | None, Form()] = None,
 ) -> ChartScreenshotRunRead:
-    extraction = await extract_chart_image_from_upload(
+    upload_extraction = await extract_chart_image_from_upload(
         request=request,
         file=file,
+        calibration_mode=calibration_mode,
         timeframe=timeframe,
         window_start=window_start,
         price_min=price_min,
@@ -126,9 +153,12 @@ async def create_chart_screenshot_run_from_image(
             color_profile_tolerance=color_profile_tolerance,
         ),
     )
-    metadata = extraction.parser_metadata_json
-    if extraction.warnings:
-        metadata["imageExtractionWarnings"] = extraction.warnings
+    if not upload_extraction.extraction.supported_for_analysis:
+        raise AppError(
+            422,
+            "unsupported_chart_type",
+            "Only candlestick and OHLC bar chart screenshots can be persisted for analysis",
+        )
     payload = ChartScreenshotPredictionCreate(
         workspace_id=workspace_id,
         user_id=user_id,
@@ -139,9 +169,10 @@ async def create_chart_screenshot_run_from_image(
         parser_source_path=file.filename,
         parser_name=CHART_SCREENSHOT_IMAGE_PARSER_NAME,
         parser_version=CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
-        extraction_confidence=extraction.confidence,
-        candles=extraction.candles,
-        parser_metadata_json=metadata,
+        extraction_confidence=upload_extraction.extraction.confidence,
+        candles=upload_extraction.extraction.candles,
+        parser_metadata_json=upload_extraction.metadata_json,
+        analysis_blocked_reason=upload_extraction.analysis_blocked_reason,
         trigger_analysis=trigger_analysis,
         include_news_correlation=include_news_correlation,
         include_ai_explanation=include_ai_explanation,
@@ -156,10 +187,11 @@ async def create_chart_screenshot_run_from_image(
 async def preview_chart_screenshot_image_extraction(
     request: Request,
     timeframe: Annotated[Timeframe, Form()],
-    window_start: Annotated[datetime, Form()],
-    price_min: Annotated[Decimal, Form(gt=0)],
-    price_max: Annotated[Decimal, Form(gt=0)],
     file: Annotated[UploadFile, File()],
+    calibration_mode: Annotated[ChartCalibrationMode, Form()] = ChartCalibrationMode.MANUAL,
+    window_start: Annotated[datetime | None, Form()] = None,
+    price_min: Annotated[Decimal | None, Form(gt=0)] = None,
+    price_max: Annotated[Decimal | None, Form(gt=0)] = None,
     chart_left: Annotated[int | None, Form(ge=0)] = None,
     chart_top: Annotated[int | None, Form(ge=0)] = None,
     chart_right: Annotated[int | None, Form(ge=0)] = None,
@@ -177,9 +209,10 @@ async def preview_chart_screenshot_image_extraction(
     bearish_color_hex: Annotated[str | None, Form(max_length=7)] = None,
     color_profile_tolerance: Annotated[int, Form(ge=0, le=765)] = 80,
 ) -> ChartScreenshotImageExtractionPreviewRead:
-    extraction = await extract_chart_image_from_upload(
+    upload_extraction = await extract_chart_image_from_upload(
         request=request,
         file=file,
+        calibration_mode=calibration_mode,
         timeframe=timeframe,
         window_start=window_start,
         price_min=price_min,
@@ -203,19 +236,17 @@ async def preview_chart_screenshot_image_extraction(
             color_profile_tolerance=color_profile_tolerance,
         ),
     )
+    extraction = upload_extraction.extraction
     hypothesis = build_trend_hypothesis(extraction.candles, extraction.confidence)
-    warnings = [*extraction.warnings, *hypothesis.warnings]
-    metadata = extraction.parser_metadata_json
-    if extraction.warnings:
-        metadata["imageExtractionWarnings"] = extraction.warnings
+    warnings = [*upload_extraction.warnings, *hypothesis.warnings]
     return ChartScreenshotImageExtractionPreviewRead(
         file_name=file.filename,
         parser_name=CHART_SCREENSHOT_IMAGE_PARSER_NAME,
         parser_version=CHART_SCREENSHOT_IMAGE_PARSER_VERSION,
         timeframe=timeframe,
-        window_start=window_start,
-        price_min=price_min,
-        price_max=price_max,
+        window_start=upload_extraction.window_start,
+        price_min=upload_extraction.price_min,
+        price_max=upload_extraction.price_max,
         extraction_confidence=extraction.confidence,
         candles=extraction.candles,
         analysis_hypothesis=hypothesis.direction,
@@ -223,44 +254,211 @@ async def preview_chart_screenshot_image_extraction(
         trend_metrics_json=hypothesis.metrics_json,
         warnings=warnings,
         requires_human_review=(
-            extraction.confidence < PREVIEW_HUMAN_REVIEW_CONFIDENCE_THRESHOLD
+            upload_extraction.analysis_blocked_reason is not None
+            or extraction.confidence < PREVIEW_HUMAN_REVIEW_CONFIDENCE_THRESHOLD
             or bool(warnings)
         ),
-        parser_metadata_json=metadata,
+        parser_metadata_json=upload_extraction.metadata_json,
+        chart_type=extraction.chart_type,
+        supported_for_analysis=extraction.supported_for_analysis,
+        ocr_status=upload_extraction.ocr_status,
+        ocr_confidence=upload_extraction.ocr_confidence,
+        axis_calibration_json=upload_extraction.axis_calibration_json,
+        analysis_blocked_reason=upload_extraction.analysis_blocked_reason,
     )
 
 
 async def extract_chart_image_from_upload(
     request: Request,
     file: UploadFile,
+    calibration_mode: ChartCalibrationMode,
     timeframe: Timeframe,
-    window_start: datetime,
-    price_min: Decimal,
-    price_max: Decimal,
+    window_start: datetime | None,
+    price_min: Decimal | None,
+    price_max: Decimal | None,
     chart_left: int | None,
     chart_top: int | None,
     chart_right: int | None,
     chart_bottom: int | None,
     tuning: ChartImageExtractionTuning,
-) -> ChartImageExtractionResult:
+) -> ChartImageUploadExtraction:
     file_bytes = await file.read()
     settings = request.app.state.settings
     if len(file_bytes) > settings.max_upload_file_bytes:
         raise AppError(413, "upload_file_too_large", "Upload file is too large")
-    if price_max <= price_min:
+    image_width, image_height = probe_image_dimensions(file_bytes)
+    ocr_result = await extract_ocr_result(
+        image_bytes=file_bytes,
+        calibration_mode=calibration_mode,
+        settings=settings,
+    )
+    axis_calibration = build_axis_calibration(
+        ocr_result=ocr_result,
+        image_width=image_width,
+        image_height=image_height,
+        manual_window_start=window_start,
+        manual_price_min=price_min,
+        manual_price_max=price_max,
+    )
+    resolved_window_start = axis_calibration.window_start
+    resolved_price_min = axis_calibration.price_min
+    resolved_price_max = axis_calibration.price_max
+    validate_resolved_calibration(
+        calibration_mode=calibration_mode,
+        resolved_window_start=resolved_window_start,
+        resolved_price_min=resolved_price_min,
+        resolved_price_max=resolved_price_max,
+        axis_calibration=axis_calibration,
+    )
+    assert resolved_window_start is not None
+    assert resolved_price_min is not None
+    assert resolved_price_max is not None
+    if resolved_price_max <= resolved_price_min:
         raise AppError(422, "invalid_chart_price_range", "price_max must be greater than price_min")
     bounds = parse_chart_bounds(chart_left, chart_top, chart_right, chart_bottom)
-    return extract_candles_from_png(
+    extraction = extract_candles_from_png(
         image_bytes=file_bytes,
         config=ChartImageExtractionConfig(
             timeframe=timeframe,
-            window_start=window_start,
-            price_min=price_min,
-            price_max=price_max,
+            window_start=resolved_window_start,
+            price_min=resolved_price_min,
+            price_max=resolved_price_max,
             bounds=bounds,
             tuning=tuning,
         ),
     )
+    warnings = [*extraction.warnings, *axis_calibration.warnings]
+    analysis_blocked_reason = determine_analysis_blocked_reason(
+        extraction=extraction,
+        axis_calibration=axis_calibration,
+        settings=settings,
+    )
+    metadata = build_image_parser_metadata(
+        extraction=extraction,
+        axis_calibration=axis_calibration,
+        ocr_result=ocr_result,
+        calibration_mode=calibration_mode,
+        analysis_blocked_reason=analysis_blocked_reason,
+        warnings=warnings,
+    )
+    return ChartImageUploadExtraction(
+        extraction=extraction,
+        window_start=resolved_window_start,
+        price_min=resolved_price_min,
+        price_max=resolved_price_max,
+        metadata_json=metadata,
+        warnings=warnings,
+        ocr_status=ocr_result.status if ocr_result is not None else ChartOcrStatus.NOT_REQUESTED,
+        ocr_confidence=axis_calibration.confidence,
+        axis_calibration_json=axis_calibration.metadata_json,
+        analysis_blocked_reason=analysis_blocked_reason,
+    )
+
+
+async def extract_ocr_result(
+    image_bytes: bytes,
+    calibration_mode: ChartCalibrationMode,
+    settings: Settings,
+) -> ChartOcrResult | None:
+    if calibration_mode == ChartCalibrationMode.MANUAL:
+        return None
+    if not settings.chart_ocr_enabled:
+        if calibration_mode == ChartCalibrationMode.OCR:
+            raise AppError(
+                503,
+                "chart_ocr_disabled",
+                "Chart OCR is disabled for this environment",
+            )
+        return ChartOcrResult(
+            status=ChartOcrStatus.DISABLED,
+            provider=settings.chart_ocr_provider,
+            confidence=None,
+            text_boxes=[],
+            provider_payload_json=None,
+            warnings=["Chart OCR is disabled for this environment"],
+        )
+    provider = get_chart_ocr_provider(settings.chart_ocr_provider)
+    return await to_thread(
+        provider.extract_text,
+        image_bytes,
+        settings.chart_ocr_timeout_seconds,
+    )
+
+
+def validate_resolved_calibration(
+    calibration_mode: ChartCalibrationMode,
+    resolved_window_start: datetime | None,
+    resolved_price_min: Decimal | None,
+    resolved_price_max: Decimal | None,
+    axis_calibration: AxisCalibration,
+) -> None:
+    if (
+        resolved_window_start is not None
+        and resolved_price_min is not None
+        and resolved_price_max is not None
+    ):
+        return
+    if calibration_mode == ChartCalibrationMode.MANUAL:
+        raise AppError(
+            422,
+            "incomplete_manual_chart_calibration",
+            "window_start, price_min, and price_max are required for manual calibration",
+        )
+    raise AppError(
+        422,
+        "chart_axis_calibration_incomplete",
+        "; ".join(axis_calibration.warnings) or "Chart axis calibration is incomplete",
+    )
+
+
+def determine_analysis_blocked_reason(
+    extraction: ChartImageExtractionResult,
+    axis_calibration: AxisCalibration,
+    settings: Settings,
+) -> str | None:
+    if not extraction.supported_for_analysis:
+        return "unsupported_chart_type"
+    if extraction.confidence < settings.chart_image_min_extraction_confidence:
+        return "low_extraction_confidence"
+    if axis_calibration.confidence is not None and (
+        axis_calibration.confidence < settings.chart_ocr_min_confidence
+    ):
+        return "low_ocr_confidence"
+    if axis_calibration.status == ChartOcrStatus.PARTIAL:
+        return "axis_calibration_incomplete"
+    return None
+
+
+def build_image_parser_metadata(
+    extraction: ChartImageExtractionResult,
+    axis_calibration: AxisCalibration,
+    ocr_result: ChartOcrResult | None,
+    calibration_mode: ChartCalibrationMode,
+    analysis_blocked_reason: str | None,
+    warnings: list[str],
+) -> dict[str, object]:
+    metadata = {
+        **extraction.parser_metadata_json,
+        "calibrationMode": calibration_mode.value,
+        "axisCalibration": axis_calibration.metadata_json,
+        "ocr": (
+            serialize_ocr_result(ocr_result)
+            if ocr_result is not None
+            else {
+                "status": ChartOcrStatus.NOT_REQUESTED.value,
+                "provider": None,
+                "confidence": None,
+                "textBoxes": [],
+                "providerPayload": None,
+                "warnings": [],
+            }
+        ),
+    }
+    if warnings:
+        metadata["imageExtractionWarnings"] = warnings
+    if analysis_blocked_reason is not None:
+        metadata["analysisBlockedReason"] = analysis_blocked_reason
+    return metadata
 
 
 def build_chart_image_tuning(

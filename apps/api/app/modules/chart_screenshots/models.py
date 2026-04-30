@@ -16,6 +16,7 @@ class ChartScreenshotRunStatus(StrEnum):
     RECEIVED = "received"
     PARSING = "parsing"
     INGESTED = "ingested"
+    REVIEW_REQUIRED = "review_required"
     ANALYSIS_TRIGGERED = "analysis_triggered"
     ANALYSIS_FAILED = "analysis_failed"
     FAILED = "failed"
@@ -34,8 +35,8 @@ class ChartScreenshotRun(Base):
     __tablename__ = "chart_screenshot_runs"
     __table_args__ = (
         CheckConstraint(
-            "status in ('received', 'parsing', 'ingested', 'analysis_triggered', "
-            "'analysis_failed', 'failed', 'completed')",
+            "status in ('received', 'parsing', 'ingested', 'review_required', "
+            "'analysis_triggered', 'analysis_failed', 'failed', 'completed')",
             name="chart_screenshot_runs_status_allowed",
         ),
         CheckConstraint(
@@ -161,3 +162,41 @@ class ChartScreenshotRun(Base):
     updated_at = updated_at_column()
     started_at = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def chart_type(self) -> str | None:
+        value = self.parser_metadata_json.get("chartType")
+        return str(value) if value is not None else None
+
+    @property
+    def supported_for_analysis(self) -> bool | None:
+        value = self.parser_metadata_json.get("supportedForAnalysis")
+        return value if isinstance(value, bool) else None
+
+    @property
+    def ocr_status(self) -> str | None:
+        ocr_json = self.parser_metadata_json.get("ocr")
+        if not isinstance(ocr_json, dict):
+            return None
+        value = ocr_json.get("status")
+        return str(value) if value is not None else None
+
+    @property
+    def ocr_confidence(self) -> Decimal | None:
+        ocr_json = self.parser_metadata_json.get("ocr")
+        if not isinstance(ocr_json, dict):
+            return None
+        value = ocr_json.get("confidence")
+        if value is None:
+            return None
+        return Decimal(str(value))
+
+    @property
+    def axis_calibration_json(self) -> dict[str, object] | None:
+        value = self.parser_metadata_json.get("axisCalibration")
+        return value if isinstance(value, dict) else None
+
+    @property
+    def analysis_blocked_reason(self) -> str | None:
+        value = self.parser_metadata_json.get("analysisBlockedReason")
+        return str(value) if value is not None else None

@@ -3,11 +3,14 @@ import zlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
+from importlib import import_module
+from io import BytesIO
 
 from app.core.errors import AppError
 from app.modules.candles.timeframes import Timeframe, timeframe_duration
 from app.modules.chart_screenshots.models import ChartTrendDirection
 from app.modules.chart_screenshots.schemas import ChartScreenshotCandle
+from app.modules.chart_screenshots.types import ChartImageType
 
 CHART_SCREENSHOT_PARSER_NAME = "manual_chart_screenshot_extraction"
 CHART_SCREENSHOT_PARSER_VERSION = "0.1.0"
@@ -83,6 +86,9 @@ class PixelCluster:
     body_top_y: int
     body_bottom_y: int
     direction: ChartTrendDirection
+    has_body: bool
+    open_y: int | None = None
+    close_y: int | None = None
 
 
 @dataclass(frozen=True)
@@ -91,6 +97,9 @@ class ChartImageExtractionResult:
     confidence: Decimal
     parser_metadata_json: dict[str, object]
     warnings: list[str]
+    chart_type: ChartImageType = ChartImageType.UNKNOWN
+    supported_for_analysis: bool = False
+    analysis_blocked_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -166,7 +175,7 @@ def extract_candles_from_png(
     image_bytes: bytes,
     config: ChartImageExtractionConfig,
 ) -> ChartImageExtractionResult:
-    image = decode_png(image_bytes)
+    image = decode_chart_image(image_bytes)
     validate_tuning(config.tuning)
     bounds = config.bounds or detect_chart_bounds(image, config.tuning)
     validate_bounds(bounds, image)
@@ -177,21 +186,43 @@ def extract_candles_from_png(
         foreground_mask=foreground_mask,
         tuning=config.tuning,
     )
+    chart_type = classify_chart_type(clusters=clusters, bounds=bounds)
+    if chart_type == ChartImageType.LINE_AREA:
+        return unsupported_chart_result(
+            image=image,
+            bounds=bounds,
+            chart_type=chart_type,
+            tuning=config.tuning,
+            warning="Line or area charts are unsupported for OHLC analysis",
+        )
     if len(clusters) < MIN_DETECTED_CANDLES:
-        raise AppError(
-            422,
-            "chart_image_candles_not_detected",
-            "At least three candle shapes could not be detected in the chart image",
+        if chart_type == ChartImageType.UNKNOWN and looks_like_line_area(
+            foreground_mask=foreground_mask,
+            bounds=bounds,
+        ):
+            chart_type = ChartImageType.LINE_AREA
+        return unsupported_chart_result(
+            image=image,
+            bounds=bounds,
+            chart_type=chart_type,
+            tuning=config.tuning,
+            warning="At least three OHLC candle or bar shapes could not be detected",
         )
     if len(clusters) > config.tuning.max_detected_candles:
         clusters = clusters[-config.tuning.max_detected_candles :]
-    candles = clusters_to_candles(clusters=clusters, bounds=bounds, config=config)
+    candles = clusters_to_candles(
+        clusters=clusters,
+        bounds=bounds,
+        config=config,
+        chart_type=chart_type,
+    )
     confidence = calculate_image_extraction_confidence(clusters=clusters, bounds=bounds)
     warnings: list[str] = []
     if confidence < Decimal("0.5000"):
         warnings.append("Detected chart geometry is sparse; verify extracted candles manually")
     if config.bounds is None:
         warnings.append("Chart bounds were inferred from image pixels")
+    supported_for_analysis = chart_type in {ChartImageType.CANDLESTICK, ChartImageType.OHLC_BAR}
     return ChartImageExtractionResult(
         candles=candles,
         confidence=confidence,
@@ -205,9 +236,45 @@ def extract_candles_from_png(
                 "bottom": bounds.bottom,
             },
             "detectedCandleCount": len(candles),
+            "chartType": chart_type.value,
+            "supportedForAnalysis": supported_for_analysis,
             "parserTuning": serialize_tuning(config.tuning),
         },
         warnings=warnings,
+        chart_type=chart_type,
+        supported_for_analysis=supported_for_analysis,
+        analysis_blocked_reason=None if supported_for_analysis else "unsupported_chart_type",
+    )
+
+
+def unsupported_chart_result(
+    image: DecodedPngImage,
+    bounds: ChartImageBounds,
+    chart_type: ChartImageType,
+    tuning: ChartImageExtractionTuning,
+    warning: str,
+) -> ChartImageExtractionResult:
+    return ChartImageExtractionResult(
+        candles=[],
+        confidence=Decimal("0.0000"),
+        parser_metadata_json={
+            "imageWidth": image.width,
+            "imageHeight": image.height,
+            "chartBounds": {
+                "left": bounds.left,
+                "top": bounds.top,
+                "right": bounds.right,
+                "bottom": bounds.bottom,
+            },
+            "detectedCandleCount": 0,
+            "chartType": chart_type.value,
+            "supportedForAnalysis": False,
+            "parserTuning": serialize_tuning(tuning),
+        },
+        warnings=[warning],
+        chart_type=chart_type,
+        supported_for_analysis=False,
+        analysis_blocked_reason="unsupported_chart_type",
     )
 
 
@@ -265,6 +332,44 @@ def serialize_pixel(pixel: RgbPixel | None) -> dict[str, int] | None:
     if pixel is None:
         return None
     return {"red": pixel.red, "green": pixel.green, "blue": pixel.blue}
+
+
+def decode_chart_image(image_bytes: bytes) -> DecodedPngImage:
+    try:
+        pil_image_module = import_module("PIL.Image")
+        cv2 = import_module("cv2")
+        numpy = import_module("numpy")
+        with pil_image_module.open(BytesIO(image_bytes)) as raw_image:
+            image = raw_image.convert("RGB")
+            image_array = numpy.asarray(image, dtype=numpy.uint8)
+            image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
+            image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+            height, width = image_array.shape[:2]
+            pixels = [
+                [
+                    RgbPixel(
+                        red=int(image_array[y, x, 0]),
+                        green=int(image_array[y, x, 1]),
+                        blue=int(image_array[y, x, 2]),
+                    )
+                    for x in range(width)
+                ]
+                for y in range(height)
+            ]
+            return DecodedPngImage(width=width, height=height, pixels=pixels)
+    except Exception as error:
+        if image_bytes.startswith(PNG_SIGNATURE):
+            return decode_png(image_bytes)
+        raise AppError(
+            422,
+            "unsupported_chart_image",
+            "Chart image must be a supported PNG or JPEG image",
+        ) from error
+
+
+def probe_image_dimensions(image_bytes: bytes) -> tuple[int, int]:
+    image = decode_chart_image(image_bytes)
+    return image.width, image.height
 
 
 def decode_png(image_bytes: bytes) -> DecodedPngImage:
@@ -491,11 +596,24 @@ def detect_pixel_clusters(
     foreground_mask: list[list[bool]],
     tuning: ChartImageExtractionTuning,
 ) -> list[PixelCluster]:
+    column_counts = {
+        x: sum(1 for y in range(bounds.top, bounds.bottom + 1) if foreground_mask[y][x])
+        for x in range(bounds.left, bounds.right + 1)
+    }
+    strong_columns = {
+        x for x, count in column_counts.items() if count >= tuning.active_column_min_pixels
+    }
     active_columns = [
         x
-        for x in range(bounds.left, bounds.right + 1)
-        if sum(1 for y in range(bounds.top, bounds.bottom + 1) if foreground_mask[y][x])
-        >= tuning.active_column_min_pixels
+        for x, count in column_counts.items()
+        if count >= tuning.active_column_min_pixels
+        or (
+            count > 0
+            and any(
+                abs(x - strong_column) <= tuning.column_gap_tolerance + 2
+                for strong_column in strong_columns
+            )
+        )
     ]
     groups = group_active_columns(active_columns, tuning)
     clusters: list[PixelCluster] = []
@@ -556,9 +674,12 @@ def build_pixel_cluster(
     if body_rows:
         body_top_y = min(body_rows)
         body_bottom_y = max(body_rows)
+        has_body = longest_consecutive_row_count(body_rows) >= 3 and width >= 3
     else:
         body_top_y = high_y
         body_bottom_y = low_y
+        has_body = False
+    open_y, close_y = detect_bar_open_close_y(foreground_mask, left, right, high_y, low_y)
     direction = detect_cluster_direction(
         image,
         foreground_mask,
@@ -568,6 +689,11 @@ def build_pixel_cluster(
         low_y,
         tuning.color_profile,
     )
+    if direction == ChartTrendDirection.UNKNOWN and open_y is not None and close_y is not None:
+        if close_y < open_y:
+            direction = ChartTrendDirection.BULLISH
+        elif close_y > open_y:
+            direction = ChartTrendDirection.BEARISH
     return PixelCluster(
         left=left,
         right=right,
@@ -576,7 +702,62 @@ def build_pixel_cluster(
         body_top_y=body_top_y,
         body_bottom_y=body_bottom_y,
         direction=direction,
+        has_body=has_body,
+        open_y=open_y,
+        close_y=close_y,
     )
+
+
+def longest_consecutive_row_count(rows: list[int]) -> int:
+    if not rows:
+        return 0
+    longest = 1
+    current = 1
+    previous = rows[0]
+    for row in rows[1:]:
+        if row == previous + 1:
+            current += 1
+        else:
+            longest = max(longest, current)
+            current = 1
+        previous = row
+    return max(longest, current)
+
+
+def detect_bar_open_close_y(
+    foreground_mask: list[list[bool]],
+    left: int,
+    right: int,
+    high_y: int,
+    low_y: int,
+) -> tuple[int | None, int | None]:
+    width = right - left + 1
+    if width < 3:
+        return None, None
+    center = (left + right) // 2
+    left_columns = range(left, max(left + 1, center))
+    right_columns = range(min(right, center + 1), right + 1)
+    open_y = densest_tick_y(foreground_mask, left_columns, high_y, low_y)
+    close_y = densest_tick_y(foreground_mask, right_columns, high_y, low_y)
+    return open_y, close_y
+
+
+def densest_tick_y(
+    foreground_mask: list[list[bool]],
+    columns: range,
+    high_y: int,
+    low_y: int,
+) -> int | None:
+    row_counts = [
+        (sum(1 for x in columns if foreground_mask[y][x]), y)
+        for y in range(high_y, low_y + 1)
+    ]
+    if not row_counts:
+        return None
+    count, y = max(row_counts)
+    if count == 0:
+        return None
+    return y
 
 
 def detect_cluster_direction(
@@ -610,10 +791,55 @@ def detect_cluster_direction(
     return ChartTrendDirection.UNKNOWN
 
 
+def classify_chart_type(
+    clusters: list[PixelCluster],
+    bounds: ChartImageBounds,
+) -> ChartImageType:
+    if not clusters:
+        return ChartImageType.UNKNOWN
+    chart_width = max(bounds.right - bounds.left + 1, 1)
+    widest_cluster = max(cluster.right - cluster.left + 1 for cluster in clusters)
+    if widest_cluster / chart_width > 0.25 and len(clusters) < MIN_DETECTED_CANDLES:
+        return ChartImageType.LINE_AREA
+    body_count = sum(1 for cluster in clusters if cluster.has_body)
+    bar_count = sum(
+        1
+        for cluster in clusters
+        if cluster.open_y is not None and cluster.close_y is not None and not cluster.has_body
+    )
+    if body_count >= max(1, len(clusters) // 3):
+        return ChartImageType.CANDLESTICK
+    if bar_count >= max(1, len(clusters) // 3):
+        return ChartImageType.OHLC_BAR
+    if widest_cluster / chart_width > 0.15:
+        return ChartImageType.LINE_AREA
+    return ChartImageType.UNKNOWN
+
+
+def looks_like_line_area(
+    foreground_mask: list[list[bool]],
+    bounds: ChartImageBounds,
+) -> bool:
+    active_points = [
+        (x, y)
+        for y in range(bounds.top, bounds.bottom + 1)
+        for x in range(bounds.left, bounds.right + 1)
+        if foreground_mask[y][x]
+    ]
+    if len(active_points) < 5:
+        return False
+    x_span = max(x for x, _ in active_points) - min(x for x, _ in active_points)
+    y_span = max(y for _, y in active_points) - min(y for _, y in active_points)
+    chart_width = max(bounds.right - bounds.left + 1, 1)
+    chart_height = max(bounds.bottom - bounds.top + 1, 1)
+    return x_span / chart_width > 0.20 and y_span / chart_height > 0.10
+
+
 def clusters_to_candles(
     clusters: list[PixelCluster],
     bounds: ChartImageBounds,
     config: ChartImageExtractionConfig,
+    chart_type: ChartImageType,
 ) -> list[ChartScreenshotCandle]:
     sorted_clusters = sorted(clusters, key=lambda cluster: (cluster.left + cluster.right) / 2)
     duration = timeframe_duration(config.timeframe)
@@ -623,7 +849,14 @@ def clusters_to_candles(
         low = pixel_y_to_price(cluster.low_y, bounds, config)
         body_top = pixel_y_to_price(cluster.body_top_y, bounds, config)
         body_bottom = pixel_y_to_price(cluster.body_bottom_y, bounds, config)
-        if cluster.direction == ChartTrendDirection.BEARISH:
+        if (
+            chart_type == ChartImageType.OHLC_BAR
+            and cluster.open_y is not None
+            and cluster.close_y is not None
+        ):
+            open_price = pixel_y_to_price(cluster.open_y, bounds, config)
+            close_price = pixel_y_to_price(cluster.close_y, bounds, config)
+        elif cluster.direction == ChartTrendDirection.BEARISH:
             open_price = body_top
             close_price = body_bottom
         else:
