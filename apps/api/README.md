@@ -3,9 +3,10 @@
 FastAPI backend for deterministic market intelligence over imported and live-originated
 candle data. The backend stores market data, calculates features and indicators, classifies
 signals with rules, generates safe deterministic and optional grounded LLM explanations from
-persisted artifacts, supports replay from stored candles, and persists deterministic news/event
-context for analysis-aware workflows. It also accepts manually or externally extracted trading
-chart screenshot candles and persists deterministic next-trend hypotheses.
+persisted artifacts, supports replay from stored candles, persists deterministic news/event
+context, and evaluates observed historical outcomes after persisted signals. It also accepts
+manually or externally extracted trading chart screenshot candles and persists deterministic
+next-trend hypotheses.
 
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 The LLM explanation layer is optional and may only explain persisted deterministic output.
@@ -140,6 +141,9 @@ RATE_LIMIT_ENABLED=false
 RATE_LIMIT_REQUESTS_PER_MINUTE=60
 MAX_REQUEST_BODY_BYTES=1048576
 MAX_UPLOAD_FILE_BYTES=10485760
+OUTCOME_DEFAULT_HORIZONS_MINUTES=5,15,30,60
+OUTCOME_MIN_FUTURE_CANDLES=3
+OUTCOME_EVALUATION_VERSION=v1
 ```
 
 `AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
@@ -251,6 +255,12 @@ Grounded LLM explanations are documented in:
 docs/llm-explanations.md
 ```
 
+Signal outcome evaluation is documented in:
+
+```txt
+docs/outcome-evaluation.md
+```
+
 When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs
 before LLM explanation generation so the LLM can only use persisted correlation context.
 
@@ -297,6 +307,22 @@ POST /chart-screenshot-runs/{run_id}/review
 GET /chart-screenshot-runs/{run_id}/decision
 GET /chart-screenshot-runs/{run_id}/report
 GET /chart-screenshot-runs/{run_id}/lineage
+```
+
+Signal outcome evaluation APIs measure observed final-candle behavior after persisted deterministic
+signals. They do not calculate broker PnL, produce financial advice, or trigger execution:
+
+```txt
+POST /signals/{signal_id}/outcomes/evaluate
+GET /signals/{signal_id}/outcomes
+GET /signals/{signal_id}/outcomes/{horizon_minutes}
+POST /analysis-runs/{analysis_run_id}/outcomes/evaluate
+GET /analysis-runs/{analysis_run_id}/outcomes
+POST /outcome-evaluation-runs/backfill
+GET /outcome-evaluation-runs/{run_id}
+GET /outcomes/performance/patterns
+GET /outcomes/performance/strategy-profiles
+GET /outcomes/performance/symbols
 ```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:

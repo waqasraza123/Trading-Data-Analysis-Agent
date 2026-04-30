@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     news_correlation_pre_event_minutes: int = Field(default=5, ge=0, le=1440)
     news_correlation_post_event_minutes: int = Field(default=30, ge=1, le=1440)
     news_correlation_max_events_per_signal: int = Field(default=10, ge=1, le=100)
+    outcome_default_horizons_minutes: list[int] = Field(default_factory=lambda: [5, 15, 30, 60])
+    outcome_min_future_candles: int = Field(default=3, ge=1, le=500)
+    outcome_evaluation_version: str = "v1"
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"
@@ -117,6 +120,31 @@ class Settings(BaseSettings):
         normalized_value = value.strip()
         if not normalized_value:
             msg = "LLM_MODEL must not be empty when LLM explanations are enabled"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("outcome_default_horizons_minutes", mode="before")
+    @classmethod
+    def parse_outcome_default_horizons_minutes(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [int(item.strip()) for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("outcome_default_horizons_minutes")
+    @classmethod
+    def validate_outcome_default_horizons_minutes(cls, value: list[int]) -> list[int]:
+        normalized = sorted({horizon for horizon in value if horizon > 0})
+        if not normalized:
+            msg = "OUTCOME_DEFAULT_HORIZONS_MINUTES must contain at least one positive horizon"
+            raise ValueError(msg)
+        return normalized
+
+    @field_validator("outcome_evaluation_version")
+    @classmethod
+    def validate_outcome_evaluation_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "OUTCOME_EVALUATION_VERSION must not be empty"
             raise ValueError(msg)
         return normalized_value
 

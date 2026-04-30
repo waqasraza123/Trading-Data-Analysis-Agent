@@ -9,7 +9,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
-- The API currently exposes health, workspace/user setup, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and versioned replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, engine version, deterministic signal classification, deterministic explanation, deterministic news/event correlation, grounded LLM explanation, and chart screenshot trend-prediction endpoints.
+- The API currently exposes health, workspace/user setup, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and versioned replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, engine version, deterministic signal classification, deterministic explanation, deterministic news/event correlation, grounded LLM explanation, signal outcome evaluation, and chart screenshot trend-prediction endpoints.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
 - The shared candle validation and normalization layer exists under `apps/api/app/modules/candles/`.
 - The live feed ingestion foundation exists under `apps/api/app/modules/live/`.
@@ -18,6 +18,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Deterministic feature engineering exists under `apps/api/app/modules/features/`.
 - Deterministic indicator calculation exists under `apps/api/app/modules/indicators/`.
 - Deterministic pattern candidate detection exists under `apps/api/app/modules/patterns/`.
+- Signal outcome evaluation exists under `apps/api/app/modules/outcomes/`.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
 - The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
 - Durable project memory lives in this file.
@@ -62,6 +63,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Deterministic explanations are implemented on top of persisted signals, evidence, confidence components, risk notes, strategy profile snapshots, feature snapshots, and indicator snapshots.
 - Deterministic news/event correlation is implemented on top of manually/imported events and persisted signals. It is contextual only, avoids causation language, and does not override signal classification or confidence.
 - Grounded LLM explanations are implemented as an optional layer on top of deterministic explanation artifacts, with mock/OpenAI provider abstraction, safety checks, grounding checks, and deterministic fallback behavior.
+- Signal outcome evaluation is implemented as a separate truth loop after persisted deterministic signals. It measures observed final-candle follow-through, favorable movement, adverse movement, reversal, insufficient data, and historical behavior by horizon without calculating broker PnL or changing signal classification.
 - Later phases add live scanning, deeper external integrations, and performance tuning.
 - Chart screenshot ingestion accepts manually or externally extracted OHLC rows and deterministic PNG candlestick image uploads, supports write-free PNG extraction preview with request-scoped parser tuning, stores valid extracted rows through the shared candle path, persists deterministic trend hypotheses, supports human review/correction without mutating the original extraction audit trail, can optionally trigger the existing deterministic analysis lifecycle over the extracted candle window, exposes a decision endpoint that returns either analysis-backed reasoning or screenshot-hypothesis fallback reasoning, exposes an audit report endpoint that bundles run/candle/quality/review/decision/correction artifacts, and exposes a lineage endpoint for original/corrected run chains.
 - Add tests with the first meaningful code path and keep verification commands current here.
@@ -88,6 +90,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented deterministic_explanations migration/model, deterministic explanation templates, safety checker, idempotent persistence service, lifecycle/manual classification integration, retrieval/generation APIs, audit events, documentation, and explanation unit tests.
 - Implemented news_events and signal_news_correlations migration/models, manual/import JSON event ingestion APIs, deterministic relevance/scoring service, manual correlation APIs, optional include_news_correlation lifecycle hook, cautious risk-note integration, documentation, and tests.
 - Implemented llm_explanations migration/model, grounded LLM input builder, prompt, mock/OpenAI provider abstraction, safety and grounding checks, LLM explanation APIs, optional include_ai_explanation lifecycle hook, documentation, and tests.
+- Implemented signal_outcomes and outcome_evaluation_runs migration/models, deterministic outcome calculator, bounded backfill service, signal/analysis outcome APIs, on-demand aggregation APIs for patterns/strategy profiles/symbols, audit events, documentation, and unit tests.
 - Implemented chart_screenshot_runs migration/model, chart_screenshot data source type, screenshot-derived candle storage linkage, deterministic trend-hypothesis service, manual/external OHLC APIs, deterministic PNG candlestick extraction preview and persistence APIs with request-scoped parser tuning, human review/correction workflow, optional analysis-run triggering, chart decision response API, chart audit report API, chart correction lineage API, and documentation.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
 - Implemented workspace/user APIs, idempotent backend seed command/service, engine version registry/query APIs, analysis engine/rule-set snapshots, and current-v1 same-engine replay support.
@@ -124,6 +127,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Analysis retry replaces prior pattern candidate rows for the same analysis run until a future analysis-attempt model exists.
 - Strategy profiles are deterministic market-reading configurations for signal classification; they are not broker strategies, trade execution, auto-trading, or financial advice.
 - Optional LLM explanations must remain downstream of deterministic artifacts and must not classify, override signals, invent news, claim causation, or provide trade instructions.
+- Outcome evaluation is downstream of persisted signals and final candles only. It evaluates observed historical behavior after classification, does not mutate original signals, does not calculate broker PnL, and does not produce financial advice.
+- Replay signal outcomes are stored separately for replay signals and must not mutate original signal outcomes.
 - Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, `replay_mode`, `engine_snapshot_json`, and `rule_set_snapshot_json`; `latest_engine_version` uses current registered engines/profiles, and `same_engine_version` supports registered current v1 snapshots or returns `unsupported_engine_version`.
 - DB integration tests require explicit `TEST_DATABASE_URL`; unit tests must not fall back to production Neon `DATABASE_URL`.
 - Golden integration tests assert deterministic signal outputs and deterministic explanations for completed analysis runs.
