@@ -39,6 +39,11 @@ def test_settings_load_defaults() -> None:
     assert settings.seed_default_admin_name is None
     assert settings.notification_worker_enabled is False
     assert settings.notification_worker_batch_size == 100
+    assert settings.market_scan_worker_enabled is False
+    assert settings.market_scan_worker_poll_seconds == 30
+    assert settings.market_scan_worker_batch_size == 10
+    assert settings.market_scan_default_lookback_minutes == 60
+    assert settings.market_scan_default_interval_seconds == 60
     assert settings.worker_supervisor_components == []
     assert settings.worker_supervisor_shutdown_timeout_seconds == 20
 

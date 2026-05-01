@@ -20,6 +20,13 @@ from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.llm_explanations.models import LlmExplanation
+from app.modules.market_scans.models import (
+    MarketWatchlist,
+    MarketWatchlistItem,
+    ScheduledScanConfig,
+    ScheduledScanRun,
+    ScheduledScanRunItem,
+)
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.notifications.models import (
     NotificationMessage,
@@ -68,6 +75,8 @@ __all__ = [
     "LiveFeedSubscription",
     "LlmExplanation",
     "LlmReasoningRun",
+    "MarketWatchlist",
+    "MarketWatchlistItem",
     "NewsEvent",
     "NotificationMessage",
     "NotificationPreference",
@@ -86,6 +95,9 @@ __all__ = [
     "SignalEvidence",
     "SignalRiskNote",
     "ScenarioHypothesis",
+    "ScheduledScanConfig",
+    "ScheduledScanRun",
+    "ScheduledScanRunItem",
     "StrategyProfileDiagnostic",
     "StrategyProfileDiagnosticRun",
     "StrategyProfile",

@@ -28,6 +28,7 @@ class WorkerSupervisorComponent(StrEnum):
     STALE_MONITOR = "stale_monitor"
     REASONING_ACTIONS = "reasoning_actions"
     NOTIFICATIONS = "notifications"
+    MARKET_SCANS = "market_scans"
 
 
 class Settings(BaseSettings):
@@ -119,6 +120,11 @@ class Settings(BaseSettings):
     notification_worker_lock_seconds: int = Field(default=120, ge=1)
     notification_worker_max_attempts: int = Field(default=3, ge=1, le=100)
     notification_worker_jitter_seconds: float = Field(default=2, ge=0)
+    market_scan_worker_enabled: bool = False
+    market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
+    market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
+    market_scan_default_lookback_minutes: int = Field(default=60, ge=1, le=43200)
+    market_scan_default_interval_seconds: int = Field(default=60, ge=1)
     worker_supervisor_components: list[WorkerSupervisorComponent] = Field(default_factory=list)
     worker_supervisor_shutdown_timeout_seconds: float = Field(default=20, gt=0)
     service_name: str = "trading-intelligence-api"

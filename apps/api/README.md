@@ -7,9 +7,10 @@ persisted artifacts, supports optional multi-LLM grounded scenario reasoning, su
 stored candles, persists deterministic news/event context, evaluates observed historical outcomes
 after persisted signals, stores outcome-based profile diagnostics and advisory calibration
 recommendations, converts persisted reasoning scenarios into backend-safe follow-up action plans,
-and composes read-only intelligence reports from existing persisted artifacts. It also accepts
-manually or externally extracted trading chart screenshot candles and persists deterministic
-next-trend hypotheses. A read-only audit timeline API composes persisted artifacts into
+composes read-only intelligence reports from existing persisted artifacts, and can run backend-only
+market watchlist scans that create bounded deterministic analysis runs from stored final candles. It
+also accepts manually or externally extracted trading chart screenshot candles and persists
+deterministic next-trend hypotheses. A read-only audit timeline API composes persisted artifacts into
 chronological traceability and lineage views for operator review.
 
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
@@ -145,12 +146,19 @@ Run the notification worker:
 NOTIFICATION_WORKER_ENABLED=true .venv/bin/python -m app.workers.notification_worker
 ```
 
+Run the market scan worker:
+
+```sh
+MARKET_SCAN_WORKER_ENABLED=true .venv/bin/python -m app.workers.market_scan_worker
+```
+
 Run a supervised worker process:
 
 ```sh
-WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications \
+WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications,market_scans \
 REASONING_ACTION_WORKER_ENABLED=true \
 NOTIFICATION_WORKER_ENABLED=true \
+MARKET_SCAN_WORKER_ENABLED=true \
 .venv/bin/python -m app.workers.supervisor
 ```
 
@@ -193,6 +201,11 @@ NOTIFICATION_WORKER_BATCH_SIZE=100
 NOTIFICATION_WORKER_LOCK_SECONDS=120
 NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
+MARKET_SCAN_WORKER_ENABLED=false
+MARKET_SCAN_WORKER_POLL_SECONDS=30
+MARKET_SCAN_WORKER_BATCH_SIZE=10
+MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
+MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
 WORKER_SUPERVISOR_COMPONENTS=
 WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
 ```
@@ -256,6 +269,12 @@ Analysis run lifecycle is documented in:
 
 ```txt
 docs/analysis-run-lifecycle.md
+```
+
+Market watchlists and scheduled scans are documented in:
+
+```txt
+docs/market-scans.md
 ```
 
 Feature engineering snapshots are documented in:
