@@ -11,6 +11,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
+- Bounded backfill plan endpoints exist under `apps/api/app/modules/backfill_plans/` for creating dry-run plan and item records only.
 - The backend uses FastAPI, Python 3.12+ packaging metadata, Pydantic v2 settings, async SQLAlchemy 2.x, asyncpg, Alembic, pytest, Ruff, and mypy.
 - The API currently exposes health, workspace/user setup, symbol configuration, data source configuration, historical candle import, live feed ingestion foundation, candle query/quality, analysis run lifecycle and versioned replay, feature snapshot, indicator snapshot, pattern candidate, strategy profile, engine version, deterministic signal classification, deterministic explanation, deterministic news/event correlation, grounded LLM explanation, signal outcome evaluation, outcome-based profile diagnostics, multi-LLM scenario reasoning, backend-safe reasoning action plans with scheduled due execution, notification outbox/preference endpoints, backend-only market watchlist and scheduled scan endpoints, chart screenshot trend-prediction endpoints, read-only intelligence report endpoints, read-only audit timeline traceability endpoints, grounded AI intelligence analyst endpoints, and deterministic intelligence quality gate/shadow classification endpoints.
 - Phase 2 core database schema models and migration exist under `apps/api/`.
@@ -137,6 +138,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented production worker supervisor orchestration for live feed, stale monitor, reasoning action, and notification runtimes with component selection, graceful shutdown, fail-fast child monitoring, docs, and unit tests.
 - Implemented backtest experiment cohort analysis over existing persisted signals and outcomes with bounded filters, cohort persistence, safe observed behavior metrics, docs, and APIs.
 - Implemented multi-timeframe aggregation and context persistence with derived candle lineage, completion accounting, higher-timeframe agreement scoring, APIs, docs, and settings.
+- Implemented intelligence backfill plan and item persistence, bounded dry-run planner contracts, missing outcome/context/stale/module plan APIs, safety metadata, docs, and migration.
 
 ## Important Decisions
 
@@ -201,6 +203,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Chart screenshot deterministic analysis can run only from normalized OHLC candles. Non-OHLC chart types are not converted into synthetic candles, and low extraction/OCR confidence requires accepted human review or correction before analysis triggering.
 - Multi-timeframe aggregation only persists complete derived candles, skips incomplete windows, uses a `derived_aggregation` data source, and preserves existing final candle conflict semantics.
 - Audit timeline defaults are settings-backed and remain read-only; timeline routes may include persisted scheduled scan provenance, chart screenshot provenance, quality findings, and shadow classifications, but they must not run or mutate those systems.
+- Backfill plans are planning contracts only. They persist bounded plan/item records for missing or stale derived artifacts, default to dry-run behavior, never run automatically, and must not mutate source artifacts or call external providers.
 - Decision readiness, market regime context, historical case retrieval, and operator reviews are diagnostic context modules. They may read persisted artifacts and store their own records, but they must not classify signals, override deterministic outputs, auto-create downstream work except through explicit APIs, execute action items, or mutate existing analysis artifacts.
 
 ## Recent Durable Update

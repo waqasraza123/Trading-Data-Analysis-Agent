@@ -279,6 +279,9 @@ PROVIDER_POLLING_USER_AGENT=trading-intelligence-api-provider-polling/0.1
 BINANCE_PUBLIC_REST_BASE_URL=https://api.binance.com
 WORKER_SUPERVISOR_COMPONENTS=
 WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
+BACKFILL_PLAN_VERSION=v1
+BACKFILL_PLAN_DEFAULT_LIMIT=1000
+BACKFILL_PLAN_MAX_LIMIT=10000
 ```
 
 `AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
@@ -805,6 +808,24 @@ GET /data-quality/runs/{run_id}/findings
 
 They do not predict markets, classify signals, provide financial advice, create alerts, execute
 broker actions, mutate analysis results, or change candle final/partial storage behavior.
+
+Backfill plan APIs create bounded dry-run contracts for missing or stale derived intelligence
+artifacts. They do not execute work automatically, mutate source artifacts, call external providers,
+send notifications, or perform broker/order/position work:
+
+```txt
+POST /backfill-plans
+GET /backfill-plans
+GET /backfill-plans/{plan_id}
+GET /backfill-plans/{plan_id}/items
+POST /backfill-plans/{plan_id}/cancel
+```
+
+Backfill planning is documented in:
+
+```txt
+docs/backfill-plans.md
+```
 
 Disposable database validation, integration fixtures, and smoke commands are documented in:
 

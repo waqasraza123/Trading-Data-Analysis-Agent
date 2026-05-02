@@ -11,6 +11,7 @@ from app.modules.ai_intelligence.models import (
     AiIntelligenceRun,
 )
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
+from app.modules.backfill_plans.models import IntelligenceBackfillItem, IntelligenceBackfillPlan
 from app.modules.backtest_experiments.models import (
     BacktestExperimentCohort,
     BacktestExperimentRun,
@@ -113,6 +114,8 @@ __all__ = [
     "BacktestExperimentCohort",
     "BacktestExperimentRun",
     "Base",
+    "IntelligenceBackfillItem",
+    "IntelligenceBackfillPlan",
     "MarketRegimeContext",
     "Candle",
     "CandleAggregationRun",

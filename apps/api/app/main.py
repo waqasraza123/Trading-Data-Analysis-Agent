@@ -16,6 +16,7 @@ from app.modules.action_plans.routes import router as action_plans_router
 from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.backtest_experiments.routes import router as backtest_experiments_router
+from app.modules.backfill_plans.routes import router as backfill_plans_router
 from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
@@ -145,6 +146,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(intelligence_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_scans_router, prefix=resolved_settings.api_prefix)
     app.include_router(timeframe_aggregation_router, prefix=resolved_settings.api_prefix)
+    app.include_router(backfill_plans_router, prefix=resolved_settings.api_prefix)
     return app
 
 

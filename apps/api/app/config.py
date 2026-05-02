@@ -220,6 +220,9 @@ class Settings(BaseSettings):
     market_session_default_timezone: str = "UTC"
     operator_playbook_version: str = "v1"
     operator_playbook_seed_enabled: bool = True
+    backfill_plan_version: str = "v1"
+    backfill_plan_default_limit: int = Field(default=1000, ge=1)
+    backfill_plan_max_limit: int = Field(default=10000, ge=1)
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"
@@ -485,6 +488,15 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return self
 
+    @field_validator("backfill_plan_version")
+    @classmethod
+    def validate_backfill_plan_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "BACKFILL_PLAN_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
     @model_validator(mode="after")
     def validate_production_settings(self) -> Self:
         if self.auth_enabled and secret_is_empty(self.admin_api_key):
@@ -543,6 +555,9 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if not self.chart_unsupported_rejection_enabled:
             msg = "CHART_UNSUPPORTED_REJECTION_ENABLED must stay true"
+            raise ValueError(msg)
+        if self.backfill_plan_default_limit > self.backfill_plan_max_limit:
+            msg = "BACKFILL_PLAN_DEFAULT_LIMIT must be less than or equal to BACKFILL_PLAN_MAX_LIMIT"
             raise ValueError(msg)
         return self
 
