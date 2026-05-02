@@ -3,6 +3,7 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Self
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -60,8 +61,18 @@ class Settings(BaseSettings):
     llm_default_model: str = "mock-scenario-v1"
     llm_provider_timeout_seconds: float = Field(default=12.0, gt=0)
     llm_temperature: float = Field(default=0.2, ge=0, le=2)
+    scenario_ensemble_version: str = "v1"
+    scenario_ensemble_default_provider: str = "mock"
+    scenario_ensemble_max_providers: int = Field(default=3, ge=1, le=10)
+    scenario_ensemble_min_agreement_ratio: Decimal = Field(
+        default=Decimal("0.6000"),
+        ge=0,
+        le=1,
+    )
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
+    market_session_version: str = "v1"
+    market_session_default_timezone: str = "UTC"
     chart_ocr_enabled: bool = False
     chart_ocr_provider: str = "google_vision"
     chart_ocr_timeout_seconds: float = Field(default=10.0, gt=0)
@@ -85,6 +96,21 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    market_regime_version: str = "market_regime_v1"
+    market_regime_min_confidence: Decimal = Field(default=Decimal("0.5000"), ge=0, le=1)
+    market_regime_strong_data_quality: Decimal = Field(default=Decimal("0.8500"), ge=0, le=1)
+    market_regime_acceptable_data_quality: Decimal = Field(
+        default=Decimal("0.6500"),
+        ge=0,
+        le=1,
+    )
+    historical_case_vector_version: str = "historical_case_vector_v1"
+    historical_case_default_limit: int = Field(default=10, ge=1, le=500)
+    historical_case_max_limit: int = Field(default=50, ge=1, le=500)
+    historical_case_min_score: Decimal = Field(default=Decimal("0.5000"), ge=0, le=1)
+    decision_readiness_assessment_version: str = "decision_readiness_v1"
+    decision_readiness_ready_threshold: Decimal = Field(default=Decimal("0.8500"), ge=0, le=1)
+    decision_readiness_review_threshold: Decimal = Field(default=Decimal("0.6500"), ge=0, le=1)
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
@@ -102,12 +128,26 @@ class Settings(BaseSettings):
     live_feed_stale_message_seconds: int = Field(default=180, ge=1)
     live_feed_stale_final_candle_seconds: int = Field(default=300, ge=1)
     live_feed_worker_poll_seconds: float = Field(default=10, gt=0)
+    provider_polling_timeout_seconds: int = Field(default=20, ge=1)
+    provider_polling_max_candles_per_request: int = Field(default=1000, ge=1, le=5000)
+    provider_polling_user_agent: str = "trading-intelligence-api-provider-polling/0.1"
+    binance_public_rest_base_url: str = "https://api.binance.com"
+    data_quality_version: str = "v1"
+    data_quality_strong_threshold: Decimal = Field(default=Decimal("0.95"), ge=0, le=1)
+    data_quality_acceptable_threshold: Decimal = Field(default=Decimal("0.85"), ge=0, le=1)
+    data_quality_degraded_threshold: Decimal = Field(default=Decimal("0.70"), ge=0, le=1)
+    data_quality_outlier_range_multiplier: Decimal = Field(default=Decimal("4.0"), gt=0)
+    data_quality_stale_live_seconds: int = Field(default=300, ge=1)
     news_correlation_pre_event_minutes: int = Field(default=5, ge=0, le=1440)
     news_correlation_post_event_minutes: int = Field(default=30, ge=1, le=1440)
     news_correlation_max_events_per_signal: int = Field(default=10, ge=1, le=100)
     outcome_default_horizons_minutes: list[int] = Field(default_factory=lambda: [5, 15, 30, 60])
     outcome_min_future_candles: int = Field(default=3, ge=1, le=500)
     outcome_evaluation_version: str = "v1"
+    market_regime_version: str = "v1"
+    market_regime_min_confidence: Decimal = Field(default=Decimal("0.50"), ge=0, le=1)
+    market_regime_strong_data_quality: Decimal = Field(default=Decimal("0.90"), ge=0, le=1)
+    market_regime_acceptable_data_quality: Decimal = Field(default=Decimal("0.75"), ge=0, le=1)
     profile_diagnostics_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     profile_diagnostics_strong_follow_through_rate: Decimal = Field(
         default=Decimal("0.65"),
@@ -125,6 +165,16 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    historical_case_vector_version: str = "v1"
+    historical_case_default_limit: int = Field(default=20, ge=1, le=1000)
+    historical_case_max_limit: int = Field(default=100, ge=1, le=1000)
+    historical_case_min_score: Decimal = Field(default=Decimal("0.40"), ge=0, le=1)
+    timeframe_aggregation_version: str = "v1"
+    timeframe_aggregation_min_completeness: Decimal = Field(default=Decimal("1.0"), ge=0, le=1)
+    timeframe_aggregation_allowed_targets: list[str] = Field(
+        default_factory=lambda: ["5m", "15m", "30m", "1h", "4h"]
+    )
+    multi_timeframe_context_version: str = "v1"
     reasoning_action_worker_enabled: bool = False
     reasoning_action_worker_poll_seconds: float = Field(default=10, gt=0)
     reasoning_action_worker_batch_size: int = Field(default=25, ge=1, le=500)
@@ -145,6 +195,22 @@ class Settings(BaseSettings):
     market_scan_default_interval_seconds: int = Field(default=60, ge=1)
     worker_supervisor_components: list[WorkerSupervisorComponent] = Field(default_factory=list)
     worker_supervisor_shutdown_timeout_seconds: float = Field(default=20, gt=0)
+    profile_simulation_max_signals: int = Field(default=500, ge=1, le=5000)
+    profile_simulation_version: str = "v1"
+    data_quality_version: str = "v1"
+    data_quality_strong_threshold: Decimal = Field(default=Decimal("0.9500"), ge=0, le=1)
+    data_quality_acceptable_threshold: Decimal = Field(default=Decimal("0.8500"), ge=0, le=1)
+    data_quality_degraded_threshold: Decimal = Field(default=Decimal("0.7000"), ge=0, le=1)
+    data_quality_outlier_range_multiplier: Decimal = Field(default=Decimal("5.0000"), gt=0)
+    data_quality_stale_live_seconds: int = Field(default=300, ge=1)
+    intelligence_dataset_schema_version: str = "v1"
+    intelligence_dataset_default_limit: int = Field(default=500, ge=1, le=5000)
+    intelligence_dataset_max_limit: int = Field(default=5000, ge=1, le=50000)
+    intelligence_dataset_max_text_length: int = Field(default=2000, ge=100, le=20000)
+    market_session_version: str = "v1"
+    market_session_default_timezone: str = "UTC"
+    operator_playbook_version: str = "v1"
+    operator_playbook_seed_enabled: bool = True
     service_name: str = "trading-intelligence-api"
     service_title: str = "Trading Intelligence API"
     service_version: str = "0.1.0"
@@ -187,6 +253,24 @@ class Settings(BaseSettings):
         normalized_value = value.strip().lower()
         return normalized_value or None
 
+    @field_validator("provider_polling_user_agent")
+    @classmethod
+    def validate_provider_polling_user_agent(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "PROVIDER_POLLING_USER_AGENT must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("binance_public_rest_base_url")
+    @classmethod
+    def validate_binance_public_rest_base_url(cls, value: str) -> str:
+        normalized_value = value.strip().rstrip("/")
+        if not normalized_value.startswith(("http://", "https://")):
+            msg = "BINANCE_PUBLIC_REST_BASE_URL must start with http:// or https://"
+            raise ValueError(msg)
+        return normalized_value
+
     @field_validator("llm_provider")
     @classmethod
     def normalize_llm_provider(cls, value: str) -> str:
@@ -196,6 +280,15 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_llm_default_provider(cls, value: str) -> str:
         return value.strip().lower()
+
+    @field_validator("scenario_ensemble_default_provider")
+    @classmethod
+    def normalize_scenario_ensemble_default_provider(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if not normalized_value:
+            msg = "SCENARIO_ENSEMBLE_DEFAULT_PROVIDER must not be empty"
+            raise ValueError(msg)
+        return normalized_value
 
     @field_validator("llm_model")
     @classmethod
@@ -232,7 +325,14 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
-    @field_validator("intelligence_quality_gate_version", "intelligence_quality_shadow_version")
+    @field_validator(
+        "intelligence_quality_gate_version",
+        "intelligence_quality_shadow_version",
+        "market_regime_version",
+        "historical_case_vector_version",
+        "decision_readiness_assessment_version",
+        "scenario_ensemble_version",
+    )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
         normalized_value = value.strip()
@@ -241,11 +341,38 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
+    @field_validator("market_session_version")
+    @classmethod
+    def validate_market_session_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "MARKET_SESSION_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("market_session_default_timezone")
+    @classmethod
+    def validate_market_session_default_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "MARKET_SESSION_DEFAULT_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
     @field_validator("outcome_default_horizons_minutes", mode="before")
     @classmethod
     def parse_outcome_default_horizons_minutes(cls, value: object) -> object:
         if isinstance(value, str):
             return [int(item.strip()) for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("timeframe_aggregation_allowed_targets", mode="before")
+    @classmethod
+    def parse_timeframe_aggregation_allowed_targets(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
     @field_validator("worker_supervisor_components", mode="before")
@@ -272,6 +399,82 @@ class Settings(BaseSettings):
             msg = "OUTCOME_EVALUATION_VERSION must not be empty"
             raise ValueError(msg)
         return normalized_value
+
+    @field_validator("timeframe_aggregation_version", "multi_timeframe_context_version")
+    @classmethod
+    def validate_timeframe_aggregation_versions(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "Version settings must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("timeframe_aggregation_allowed_targets")
+    @classmethod
+    def validate_timeframe_aggregation_allowed_targets(cls, value: list[str]) -> list[str]:
+        normalized = []
+        for item in value:
+            normalized_item = item.strip()
+            if normalized_item and normalized_item not in normalized:
+                normalized.append(normalized_item)
+        if not normalized:
+            msg = "TIMEFRAME_AGGREGATION_ALLOWED_TARGETS must contain at least one timeframe"
+            raise ValueError(msg)
+        return normalized
+
+    @field_validator("market_regime_version")
+    @classmethod
+    def validate_market_regime_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "MARKET_REGIME_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("historical_case_vector_version")
+    @classmethod
+    def validate_historical_case_vector_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "HISTORICAL_CASE_VECTOR_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("data_quality_version")
+    @classmethod
+    def validate_data_quality_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "DATA_QUALITY_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator(
+        "profile_simulation_version",
+        "data_quality_version",
+        "intelligence_dataset_schema_version",
+        "market_session_version",
+        "operator_playbook_version",
+        "market_session_default_timezone",
+    )
+    @classmethod
+    def validate_non_empty_operations_value(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "Operations setting must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @model_validator(mode="after")
+    def validate_data_quality_thresholds(self) -> Self:
+        if not (
+            self.data_quality_strong_threshold
+            >= self.data_quality_acceptable_threshold
+            >= self.data_quality_degraded_threshold
+        ):
+            msg = "DATA_QUALITY thresholds must be ordered strong >= acceptable >= degraded"
+            raise ValueError(msg)
+        return self
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> Self:
@@ -309,6 +512,21 @@ class Settings(BaseSettings):
                 "INTELLIGENCE_QUALITY_STRONG_THRESHOLD must be >= "
                 "INTELLIGENCE_QUALITY_ACCEPTABLE_THRESHOLD >= "
                 "INTELLIGENCE_QUALITY_REVIEW_THRESHOLD"
+            )
+            raise ValueError(msg)
+        if self.market_regime_strong_data_quality < self.market_regime_acceptable_data_quality:
+            msg = (
+                "MARKET_REGIME_STRONG_DATA_QUALITY must be >= "
+                "MARKET_REGIME_ACCEPTABLE_DATA_QUALITY"
+            )
+            raise ValueError(msg)
+        if self.historical_case_default_limit > self.historical_case_max_limit:
+            msg = "HISTORICAL_CASE_DEFAULT_LIMIT must be <= HISTORICAL_CASE_MAX_LIMIT"
+            raise ValueError(msg)
+        if self.decision_readiness_ready_threshold < self.decision_readiness_review_threshold:
+            msg = (
+                "DECISION_READINESS_READY_THRESHOLD must be >= "
+                "DECISION_READINESS_REVIEW_THRESHOLD"
             )
             raise ValueError(msg)
         if self.app_env == AppEnvironment.PRODUCTION and not self.audit_timeline_redaction_enabled:

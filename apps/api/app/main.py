@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.modules.market_regimes.routes import router as market_regimes_router
+
 from app.config import Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -13,29 +15,46 @@ from app.core.rate_limit import create_rate_limiter
 from app.modules.action_plans.routes import router as action_plans_router
 from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.analysis.routes import router as analysis_router
+from app.modules.backtest_experiments.routes import router as backtest_experiments_router
 from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
+from app.modules.data_quality.routes import router as data_quality_router
+from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_sources.routes import router as data_sources_router
+from app.modules.decision_readiness.routes import router as decision_readiness_router
 from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.intelligence_quality.routes import router as intelligence_quality_router
+from app.modules.intelligence_datasets.routes import router as intelligence_datasets_router
 from app.modules.intelligence_reports.routes import router as intelligence_reports_router
 from app.modules.live.routes import router as live_router
 from app.modules.llm_explanations.routes import router as llm_explanations_router
+from app.modules.market_sessions.routes import router as market_sessions_router
 from app.modules.market_scans.routes import router as market_scans_router
 from app.modules.news.routes import news_events_router
 from app.modules.news.routes import router as news_router
 from app.modules.notifications.routes import router as notifications_router
+from app.modules.operator_reviews.routes import router as operator_reviews_router
+from app.modules.operator_playbooks.routes import router as operator_playbooks_router
+from app.modules.market_sessions.routes import router as market_sessions_router
+from app.modules.operator_playbooks.routes import router as operator_playbooks_router
 from app.modules.outcomes.routes import router as outcomes_router
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
+from app.modules.profile_governance.routes import router as profile_governance_router
+from app.modules.profile_simulations.routes import router as profile_simulations_router
+from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
+from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
 from app.modules.signals.routes import router as signals_router
 from app.modules.strategy_profiles.routes import router as strategy_profiles_router
 from app.modules.symbols.routes import router as symbols_router
+from app.modules.timeframe_aggregation.routes import router as timeframe_aggregation_router
 from app.modules.users.routes import router as users_router
 from app.modules.workspaces.routes import router as workspaces_router
+from app.modules.historical_cases.routes import router as historical_cases_router
+from app.modules.intelligence_datasets.routes import router as intelligence_datasets_router
 from app.routes.health import router as health_router
 
 
@@ -81,32 +100,50 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     register_error_handlers(app)
     app.include_router(health_router, prefix=resolved_settings.api_prefix)
+    app.include_router(historical_cases_router, prefix=resolved_settings.api_prefix)
+    app.include_router(intelligence_datasets_router, prefix=resolved_settings.api_prefix)
+    app.include_router(market_regimes_router, prefix=resolved_settings.api_prefix)
     app.include_router(workspaces_router, prefix=resolved_settings.api_prefix)
     app.include_router(users_router, prefix=resolved_settings.api_prefix)
     app.include_router(symbols_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_sources_router, prefix=resolved_settings.api_prefix)
     app.include_router(engine_versions_router, prefix=resolved_settings.api_prefix)
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
+    app.include_router(provider_polling_router, prefix=resolved_settings.api_prefix)
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(data_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(chart_screenshot_router, prefix=resolved_settings.api_prefix)
+    app.include_router(data_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(analysis_router, prefix=resolved_settings.api_prefix)
+    app.include_router(market_sessions_router, prefix=resolved_settings.api_prefix)
     app.include_router(audit_timeline_router, prefix=resolved_settings.api_prefix)
     app.include_router(strategy_profiles_router, prefix=resolved_settings.api_prefix)
     app.include_router(signals_router, prefix=resolved_settings.api_prefix)
     app.include_router(news_events_router, prefix=resolved_settings.api_prefix)
     app.include_router(news_router, prefix=resolved_settings.api_prefix)
     app.include_router(notifications_router, prefix=resolved_settings.api_prefix)
+    app.include_router(operator_reviews_router, prefix=resolved_settings.api_prefix)
     app.include_router(explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(llm_explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(outcomes_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_diagnostics_router, prefix=resolved_settings.api_prefix)
+    app.include_router(backtest_experiments_router, prefix=resolved_settings.api_prefix)
+    app.include_router(profile_governance_router, prefix=resolved_settings.api_prefix)
+    app.include_router(profile_simulations_router, prefix=resolved_settings.api_prefix)
+    app.include_router(intelligence_datasets_router, prefix=resolved_settings.api_prefix)
+    app.include_router(operator_playbooks_router, prefix=resolved_settings.api_prefix)
     app.include_router(reasoning_router, prefix=resolved_settings.api_prefix)
+    app.include_router(scenario_ensembles_router, prefix=resolved_settings.api_prefix)
     app.include_router(action_plans_router, prefix=resolved_settings.api_prefix)
+    app.include_router(market_sessions_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_reports_router, prefix=resolved_settings.api_prefix)
+    app.include_router(decision_readiness_router, prefix=resolved_settings.api_prefix)
+    app.include_router(operator_playbooks_router, prefix=resolved_settings.api_prefix)
     app.include_router(ai_intelligence_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_scans_router, prefix=resolved_settings.api_prefix)
+    app.include_router(timeframe_aggregation_router, prefix=resolved_settings.api_prefix)
     return app
 
 

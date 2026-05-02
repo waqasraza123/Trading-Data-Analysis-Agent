@@ -55,6 +55,7 @@ It does:
 - Persist deterministic feature snapshots.
 - Persist deterministic indicator snapshots for EMA, RSI, MACD, and ATR.
 - Persist deterministic news/event correlation context without causation claims.
+- Run bounded backtest experiments that summarize historical signal outcome cohorts without PnL, win-rate, broker execution, or trade advice.
 - Store audit logs for analysis runs.
 - Expose typed APIs for future UI, scanner, replay, and explanation layers.
 
@@ -88,6 +89,7 @@ Neon stores the truth. FastAPI controls the workflow. Deterministic engines calc
 - Deterministic feature engineering snapshots.
 - Deterministic indicator snapshots.
 - Deterministic news/event ingestion and signal correlation APIs.
+- Scenario ensemble consensus diagnostics across grounded provider/model scenario reasoning output.
 - Pytest, Ruff, mypy, and GitHub Actions CI.
 
 ## Architecture
@@ -243,6 +245,10 @@ Configuration is read from environment variables and `apps/api/.env`.
 | `TEST_DATABASE_URL` | For DB tests/smoke | empty | Explicit disposable database target for integration tests and smoke checks. |
 | `REDIS_URL` | Future workers | empty | Reserved for background processing and cache-backed workflows. |
 | `OPENAI_API_KEY` | Future explanation layer | empty | Reserved for explanation-only AI workflows. |
+| `SCENARIO_ENSEMBLE_VERSION` | No | `v1` | Scenario ensemble consensus version recorded on each run. |
+| `SCENARIO_ENSEMBLE_DEFAULT_PROVIDER` | No | `mock` | Default provider when no ensemble provider list is supplied. |
+| `SCENARIO_ENSEMBLE_MAX_PROVIDERS` | No | `3` | Maximum provider/model requests in one ensemble run. |
+| `SCENARIO_ENSEMBLE_MIN_AGREEMENT_RATIO` | No | `0.6000` | Minimum ratio for partial scenario agreement. |
 | `CHART_OCR_ENABLED` | No | `false` | Enables Google Vision OCR for chart screenshot axis calibration. |
 | `CHART_OCR_PROVIDER` | No | `google_vision` | Chart OCR provider selector. `google_vision` uses Google ADC. |
 | `CHART_OCR_TIMEOUT_SECONDS` | No | `10` | OCR provider timeout for chart screenshot uploads. |
@@ -311,6 +317,8 @@ All routes are mounted under `API_PREFIX` when configured.
 | Live ingestion | Subscription lifecycle, stale checks, feed event ingestion, event listing |
 | Candles | `GET /candles`, `GET /candles/count`, `GET /candles/quality`, `GET /candles/latest` |
 | Analysis | Historical runs, live-window runs, run listing, run details, audit logs, features, indicators, retry |
+| Backtest experiments | `POST /backtest-experiments/run`, `GET /backtest-experiments/runs`, `GET /backtest-experiments/runs/{run_id}`, `GET /backtest-experiments/runs/{run_id}/cohorts` |
+| Scenario ensembles | `POST /signals/{signal_id}/scenario-ensemble`, `GET /signals/{signal_id}/scenario-ensembles`, `GET /scenario-ensembles/{ensemble_run_id}`, `GET /scenario-ensembles/{ensemble_run_id}/items`, `GET /scenario-ensembles/{ensemble_run_id}/consensus` |
 
 Use `/docs` or `/openapi.json` from a running server for exact request and response schemas.
 
@@ -435,6 +443,8 @@ API-specific documentation:
 - [Analysis run lifecycle](apps/api/docs/analysis-run-lifecycle.md)
 - [Feature engineering](apps/api/docs/feature-engineering.md)
 - [Indicator engine](apps/api/docs/indicator-engine.md)
+- [Backtest experiments](apps/api/docs/backtest-experiments.md)
+- [Scenario ensembles](apps/api/docs/scenario-ensembles.md)
 
 ## Roadmap
 
