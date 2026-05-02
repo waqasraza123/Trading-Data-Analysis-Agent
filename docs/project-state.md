@@ -273,3 +273,9 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 # Current Session Addition
 
 - Strategy profile governance is implemented as a manual operator workflow for drafts, deterministic validation, review, approval, explicit promotion, and audit history. Draft approval does not activate a profile, promotion is explicit, older active versions remain active unless `deactivatePrevious=true` is requested, and past signals keep their original strategy profile snapshots.
+
+## Context Pack Update
+
+- Unified analysis context packs are implemented as a canonical read-only composition layer over persisted signal, analysis run, reasoning run, outcome, chart screenshot, replay, evidence, explanation, audit, quality, decision readiness, report, and optional market-context artifacts.
+- Context packs produce bounded, redacted, typed source-of-truth artifact snapshots for downstream backend modules and do not mutate signals, trigger LLM calls, run replay, evaluate outcomes, execute actions, call external providers, send alerts, or provide financial advice.
+- Context pack APIs are `GET /context-packs/signals/{signal_id}`, `GET /context-packs/analysis-runs/{analysis_run_id}`, `GET /context-packs/reasoning-runs/{reasoning_run_id}`, `GET /context-packs/outcomes/{outcome_id}`, and `GET /context-packs/chart-screenshot-runs/{run_id}`.

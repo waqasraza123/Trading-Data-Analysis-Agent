@@ -673,6 +673,19 @@ GET /scenario-ensembles/{ensemble_run_id}
 GET /scenario-ensembles/{ensemble_run_id}/items
 GET /scenario-ensembles/{ensemble_run_id}/consensus
 ```
+Context pack APIs compose persisted artifacts into bounded redacted source-of-truth bundles for
+downstream backend modules. They are read-only and do not mutate signals, trigger LLM calls, run
+replay, evaluate outcomes, execute action items, call providers, send alerts, or provide financial
+advice:
+
+```txt
+GET /context-packs/signals/{signal_id}
+GET /context-packs/analysis-runs/{analysis_run_id}
+GET /context-packs/reasoning-runs/{reasoning_run_id}
+GET /context-packs/outcomes/{outcome_id}
+GET /context-packs/chart-screenshot-runs/{run_id}
+```
+
 
 Reasoning action plan APIs convert persisted scenario suggestions into bounded backend-safe
 follow-up items and can manually execute due deterministic work:

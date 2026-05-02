@@ -19,6 +19,7 @@ from app.modules.backtest_experiments.routes import router as backtest_experimen
 from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
+from app.modules.context_packs.routes import router as context_packs_router
 from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_sources.routes import router as data_sources_router
@@ -147,4 +148,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     return app
 
 
+    app.include_router(context_packs_router, prefix=resolved_settings.api_prefix)
 app = create_app()

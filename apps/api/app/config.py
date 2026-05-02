@@ -111,6 +111,15 @@ class Settings(BaseSettings):
     decision_readiness_assessment_version: str = "decision_readiness_v1"
     decision_readiness_ready_threshold: Decimal = Field(default=Decimal("0.8500"), ge=0, le=1)
     decision_readiness_review_threshold: Decimal = Field(default=Decimal("0.6500"), ge=0, le=1)
+    context_pack_max_evidence_rows: int = Field(default=50, ge=1, le=500)
+    context_pack_max_risk_notes: int = Field(default=50, ge=1, le=500)
+    context_pack_max_audit_events: int = Field(default=100, ge=1, le=1000)
+    context_pack_max_outcomes: int = Field(default=20, ge=1, le=500)
+    context_pack_max_scenarios: int = Field(default=10, ge=1, le=100)
+    context_pack_max_action_items: int = Field(default=50, ge=1, le=500)
+    context_pack_max_news_correlations: int = Field(default=20, ge=1, le=500)
+    context_pack_max_text_length: int = Field(default=4000, ge=100, le=20000)
+    context_pack_schema_version: str = "v1"
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
