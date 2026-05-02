@@ -112,6 +112,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented notification_preferences, notification_messages, and notification_worker_runs persistence, notification APIs, in-app outbox dispatch, safety checks, idempotency, worker runtime/entrypoint, docs, and unit tests.
 - Implemented market_watchlists, market_watchlist_items, scheduled_scan_configs, scheduled_scan_runs, and scheduled_scan_run_items persistence, watchlist/config/run APIs, bounded due scan executor, optional `python -m app.workers.market_scan_worker`, supervisor registration, docs, and unit tests.
 - Implemented chart screenshot hardening with Pillow/OpenCV image decoding, Google Vision OCR provider abstraction, axis calibration metadata, candlestick/OHLC bar extraction, line/area unsupported-chart handling, low-confidence review-required gating, docs, and unit tests.
+- Integrated chart screenshot hardening, scheduled scans, audit timeline traceability, and intelligence quality gates into one backend surface with settings-backed defaults, read-only scan/screenshot/quality timeline provenance, diagnostic screenshot quality findings, and a single Alembic head.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
 - Implemented workspace/user APIs, idempotent backend seed command/service, engine version registry/query APIs, analysis engine/rule-set snapshots, and current-v1 same-engine replay support.
 - Implemented disposable DB validation hardening, backend integration smoke coverage, and a safe `python -m app.cli smoke` command for read-only or explicit write checks against non-production databases.
@@ -171,6 +172,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Worker process entrypoints are `python -m app.workers.live_feed_worker`, `python -m app.workers.live_stale_monitor`, `python -m app.workers.reasoning_actions_worker`, `python -m app.workers.notification_worker`, `python -m app.workers.market_scan_worker`, and optional orchestrator `python -m app.workers.supervisor`.
 - Chart screenshot OCR uses Google Vision through Application Default Credentials only when `CHART_OCR_ENABLED=true`; manual calibration remains supported and raw uploaded image bytes are not persisted.
 - Chart screenshot deterministic analysis can run only from normalized OHLC candles. Non-OHLC chart types are not converted into synthetic candles, and low extraction/OCR confidence requires accepted human review or correction before analysis triggering.
+- Audit timeline defaults are settings-backed and remain read-only; timeline routes may include persisted scheduled scan provenance, chart screenshot provenance, quality findings, and shadow classifications, but they must not run or mutate those systems.
 
 ## Deferred / Not Yet Implemented
 

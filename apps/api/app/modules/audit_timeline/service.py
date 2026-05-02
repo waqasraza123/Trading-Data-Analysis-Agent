@@ -33,7 +33,13 @@ from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
 from app.modules.indicators.models import IndicatorSnapshot
+from app.modules.intelligence_quality.models import (
+    IntelligenceQualityFinding,
+    IntelligenceQualityRun,
+    ShadowClassificationResult,
+)
 from app.modules.llm_explanations.models import LlmExplanation
+from app.modules.market_scans.models import ScheduledScanRun, ScheduledScanRunItem
 from app.modules.news.models import SignalNewsCorrelation
 from app.modules.outcomes.models import SignalOutcome
 from app.modules.patterns.models import PatternCandidate
@@ -141,6 +147,19 @@ class AuditTimelineService:
         self.add_action_plan_events(events, context.action_plans, [], resolved_options)
         self.add_replay_events(events, context.replay_runs, resolved_options)
         self.add_chart_events(events, context.chart_runs, resolved_options)
+        self.add_scheduled_scan_events(
+            events,
+            context.scan_items,
+            context.scan_runs,
+            resolved_options,
+        )
+        self.add_quality_events(
+            events,
+            context.quality_runs,
+            context.quality_findings,
+            context.shadow_results,
+            resolved_options,
+        )
         self.add_audit_events(events, context.audit_logs, resolved_options)
         graph = self.analysis_graph(run, context, resolved_options.include_graph)
         completeness = completeness_from_components(
@@ -155,6 +174,8 @@ class AuditTimelineService:
                 "confidence_components": bool(context.confidence_components),
                 "risk_notes": bool(context.risk_notes),
                 "deterministic_explanation": context.deterministic_explanation is not None,
+                "scheduled_scan_provenance": bool(context.scan_items),
+                "quality_runs": bool(context.quality_runs),
                 "audit_logs": bool(context.audit_logs),
             }
         )
@@ -239,6 +260,19 @@ class AuditTimelineService:
         self.add_action_plan_events(events, context.action_plans, [], resolved_options)
         self.add_outcome_events(events, context.outcomes, resolved_options)
         self.add_chart_events(events, context.chart_runs, resolved_options)
+        self.add_scheduled_scan_events(
+            events,
+            context.scan_items,
+            context.scan_runs,
+            resolved_options,
+        )
+        self.add_quality_events(
+            events,
+            diagnostics["quality_runs"],
+            diagnostics["quality_findings"],
+            diagnostics["shadow_results"],
+            resolved_options,
+        )
         self.add_audit_events(events, context.audit_logs, resolved_options)
         graph = self.signal_graph(
             signal,
@@ -256,6 +290,8 @@ class AuditTimelineService:
                 "risk_notes": bool(context.risk_notes),
                 "deterministic_explanation": context.deterministic_explanation is not None,
                 "outcomes": bool(context.outcomes),
+                "scheduled_scan_provenance": bool(context.scan_items),
+                "quality_runs": bool(diagnostics["quality_runs"]),
                 "audit_logs": bool(context.audit_logs),
             }
         )
@@ -568,6 +604,23 @@ class AuditTimelineService:
             if analysis_run is not None
             else None
         )
+        quality_runs = (
+            await self.repository.list_quality_runs_by_analysis_run_id(
+                analysis_run.id,
+                resolved_options.limit_artifacts,
+            )
+            if analysis_run is not None
+            else []
+        )
+        quality_run_ids = [item.id for item in quality_runs]
+        quality_findings = await self.repository.list_quality_findings_by_run_ids(
+            quality_run_ids,
+            resolved_options.limit_artifacts,
+        )
+        shadow_results = await self.repository.list_shadow_results_by_quality_run_ids(
+            quality_run_ids,
+            resolved_options.limit_artifacts,
+        )
         corrections = await self.repository.list_chart_corrections(
             run.id,
             resolved_options.limit_artifacts,
@@ -656,6 +709,13 @@ class AuditTimelineService:
             )
         if signal is not None:
             self.add_signal_event(events, signal, resolved_options)
+        self.add_quality_events(
+            events,
+            quality_runs,
+            quality_findings,
+            shadow_results,
+            resolved_options,
+        )
         self.add_audit_events(events, audit_logs, resolved_options)
         graph = self.chart_graph(
             run,
@@ -673,6 +733,7 @@ class AuditTimelineService:
                 "linked_analysis_run": analysis_run is not None,
                 "human_review": review is not None,
                 "corrections": bool(corrections),
+                "quality_runs": bool(quality_runs),
                 "audit_logs": bool(audit_logs),
             }
         )
@@ -688,6 +749,9 @@ class AuditTimelineService:
                 analysis_run,
                 signal,
                 corrections,
+                quality_runs,
+                quality_findings,
+                shadow_results,
                 resolved_options,
             ),
             options=resolved_options,
@@ -709,6 +773,35 @@ class AuditTimelineService:
         reasoning_runs: list[LlmReasoningRun] = []
         action_plans: list[ReasoningActionPlan] = []
         outcomes: list[SignalOutcome] = []
+        scan_items = await self.repository.list_scheduled_scan_items_by_analysis_run_id(
+            run.id,
+            options.limit_artifacts,
+        )
+        scan_runs = await self.repository.list_scheduled_scan_runs_by_item_ids(
+            self.scan_run_ids(scan_items),
+            options.limit_artifacts,
+        )
+        quality_runs = await self.repository.list_quality_runs_by_analysis_run_id(
+            run.id,
+            options.limit_artifacts,
+        )
+        if resolved_signal is not None:
+            quality_runs = self.dedupe_artifacts(
+                quality_runs
+                + await self.repository.list_quality_runs_by_signal_id(
+                    resolved_signal.id,
+                    options.limit_artifacts,
+                )
+            )
+        quality_run_ids = [item.id for item in quality_runs]
+        quality_findings = await self.repository.list_quality_findings_by_run_ids(
+            quality_run_ids,
+            options.limit_artifacts,
+        )
+        shadow_results = await self.repository.list_shadow_results_by_quality_run_ids(
+            quality_run_ids,
+            options.limit_artifacts,
+        )
         if resolved_signal is not None:
             evidence = await self.repository.list_evidence(
                 resolved_signal.id,
@@ -781,7 +874,10 @@ class AuditTimelineService:
                 run.id,
                 options.limit_artifacts,
             )
-            outcomes = await self.repository.list_analysis_outcomes(run.id, options.limit_artifacts)
+            outcomes = await self.repository.list_analysis_outcomes(
+                run.id,
+                options.limit_artifacts,
+            )
         return AnalysisTimelineContext(
             run=run,
             signal=resolved_signal,
@@ -805,6 +901,11 @@ class AuditTimelineService:
                 run.id,
                 options.limit_artifacts,
             ),
+            scan_items=scan_items,
+            scan_runs=scan_runs,
+            quality_runs=quality_runs,
+            quality_findings=quality_findings,
+            shadow_results=shadow_results,
             audit_logs=(
                 await self.repository.list_audit_logs(run.id, options.limit_audit)
                 if options.include_audit
@@ -827,8 +928,10 @@ class AuditTimelineService:
         self,
         signal: Signal,
         options: AuditTimelineOptions,
-    ) -> dict[str, list[dict[str, Any]]]:
+    ) -> dict[str, list[Any]]:
         limit = min(options.limit_artifacts, 50)
+        quality_runs = await self.repository.list_quality_runs_by_signal_id(signal.id, limit)
+        quality_run_ids = [item.id for item in quality_runs]
         return {
             "profile_diagnostics": await self.repository.list_optional_strategy_profile_diagnostics(
                 signal.workspace_id,
@@ -855,7 +958,26 @@ class AuditTimelineService:
                     limit,
                 )
             ),
+            "quality_runs": quality_runs,
+            "quality_findings": await self.repository.list_quality_findings_by_run_ids(
+                quality_run_ids,
+                limit,
+            ),
+            "shadow_results": await self.repository.list_shadow_results_by_quality_run_ids(
+                quality_run_ids,
+                limit,
+            ),
         }
+
+    def scan_run_ids(self, items: list[ScheduledScanRunItem]) -> list[UUID]:
+        result: list[UUID] = []
+        seen: set[UUID] = set()
+        for item in items:
+            if item.scan_run_id in seen:
+                continue
+            seen.add(item.scan_run_id)
+            result.append(item.scan_run_id)
+        return result
 
     async def outcome_diagnostics(
         self,
@@ -1304,6 +1426,93 @@ class AuditTimelineService:
                 )
             )
 
+    def add_scheduled_scan_events(
+        self,
+        events: list[AuditTimelineEvent],
+        items: list[ScheduledScanRunItem],
+        runs: list[ScheduledScanRun],
+        options: AuditTimelineOptions,
+    ) -> None:
+        for run in runs:
+            events.append(
+                timeline_event(
+                    run.created_at,
+                    "scheduled_scan_run_linked",
+                    "scheduled_scan_run",
+                    run.id,
+                    "Scheduled scan run linked",
+                    f"Scheduled scan run status is {run.status}.",
+                    severity=self.status_severity(run.status),
+                    metadata=self.scheduled_scan_run_metadata(run),
+                    include_metadata=options.include_metadata,
+                )
+            )
+        for item in items:
+            events.append(
+                timeline_event(
+                    item.created_at,
+                    "scheduled_scan_item_linked",
+                    "scheduled_scan_run_item",
+                    item.id,
+                    "Scheduled scan item linked",
+                    f"Scheduled scan item status is {item.status}.",
+                    severity=self.status_severity(item.status),
+                    metadata=self.scheduled_scan_item_metadata(item),
+                    include_metadata=options.include_metadata,
+                )
+            )
+
+    def add_quality_events(
+        self,
+        events: list[AuditTimelineEvent],
+        runs: list[IntelligenceQualityRun],
+        findings: list[IntelligenceQualityFinding],
+        shadow_results: list[ShadowClassificationResult],
+        options: AuditTimelineOptions,
+    ) -> None:
+        for run in runs:
+            events.append(
+                timeline_event(
+                    run.created_at,
+                    "intelligence_quality_run_linked",
+                    "intelligence_quality_run",
+                    run.id,
+                    "Quality run linked",
+                    f"Quality run label is {run.quality_label}.",
+                    severity=self.status_severity(run.status),
+                    metadata=self.quality_run_metadata(run),
+                    include_metadata=options.include_metadata,
+                )
+            )
+        for finding in findings:
+            events.append(
+                timeline_event(
+                    finding.created_at,
+                    "intelligence_quality_finding_linked",
+                    "intelligence_quality_finding",
+                    finding.id,
+                    "Quality finding linked",
+                    f"Quality finding severity is {finding.severity}.",
+                    severity=self.status_severity(finding.severity),
+                    metadata=self.quality_finding_metadata(finding),
+                    include_metadata=options.include_metadata,
+                )
+            )
+        for result in shadow_results:
+            events.append(
+                timeline_event(
+                    result.created_at,
+                    "shadow_classification_linked",
+                    "shadow_classification_result",
+                    result.id,
+                    "Shadow classification linked",
+                    f"Shadow agreement is {result.agreement_with_final}.",
+                    severity=self.status_severity(result.agreement_with_final),
+                    metadata=self.shadow_result_metadata(result),
+                    include_metadata=options.include_metadata,
+                )
+            )
+
     def add_audit_events(
         self,
         events: list[AuditTimelineEvent],
@@ -1453,6 +1662,46 @@ class AuditTimelineService:
                 chart_run.status,
             )
             builder.add_edge(signal_node, node, ArtifactRelationship.REVIEWED_BY)
+        for scan_run in context.scan_runs:
+            node = builder.add_node(
+                scan_run.id,
+                "scheduled_scan_run",
+                "Scheduled scan run",
+                scan_run.status,
+            )
+            builder.add_edge(node, signal_node, ArtifactRelationship.PRODUCED)
+        for scan_item in context.scan_items:
+            node = builder.add_node(
+                scan_item.id,
+                "scheduled_scan_run_item",
+                "Scheduled scan item",
+                scan_item.status,
+            )
+            builder.add_edge(node, signal_node, ArtifactRelationship.PRODUCED)
+        for quality_run in context.quality_runs:
+            node = builder.add_node(
+                quality_run.id,
+                "intelligence_quality_run",
+                "Quality run",
+                quality_run.quality_label,
+            )
+            builder.add_edge(signal_node, node, ArtifactRelationship.EVALUATED_BY)
+        for finding in context.quality_findings:
+            node = builder.add_node(
+                finding.id,
+                "intelligence_quality_finding",
+                "Quality finding",
+                finding.severity,
+            )
+            builder.add_edge(signal_node, node, ArtifactRelationship.EVALUATED_BY)
+        for result in context.shadow_results:
+            node = builder.add_node(
+                result.id,
+                "shadow_classification_result",
+                "Shadow classification",
+                result.agreement_with_final,
+            )
+            builder.add_edge(signal_node, node, ArtifactRelationship.EVALUATED_BY)
 
     def reasoning_graph(
         self,
@@ -1598,6 +1847,26 @@ class AuditTimelineService:
                 [self.analysis_run_metadata(item) for item in context.replay_runs],
                 options.limit_artifacts,
             ),
+            "scheduled_scan_runs": bounded_artifacts(
+                [self.scheduled_scan_run_metadata(item) for item in context.scan_runs],
+                options.limit_artifacts,
+            ),
+            "scheduled_scan_items": bounded_artifacts(
+                [self.scheduled_scan_item_metadata(item) for item in context.scan_items],
+                options.limit_artifacts,
+            ),
+            "quality_runs": bounded_artifacts(
+                [self.quality_run_metadata(item) for item in context.quality_runs],
+                options.limit_artifacts,
+            ),
+            "quality_findings": bounded_artifacts(
+                [self.quality_finding_metadata(item) for item in context.quality_findings],
+                options.limit_artifacts,
+            ),
+            "shadow_classifications": bounded_artifacts(
+                [self.shadow_result_metadata(item) for item in context.shadow_results],
+                options.limit_artifacts,
+            ),
             "raw_candle_series_included": False,
         }
 
@@ -1630,10 +1899,7 @@ class AuditTimelineService:
                 [self.risk_note_metadata(item) for item in context.risk_notes],
                 options.limit_artifacts,
             ),
-            "diagnostics": {
-                key: bounded_artifacts(value, options.limit_artifacts)
-                for key, value in diagnostics.items()
-            },
+            "diagnostics": self.signal_diagnostic_sections(diagnostics, options),
         }
 
     def reasoning_sections(
@@ -1708,6 +1974,9 @@ class AuditTimelineService:
         analysis_run: AnalysisRun | None,
         signal: Signal | None,
         corrections: list[ChartScreenshotRun],
+        quality_runs: list[IntelligenceQualityRun],
+        quality_findings: list[IntelligenceQualityFinding],
+        shadow_results: list[ShadowClassificationResult],
         options: AuditTimelineOptions,
     ) -> dict[str, Any]:
         return {
@@ -1721,8 +1990,64 @@ class AuditTimelineService:
                 [self.chart_screenshot_metadata(item) for item in corrections],
                 options.limit_artifacts,
             ),
+            "quality_runs": bounded_artifacts(
+                [self.quality_run_metadata(item) for item in quality_runs],
+                options.limit_artifacts,
+            ),
+            "quality_findings": bounded_artifacts(
+                [self.quality_finding_metadata(item) for item in quality_findings],
+                options.limit_artifacts,
+            ),
+            "shadow_classifications": bounded_artifacts(
+                [self.shadow_result_metadata(item) for item in shadow_results],
+                options.limit_artifacts,
+            ),
             "raw_image_bytes_included": False,
             "raw_candle_series_included": False,
+        }
+
+    def signal_diagnostic_sections(
+        self,
+        diagnostics: dict[str, list[Any]],
+        options: AuditTimelineOptions,
+    ) -> dict[str, Any]:
+        return {
+            "profile_diagnostics": bounded_artifacts(
+                diagnostics.get("profile_diagnostics", []),
+                options.limit_artifacts,
+            ),
+            "pattern_diagnostics": bounded_artifacts(
+                diagnostics.get("pattern_diagnostics", []),
+                options.limit_artifacts,
+            ),
+            "calibration_recommendations": bounded_artifacts(
+                diagnostics.get("calibration_recommendations", []),
+                options.limit_artifacts,
+            ),
+            "quality_runs": bounded_artifacts(
+                [
+                    self.quality_run_metadata(item)
+                    for item in diagnostics.get("quality_runs", [])
+                    if isinstance(item, IntelligenceQualityRun)
+                ],
+                options.limit_artifacts,
+            ),
+            "quality_findings": bounded_artifacts(
+                [
+                    self.quality_finding_metadata(item)
+                    for item in diagnostics.get("quality_findings", [])
+                    if isinstance(item, IntelligenceQualityFinding)
+                ],
+                options.limit_artifacts,
+            ),
+            "shadow_classifications": bounded_artifacts(
+                [
+                    self.shadow_result_metadata(item)
+                    for item in diagnostics.get("shadow_results", [])
+                    if isinstance(item, ShadowClassificationResult)
+                ],
+                options.limit_artifacts,
+            ),
         }
 
     def analysis_run_metadata(self, run: AnalysisRun | None) -> dict[str, Any]:
@@ -2049,6 +2374,109 @@ class AuditTimelineService:
             "updated_at": item.updated_at,
         }
 
+    def scheduled_scan_run_metadata(self, item: ScheduledScanRun) -> dict[str, Any]:
+        return {
+            "id": item.id,
+            "workspace_id": item.workspace_id,
+            "scan_config_id": item.scan_config_id,
+            "status": item.status,
+            "scan_mode": item.scan_mode,
+            "scheduled_for": item.scheduled_for,
+            "started_at": item.started_at,
+            "completed_at": item.completed_at,
+            "scanned_item_count": item.scanned_item_count,
+            "analysis_run_count": item.analysis_run_count,
+            "skipped_count": item.skipped_count,
+            "failed_count": item.failed_count,
+            "analysis_run_ids": item.analysis_run_ids_json,
+            "signal_ids": item.signal_ids_json,
+            "reasoning_run_ids": item.reasoning_run_ids_json,
+            "action_plan_ids": item.action_plan_ids_json,
+            "result": item.result_json,
+            "error_message": item.error_message,
+            "created_at": item.created_at,
+            "updated_at": item.updated_at,
+        }
+
+    def scheduled_scan_item_metadata(self, item: ScheduledScanRunItem) -> dict[str, Any]:
+        return {
+            "id": item.id,
+            "workspace_id": item.workspace_id,
+            "scan_run_id": item.scan_run_id,
+            "scan_config_id": item.scan_config_id,
+            "watchlist_item_id": item.watchlist_item_id,
+            "symbol_id": item.symbol_id,
+            "source_id": item.source_id,
+            "timeframe": item.timeframe,
+            "status": item.status,
+            "analysis_run_id": item.analysis_run_id,
+            "signal_id": item.signal_id,
+            "reasoning_run_id": item.reasoning_run_id,
+            "action_plan_id": item.action_plan_id,
+            "skipped_reason": item.skipped_reason,
+            "error_message": item.error_message,
+            "created_at": item.created_at,
+            "updated_at": item.updated_at,
+        }
+
+    def quality_run_metadata(self, item: IntelligenceQualityRun) -> dict[str, Any]:
+        return {
+            "id": item.id,
+            "workspace_id": item.workspace_id,
+            "analysis_run_id": item.analysis_run_id,
+            "signal_id": item.signal_id,
+            "source_type": item.source_type,
+            "status": item.status,
+            "quality_score": item.quality_score,
+            "quality_label": item.quality_label,
+            "gate_version": item.gate_version,
+            "shadow_version": item.shadow_version,
+            "checked_at": item.checked_at,
+            "summary": item.summary,
+            "metadata": item.metadata_json,
+            "created_at": item.created_at,
+            "updated_at": item.updated_at,
+        }
+
+    def quality_finding_metadata(self, item: IntelligenceQualityFinding) -> dict[str, Any]:
+        return {
+            "id": item.id,
+            "workspace_id": item.workspace_id,
+            "quality_run_id": item.quality_run_id,
+            "finding_type": item.finding_type,
+            "severity": item.severity,
+            "code": item.code,
+            "title": item.title,
+            "message": item.message,
+            "artifact_type": item.artifact_type,
+            "artifact_id": item.artifact_id,
+            "expected_value": item.expected_value,
+            "observed_value": item.observed_value,
+            "metadata": item.metadata_json,
+            "created_at": item.created_at,
+        }
+
+    def shadow_result_metadata(self, item: ShadowClassificationResult) -> dict[str, Any]:
+        return {
+            "id": item.id,
+            "workspace_id": item.workspace_id,
+            "quality_run_id": item.quality_run_id,
+            "analysis_run_id": item.analysis_run_id,
+            "signal_id": item.signal_id,
+            "strategy_profile_key": item.strategy_profile_key,
+            "strategy_profile_version": item.strategy_profile_version,
+            "classification_status": item.classification_status,
+            "bias": item.bias,
+            "pattern_type": item.pattern_type,
+            "confidence_score": item.confidence_score,
+            "confidence_label": item.confidence_label,
+            "selected_candidate_id": item.selected_candidate_id,
+            "agreement_with_final": item.agreement_with_final,
+            "disagreement_reason": item.disagreement_reason,
+            "metadata": item.metadata_json,
+            "created_at": item.created_at,
+        }
+
     def human_review(self, item: ChartScreenshotRun) -> dict[str, Any] | None:
         review = (item.parser_metadata_json or {}).get("humanReview")
         return review if isinstance(review, dict) else None
@@ -2087,6 +2515,11 @@ class AnalysisTimelineContext:
         action_plans: list[ReasoningActionPlan],
         replay_runs: list[AnalysisRun],
         chart_runs: list[ChartScreenshotRun],
+        scan_items: list[ScheduledScanRunItem],
+        scan_runs: list[ScheduledScanRun],
+        quality_runs: list[IntelligenceQualityRun],
+        quality_findings: list[IntelligenceQualityFinding],
+        shadow_results: list[ShadowClassificationResult],
         audit_logs: list[AnalysisAuditLog],
     ) -> None:
         self.run = run
@@ -2105,4 +2538,9 @@ class AnalysisTimelineContext:
         self.action_plans = action_plans
         self.replay_runs = replay_runs
         self.chart_runs = chart_runs
+        self.scan_items = scan_items
+        self.scan_runs = scan_runs
+        self.quality_runs = quality_runs
+        self.quality_findings = quality_findings
+        self.shadow_results = shadow_results
         self.audit_logs = audit_logs

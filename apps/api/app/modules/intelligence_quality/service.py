@@ -3,11 +3,11 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings, get_settings
 from app.core.errors import AppError
 from app.core.time import utc_now
 from app.modules.analysis.models import AnalysisMode
 from app.modules.intelligence_quality.gates import (
-    QUALITY_GATE_VERSION,
     FindingDraft,
     IntelligenceQualityGateService,
     score_findings,
@@ -31,15 +31,15 @@ from app.modules.intelligence_quality.schemas import (
 )
 from app.modules.intelligence_quality.shadow import (
     SHADOW_CLASSIFICATION_DISABLED_VERSION,
-    SHADOW_CLASSIFICATION_VERSION,
     ShadowClassificationDraft,
     ShadowClassificationService,
 )
 
 
 class IntelligenceQualityService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, settings: Settings | None = None) -> None:
         self.session = session
+        self.settings = settings or get_settings()
         self.repository = IntelligenceQualityRepository(session)
         self.gate_service = IntelligenceQualityGateService()
         self.shadow_service = ShadowClassificationService()
@@ -50,11 +50,11 @@ class IntelligenceQualityService:
         include_shadow_classification: bool,
         force_recompute: bool,
     ) -> IntelligenceQualityResponse:
-        shadow_version = shadow_version_for_request(include_shadow_classification)
+        shadow_version = self.shadow_version_for_request(include_shadow_classification)
         if not force_recompute:
             existing = await self.repository.get_latest_signal_run(
                 signal_id=signal_id,
-                gate_version=QUALITY_GATE_VERSION,
+                gate_version=self.settings.intelligence_quality_gate_version,
                 shadow_version=shadow_version,
             )
             if existing is not None:
@@ -75,11 +75,11 @@ class IntelligenceQualityService:
         include_shadow_classification: bool,
         force_recompute: bool,
     ) -> IntelligenceQualityResponse:
-        shadow_version = shadow_version_for_request(include_shadow_classification)
+        shadow_version = self.shadow_version_for_request(include_shadow_classification)
         if not force_recompute:
             existing = await self.repository.get_latest_analysis_run(
                 analysis_run_id=analysis_run_id,
-                gate_version=QUALITY_GATE_VERSION,
+                gate_version=self.settings.intelligence_quality_gate_version,
                 shadow_version=shadow_version,
             )
             if existing is not None:
@@ -106,8 +106,8 @@ class IntelligenceQualityService:
     ) -> IntelligenceQualityResponse:
         run = await self.repository.get_latest_signal_run(
             signal_id=signal_id,
-            gate_version=QUALITY_GATE_VERSION,
-            shadow_version=shadow_version_for_request(include_shadow_classification),
+            gate_version=self.settings.intelligence_quality_gate_version,
+            shadow_version=self.shadow_version_for_request(include_shadow_classification),
         )
         if run is None:
             raise AppError(404, "quality_run_not_found", "Quality run not found")
@@ -120,8 +120,8 @@ class IntelligenceQualityService:
     ) -> IntelligenceQualityResponse:
         run = await self.repository.get_latest_analysis_run(
             analysis_run_id=analysis_run_id,
-            gate_version=QUALITY_GATE_VERSION,
-            shadow_version=shadow_version_for_request(include_shadow_classification),
+            gate_version=self.settings.intelligence_quality_gate_version,
+            shadow_version=self.shadow_version_for_request(include_shadow_classification),
         )
         if run is None:
             raise AppError(404, "quality_run_not_found", "Quality run not found")
@@ -174,7 +174,12 @@ class IntelligenceQualityService:
                 shadow_drafts = shadow_outcome.results
                 shadow_findings = shadow_outcome.findings
             all_findings = gate_findings + shadow_findings
-            score_result = score_findings(all_findings)
+            score_result = score_findings(
+                all_findings,
+                strong_threshold=self.settings.intelligence_quality_strong_threshold,
+                acceptable_threshold=self.settings.intelligence_quality_acceptable_threshold,
+                review_threshold=self.settings.intelligence_quality_review_threshold,
+            )
             run = await self.repository.create_quality_run(
                 IntelligenceQualityRun(
                     workspace_id=self.workspace_id(artifacts),
@@ -188,8 +193,8 @@ class IntelligenceQualityService:
                     status=score_result.status,
                     quality_score=score_result.quality_score,
                     quality_label=score_result.quality_label,
-                    gate_version=QUALITY_GATE_VERSION,
-                    shadow_version=shadow_version_for_request(include_shadow_classification),
+                    gate_version=self.settings.intelligence_quality_gate_version,
+                    shadow_version=self.shadow_version_for_request(include_shadow_classification),
                     checked_at=utc_now(),
                     summary=score_result.summary,
                     metadata_json={
@@ -231,6 +236,9 @@ class IntelligenceQualityService:
             await self.session.rollback()
             raise
 
+    def shadow_version_for_request(self, include_shadow_classification: bool) -> str:
+        return shadow_version_for_request(include_shadow_classification, self.settings)
+
     async def ensure_run_exists(self, quality_run_id: UUID) -> IntelligenceQualityRun:
         run = await self.repository.get_run(quality_run_id)
         if run is None:
@@ -245,9 +253,13 @@ class IntelligenceQualityService:
         raise AppError(422, "quality_source_missing", "Quality source is missing workspace")
 
 
-def shadow_version_for_request(include_shadow_classification: bool) -> str:
+def shadow_version_for_request(
+    include_shadow_classification: bool,
+    settings: Settings | None = None,
+) -> str:
+    resolved_settings = settings or get_settings()
     return (
-        SHADOW_CLASSIFICATION_VERSION
+        resolved_settings.intelligence_quality_shadow_version
         if include_shadow_classification
         else SHADOW_CLASSIFICATION_DISABLED_VERSION
     )

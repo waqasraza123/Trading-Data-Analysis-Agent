@@ -181,6 +181,16 @@ CHART_OCR_PROVIDER=google_vision
 CHART_OCR_TIMEOUT_SECONDS=10
 CHART_OCR_MIN_CONFIDENCE=0.6500
 CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE=0.7500
+CHART_UNSUPPORTED_REJECTION_ENABLED=true
+AUDIT_TIMELINE_MAX_EVENTS=200
+AUDIT_TIMELINE_MAX_AUDIT_EVENTS=100
+AUDIT_TIMELINE_MAX_ARTIFACTS=200
+AUDIT_TIMELINE_REDACTION_ENABLED=true
+INTELLIGENCE_QUALITY_GATE_VERSION=quality_gates_v1
+INTELLIGENCE_QUALITY_SHADOW_VERSION=shadow_profiles_v1
+INTELLIGENCE_QUALITY_STRONG_THRESHOLD=0.9000
+INTELLIGENCE_QUALITY_ACCEPTABLE_THRESHOLD=0.7500
+INTELLIGENCE_QUALITY_REVIEW_THRESHOLD=0.5000
 OUTCOME_DEFAULT_HORIZONS_MINUTES=5,15,30,60
 OUTCOME_MIN_FUTURE_CANDLES=3
 OUTCOME_EVALUATION_VERSION=v1
@@ -404,12 +414,15 @@ supported for the currently registered v1 deterministic engines and returns
 `unsupported_engine_version` instead of falling back when a stored snapshot references an
 unregistered engine version.
 
-Chart screenshot APIs support manually or externally extracted OHLC rows and deterministic PNG
-candlestick extraction from trading chart images. Valid extracted rows are stored through the shared
-candle path and persisted with a deterministic next-trend hypothesis. Both create endpoints can
-optionally trigger the existing deterministic analysis lifecycle after extraction. PNG preview and
-image ingestion support request-scoped parser tuning for chart bounds, candle colors, foreground
-thresholds, and cluster detection:
+Chart screenshot APIs support manually or externally extracted OHLC rows and deterministic PNG/JPEG
+candlestick or OHLC-bar extraction from trading chart images. OCR is optional and provider-backed;
+API startup and normal tests do not require Google Vision credentials. Valid extracted rows are
+stored through the shared candle path and persisted with a deterministic next-trend hypothesis.
+Unsupported non-OHLC screenshots are rejected, and low-confidence extraction requires review or
+correction before deterministic analysis can be triggered. Final analysis still runs only from
+normalized OHLC candles, never directly from pixels. PNG preview and image ingestion support
+request-scoped parser tuning for chart bounds, candle colors, foreground thresholds, and cluster
+detection:
 
 ```txt
 POST /chart-screenshot-runs

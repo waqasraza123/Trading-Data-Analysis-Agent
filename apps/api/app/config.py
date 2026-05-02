@@ -67,6 +67,24 @@ class Settings(BaseSettings):
     chart_ocr_timeout_seconds: float = Field(default=10.0, gt=0)
     chart_ocr_min_confidence: Decimal = Field(default=Decimal("0.6500"), ge=0, le=1)
     chart_image_min_extraction_confidence: Decimal = Field(default=Decimal("0.7500"), ge=0, le=1)
+    chart_unsupported_rejection_enabled: bool = True
+    audit_timeline_max_events: int = Field(default=200, ge=1, le=500)
+    audit_timeline_max_audit_events: int = Field(default=100, ge=1, le=500)
+    audit_timeline_max_artifacts: int = Field(default=200, ge=1, le=500)
+    audit_timeline_redaction_enabled: bool = True
+    intelligence_quality_gate_version: str = "quality_gates_v1"
+    intelligence_quality_shadow_version: str = "shadow_profiles_v1"
+    intelligence_quality_strong_threshold: Decimal = Field(default=Decimal("0.9000"), ge=0, le=1)
+    intelligence_quality_acceptable_threshold: Decimal = Field(
+        default=Decimal("0.7500"),
+        ge=0,
+        le=1,
+    )
+    intelligence_quality_review_threshold: Decimal = Field(
+        default=Decimal("0.5000"),
+        ge=0,
+        le=1,
+    )
     cors_allowed_origins: list[str] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
@@ -214,6 +232,15 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
+    @field_validator("intelligence_quality_gate_version", "intelligence_quality_shadow_version")
+    @classmethod
+    def validate_non_empty_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "Quality gate and shadow versions must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
     @field_validator("outcome_default_horizons_minutes", mode="before")
     @classmethod
     def parse_outcome_default_horizons_minutes(cls, value: object) -> object:
@@ -272,6 +299,23 @@ class Settings(BaseSettings):
             self.live_feed_api_key
         ):
             msg = "LIVE_FEED_API_KEY is required for the selected live feed provider"
+            raise ValueError(msg)
+        if not (
+            self.intelligence_quality_strong_threshold
+            >= self.intelligence_quality_acceptable_threshold
+            >= self.intelligence_quality_review_threshold
+        ):
+            msg = (
+                "INTELLIGENCE_QUALITY_STRONG_THRESHOLD must be >= "
+                "INTELLIGENCE_QUALITY_ACCEPTABLE_THRESHOLD >= "
+                "INTELLIGENCE_QUALITY_REVIEW_THRESHOLD"
+            )
+            raise ValueError(msg)
+        if self.app_env == AppEnvironment.PRODUCTION and not self.audit_timeline_redaction_enabled:
+            msg = "AUDIT_TIMELINE_REDACTION_ENABLED must stay true in production"
+            raise ValueError(msg)
+        if not self.chart_unsupported_rejection_enabled:
+            msg = "CHART_UNSUPPORTED_REJECTION_ENABLED must stay true"
             raise ValueError(msg)
         return self
 

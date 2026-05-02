@@ -106,6 +106,7 @@ CHART_OCR_PROVIDER=google_vision
 CHART_OCR_TIMEOUT_SECONDS=10
 CHART_OCR_MIN_CONFIDENCE=0.6500
 CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE=0.7500
+CHART_UNSUPPORTED_REJECTION_ENABLED=true
 ```
 
 Supported calibration modes for image endpoints:
@@ -318,6 +319,10 @@ When analysis is triggered:
 The analysis lifecycle still enforces normal candle sufficiency, final-candle reads, deterministic
 feature/indicator/pattern/signal generation, deterministic explanation generation, and optional
 news/LLM behavior.
+
+Audit timelines include linked screenshot runs, human review/correction lineage, parser metadata,
+and created analysis runs. Intelligence quality gates can flag unsupported screenshot context,
+review-required extraction, and failed OCR metadata without running OCR or changing signals.
 
 ## Human Review And Correction
 

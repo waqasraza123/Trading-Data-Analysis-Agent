@@ -44,6 +44,16 @@ def test_settings_load_defaults() -> None:
     assert settings.market_scan_worker_batch_size == 10
     assert settings.market_scan_default_lookback_minutes == 60
     assert settings.market_scan_default_interval_seconds == 60
+    assert settings.chart_unsupported_rejection_enabled is True
+    assert settings.audit_timeline_max_events == 200
+    assert settings.audit_timeline_max_audit_events == 100
+    assert settings.audit_timeline_max_artifacts == 200
+    assert settings.audit_timeline_redaction_enabled is True
+    assert settings.intelligence_quality_gate_version == "quality_gates_v1"
+    assert settings.intelligence_quality_shadow_version == "shadow_profiles_v1"
+    assert str(settings.intelligence_quality_strong_threshold) == "0.9000"
+    assert str(settings.intelligence_quality_acceptable_threshold) == "0.7500"
+    assert str(settings.intelligence_quality_review_threshold) == "0.5000"
     assert settings.worker_supervisor_components == []
     assert settings.worker_supervisor_shutdown_timeout_seconds == 20
 
@@ -103,6 +113,29 @@ def test_production_rejects_wildcard_cors_origin() -> None:
             app_env=AppEnvironment.PRODUCTION,
             cors_allowed_origins="*",
         )
+
+
+def test_quality_thresholds_must_be_ordered() -> None:
+    with pytest.raises(ValueError, match="INTELLIGENCE_QUALITY_STRONG_THRESHOLD"):
+        Settings(
+            _env_file=None,
+            intelligence_quality_strong_threshold="0.7000",
+            intelligence_quality_acceptable_threshold="0.8000",
+        )
+
+
+def test_production_requires_audit_timeline_redaction() -> None:
+    with pytest.raises(ValueError, match="AUDIT_TIMELINE_REDACTION_ENABLED"):
+        Settings(
+            _env_file=None,
+            app_env=AppEnvironment.PRODUCTION,
+            audit_timeline_redaction_enabled=False,
+        )
+
+
+def test_chart_unsupported_rejection_cannot_be_disabled() -> None:
+    with pytest.raises(ValueError, match="CHART_UNSUPPORTED_REJECTION_ENABLED"):
+        Settings(_env_file=None, chart_unsupported_rejection_enabled=False)
 
 
 def test_build_async_database_url_for_neon_postgres_url() -> None:

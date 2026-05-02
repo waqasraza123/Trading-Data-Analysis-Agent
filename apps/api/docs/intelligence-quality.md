@@ -40,6 +40,8 @@ Quality gates inspect persisted artifacts only:
   conversion metadata
 - news correlation label ranges, cautious reason wording, and plausible time deltas
 - replay link and engine snapshot consistency
+- chart screenshot parser metadata, including unsupported chart flags, review-required state, and
+  failed OCR context, without running OCR or treating pixels as source-of-truth analysis
 
 Missing optional artifacts produce low or info findings. Missing required artifacts produce medium
 or high findings.
@@ -65,6 +67,18 @@ Labels:
 - `insufficient_context`: `< 0.20`
 
 Required missing artifacts cap otherwise strong results to review-oriented labels.
+
+The scoring thresholds and persisted versions are configurable:
+
+```txt
+INTELLIGENCE_QUALITY_GATE_VERSION=quality_gates_v1
+INTELLIGENCE_QUALITY_SHADOW_VERSION=shadow_profiles_v1
+INTELLIGENCE_QUALITY_STRONG_THRESHOLD=0.9000
+INTELLIGENCE_QUALITY_ACCEPTABLE_THRESHOLD=0.7500
+INTELLIGENCE_QUALITY_REVIEW_THRESHOLD=0.5000
+```
+
+Thresholds must remain ordered from strong to acceptable to review.
 
 ## Shadow Classification
 
@@ -96,6 +110,21 @@ Examples:
 - review ungrounded news context
 - review non-directional outcome label conflicts
 - review exposed output with failed grounding
+- review linked screenshot extraction when parser metadata says human review is required
+
+Suggested backend actions are limited to safe follow-up records:
+
+```txt
+evaluate_outcome_after_horizon
+run_replay
+run_news_correlation
+wait_for_more_final_candles
+request_human_review
+no_action
+```
+
+Rejected trading actions such as order placement, position entry/exit, stop-loss/take-profit
+changes, leverage, and copy trading remain invalid and are never made executable.
 
 ## APIs
 

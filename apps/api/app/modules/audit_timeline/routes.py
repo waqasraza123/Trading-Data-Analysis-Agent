@@ -1,9 +1,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings, get_settings
 from app.dependencies import database_session
 from app.modules.audit_timeline.schemas import AuditTimelineOptions, AuditTimelineRead
 from app.modules.audit_timeline.service import AuditTimelineService
@@ -18,22 +19,29 @@ def get_audit_timeline_service(
 
 
 def timeline_options(
+    request: Request,
     include_audit: Annotated[bool, Query(alias="includeAudit")] = True,
     include_graph: Annotated[bool, Query(alias="includeGraph")] = True,
     include_artifacts: Annotated[bool, Query(alias="includeArtifacts")] = True,
-    include_metadata: Annotated[bool, Query(alias="includeMetadata")] = True,
-    limit_events: Annotated[int, Query(alias="limitEvents", ge=1, le=500)] = 200,
-    limit_audit: Annotated[int, Query(alias="limitAudit", ge=1, le=500)] = 100,
-    limit_artifacts: Annotated[int, Query(alias="limitArtifacts", ge=1, le=500)] = 200,
+    include_metadata: Annotated[bool | None, Query(alias="includeMetadata")] = None,
+    limit_events: Annotated[int | None, Query(alias="limitEvents", ge=1, le=500)] = None,
+    limit_audit: Annotated[int | None, Query(alias="limitAudit", ge=1, le=500)] = None,
+    limit_artifacts: Annotated[int | None, Query(alias="limitArtifacts", ge=1, le=500)] = None,
 ) -> AuditTimelineOptions:
+    settings = getattr(request.app.state, "settings", None)
+    resolved_settings = settings if isinstance(settings, Settings) else get_settings()
     return AuditTimelineOptions(
         include_audit=include_audit,
         include_graph=include_graph,
         include_artifacts=include_artifacts,
-        include_metadata=include_metadata,
-        limit_events=limit_events,
-        limit_audit=limit_audit,
-        limit_artifacts=limit_artifacts,
+        include_metadata=(
+            resolved_settings.audit_timeline_redaction_enabled
+            if include_metadata is None
+            else include_metadata
+        ),
+        limit_events=limit_events or resolved_settings.audit_timeline_max_events,
+        limit_audit=limit_audit or resolved_settings.audit_timeline_max_audit_events,
+        limit_artifacts=limit_artifacts or resolved_settings.audit_timeline_max_artifacts,
     )
 
 

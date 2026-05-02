@@ -27,10 +27,10 @@ TOLERANCE = Decimal("0.0100")
 WEIGHT_TOLERANCE = Decimal("0.0500")
 SUPPORTED_SAFE_ACTIONS = {
     "evaluate_outcome_after_horizon",
-    "replay_analysis",
+    "run_replay",
     "run_news_correlation",
-    "wait_for_final_candles",
-    "human_review",
+    "wait_for_more_final_candles",
+    "request_human_review",
     "no_action",
 }
 UNSAFE_DIRECTIVE_TERMS = (
@@ -108,6 +108,7 @@ class IntelligenceQualityGateService:
         findings.extend(self.outcome_findings(artifacts))
         findings.extend(self.news_findings(artifacts))
         findings.extend(self.replay_findings(artifacts))
+        findings.extend(self.chart_screenshot_findings(artifacts))
         findings.extend(self.review_recommendation_findings(findings))
         return findings
 
@@ -924,6 +925,69 @@ class IntelligenceQualityGateService:
             )
         return findings
 
+    def chart_screenshot_findings(
+        self,
+        artifacts: IntelligenceQualityArtifacts,
+    ) -> list[FindingDraft]:
+        findings: list[FindingDraft] = []
+        for run in artifacts.chart_screenshot_runs:
+            metadata = run.parser_metadata_json or {}
+            blocked_reason = metadata.get("analysisBlockedReason")
+            supported = metadata.get("supportedForAnalysis")
+            chart_type = metadata.get("chartType")
+            if supported is False:
+                findings.append(
+                    finding(
+                        IntelligenceQualityFindingType.SAFETY_ISSUE,
+                        IntelligenceQualitySeverity.HIGH,
+                        "unsupported_chart_source_context",
+                        "Unsupported chart source context",
+                        "Linked screenshot metadata says the chart is unsupported for analysis.",
+                        "chart_screenshot_run",
+                        run.id,
+                        expected_value=True,
+                        observed_value=supported,
+                        metadata_json={"chartType": str(chart_type) if chart_type else None},
+                    )
+                )
+            if run.status == "review_required" or blocked_reason is not None:
+                findings.append(
+                    finding(
+                        IntelligenceQualityFindingType.REVIEW_RECOMMENDATION,
+                        IntelligenceQualitySeverity.MEDIUM,
+                        "chart_screenshot_review_required",
+                        "Screenshot review required",
+                        (
+                            "Linked screenshot extraction requires review before relying on "
+                            "analysis context."
+                        ),
+                        "chart_screenshot_run",
+                        run.id,
+                        observed_value=blocked_reason or run.status,
+                        metadata_json={
+                            "extractionConfidence": str(run.extraction_confidence),
+                            "chartType": str(chart_type) if chart_type else None,
+                        },
+                    )
+                )
+            ocr = metadata.get("ocr")
+            if isinstance(ocr, dict) and ocr.get("status") == "failed":
+                findings.append(
+                    finding(
+                        IntelligenceQualityFindingType.DEGRADED_CONFIDENCE,
+                        IntelligenceQualitySeverity.LOW,
+                        "chart_ocr_failed_context",
+                        "Chart OCR context unavailable",
+                        (
+                            "Linked screenshot OCR failed; manual calibration or review context "
+                            "is required."
+                        ),
+                        "chart_screenshot_run",
+                        run.id,
+                    )
+                )
+        return findings
+
     def review_recommendation_findings(
         self,
         findings: list[FindingDraft],
@@ -969,12 +1033,22 @@ class IntelligenceQualityGateService:
         return recommendations
 
 
-def score_findings(findings: list[FindingDraft]) -> QualityScoreResult:
+def score_findings(
+    findings: list[FindingDraft],
+    strong_threshold: Decimal = Decimal("0.9000"),
+    acceptable_threshold: Decimal = Decimal("0.7500"),
+    review_threshold: Decimal = Decimal("0.5000"),
+) -> QualityScoreResult:
     score = Decimal("1.0000")
     for item in findings:
         score -= SCORE_PENALTIES[item.severity]
     score = clamp_decimal(score)
-    label = label_for_score(score)
+    label = label_for_score(
+        score,
+        strong_threshold=strong_threshold,
+        acceptable_threshold=acceptable_threshold,
+        review_threshold=review_threshold,
+    )
     if any_required_artifact_missing(findings) and label in {
         IntelligenceQualityLabel.STRONG.value,
         IntelligenceQualityLabel.ACCEPTABLE.value,
@@ -1078,12 +1152,17 @@ def clamp_decimal(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.0001"))
 
 
-def label_for_score(score: Decimal) -> str:
-    if score >= Decimal("0.9000"):
+def label_for_score(
+    score: Decimal,
+    strong_threshold: Decimal = Decimal("0.9000"),
+    acceptable_threshold: Decimal = Decimal("0.7500"),
+    review_threshold: Decimal = Decimal("0.5000"),
+) -> str:
+    if score >= strong_threshold:
         return IntelligenceQualityLabel.STRONG.value
-    if score >= Decimal("0.7500"):
+    if score >= acceptable_threshold:
         return IntelligenceQualityLabel.ACCEPTABLE.value
-    if score >= Decimal("0.5000"):
+    if score >= review_threshold:
         return IntelligenceQualityLabel.REVIEW_RECOMMENDED.value
     if score >= Decimal("0.2000"):
         return IntelligenceQualityLabel.INCONSISTENT.value

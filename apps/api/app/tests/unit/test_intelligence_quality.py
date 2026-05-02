@@ -8,7 +8,9 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings
 from app.modules.analysis.models import AnalysisMode, AnalysisRun, AnalysisRunStatus
+from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.explanations.models import (
     DeterministicExplanation,
     ExplanationSafetyStatus,
@@ -17,6 +19,7 @@ from app.modules.explanations.models import (
 from app.modules.features.models import FeatureSnapshot
 from app.modules.indicators.models import IndicatorSnapshot
 from app.modules.intelligence_quality.gates import (
+    SUPPORTED_SAFE_ACTIONS,
     FindingDraft,
     IntelligenceQualityGateService,
     score_findings,
@@ -190,6 +193,60 @@ def test_outcome_mismatch_creates_finding() -> None:
     findings = IntelligenceQualityGateService().outcome_findings(artifacts)
 
     assert "outcome_bias_mismatch" in {finding.code for finding in findings}
+
+
+def test_quality_gates_use_backend_safe_action_names() -> None:
+    assert {
+        "evaluate_outcome_after_horizon",
+        "run_replay",
+        "run_news_correlation",
+        "wait_for_more_final_candles",
+        "request_human_review",
+        "no_action",
+    } <= SUPPORTED_SAFE_ACTIONS
+    assert "replay_analysis" not in SUPPORTED_SAFE_ACTIONS
+    assert "human_review" not in SUPPORTED_SAFE_ACTIONS
+
+
+def test_chart_screenshot_review_metadata_creates_diagnostic_finding() -> None:
+    artifacts = complete_artifacts()
+    signal = require_signal(artifacts)
+    artifacts.chart_screenshot_runs = [
+        ChartScreenshotRun(
+            id=uuid4(),
+            workspace_id=signal.workspace_id,
+            source_id=None,
+            symbol_id=signal.symbol_id,
+            analysis_run_id=signal.analysis_run_id,
+            timeframe=signal.timeframe,
+            file_name="chart.png",
+            parser_name="opencv",
+            parser_version="v1",
+            status="review_required",
+            extraction_confidence=Decimal("0.4000"),
+            raw_candle_count=20,
+            stored_candle_count=0,
+            duplicate_count=0,
+            conflict_count=0,
+            extracted_payload_json={},
+            extraction_warnings_json={"warnings": []},
+            parser_metadata_json={
+                "chartType": "line",
+                "supportedForAnalysis": False,
+                "analysisBlockedReason": "unsupported_chart_type",
+                "ocr": {"status": "failed"},
+            },
+            created_at=NOW,
+            updated_at=NOW,
+        )
+    ]
+
+    findings = IntelligenceQualityGateService().chart_screenshot_findings(artifacts)
+    codes = {finding.code for finding in findings}
+
+    assert "unsupported_chart_source_context" in codes
+    assert "chart_screenshot_review_required" in codes
+    assert "chart_ocr_failed_context" in codes
 
 
 def test_quality_score_labels() -> None:
@@ -760,6 +817,7 @@ def service_with_fake_repository() -> tuple[
     service = IntelligenceQualityService.__new__(IntelligenceQualityService)
     repository = FakeQualityRepository()
     service.session = cast(AsyncSession, session)
+    service.settings = Settings(_env_file=None)
     service.repository = cast(IntelligenceQualityRepository, repository)
     service.gate_service = IntelligenceQualityGateService()
     service.shadow_service = ShadowClassificationService()

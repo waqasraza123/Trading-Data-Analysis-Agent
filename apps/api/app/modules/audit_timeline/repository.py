@@ -12,7 +12,13 @@ from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
 from app.modules.indicators.models import IndicatorSnapshot
+from app.modules.intelligence_quality.models import (
+    IntelligenceQualityFinding,
+    IntelligenceQualityRun,
+    ShadowClassificationResult,
+)
 from app.modules.llm_explanations.models import LlmExplanation
+from app.modules.market_scans.models import ScheduledScanRun, ScheduledScanRunItem
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.outcomes.models import SignalOutcome
 from app.modules.patterns.models import PatternCandidate
@@ -392,6 +398,96 @@ class AuditTimelineRepository:
             select(ChartScreenshotRun)
             .where(ChartScreenshotRun.parser_source_path == f"correction:{run_id}")
             .order_by(ChartScreenshotRun.created_at.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_scheduled_scan_items_by_analysis_run_id(
+        self,
+        analysis_run_id: UUID,
+        limit: int,
+    ) -> list[ScheduledScanRunItem]:
+        statement: Select[tuple[ScheduledScanRunItem]] = (
+            select(ScheduledScanRunItem)
+            .where(ScheduledScanRunItem.analysis_run_id == analysis_run_id)
+            .order_by(ScheduledScanRunItem.created_at.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_scheduled_scan_runs_by_item_ids(
+        self,
+        scan_run_ids: list[UUID],
+        limit: int,
+    ) -> list[ScheduledScanRun]:
+        if not scan_run_ids:
+            return []
+        statement: Select[tuple[ScheduledScanRun]] = (
+            select(ScheduledScanRun)
+            .where(ScheduledScanRun.id.in_(scan_run_ids))
+            .order_by(ScheduledScanRun.created_at.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_quality_runs_by_analysis_run_id(
+        self,
+        analysis_run_id: UUID,
+        limit: int,
+    ) -> list[IntelligenceQualityRun]:
+        statement: Select[tuple[IntelligenceQualityRun]] = (
+            select(IntelligenceQualityRun)
+            .where(IntelligenceQualityRun.analysis_run_id == analysis_run_id)
+            .order_by(IntelligenceQualityRun.created_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_quality_runs_by_signal_id(
+        self,
+        signal_id: UUID,
+        limit: int,
+    ) -> list[IntelligenceQualityRun]:
+        statement: Select[tuple[IntelligenceQualityRun]] = (
+            select(IntelligenceQualityRun)
+            .where(IntelligenceQualityRun.signal_id == signal_id)
+            .order_by(IntelligenceQualityRun.created_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_quality_findings_by_run_ids(
+        self,
+        quality_run_ids: list[UUID],
+        limit: int,
+    ) -> list[IntelligenceQualityFinding]:
+        if not quality_run_ids:
+            return []
+        statement: Select[tuple[IntelligenceQualityFinding]] = (
+            select(IntelligenceQualityFinding)
+            .where(IntelligenceQualityFinding.quality_run_id.in_(quality_run_ids))
+            .order_by(IntelligenceQualityFinding.created_at.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_shadow_results_by_quality_run_ids(
+        self,
+        quality_run_ids: list[UUID],
+        limit: int,
+    ) -> list[ShadowClassificationResult]:
+        if not quality_run_ids:
+            return []
+        statement: Select[tuple[ShadowClassificationResult]] = (
+            select(ShadowClassificationResult)
+            .where(ShadowClassificationResult.quality_run_id.in_(quality_run_ids))
+            .order_by(ShadowClassificationResult.created_at.asc())
             .limit(limit)
         )
         result = await self.session.execute(statement)

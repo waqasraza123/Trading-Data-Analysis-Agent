@@ -135,6 +135,10 @@ optionally create scenario reasoning when enabled and configured
 optionally create an action plan only from a reasoning run
 ```
 
+Scan runs and per-item rows are traceability artifacts. Audit timelines can show which scan created
+an analysis run or signal, intelligence reports can reference scan source metadata, and quality
+gates can inspect scan-created signals without mutating them.
+
 Skipped reasons include:
 
 ```txt

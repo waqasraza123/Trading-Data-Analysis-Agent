@@ -26,7 +26,8 @@ and from synthetic timestamps on persisted artifacts when audit logs are missing
 can represent analysis run creation, candle window resolution, feature and indicator snapshots,
 pattern candidates, signal evidence/confidence/risk persistence, deterministic explanations, news
 correlations, LLM explanations, outcomes, reasoning runs, action plans, replay links, screenshot
-decisions, human reviews, and correction lineage.
+decisions, human reviews, correction lineage, scheduled scan provenance, quality findings, and
+shadow classification diagnostics.
 
 The API never includes raw candle series or raw image bytes.
 
@@ -67,8 +68,10 @@ limitAudit=100
 limitArtifacts=200
 ```
 
-`limitEvents`, `limitAudit`, and `limitArtifacts` are capped at 500. Metadata is truncated and large
-collections are summarized.
+Defaults come from `AUDIT_TIMELINE_MAX_EVENTS`, `AUDIT_TIMELINE_MAX_AUDIT_EVENTS`,
+`AUDIT_TIMELINE_MAX_ARTIFACTS`, and `AUDIT_TIMELINE_REDACTION_ENABLED`. `limitEvents`,
+`limitAudit`, and `limitArtifacts` are capped at 500. Metadata is truncated and large collections
+are summarized.
 
 ## Redaction And Truncation
 
@@ -85,6 +88,10 @@ Audit timelines compose existing persisted artifacts only. They do not run analy
 evaluate outcomes, run diagnostics, generate LLM output, execute action items, mutate source
 artifacts, send alerts or notifications, or provide broker execution, auto-trading, copy trading,
 billing, or financial advice.
+
+Scheduled scan, chart screenshot, and intelligence quality records are included only when already
+persisted. Missing optional modules or artifacts become `missingSections` entries or empty sections
+rather than runtime work.
 
 ## Future Operator Usage
 

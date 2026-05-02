@@ -22,7 +22,13 @@ from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.explanations.models import DeterministicExplanation, ExplanationType
 from app.modules.features.models import FeatureSnapshot
 from app.modules.indicators.models import IndicatorSnapshot
+from app.modules.intelligence_quality.models import (
+    IntelligenceQualityFinding,
+    IntelligenceQualityRun,
+    ShadowClassificationResult,
+)
 from app.modules.llm_explanations.models import LlmExplanation
+from app.modules.market_scans.models import ScheduledScanRun, ScheduledScanRunItem
 from app.modules.news.models import SignalNewsCorrelation
 from app.modules.outcomes.models import OutcomeEvaluationStatus, OutcomeLabel, SignalOutcome
 from app.modules.patterns.models import PatternCandidate
@@ -103,6 +109,30 @@ class FakeAuditTimelineRepository:
         self.chart_corrections = [
             chart_correction_row(uuid4(), self.chart_runs[0], self.workspace_id)
         ]
+        self.scan_run = scheduled_scan_run_row(
+            uuid4(),
+            self.workspace_id,
+            self.run.id,
+            self.signal.id,
+        )
+        self.scan_items = [
+            scheduled_scan_item_row(
+                uuid4(),
+                self.workspace_id,
+                self.scan_run.id,
+                self.scan_run.scan_config_id,
+                self.run,
+                self.signal,
+            )
+        ]
+        self.quality_run = quality_run_row(
+            uuid4(),
+            self.workspace_id,
+            self.run.id,
+            self.signal.id,
+        )
+        self.quality_findings = [quality_finding_row(uuid4(), self.quality_run)]
+        self.shadow_results = [shadow_result_row(uuid4(), self.quality_run, self.run, self.signal)]
         self.audit_logs = [audit_log_row(self.run.id)]
         self.profile_diagnostics = [{"id": uuid4(), "diagnostic_label": "neutral"}]
         self.pattern_diagnostics = [{"id": uuid4(), "diagnostic_label": "neutral"}]
@@ -297,6 +327,48 @@ class FakeAuditTimelineRepository:
     ) -> list[ChartScreenshotRun]:
         return self.chart_corrections[:limit] if run_id == self.chart_run_id else []
 
+    async def list_scheduled_scan_items_by_analysis_run_id(
+        self,
+        analysis_run_id: UUID,
+        limit: int,
+    ) -> list[ScheduledScanRunItem]:
+        return self.scan_items[:limit] if analysis_run_id == self.run.id else []
+
+    async def list_scheduled_scan_runs_by_item_ids(
+        self,
+        scan_run_ids: list[UUID],
+        limit: int,
+    ) -> list[ScheduledScanRun]:
+        return [self.scan_run][:limit] if self.scan_run.id in scan_run_ids else []
+
+    async def list_quality_runs_by_analysis_run_id(
+        self,
+        analysis_run_id: UUID,
+        limit: int,
+    ) -> list[IntelligenceQualityRun]:
+        return [self.quality_run][:limit] if analysis_run_id == self.run.id else []
+
+    async def list_quality_runs_by_signal_id(
+        self,
+        signal_id: UUID,
+        limit: int,
+    ) -> list[IntelligenceQualityRun]:
+        return [self.quality_run][:limit] if signal_id == self.signal.id else []
+
+    async def list_quality_findings_by_run_ids(
+        self,
+        quality_run_ids: list[UUID],
+        limit: int,
+    ) -> list[IntelligenceQualityFinding]:
+        return self.quality_findings[:limit] if self.quality_run.id in quality_run_ids else []
+
+    async def list_shadow_results_by_quality_run_ids(
+        self,
+        quality_run_ids: list[UUID],
+        limit: int,
+    ) -> list[ShadowClassificationResult]:
+        return self.shadow_results[:limit] if self.quality_run.id in quality_run_ids else []
+
     async def list_replay_runs(self, analysis_run_id: UUID, limit: int) -> list[AnalysisRun]:
         return self.replay_runs[:limit] if analysis_run_id == self.run.id else []
 
@@ -357,6 +429,20 @@ async def test_builds_analysis_timeline_with_synthetic_artifact_timestamps() -> 
 
 
 @pytest.mark.anyio
+async def test_analysis_timeline_includes_scan_and_quality_provenance() -> None:
+    service, repository = service_with_fake_repository()
+
+    timeline = await service.build_analysis_run_timeline(repository.run.id)
+    event_types = {event.event_type for event in timeline.timeline}
+
+    assert "scheduled_scan_run_linked" in event_types
+    assert "scheduled_scan_item_linked" in event_types
+    assert "intelligence_quality_finding_linked" in event_types
+    assert timeline.sections["scheduled_scan_runs"]["returned_count"] == 1
+    assert timeline.sections["quality_findings"]["returned_count"] == 1
+
+
+@pytest.mark.anyio
 async def test_builds_signal_timeline_with_evidence_confidence_and_explanation() -> None:
     service, repository = service_with_fake_repository()
 
@@ -367,6 +453,7 @@ async def test_builds_signal_timeline_with_evidence_confidence_and_explanation()
     assert "signal_confidence_persisted" in event_types
     assert "deterministic_explanation_generated" in event_types
     assert timeline.sections["evidence"]["returned_count"] == 1
+    assert timeline.sections["diagnostics"]["quality_runs"]["returned_count"] == 1
 
 
 @pytest.mark.anyio
@@ -936,6 +1023,139 @@ def chart_correction_row(
     item.parser_source_path = f"correction:{original.id}"
     item.parser_metadata_json = {"correctedFromChartScreenshotRunId": str(original.id)}
     return item
+
+
+def scheduled_scan_run_row(
+    run_id: UUID,
+    workspace_id: UUID,
+    analysis_run_id: UUID,
+    signal_id: UUID,
+) -> ScheduledScanRun:
+    return ScheduledScanRun(
+        id=run_id,
+        workspace_id=workspace_id,
+        scan_config_id=uuid4(),
+        status="completed",
+        scan_mode="single_symbol",
+        scheduled_for=BASE_TIME,
+        started_at=BASE_TIME + timedelta(seconds=18),
+        completed_at=BASE_TIME + timedelta(seconds=19),
+        scanned_item_count=1,
+        analysis_run_count=1,
+        skipped_count=0,
+        failed_count=0,
+        analysis_run_ids_json=[str(analysis_run_id)],
+        signal_ids_json=[str(signal_id)],
+        reasoning_run_ids_json=None,
+        action_plan_ids_json=None,
+        result_json={"safeBackendAnalysis": True},
+        error_message=None,
+        created_at=BASE_TIME + timedelta(seconds=18),
+        updated_at=BASE_TIME + timedelta(seconds=19),
+    )
+
+
+def scheduled_scan_item_row(
+    item_id: UUID,
+    workspace_id: UUID,
+    scan_run_id: UUID,
+    scan_config_id: UUID,
+    run: AnalysisRun,
+    signal: Signal,
+) -> ScheduledScanRunItem:
+    return ScheduledScanRunItem(
+        id=item_id,
+        workspace_id=workspace_id,
+        scan_run_id=scan_run_id,
+        scan_config_id=scan_config_id,
+        watchlist_item_id=None,
+        symbol_id=run.symbol_id,
+        source_id=run.source_id,
+        timeframe=run.timeframe,
+        status="completed",
+        analysis_run_id=run.id,
+        signal_id=signal.id,
+        reasoning_run_id=None,
+        action_plan_id=None,
+        skipped_reason=None,
+        error_message=None,
+        created_at=BASE_TIME + timedelta(seconds=20),
+        updated_at=BASE_TIME + timedelta(seconds=20),
+    )
+
+
+def quality_run_row(
+    run_id: UUID,
+    workspace_id: UUID,
+    analysis_run_id: UUID,
+    signal_id: UUID,
+) -> IntelligenceQualityRun:
+    return IntelligenceQualityRun(
+        id=run_id,
+        workspace_id=workspace_id,
+        analysis_run_id=analysis_run_id,
+        signal_id=signal_id,
+        source_type="signal",
+        status="completed",
+        quality_score=Decimal("0.8750"),
+        quality_label="acceptable",
+        gate_version="quality_gates_v1",
+        shadow_version="shadow_profiles_v1",
+        checked_at=BASE_TIME + timedelta(seconds=21),
+        summary="Diagnostic quality run.",
+        metadata_json={"diagnosticOnly": True},
+        created_at=BASE_TIME + timedelta(seconds=21),
+        updated_at=BASE_TIME + timedelta(seconds=21),
+    )
+
+
+def quality_finding_row(
+    finding_id: UUID,
+    run: IntelligenceQualityRun,
+) -> IntelligenceQualityFinding:
+    return IntelligenceQualityFinding(
+        id=finding_id,
+        workspace_id=run.workspace_id,
+        quality_run_id=run.id,
+        finding_type="review_recommendation",
+        severity="medium",
+        code="review_context",
+        title="Review context",
+        message="Review persisted diagnostic context.",
+        artifact_type="signal",
+        artifact_id=run.signal_id,
+        expected_value=None,
+        observed_value=None,
+        metadata_json={},
+        created_at=BASE_TIME + timedelta(seconds=22),
+    )
+
+
+def shadow_result_row(
+    result_id: UUID,
+    quality_run: IntelligenceQualityRun,
+    analysis_run: AnalysisRun,
+    signal: Signal,
+) -> ShadowClassificationResult:
+    return ShadowClassificationResult(
+        id=result_id,
+        workspace_id=quality_run.workspace_id,
+        quality_run_id=quality_run.id,
+        analysis_run_id=analysis_run.id,
+        signal_id=signal.id,
+        strategy_profile_key=signal.strategy_profile_key,
+        strategy_profile_version=signal.strategy_profile_version,
+        classification_status=signal.classification_status,
+        bias=signal.bias,
+        pattern_type=signal.pattern_type,
+        confidence_score=signal.confidence_score,
+        confidence_label=signal.confidence_label,
+        selected_candidate_id=signal.selected_pattern_candidate_id,
+        agreement_with_final="agreed",
+        disagreement_reason=None,
+        metadata_json={"diagnosticOnly": True},
+        created_at=BASE_TIME + timedelta(seconds=23),
+    )
 
 
 def audit_log_row(run_id: UUID) -> AnalysisAuditLog:
