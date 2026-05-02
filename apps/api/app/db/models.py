@@ -11,6 +11,12 @@ from app.modules.ai_intelligence.models import (
     AiIntelligenceRun,
 )
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
+from app.modules.artifact_graph.models import (
+    ArtifactInvalidationEvent,
+    ArtifactInvalidationItem,
+    IntelligenceArtifact,
+    IntelligenceArtifactDependency,
+)
 from app.modules.backfill_plans.models import IntelligenceBackfillItem, IntelligenceBackfillPlan
 from app.modules.backtest_experiments.models import (
     BacktestExperimentCohort,
@@ -111,6 +117,8 @@ __all__ = [
     "AiIntelligenceClaim",
     "AiIntelligenceInsight",
     "AiIntelligenceRun",
+    "ArtifactInvalidationEvent",
+    "ArtifactInvalidationItem",
     "BacktestExperimentCohort",
     "BacktestExperimentRun",
     "Base",
@@ -141,6 +149,8 @@ __all__ = [
     "IntelligenceQualityRun",
     "ImportBatch",
     "ImportError",
+    "IntelligenceArtifact",
+    "IntelligenceArtifactDependency",
     "LiveFeedEvent",
     "LiveFeedSubscription",
     "LlmExplanation",

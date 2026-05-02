@@ -833,6 +833,12 @@ Disposable database validation, integration fixtures, and smoke commands are doc
 docs/integration-tests.md
 ```
 
+Intelligence artifact dependency graph and invalidation behavior is documented in:
+
+```txt
+docs/artifact-graph.md
+```
+
 Decision readiness assessment is documented in:
 
 ```txt

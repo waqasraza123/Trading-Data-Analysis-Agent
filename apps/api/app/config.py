@@ -184,6 +184,9 @@ class Settings(BaseSettings):
         default_factory=lambda: ["5m", "15m", "30m", "1h", "4h"]
     )
     multi_timeframe_context_version: str = "v1"
+    artifact_graph_version: str = "v1"
+    artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
+    artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
     reasoning_action_worker_enabled: bool = False
     reasoning_action_worker_poll_seconds: float = Field(default=10, gt=0)
     reasoning_action_worker_batch_size: int = Field(default=25, ge=1, le=500)
@@ -409,6 +412,15 @@ class Settings(BaseSettings):
         normalized_value = value.strip()
         if not normalized_value:
             msg = "OUTCOME_EVALUATION_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("artifact_graph_version")
+    @classmethod
+    def validate_artifact_graph_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "ARTIFACT_GRAPH_VERSION must not be empty"
             raise ValueError(msg)
         return normalized_value
 

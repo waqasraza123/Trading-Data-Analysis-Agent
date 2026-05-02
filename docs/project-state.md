@@ -136,6 +136,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented backend security and observability hardening: settings validation, CORS configuration, optional API key guard, request/upload limits, rate-limit foundation, request duration logs, safe error responses with request IDs, health/readiness/worker health endpoints, live worker/stale monitor process hardening, operational docs, and env examples.
 - Implemented production Redis-backed rate limiting with local/test in-memory fallback, staging/production Redis configuration validation, Redis health checks, operational docs, and unit coverage.
 - Implemented production worker supervisor orchestration for live feed, stale monitor, reasoning action, and notification runtimes with component selection, graceful shutdown, fail-fast child monitoring, docs, and unit tests.
+- Implemented intelligence artifact dependency graph and invalidation infrastructure for artifact registration, dependency paths, stale marking, invalidation events/items, recomputation candidate listing, API routes, docs, and database schema.
 - Implemented backtest experiment cohort analysis over existing persisted signals and outcomes with bounded filters, cohort persistence, safe observed behavior metrics, docs, and APIs.
 - Implemented multi-timeframe aggregation and context persistence with derived candle lineage, completion accounting, higher-timeframe agreement scoring, APIs, docs, and settings.
 - Implemented intelligence backfill plan and item persistence, bounded dry-run planner contracts, missing outcome/context/stale/module plan APIs, safety metadata, docs, and migration.
@@ -231,6 +232,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Scenario ensembles run multiple grounded scenario reasoning provider/model requests over the same signal input, store linked reasoning run IDs, exclude unsafe or ungrounded outputs from consensus, and persist scenario-level agreement/disagreement diagnostics.
 - Scenario ensembles do not classify signals, override deterministic outputs, create final signals, execute actions, send alerts, call brokers, mutate existing reasoning runs, or provide financial advice.
 - Scenario ensemble APIs are documented in `apps/api/docs/scenario-ensembles.md`.
+
+- Intelligence artifact graph records traceability and invalidation state only. It can mark downstream artifacts stale and record invalidation paths, but it does not delete artifacts, recompute artifacts, run tasks, mutate signal classifications, send notifications, execute broker workflows, or produce financial advice.
 
 ## Deferred / Not Yet Implemented
 
