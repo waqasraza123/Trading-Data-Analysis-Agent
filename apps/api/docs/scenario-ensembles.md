@@ -91,3 +91,8 @@ Ensemble persistence is separate from reasoning persistence:
 - `scenario_consensus_results` stores scenario-level agreement and conflicting evidence summaries.
 
 Existing reasoning runs are not mutated by ensemble consensus.
+## Integrated Engine Boundary
+
+Scenario ensembles compare grounded scenario reasoning outputs for diagnostics only. They may be
+included in reports or future readiness checks, but they do not classify signals, mutate reasoning
+runs, create action items, alter strategy profiles, send alerts, or provide financial advice.
