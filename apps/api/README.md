@@ -7,11 +7,12 @@ persisted artifacts, supports optional multi-LLM grounded scenario reasoning, su
 stored candles, persists deterministic news/event context, evaluates observed historical outcomes
 after persisted signals, stores outcome-based profile diagnostics and advisory calibration
 recommendations, converts persisted reasoning scenarios into backend-safe follow-up action plans,
-composes read-only intelligence reports from existing persisted artifacts, and can run backend-only
-market watchlist scans that create bounded deterministic analysis runs from stored final candles. It
-also accepts manually or externally extracted trading chart screenshot candles and persists
-deterministic next-trend hypotheses. A read-only audit timeline API composes persisted artifacts into
-chronological traceability and lineage views for operator review.
+composes read-only intelligence reports from existing persisted artifacts, persists deterministic
+intelligence quality gate runs with diagnostic shadow classification comparisons, and can run
+backend-only market watchlist scans that create bounded deterministic analysis runs from stored
+final candles. It also accepts manually or externally extracted trading chart screenshot candles and
+persists deterministic next-trend hypotheses. A read-only audit timeline API composes persisted
+artifacts into chronological traceability and lineage views for operator review.
 
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 LLM layers are optional and may only explain or reason from persisted deterministic output.
@@ -257,6 +258,12 @@ Operational hardening is documented in:
 docs/operations.md
 docs/security.md
 docs/live-runtime.md
+```
+
+Intelligence quality gates and shadow classification are documented in:
+
+```txt
+docs/intelligence-quality.md
 ```
 
 Candle query and quality APIs are documented in:

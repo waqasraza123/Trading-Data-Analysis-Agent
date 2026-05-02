@@ -20,6 +20,7 @@ from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
+from app.modules.intelligence_quality.routes import router as intelligence_quality_router
 from app.modules.intelligence_reports.routes import router as intelligence_reports_router
 from app.modules.live.routes import router as live_router
 from app.modules.llm_explanations.routes import router as llm_explanations_router
@@ -104,6 +105,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(action_plans_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_reports_router, prefix=resolved_settings.api_prefix)
     app.include_router(ai_intelligence_router, prefix=resolved_settings.api_prefix)
+    app.include_router(intelligence_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_scans_router, prefix=resolved_settings.api_prefix)
     return app
 

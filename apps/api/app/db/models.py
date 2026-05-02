@@ -18,6 +18,11 @@ from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
+from app.modules.intelligence_quality.models import (
+    IntelligenceQualityFinding,
+    IntelligenceQualityRun,
+    ShadowClassificationResult,
+)
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.market_scans.models import (
@@ -69,6 +74,8 @@ __all__ = [
     "EngineVersion",
     "FeatureSnapshot",
     "IndicatorSnapshot",
+    "IntelligenceQualityFinding",
+    "IntelligenceQualityRun",
     "ImportBatch",
     "ImportError",
     "LiveFeedEvent",
@@ -94,6 +101,7 @@ __all__ = [
     "SignalConfidenceComponent",
     "SignalEvidence",
     "SignalRiskNote",
+    "ShadowClassificationResult",
     "ScenarioHypothesis",
     "ScheduledScanConfig",
     "ScheduledScanRun",
