@@ -16,6 +16,7 @@ class CandleOriginType(StrEnum):
     API_POLLING = "api_polling"
     MANUAL_SEED = "manual_seed"
     CHART_SCREENSHOT = "chart_screenshot"
+    DERIVED_AGGREGATION = "derived_aggregation"
 
 
 class CandleUpsertStatus(StrEnum):

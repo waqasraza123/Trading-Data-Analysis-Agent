@@ -7,9 +7,10 @@ prefer one process per worker.
 ## Run
 
 ```sh
-WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications \
+WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications,market_scans \
 REASONING_ACTION_WORKER_ENABLED=true \
 NOTIFICATION_WORKER_ENABLED=true \
+MARKET_SCAN_WORKER_ENABLED=true \
 .venv/bin/python -m app.workers.supervisor
 ```
 
@@ -24,10 +25,12 @@ live_feed
 stale_monitor
 reasoning_actions
 notifications
+market_scans
 ```
 
 `reasoning_actions` starts only when `REASONING_ACTION_WORKER_ENABLED=true`.
 `notifications` starts only when `NOTIFICATION_WORKER_ENABLED=true`.
+`market_scans` starts only when `MARKET_SCAN_WORKER_ENABLED=true`.
 
 ## Failure Behavior
 

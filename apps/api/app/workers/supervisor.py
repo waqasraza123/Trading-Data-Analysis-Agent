@@ -12,6 +12,7 @@ from app.core.logging import configure_logging
 from app.db.session import get_async_session_factory
 from app.modules.action_plans.worker import ReasoningActionWorkerRuntime
 from app.modules.live.supervisor import LiveFeedSupervisor, LiveStaleSupervisor
+from app.modules.market_scans.scheduler import MarketScanWorkerRuntime
 from app.modules.notifications.worker import NotificationWorkerRuntime
 from app.workers.runtime import register_signal_handlers, to_coroutine
 
@@ -112,6 +113,26 @@ class WorkerSupervisorRuntime:
                 worker_id,
                 notification_runtime.run_forever,
                 notification_runtime.stop,
+            )
+        if component == WorkerSupervisorComponent.MARKET_SCANS:
+            if not self.settings.market_scan_worker_enabled:
+                self.logger.info(
+                    "supervised_worker_disabled",
+                    extra={"worker_name": component.value},
+                )
+                return None
+            worker_id = f"market-scan-worker-{uuid4()}"
+            market_scan_runtime = MarketScanWorkerRuntime(
+                session_factory=self.session_factory,
+                settings=self.settings,
+                worker_id=worker_id,
+                logger=self.logger,
+            )
+            return SupervisedWorker(
+                "market_scan_worker",
+                worker_id,
+                market_scan_runtime.run_forever,
+                market_scan_runtime.stop,
             )
 
     async def run_forever(self) -> None:

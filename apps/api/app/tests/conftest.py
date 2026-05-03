@@ -36,6 +36,14 @@ from app.modules.workspaces.models import Workspace
 
 TEST_DATABASE_SKIP_REASON = "DB integration tests require TEST_DATABASE_URL"
 APP_TABLES = (
+    "scheduled_scan_run_items",
+    "scheduled_scan_runs",
+    "scheduled_scan_configs",
+    "market_watchlist_items",
+    "market_watchlists",
+    "shadow_classification_results",
+    "intelligence_quality_findings",
+    "intelligence_quality_runs",
     "calibration_recommendations",
     "pattern_outcome_diagnostics",
     "strategy_profile_diagnostics",

@@ -105,6 +105,7 @@ def test_supervisor_skips_disabled_optional_workers() -> None:
             worker_supervisor_components=[
                 WorkerSupervisorComponent.REASONING_ACTIONS,
                 WorkerSupervisorComponent.NOTIFICATIONS,
+                WorkerSupervisorComponent.MARKET_SCANS,
             ],
         )
     )
@@ -115,11 +116,12 @@ def test_supervisor_skips_disabled_optional_workers() -> None:
 def test_settings_parse_worker_supervisor_components() -> None:
     settings = Settings(
         _env_file=None,
-        worker_supervisor_components="live_feed, stale_monitor, notifications",
+        worker_supervisor_components="live_feed, stale_monitor, notifications, market_scans",
     )
 
     assert settings.worker_supervisor_components == [
         WorkerSupervisorComponent.LIVE_FEED,
         WorkerSupervisorComponent.STALE_MONITOR,
         WorkerSupervisorComponent.NOTIFICATIONS,
+        WorkerSupervisorComponent.MARKET_SCANS,
     ]

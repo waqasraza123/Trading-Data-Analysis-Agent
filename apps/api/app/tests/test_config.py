@@ -24,6 +24,10 @@ def test_settings_load_defaults() -> None:
     assert settings.llm_default_model == "mock-scenario-v1"
     assert settings.llm_provider_timeout_seconds == 12
     assert settings.llm_temperature == 0.2
+    assert settings.scenario_ensemble_version == "v1"
+    assert settings.scenario_ensemble_default_provider == "mock"
+    assert settings.scenario_ensemble_max_providers == 3
+    assert str(settings.scenario_ensemble_min_agreement_ratio) == "0.6000"
     assert settings.news_correlation_pre_event_minutes == 5
     assert settings.news_correlation_post_event_minutes == 30
     assert settings.news_correlation_max_events_per_signal == 10
@@ -39,6 +43,39 @@ def test_settings_load_defaults() -> None:
     assert settings.seed_default_admin_name is None
     assert settings.notification_worker_enabled is False
     assert settings.notification_worker_batch_size == 100
+    assert settings.market_scan_worker_enabled is False
+    assert settings.market_scan_worker_poll_seconds == 30
+    assert settings.market_scan_worker_batch_size == 10
+    assert settings.market_scan_default_lookback_minutes == 60
+    assert settings.market_scan_default_interval_seconds == 60
+    assert settings.provider_polling_timeout_seconds == 20
+    assert settings.provider_polling_max_candles_per_request == 1000
+    assert (
+        settings.provider_polling_user_agent
+        == "trading-intelligence-api-provider-polling/0.1"
+    )
+    assert settings.binance_public_rest_base_url == "https://api.binance.com"
+    assert settings.chart_unsupported_rejection_enabled is True
+    assert settings.audit_timeline_max_events == 200
+    assert settings.audit_timeline_max_audit_events == 100
+    assert settings.audit_timeline_max_artifacts == 200
+    assert settings.audit_timeline_redaction_enabled is True
+    assert settings.intelligence_quality_gate_version == "quality_gates_v1"
+    assert settings.intelligence_quality_shadow_version == "shadow_profiles_v1"
+    assert str(settings.intelligence_quality_strong_threshold) == "0.9000"
+    assert str(settings.intelligence_quality_acceptable_threshold) == "0.7500"
+    assert str(settings.intelligence_quality_review_threshold) == "0.5000"
+    assert settings.market_regime_version == "market_regime_v1"
+    assert str(settings.market_regime_min_confidence) == "0.5000"
+    assert str(settings.market_regime_strong_data_quality) == "0.8500"
+    assert str(settings.market_regime_acceptable_data_quality) == "0.6500"
+    assert settings.historical_case_vector_version == "historical_case_vector_v1"
+    assert settings.historical_case_default_limit == 10
+    assert settings.historical_case_max_limit == 50
+    assert str(settings.historical_case_min_score) == "0.5000"
+    assert settings.decision_readiness_assessment_version == "decision_readiness_v1"
+    assert str(settings.decision_readiness_ready_threshold) == "0.8500"
+    assert str(settings.decision_readiness_review_threshold) == "0.6500"
     assert settings.worker_supervisor_components == []
     assert settings.worker_supervisor_shutdown_timeout_seconds == 20
 
@@ -97,6 +134,50 @@ def test_production_rejects_wildcard_cors_origin() -> None:
             _env_file=None,
             app_env=AppEnvironment.PRODUCTION,
             cors_allowed_origins="*",
+        )
+
+
+def test_quality_thresholds_must_be_ordered() -> None:
+    with pytest.raises(ValueError, match="INTELLIGENCE_QUALITY_STRONG_THRESHOLD"):
+        Settings(
+            _env_file=None,
+            intelligence_quality_strong_threshold="0.7000",
+            intelligence_quality_acceptable_threshold="0.8000",
+        )
+
+
+def test_production_requires_audit_timeline_redaction() -> None:
+    with pytest.raises(ValueError, match="AUDIT_TIMELINE_REDACTION_ENABLED"):
+        Settings(
+            _env_file=None,
+            app_env=AppEnvironment.PRODUCTION,
+            audit_timeline_redaction_enabled=False,
+        )
+
+
+def test_chart_unsupported_rejection_cannot_be_disabled() -> None:
+    with pytest.raises(ValueError, match="CHART_UNSUPPORTED_REJECTION_ENABLED"):
+        Settings(_env_file=None, chart_unsupported_rejection_enabled=False)
+
+
+def test_advanced_context_threshold_settings_must_be_ordered() -> None:
+    with pytest.raises(ValueError, match="MARKET_REGIME_STRONG_DATA_QUALITY"):
+        Settings(
+            _env_file=None,
+            market_regime_strong_data_quality="0.6000",
+            market_regime_acceptable_data_quality="0.7000",
+        )
+    with pytest.raises(ValueError, match="HISTORICAL_CASE_DEFAULT_LIMIT"):
+        Settings(
+            _env_file=None,
+            historical_case_default_limit=60,
+            historical_case_max_limit=50,
+        )
+    with pytest.raises(ValueError, match="DECISION_READINESS_READY_THRESHOLD"):
+        Settings(
+            _env_file=None,
+            decision_readiness_ready_threshold="0.6000",
+            decision_readiness_review_threshold="0.7000",
         )
 
 

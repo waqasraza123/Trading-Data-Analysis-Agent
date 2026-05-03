@@ -56,6 +56,11 @@ NOTIFICATION_WORKER_BATCH_SIZE=100
 NOTIFICATION_WORKER_LOCK_SECONDS=120
 NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
+MARKET_SCAN_WORKER_ENABLED=false
+MARKET_SCAN_WORKER_POLL_SECONDS=30
+MARKET_SCAN_WORKER_BATCH_SIZE=10
+MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
+MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
 WORKER_SUPERVISOR_COMPONENTS=
 WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
 SEED_DEFAULT_WORKSPACE_NAME=
@@ -96,9 +101,11 @@ python -m app.workers.live_feed_worker
 python -m app.workers.live_stale_monitor
 REASONING_ACTION_WORKER_ENABLED=true python -m app.workers.reasoning_actions_worker
 NOTIFICATION_WORKER_ENABLED=true python -m app.workers.notification_worker
-WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications \
+MARKET_SCAN_WORKER_ENABLED=true python -m app.workers.market_scan_worker
+WORKER_SUPERVISOR_COMPONENTS=live_feed,stale_monitor,reasoning_actions,notifications,market_scans \
 REASONING_ACTION_WORKER_ENABLED=true \
 NOTIFICATION_WORKER_ENABLED=true \
+MARKET_SCAN_WORKER_ENABLED=true \
 python -m app.workers.supervisor
 ```
 
@@ -145,6 +152,10 @@ live_worker_started
 live_worker_stopped
 stale_monitor_started
 stale_monitor_stopped
+scheduled_scan_due_found
+scheduled_scan_run_started
+scheduled_scan_run_completed
+scheduled_scan_run_failed
 replay_requested
 replay_failed
 analysis_failed
