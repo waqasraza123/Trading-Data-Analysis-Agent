@@ -317,6 +317,15 @@ class Settings(BaseSettings):
     setup_context_strong_threshold: Decimal = Field(default=Decimal("0.7500"), ge=0, le=1)
     setup_context_acceptable_threshold: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
     setup_context_review_threshold: Decimal = Field(default=Decimal("0.4500"), ge=0, le=1)
+    signal_digest_version: str = "v1"
+    signal_digest_default_timezone: str = "UTC"
+    signal_digest_max_items: int = Field(default=100, ge=1, le=500)
+    signal_digest_high_confidence_threshold: Decimal = Field(
+        default=Decimal("0.70"),
+        ge=0,
+        le=1,
+    )
+    signal_digest_stale_data_priority: str = "high"
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
     artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
@@ -530,6 +539,7 @@ class Settings(BaseSettings):
         "capability_registry_default_version",
         "market_memory_state_version",
         "setup_context_version",
+        "signal_digest_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
@@ -576,6 +586,26 @@ class Settings(BaseSettings):
         normalized_value = value.strip()
         if not normalized_value:
             msg = "NOTIFICATION_WEBHOOK_USER_AGENT must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("signal_digest_default_timezone")
+    @classmethod
+    def validate_signal_digest_default_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "SIGNAL_DIGEST_DEFAULT_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("signal_digest_stale_data_priority")
+    @classmethod
+    def validate_signal_digest_stale_data_priority(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"low", "normal", "high", "urgent"}:
+            msg = "SIGNAL_DIGEST_STALE_DATA_PRIORITY must be low, normal, high, or urgent"
             raise ValueError(msg)
         return normalized_value
 

@@ -360,7 +360,7 @@ class DecisionReadinessCalculator:
         for risk_note in context.risk_notes:
             if risk_note.severity == "high":
                 score = score - HIGH_SEVERITY_DEDUCTION
-            warnings.append(warning_item(risk_note.code, risk_note.message, "high"))
+                warnings.append(warning_item(risk_note.code, risk_note.message, "high"))
                 next_steps.append("request_human_review")
             if risk_note.severity == "medium":
                 score = score - MEDIUM_WARNING_DEDUCTION
@@ -488,7 +488,8 @@ class DecisionReadinessCalculator:
                     warnings.append(
                         warning_item(
                             "screenshot_review_accepted",
-                            "Screenshot extraction required review and has accepted review metadata.",
+                            "Screenshot extraction required review and has accepted "
+                            "review metadata.",
                             "medium",
                         )
                     )

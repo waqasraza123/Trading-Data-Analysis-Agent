@@ -15,6 +15,12 @@ compares those notes with later deterministic outcomes. It does not add UI, brok
 broker imports, auto-trading, copy trading, financial advice, PnL calculations, signal mutation, or
 outcome mutation.
 
+Signal digests are implemented under `/signal-digests`. They persist deterministic daily, session,
+custom-period, and watchlist review summaries from stored signals, outcomes, market memory, quality
+gates, readiness checks, news/event correlations, and backend follow-up records. They do not run
+analysis, evaluate outcomes, call LLMs, classify or override signals, send notifications, execute
+broker actions, auto-trade, copy-trade, or provide financial advice.
+
 Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
 pattern candidates contributed to final signals and observed outcomes by detector type, selected
 candidate, rejected candidate, blocked candidate, horizon, profile, symbol, and timeframe. It is
@@ -552,6 +558,12 @@ Market watchlists and scheduled scans are documented in:
 
 ```txt
 docs/market-scans.md
+```
+
+Signal digest summaries are documented in:
+
+```txt
+docs/signal-digests.md
 ```
 
 Feature engineering snapshots are documented in:
@@ -1434,6 +1446,21 @@ POST /operator-reviews/{review_item_id}/resolve
 POST /operator-reviews/{review_item_id}/dismiss
 GET /operator-reviews/{review_item_id}/events
 ```
+
+Signal digest APIs persist read-only daily, session, custom-period, and watchlist summaries:
+
+```txt
+POST /signal-digests
+GET /signal-digests
+GET /signal-digests/{digest_id}
+GET /signal-digests/{digest_id}/items
+POST /signal-digests/daily
+POST /signal-digests/session
+```
+
+They use safe digest language such as bullish bias, bearish bias, no directional signal, setup
+quality, review recommended, watch condition, stale data, conflict, observed follow-through, and
+observed reversal. They do not send notifications or provide financial advice.
 ## Webhook Outbox
 
 Webhook outbox APIs persist sanitized integration payload records without sending HTTP requests:

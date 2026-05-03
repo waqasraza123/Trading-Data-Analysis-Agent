@@ -126,6 +126,7 @@ from app.modules.scenario_outcomes.models import (
     ScenarioOutcomeSummaryRun,
 )
 from app.modules.setup_context.models import SetupContext
+from app.modules.signal_digests.models import SignalDigestItem, SignalDigestRun
 from app.modules.signals.models import (
     Signal,
     SignalConfidenceComponent,
@@ -265,6 +266,8 @@ __all__ = [
     "ScenarioHypothesisOutcome",
     "ScenarioOutcomeSummaryRun",
     "SetupContext",
+    "SignalDigestItem",
+    "SignalDigestRun",
     "ScheduledScanConfig",
     "ScheduledScanRun",
     "ScheduledScanRunItem",
