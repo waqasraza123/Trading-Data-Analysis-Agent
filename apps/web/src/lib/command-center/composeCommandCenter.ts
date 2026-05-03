@@ -383,6 +383,7 @@ function buildNavigationItems(workspaceId: UUID | null): CommandCenterNavigation
     { id: "triage", label: "Triage", detail: "Sort signals by review state.", href: commandCenterHref("/triage", workspaceId), tone: "warning" },
     { id: "scanner", label: "Scanner", detail: "Run or inspect deterministic scans.", href: commandCenterHref("/scanner", workspaceId), tone: "good" },
     { id: "data", label: "Data", detail: "Review freshness and recovery setup.", href: commandCenterHref("/data/onboarding", workspaceId), tone: "neutral" },
+    { id: "quality", label: "Quality", detail: "Review signal quality and drift.", href: commandCenterHref("/quality", workspaceId), tone: "info" },
     { id: "preferences", label: "Preferences", detail: "Set review workflow filters.", href: commandCenterHref("/preferences/strategy", workspaceId), tone: "neutral" },
     { id: "review", label: "Review", detail: "Inspect observed outcomes.", href: commandCenterHref("/review/outcomes", workspaceId), tone: "info" },
     { id: "journal", label: "Journal", detail: "Open journal reflection.", href: commandCenterHref("/journal", workspaceId), tone: "neutral" },

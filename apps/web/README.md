@@ -154,6 +154,7 @@ Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.
 Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`.
 Use `/triage?workspaceId=<workspace-id>` to review deterministic signals by triage column. Filters support workspace, symbol, timeframe, bias, confidence, triage column, data freshness, profile key, preference profile, only fresh, and only review required.
 Use `/review/outcomes?workspaceId=<workspace-id>` to review recent signal outcomes, linked journal notes, and optional diagnostics.
+Use `/quality?workspaceId=<workspace-id>` to review the signal quality scoreboard. Filters support workspace, strategy profile, symbol, timeframe, pattern, horizon, and date range.
 Use `/journal?workspaceId=<workspace-id>` to create and review reflection notes. Optional `signalId`, `analysisRunId`, `setupContextId`, and `outcomeId` query params prefill context links.
 Use `/preferences/strategy?workspaceId=<workspace-id>` to create and maintain review preference profiles. A profile can be selected with `?profileId=<profile-id>`.
 Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding workflow. The page persists selected workspace, source, symbols, and timeframes in the URL and browser storage.
@@ -165,6 +166,7 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 - `/scanner` renders watchlist scanner controls for backend deterministic scan orchestration.
 - `/triage` renders the read-only signal triage board over deterministic signal artifacts.
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
+- `/quality` renders the read-only signal quality scoreboard over stored diagnostics, observed behavior, calibration, validation, drift, attribution, and backtest cohorts.
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
 - `/preferences/strategy` renders personal strategy preference profiles for review filtering only.
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
@@ -184,9 +186,10 @@ The integrated web surface is arranged for a deterministic daily review loop:
 6. Inspect setup context in `/signals/[signalId]`.
 7. Add or update observational journal notes in `/journal`.
 8. Review observed outcomes in `/review/outcomes`.
-9. Revisit digest summaries in `/brief`, `/command-center`, `/dashboard`, or symbol detail.
+9. Review quality, calibration, validation, and drift in `/quality`.
+10. Revisit digest summaries in `/brief`, `/command-center`, `/dashboard`, or symbol detail.
 
-The shared navigation links Command Center, Brief, Triage, Scanner, Data, Preferences, Review, and Journal. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding.
+The shared navigation links Command Center, Brief, Triage, Scanner, Data, Quality, Preferences, Review, and Journal. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to the quality scoreboard.
 
 ## Daily Trading Command Center
 
@@ -219,6 +222,23 @@ The page shows:
 - Optional pattern reliability, profile diagnostics, confidence calibration, cohort drift, pattern attribution, and digest context panels when those endpoints exist.
 
 The review loop is a learning workflow only. It does not execute trades, connect to brokers, collect account-result metrics, collect order fields, or provide financial advice.
+
+## Signal Quality Scoreboard
+
+The quality page is a frontend composition layer in `apps/web/src/lib/api/quality.ts` and `apps/web/src/lib/quality/composeQualityScoreboard.ts`. It does not add a backend endpoint. It composes existing read-only backend endpoints into one analytics dashboard for deterministic signal quality and historical behavior.
+
+Backend inputs:
+
+- `/outcomes/performance/strategy-profiles`, `/outcomes/performance/patterns`, and `/outcomes/performance/symbols` for observed continuation, reversal, no-follow-through, and sample-size metrics.
+- `/profile-diagnostics/strategy-profiles`, `/profile-diagnostics/patterns`, and `/profile-diagnostics/recommendations` for profile and pattern review labels.
+- `/confidence-calibration/runs` and `/confidence-calibration/runs/{runId}/bins` for confidence alignment.
+- `/walk-forward-validations/runs`, `/walk-forward-validations/runs/{runId}/windows`, and `/walk-forward-validations/runs/{runId}/comparisons` for stability windows.
+- `/cohort-drift/results/recent` for baseline versus recent cohort behavior.
+- `/pattern-attribution/runs` and `/pattern-attribution/runs/{runId}/results` for selected, rejected, and blocking pattern behavior.
+- `/backtest-experiments/runs` and `/backtest-experiments/runs/{runId}/cohorts` for optional cohort context.
+- `/workspaces`, `/symbols`, and `/strategy-profiles` for filters and labels.
+
+Safe metrics include continuation rate, reversal rate, no follow-through rate, confidence alignment, observed behavior, sample size, review recommended, degraded, drift detected, and data coverage. The page avoids account-result, broker, and advice language. It does not run diagnostics automatically; if diagnostics have not been created, it shows empty states and run-diagnostics-first suggestions.
 
 ## Journal Workflow
 
@@ -322,6 +342,7 @@ The dashboard expects backend modules to be deployed incrementally:
 - If triage enrichment APIs are unavailable, cards remain classified from the signal and market-memory artifacts that did load.
 - If signal digests are unavailable, digest panels show an empty state and the rest of the cockpit remains usable.
 - If outcome diagnostics, confidence calibration, cohort drift, or pattern attribution endpoints are unavailable, `/review/outcomes` hides those panels and still renders available outcome items.
+- If quality scoreboard endpoints are unavailable, `/quality` records scoped API failures, renders available sections, and shows empty states with run-diagnostics-first suggestions when no stored diagnostics are available.
 - If outcomes are unavailable for recent signals, `/review/outcomes` shows an empty queue rather than blocking the page.
 - If the journal API is unavailable, `/journal` shows an unavailable state and `/review/outcomes` still shows outcome cards without linked journal notes.
 - If the brief cannot reach an optional endpoint, the affected section shows an unavailable or empty state and the rest of `/brief` remains usable.
