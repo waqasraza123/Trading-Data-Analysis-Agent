@@ -65,6 +65,7 @@ from app.modules.provider_health.routes import router as provider_health_router
 from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.rule_packs.routes import router as rule_packs_router
+from app.modules.scanner_presets.routes import router as scanner_presets_router
 from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
 from app.modules.scenario_outcomes.routes import router as scenario_outcomes_router
 from app.modules.setup_context.routes import router as setup_context_router
@@ -188,6 +189,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         profile_governance_router,
         profile_simulations_router,
         market_scans_router,
+        scanner_presets_router,
         synthetic_fixtures_router,
         webhook_outbox_router,
         artifact_graph_router,

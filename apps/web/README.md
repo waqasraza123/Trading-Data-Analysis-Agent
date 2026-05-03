@@ -19,6 +19,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
+- Scanner preset gallery for creating watchlists and scheduled scan configs from backend templates without running scans on apply.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
@@ -34,6 +35,10 @@ The client composes data from optional backend APIs:
 - `GET /symbols/{symbol_id}`
 - `GET /market-watchlists`
 - `GET /market-watchlists/{watchlist_id}/items`
+- `GET /scanner-presets`
+- `POST /scanner-presets/seed-default`
+- `POST /scanner-presets/{preset_id}/apply`
+- `GET /scanner-presets/applications/{application_id}`
 - `GET /market-memory/snapshots`
 - `GET /scheduled-scan-configs`
 - `GET /scheduled-scan-configs/due`
@@ -344,13 +349,14 @@ Provider keys and paid provider secrets are not entered in the frontend. Source 
 
 The scanner page controls existing backend scan endpoints:
 
+- Seed and apply backend scanner presets for London open, New York open, crypto 24h, high volatility, trend continuation, reversal risk, range/no directional signal, needs confirmation, stale data repair, and close-of-day review workflows.
 - Create, pause, resume, and archive market watchlists when supported by the backend status field.
 - Add symbol/timeframe/source items to watchlists and deactivate items.
 - Create watchlist scan configs and single-symbol scan configs with lookback minutes, interval seconds, partial-candle mode, news correlation, AI explanation, reasoning, and action-plan record flags supported by the backend schema.
 - Pause, resume, archive, run one config now, list due configs, and run due scan configs.
 - Inspect returned scan run counts, scan run items, skipped reasons, error messages, analysis run references, signal result links, confidence, pattern, and data quality component context.
 
-The scanner does not call notification endpoints, execute action items, connect to brokers, require a live provider, or create financial-advice output. Recent scan run history is limited to returned or explicitly selected scan runs because the backend does not currently expose a general list endpoint for scheduled scan runs.
+Preset apply creates watchlists and scan configs only. It does not run scans; run-now remains a separate explicit control. The scanner does not call notification endpoints, execute action items, connect to brokers, require a live provider, or create financial-advice output. Recent scan run history is limited to returned or explicitly selected scan runs because the backend does not currently expose a general list endpoint for scheduled scan runs.
 
 ## Safety Language
 

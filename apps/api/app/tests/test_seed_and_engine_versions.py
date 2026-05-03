@@ -12,6 +12,7 @@ from app.modules.engine_versions.registry import (
     is_supported_engine_snapshot,
 )
 from app.modules.engine_versions.service import EngineVersionService
+from app.modules.scanner_presets.models import ScannerPreset
 from app.modules.seeding.service import SeedService
 from app.modules.strategy_profiles.models import StrategyProfile
 from app.modules.symbols.models import Symbol
@@ -35,6 +36,18 @@ EXPECTED_ENGINE_VERSIONS = {
     ("news_correlation_engine", "v1"),
     ("replay_engine", "v1"),
 }
+EXPECTED_SCANNER_PRESETS = {
+    "london_open",
+    "new_york_open",
+    "crypto_24h",
+    "high_volatility",
+    "trend_continuation",
+    "reversal_risk",
+    "range_no_directional",
+    "needs_confirmation",
+    "stale_data_repair",
+    "close_of_day_review",
+}
 
 
 @pytest.mark.asyncio
@@ -56,6 +69,7 @@ async def test_seed_service_is_idempotent(db_session: AsyncSession) -> None:
     assert second_result.data_source_count == 4
     assert second_result.strategy_profile_count == 4
     assert second_result.engine_version_count == len(CURRENT_ENGINE_VERSIONS)
+    assert second_result.scanner_preset_count == len(EXPECTED_SCANNER_PRESETS)
 
 
 @pytest.mark.asyncio
@@ -83,11 +97,13 @@ async def test_seed_service_creates_required_defaults_without_duplicates(
     engine_result = await db_session.execute(
         select(EngineVersion.engine_name, EngineVersion.version)
     )
+    preset_result = await db_session.execute(select(ScannerPreset.key))
 
     assert set(symbol_result.scalars().all()) == EXPECTED_SYMBOLS
     assert set(data_source_result.scalars().all()) == EXPECTED_DATA_SOURCES
     assert set(profile_result.all()) == EXPECTED_STRATEGY_PROFILES
     assert set(engine_result.all()) == EXPECTED_ENGINE_VERSIONS
+    assert set(preset_result.scalars().all()) == EXPECTED_SCANNER_PRESETS
     assert counts_after_second == counts_after_first
 
 
@@ -171,9 +187,11 @@ async def seeded_row_counts(session: AsyncSession) -> dict[str, int]:
     data_sources = await session.execute(select(func.count()).select_from(DataSource))
     strategy_profiles = await session.execute(select(func.count()).select_from(StrategyProfile))
     engine_versions = await session.execute(select(func.count()).select_from(EngineVersion))
+    scanner_presets = await session.execute(select(func.count()).select_from(ScannerPreset))
     return {
         "symbols": int(symbols.scalar_one()),
         "data_sources": int(data_sources.scalar_one()),
         "strategy_profiles": int(strategy_profiles.scalar_one()),
         "engine_versions": int(engine_versions.scalar_one()),
+        "scanner_presets": int(scanner_presets.scalar_one()),
     }

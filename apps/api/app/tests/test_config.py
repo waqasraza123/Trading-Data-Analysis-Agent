@@ -48,6 +48,7 @@ def test_settings_load_defaults() -> None:
     assert settings.market_scan_worker_batch_size == 10
     assert settings.market_scan_default_lookback_minutes == 60
     assert settings.market_scan_default_interval_seconds == 60
+    assert settings.scanner_preset_version == "v1"
     assert settings.provider_polling_timeout_seconds == 20
     assert settings.provider_polling_max_candles_per_request == 1000
     assert (

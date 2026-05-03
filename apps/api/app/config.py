@@ -342,6 +342,7 @@ class Settings(BaseSettings):
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
     market_scan_default_lookback_minutes: int = Field(default=60, ge=1, le=43200)
     market_scan_default_interval_seconds: int = Field(default=60, ge=1)
+    scanner_preset_version: str = "v1"
     worker_supervisor_components: list[WorkerSupervisorComponent] = Field(default_factory=list)
     worker_supervisor_shutdown_timeout_seconds: float = Field(default=20, gt=0)
     profile_simulation_max_signals: int = Field(default=500, ge=1, le=5000)
@@ -531,6 +532,7 @@ class Settings(BaseSettings):
         "signal_priority_version",
         "journal_review_version",
         "provider_health_version",
+        "scanner_preset_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

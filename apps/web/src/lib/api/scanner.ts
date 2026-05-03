@@ -18,6 +18,10 @@ import type {
   RunDueScansInput,
   ScannerData,
   ScannerDataSource,
+  ScannerPreset,
+  ScannerPresetApplication,
+  ScannerPresetApplyInput,
+  ScannerPresetSeedResponse,
   ScheduledScanRun,
   ScheduledScanRunItem,
   ScheduledScanConfigCreateInput,
@@ -47,6 +51,30 @@ export function listScannerDataSources(workspaceId: UUID): Promise<ApiResult<Sca
       status: "active",
       limit: 500,
     },
+    optional: true,
+  });
+}
+
+export function listScannerPresets(workspaceId?: UUID): Promise<ApiResult<ScannerPreset[]>> {
+  return apiGet<ScannerPreset[]>("/scanner-presets", {
+    query: {
+      workspace_id: workspaceId,
+    },
+    optional: true,
+  });
+}
+
+export function seedScannerPresets(): Promise<ApiResult<ScannerPresetSeedResponse>> {
+  return apiPost<ScannerPresetSeedResponse>("/scanner-presets/seed-default", undefined, {
+    optional: true,
+  });
+}
+
+export function applyScannerPreset(
+  presetId: UUID,
+  input: ScannerPresetApplyInput,
+): Promise<ApiResult<ScannerPresetApplication>> {
+  return apiPost<ScannerPresetApplication>(`/scanner-presets/${presetId}/apply`, input, {
     optional: true,
   });
 }
@@ -228,6 +256,7 @@ export async function getScannerData(params: {
       workspaces,
       symbols,
       dataSources: [],
+      presets: [],
       watchlists: [],
       scanConfigs: [],
       dueScanConfigs: [],
@@ -242,15 +271,24 @@ export async function getScannerData(params: {
     };
   }
 
-  const [sourcesResult, watchlistsResult, scanConfigsResult, dueConfigsResult, selectedRunResult] =
+  const [
+    sourcesResult,
+    presetsResult,
+    watchlistsResult,
+    scanConfigsResult,
+    dueConfigsResult,
+    selectedRunResult,
+  ] =
     await Promise.all([
       listScannerDataSources(workspace.id),
+      listScannerPresets(workspace.id),
       listScannerWatchlists(workspace.id),
       listScannerScanConfigs(workspace.id),
       listScannerDueScanConfigs(workspace.id),
       params.runId ? getScannerScanRun(params.runId) : Promise.resolve(null),
     ]);
   const dataSources = readResult("Data sources", sourcesResult, [], failures);
+  const presets = readResult("Scanner presets", presetsResult, [], failures);
   const rawWatchlists = readResult("Watchlists", watchlistsResult, [], failures);
   const scanConfigs = readResult("Scheduled scan configs", scanConfigsResult, [], failures);
   const dueScanConfigs = readResult("Due scan configs", dueConfigsResult, [], failures);
@@ -274,6 +312,7 @@ export async function getScannerData(params: {
     workspaces,
     symbols,
     dataSources,
+    presets,
     watchlists,
     scanConfigs,
     dueScanConfigs,

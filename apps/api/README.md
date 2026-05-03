@@ -1,5 +1,11 @@
 # Trading Intelligence API
 
+Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
+London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
+review workflows. Applying a preset creates watchlists and scheduled scan configs only; it does not
+run scans, create execution setups, send alerts, call brokers, auto-trade, or provide financial
+advice. See `docs/scanner-presets.md`.
+
 Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
 workspace or user define preferred markets, symbols, sessions, timeframes, patterns, confidence
 thresholds, setup-quality thresholds, stale-data tolerance, confirmation requirements, avoid lists,
@@ -244,7 +250,7 @@ SEED_DEFAULT_ADMIN_NAME="Default Admin" \
 
 The seed command is idempotent. It seeds configured workspace/admin user defaults, default
 symbols, default workspace data sources including manual news context, strategy profiles,
-and current engine versions.
+current engine versions, and default scanner presets.
 `SEED_DEFAULT_WORKSPACE_NAME`, `SEED_DEFAULT_ADMIN_EMAIL`, and `SEED_DEFAULT_ADMIN_NAME`
 are optional; data sources and the admin user are seeded only when a default workspace is
 configured.
@@ -528,6 +534,7 @@ MARKET_SCAN_WORKER_POLL_SECONDS=30
 MARKET_SCAN_WORKER_BATCH_SIZE=10
 MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
 MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
+SCANNER_PRESET_VERSION=v1
 PROVIDER_POLLING_TIMEOUT_SECONDS=20
 PROVIDER_POLLING_MAX_CANDLES_PER_REQUEST=1000
 PROVIDER_POLLING_USER_AGENT=trading-intelligence-api-provider-polling/0.1

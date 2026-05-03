@@ -39,6 +39,7 @@ async def run_seed_command() -> None:
                 "data_source_count": result.data_source_count,
                 "strategy_profile_count": result.strategy_profile_count,
                 "engine_version_count": result.engine_version_count,
+                "scanner_preset_count": result.scanner_preset_count,
             },
         )
         print(json.dumps(result.__dict__, default=str, sort_keys=True))

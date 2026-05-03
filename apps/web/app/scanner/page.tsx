@@ -7,6 +7,7 @@ import { ScanRunHistory } from "@/components/scanner/ScanRunHistory";
 import { ScannerEmptyState } from "@/components/scanner/ScannerEmptyState";
 import { ScannerErrorState } from "@/components/scanner/ScannerErrorState";
 import { ScannerHeader } from "@/components/scanner/ScannerHeader";
+import { ScannerPresetGallery } from "@/components/scanner/ScannerPresetGallery";
 import { ScannerStatusPanel } from "@/components/scanner/ScannerStatusPanel";
 import { WatchlistManager } from "@/components/scanner/WatchlistManager";
 import { getScannerData } from "@/lib/api/scanner";
@@ -35,6 +36,7 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
         <ScannerStatusPanel data={data} />
         <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-6">
+            <ScannerPresetGallery data={data} />
             <WatchlistManager data={data} />
             <ScanConfigForm data={data} />
             <ScanConfigList data={data} />

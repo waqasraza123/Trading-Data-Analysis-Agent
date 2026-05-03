@@ -79,6 +79,56 @@ export type ScheduledScanRunItem = {
   updated_at: string;
 };
 
+export type ScannerPreset = {
+  id: UUID;
+  workspace_id: UUID | null;
+  key: string;
+  name: string;
+  description: string;
+  category: string;
+  status: string;
+  preset_version: string;
+  market_types_json: string[];
+  symbol_templates_json: JsonRecord[];
+  timeframe_templates_json: string[];
+  session_filters_json: JsonRecord;
+  scan_config_template_json: JsonRecord;
+  watchlist_template_json: JsonRecord;
+  preference_profile_filters_json: JsonRecord;
+  metadata_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ScannerPresetApplication = {
+  id: UUID;
+  workspace_id: UUID;
+  scanner_preset_id: UUID;
+  status: "completed" | "completed_with_warnings" | "failed";
+  watchlist_id: UUID | null;
+  scan_config_id: UUID | null;
+  preference_profile_id: UUID | null;
+  applied_config_json: JsonRecord;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ScannerPresetApplyInput = {
+  workspace_id: UUID;
+  symbol_ids: UUID[];
+  source_id?: UUID;
+  timeframes: string[];
+  create_watchlist: boolean;
+  create_scan_config: boolean;
+  name_override?: string;
+};
+
+export type ScannerPresetSeedResponse = {
+  seeded_count: number;
+  presets: ScannerPreset[];
+};
+
 export type RunDueScansResponse = {
   run_count: number;
   runs: ScheduledScanRun[];
@@ -93,6 +143,7 @@ export type ScannerData = {
   workspaces: Workspace[];
   symbols: SymbolRead[];
   dataSources: ScannerDataSource[];
+  presets: ScannerPreset[];
   watchlists: WatchlistWithItems[];
   scanConfigs: ScheduledScanConfig[];
   dueScanConfigs: ScheduledScanConfig[];
@@ -159,7 +210,13 @@ export type RunDueScansInput = {
   limit: number;
 };
 
-export type ScannerActionResult = RunDueScansResponse | ScheduledScanRun | ScheduledScanConfig | Watchlist | WatchlistItem;
+export type ScannerActionResult =
+  | RunDueScansResponse
+  | ScannerPresetApplication
+  | ScheduledScanRun
+  | ScheduledScanConfig
+  | Watchlist
+  | WatchlistItem;
 
 export function scannerFailure(label: string, result: ApiFailure): ScannerFailure {
   return {
