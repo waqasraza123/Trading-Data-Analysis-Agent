@@ -19,6 +19,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Operator review queue backend exists under `apps/api/app/modules/operator_reviews/` as a backend-only human workflow state layer for intelligence artifacts. It records review items and events only; it does not execute trades, send alerts, call LLMs, mutate signals, accept chart screenshot analysis, or change strategy profiles.
 - Market session context backend exists under `apps/api/app/modules/market_sessions/` as a deterministic context layer for analysis runs and signals. It stores rough UTC session labels for audit and later grouping without mutating signal classification, outcomes, diagnostics, or strategy profiles.
 - Cross-asset context backend exists under `apps/api/app/modules/cross_asset_context/` as a deterministic final-candle-only layer for correlation, co-movement, divergence, and lead/lag context across related symbols. It does not infer causation, mutate signals, call LLMs, send alerts, execute broker actions, or provide financial advice.
+- Rolling market state memory exists under `apps/api/app/modules/market_memory/` as a cached deterministic latest-context layer per workspace, symbol, optional source, timeframe, and state version. It reads persisted artifacts only and does not run analysis, evaluate outcomes, mutate signals, call LLMs, send alerts, execute brokers, or provide financial advice.
 
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
@@ -194,6 +195,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented real-time candle gap recovery plan and item persistence, final-candle gap detection, provider polling preparation metadata, optional pending provider polling request row creation, APIs, docs, and settings.
 - Implemented cross-asset context runs/results, deterministic correlation and lead/lag calculation, analysis-run and signal APIs, settings, docs, and migration.
 - Integrated cross-asset context, walk-forward validation, candle gap recovery, explanation comparison, and capability registry behind one route/model/settings/documentation surface with a final Alembic merge migration.
+- Implemented rolling market state memory snapshots with freshness/data-quality labels, bounded context and warning JSON, idempotent snapshot upsert APIs, workspace refresh, settings, docs, and migration.
 
 ## Important Decisions
 
@@ -215,6 +217,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Operator reviews are operator-facing workflow records only. They may point at chart screenshots, signals, analysis runs, reasoning runs, action items, quality findings, calibration recommendations, outcomes, or manual sources, but they must not mutate those sources or become trade approvals, alerts, notifications, broker workflows, copy trading, auto-trading, or financial advice.
 - Market session context uses rough UTC windows for forex, classifies crypto as 24/7, and deliberately avoids invented stock/index/commodity exchange hours without an exchange calendar. It is market context only and must not become financial advice, alerts, broker execution, or signal mutation.
 - Cross-asset context reads stored final candles only, aligns symbols by timestamp, stores contextual correlation/divergence/lead-lag labels, and must not become causation inference, deterministic signal mutation, trade recommendation, alerting, broker execution, or financial advice.
+- Rolling market state memory is a cache over deterministic artifacts. Final candles and persisted analysis, signal, context, quality, and outcome artifacts remain the source of truth; market memory must not trigger recomputation, LLM classification, outcome evaluation, signal mutation, alerts, broker workflows, or financial advice.
 - The integrated context/diagnostics modules are additive. They may persist contextual records and readiness/report evidence for future consumers, but they must not mutate final signals, auto-trigger provider polling, call LLMs for classification, create alerts, execute broker workflows, claim causation, or provide financial advice.
 
 - `docs/project-state.md` is committed durable memory and should describe long-lived project facts.

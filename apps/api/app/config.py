@@ -288,6 +288,12 @@ class Settings(BaseSettings):
     cross_asset_lead_lag_max_offset: int = Field(default=5, ge=0, le=100)
     cross_asset_alignment_threshold: Decimal = Field(default=Decimal("0.60"), ge=0, le=1)
     cross_asset_divergence_threshold: Decimal = Field(default=Decimal("0.60"), ge=0, le=1)
+    market_memory_state_version: str = "v1"
+    market_memory_fresh_seconds_1m: int = Field(default=180, ge=1)
+    market_memory_fresh_seconds_5m: int = Field(default=600, ge=1)
+    market_memory_fresh_seconds_15m: int = Field(default=1800, ge=1)
+    market_memory_fresh_seconds_1h: int = Field(default=7200, ge=1)
+    market_memory_max_context_warnings: int = Field(default=50, ge=1, le=500)
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
     artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
@@ -492,6 +498,7 @@ class Settings(BaseSettings):
         "backtest_experiment_version",
         "walk_forward_validation_version",
         "capability_registry_default_version",
+        "market_memory_state_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

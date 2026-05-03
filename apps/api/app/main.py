@@ -51,6 +51,7 @@ from app.modules.live.routes import router as live_router
 from app.modules.llm_explanations.routes import router as llm_explanations_router
 from app.modules.market_sessions.routes import router as market_sessions_router
 from app.modules.market_scans.routes import router as market_scans_router
+from app.modules.market_memory.routes import router as market_memory_router
 from app.modules.news.routes import news_events_router
 from app.modules.news.routes import router as news_router
 from app.modules.notifications.routes import router as notifications_router
@@ -190,6 +191,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ai_intelligence_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_scans_router, prefix=resolved_settings.api_prefix)
+    app.include_router(market_memory_router, prefix=resolved_settings.api_prefix)
     app.include_router(timeframe_aggregation_router, prefix=resolved_settings.api_prefix)
     app.include_router(cross_asset_context_router, prefix=resolved_settings.api_prefix)
     app.include_router(webhook_outbox_router, prefix=resolved_settings.api_prefix)

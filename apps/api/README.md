@@ -1,5 +1,11 @@
 # Trading Intelligence API
 
+Rolling market state memory is implemented under `/market-memory`. It stores one latest
+deterministic context snapshot per workspace, symbol, optional source, timeframe, and state version
+for faster reporting, scans, readiness checks, and future UI. It reads persisted final candles and
+deterministic artifacts only; it does not run analysis, evaluate outcomes, call LLMs, mutate
+signals, send alerts, execute broker actions, auto-trade, or provide financial advice.
+
 Walk-forward validation is implemented under `/walk-forward-validations`. It analyzes stored
 deterministic signals and stored outcomes across chronological validation windows to summarize
 observed follow-through, reversal behavior, confidence alignment, stability, degradation, and
@@ -352,6 +358,12 @@ CROSS_ASSET_MAX_COMPARED_SYMBOLS=20
 CROSS_ASSET_LEAD_LAG_MAX_OFFSET=5
 CROSS_ASSET_ALIGNMENT_THRESHOLD=0.60
 CROSS_ASSET_DIVERGENCE_THRESHOLD=0.60
+MARKET_MEMORY_STATE_VERSION=v1
+MARKET_MEMORY_FRESH_SECONDS_1M=180
+MARKET_MEMORY_FRESH_SECONDS_5M=600
+MARKET_MEMORY_FRESH_SECONDS_15M=1800
+MARKET_MEMORY_FRESH_SECONDS_1H=7200
+MARKET_MEMORY_MAX_CONTEXT_WARNINGS=50
 PROFILE_DIAGNOSTICS_MINIMUM_SAMPLE_SIZE=20
 PROFILE_DIAGNOSTICS_STRONG_FOLLOW_THROUGH_RATE=0.65
 PROFILE_DIAGNOSTICS_HIGH_REVERSAL_RATE=0.35
