@@ -125,6 +125,7 @@ from app.modules.scenario_outcomes.models import (
     ScenarioHypothesisOutcome,
     ScenarioOutcomeSummaryRun,
 )
+from app.modules.setup_context.models import SetupContext
 from app.modules.signals.models import (
     Signal,
     SignalConfidenceComponent,
@@ -263,6 +264,7 @@ __all__ = [
     "ScenarioHypothesis",
     "ScenarioHypothesisOutcome",
     "ScenarioOutcomeSummaryRun",
+    "SetupContext",
     "ScheduledScanConfig",
     "ScheduledScanRun",
     "ScheduledScanRunItem",

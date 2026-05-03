@@ -1,5 +1,14 @@
 # Trading Intelligence API
 
+Actionable setup context is implemented under `/signals/{id}/setup-context` and
+`/analysis-runs/{id}/setup-context`. It persists structured non-advisory setup context from existing
+signals, evidence, confidence, risk notes, advanced features, market regime/session context,
+multi-timeframe context, cross-asset context, outcomes, data quality, and readiness artifacts. It
+uses invalidation context, observation zones, target context zones, wait conditions, avoid reasons,
+data-quality warnings, risk notes, and backend-safe next observations. It does not mutate signals or
+strategy profiles, execute action items, send alerts, place orders, call brokers, auto-trade, call
+LLMs for classification, or provide financial advice.
+
 Trading journal feedback is implemented under `/journal-entries`. It records user/operator
 decision notes around observed, ignored, reviewed, paper-followed, or externally handled setups and
 compares those notes with later deterministic outcomes. It does not add UI, broker execution,

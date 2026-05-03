@@ -313,6 +313,10 @@ class Settings(BaseSettings):
     market_memory_fresh_seconds_15m: int = Field(default=1800, ge=1)
     market_memory_fresh_seconds_1h: int = Field(default=7200, ge=1)
     market_memory_max_context_warnings: int = Field(default=50, ge=1, le=500)
+    setup_context_version: str = "v1"
+    setup_context_strong_threshold: Decimal = Field(default=Decimal("0.7500"), ge=0, le=1)
+    setup_context_acceptable_threshold: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
+    setup_context_review_threshold: Decimal = Field(default=Decimal("0.4500"), ge=0, le=1)
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
     artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
@@ -525,6 +529,7 @@ class Settings(BaseSettings):
         "cohort_drift_version",
         "capability_registry_default_version",
         "market_memory_state_version",
+        "setup_context_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
@@ -760,6 +765,17 @@ class Settings(BaseSettings):
             >= self.data_quality_degraded_threshold
         ):
             msg = "DATA_QUALITY thresholds must be ordered strong >= acceptable >= degraded"
+            raise ValueError(msg)
+        return self
+
+    @model_validator(mode="after")
+    def validate_setup_context_thresholds(self) -> Self:
+        if not (
+            self.setup_context_strong_threshold
+            >= self.setup_context_acceptable_threshold
+            >= self.setup_context_review_threshold
+        ):
+            msg = "SETUP_CONTEXT thresholds must be ordered strong >= acceptable >= review"
             raise ValueError(msg)
         return self
 
