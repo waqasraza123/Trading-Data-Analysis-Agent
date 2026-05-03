@@ -1,6 +1,6 @@
 """add provider polling
 
-Revision ID: 202605021330
+Revision ID: 202605021330_provider_polling
 Revises: 202605021300
 Create Date: 2026-05-02 13:30:00.000000
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "202605021330"
+revision: str = "202605021330_provider_polling"
 down_revision: str | Sequence[str] | None = "202605021300"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

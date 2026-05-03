@@ -69,6 +69,10 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    backtest_experiment_version: str = "v1"
+    backtest_experiment_default_limit: int = Field(default=100, ge=1, le=5000)
+    backtest_experiment_max_limit: int = Field(default=1000, ge=1, le=10000)
+    backtest_experiment_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
     market_session_version: str = "v1"
@@ -111,6 +115,47 @@ class Settings(BaseSettings):
     decision_readiness_assessment_version: str = "decision_readiness_v1"
     decision_readiness_ready_threshold: Decimal = Field(default=Decimal("0.8500"), ge=0, le=1)
     decision_readiness_review_threshold: Decimal = Field(default=Decimal("0.6500"), ge=0, le=1)
+    advanced_feature_pack_version: str = "v1"
+    advanced_feature_min_candle_count: int = Field(default=20, ge=1)
+    advanced_feature_swing_lookback: int = Field(default=3, ge=1, le=20)
+    advanced_feature_zone_lookback: int = Field(default=80, ge=5)
+    advanced_feature_compression_lookback: int = Field(default=20, ge=4)
+    advanced_feature_expansion_multiplier: Decimal = Field(default=Decimal("1.5"), gt=0)
+    advanced_feature_wick_pressure_threshold: Decimal = Field(
+        default=Decimal("0.55"),
+        ge=0,
+        le=1,
+    )
+    advanced_feature_movement_efficiency_threshold: Decimal = Field(
+        default=Decimal("0.60"),
+        ge=0,
+        le=1,
+    )
+    rule_pack_default_key: str = "default_deterministic_rules"
+    rule_pack_default_version: str = "v1"
+    reproducibility_manifest_version: str = "v1"
+    event_study_version: str = "v1"
+    event_study_default_pre_event_minutes: int = Field(default=60, ge=0)
+    event_study_default_post_event_minutes: int = Field(default=240, ge=1)
+    event_study_min_candles: int = Field(default=5, ge=1)
+    event_study_strong_reaction_multiplier: Decimal = Field(default=Decimal("2.0"), gt=0)
+    event_study_moderate_reaction_multiplier: Decimal = Field(default=Decimal("1.25"), gt=0)
+    confidence_calibration_version: str = "v1"
+    confidence_calibration_default_bins: int = Field(default=10, ge=2, le=100)
+    confidence_calibration_minimum_sample_size: int = Field(default=20, ge=1)
+    confidence_calibration_overconfident_threshold: Decimal = Field(
+        default=Decimal("0.15"),
+        ge=0,
+        le=1,
+    )
+    confidence_calibration_underconfident_threshold: Decimal = Field(
+        default=Decimal("0.15"),
+        ge=0,
+        le=1,
+    )
+    webhook_outbox_payload_version: str = "v1"
+    webhook_outbox_default_status: str = "held"
+    webhook_outbox_max_payload_bytes: int = Field(default=32768, ge=1024)
     context_pack_max_evidence_rows: int = Field(default=50, ge=1, le=500)
     context_pack_max_risk_notes: int = Field(default=50, ge=1, le=500)
     context_pack_max_audit_events: int = Field(default=100, ge=1, le=1000)
@@ -150,9 +195,18 @@ class Settings(BaseSettings):
     news_correlation_pre_event_minutes: int = Field(default=5, ge=0, le=1440)
     news_correlation_post_event_minutes: int = Field(default=30, ge=1, le=1440)
     news_correlation_max_events_per_signal: int = Field(default=10, ge=1, le=100)
+    event_study_version: str = "v1"
+    event_study_default_pre_event_minutes: int = Field(default=30, ge=0, le=10080)
+    event_study_default_post_event_minutes: int = Field(default=60, ge=1, le=10080)
+    event_study_min_candles: int = Field(default=5, ge=1, le=10000)
+    event_study_strong_reaction_multiplier: Decimal = Field(default=Decimal("2.0"), gt=0)
+    event_study_moderate_reaction_multiplier: Decimal = Field(default=Decimal("1.25"), gt=0)
     outcome_default_horizons_minutes: list[int] = Field(default_factory=lambda: [5, 15, 30, 60])
     outcome_min_future_candles: int = Field(default=3, ge=1, le=500)
     outcome_evaluation_version: str = "v1"
+    rule_pack_default_key: str = "core_deterministic"
+    rule_pack_default_version: str = "v1"
+    reproducibility_manifest_version: str = "v1"
     market_regime_version: str = "v1"
     market_regime_min_confidence: Decimal = Field(default=Decimal("0.50"), ge=0, le=1)
     market_regime_strong_data_quality: Decimal = Field(default=Decimal("0.90"), ge=0, le=1)
@@ -171,6 +225,25 @@ class Settings(BaseSettings):
     )
     profile_diagnostics_confidence_misalignment_threshold: Decimal = Field(
         default=Decimal("0.45"),
+        ge=0,
+        le=1,
+    )
+    profile_governance_default_review_required: bool = True
+    profile_governance_component_weight_tolerance: Decimal = Field(
+        default=Decimal("0.0001"),
+        ge=0,
+        le=1,
+    )
+    confidence_calibration_version: str = "v1"
+    confidence_calibration_default_bins: str = "0-0.39,0.40-0.64,0.65-0.79,0.80-1.0"
+    confidence_calibration_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    confidence_calibration_overconfident_threshold: Decimal = Field(
+        default=Decimal("0.25"),
+        ge=0,
+        le=1,
+    )
+    confidence_calibration_underconfident_threshold: Decimal = Field(
+        default=Decimal("0.25"),
         ge=0,
         le=1,
     )
@@ -223,6 +296,9 @@ class Settings(BaseSettings):
     market_session_default_timezone: str = "UTC"
     operator_playbook_version: str = "v1"
     operator_playbook_seed_enabled: bool = True
+    engine_execution_default_max_attempts: int = Field(default=3, ge=1, le=100)
+    engine_execution_lock_seconds: int = Field(default=120, ge=1)
+    engine_execution_default_priority: str = "normal"
     backfill_plan_version: str = "v1"
     backfill_plan_default_limit: int = Field(default=1000, ge=1)
     backfill_plan_max_limit: int = Field(default=10000, ge=1)
@@ -305,6 +381,31 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
+    @field_validator("engine_execution_default_priority")
+    @classmethod
+    def validate_engine_execution_default_priority(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"low", "normal", "high"}:
+            msg = "ENGINE_EXECUTION_DEFAULT_PRIORITY must be low, normal, or high"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("artifact_graph_version")
+    @classmethod
+    def validate_artifact_graph_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "ARTIFACT_GRAPH_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @model_validator(mode="after")
+    def validate_backtest_experiment_limits(self) -> Self:
+        if self.backtest_experiment_default_limit > self.backtest_experiment_max_limit:
+            msg = "BACKTEST_EXPERIMENT_DEFAULT_LIMIT must be <= BACKTEST_EXPERIMENT_MAX_LIMIT"
+            raise ValueError(msg)
+        return self
+
     @field_validator("llm_model")
     @classmethod
     def normalize_llm_model(cls, value: str) -> str:
@@ -347,6 +448,7 @@ class Settings(BaseSettings):
         "historical_case_vector_version",
         "decision_readiness_assessment_version",
         "scenario_ensemble_version",
+        "backtest_experiment_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
@@ -374,6 +476,40 @@ class Settings(BaseSettings):
         except ZoneInfoNotFoundError as error:
             msg = "MARKET_SESSION_DEFAULT_TIMEZONE must be a valid IANA timezone"
             raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("advanced_feature_pack_version")
+    @classmethod
+    def validate_advanced_feature_pack_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "ADVANCED_FEATURE_PACK_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator(
+        "rule_pack_default_key",
+        "rule_pack_default_version",
+        "reproducibility_manifest_version",
+        "event_study_version",
+        "confidence_calibration_version",
+        "webhook_outbox_payload_version",
+    )
+    @classmethod
+    def validate_non_empty_version_setting(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "Version and key settings must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("webhook_outbox_default_status")
+    @classmethod
+    def validate_webhook_outbox_default_status(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"held", "pending", "cancelled"}:
+            msg = "WEBHOOK_OUTBOX_DEFAULT_STATUS must be held, pending, or cancelled"
+            raise ValueError(msg)
         return normalized_value
 
     @field_validator("outcome_default_horizons_minutes", mode="before")
@@ -406,6 +542,25 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized
 
+    @field_validator("event_study_version")
+    @classmethod
+    def validate_event_study_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "EVENT_STUDY_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @model_validator(mode="after")
+    def validate_event_study_reaction_multipliers(self) -> Self:
+        if self.event_study_strong_reaction_multiplier < self.event_study_moderate_reaction_multiplier:
+            msg = (
+                "EVENT_STUDY_STRONG_REACTION_MULTIPLIER must be greater than or equal to "
+                "EVENT_STUDY_MODERATE_REACTION_MULTIPLIER"
+            )
+            raise ValueError(msg)
+        return self
+
     @field_validator("outcome_evaluation_version")
     @classmethod
     def validate_outcome_evaluation_version(cls, value: str) -> str:
@@ -415,12 +570,16 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
-    @field_validator("artifact_graph_version")
+    @field_validator(
+        "rule_pack_default_key",
+        "rule_pack_default_version",
+        "reproducibility_manifest_version",
+    )
     @classmethod
-    def validate_artifact_graph_version(cls, value: str) -> str:
+    def validate_reproducibility_setting(cls, value: str) -> str:
         normalized_value = value.strip()
         if not normalized_value:
-            msg = "ARTIFACT_GRAPH_VERSION must not be empty"
+            msg = "Rule pack and reproducibility manifest settings must not be empty"
             raise ValueError(msg)
         return normalized_value
 
@@ -567,9 +726,6 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if not self.chart_unsupported_rejection_enabled:
             msg = "CHART_UNSUPPORTED_REJECTION_ENABLED must stay true"
-            raise ValueError(msg)
-        if self.backfill_plan_default_limit > self.backfill_plan_max_limit:
-            msg = "BACKFILL_PLAN_DEFAULT_LIMIT must be less than or equal to BACKFILL_PLAN_MAX_LIMIT"
             raise ValueError(msg)
         return self
 

@@ -13,25 +13,35 @@ from app.core.logging import configure_logging
 from app.core.middleware import OperationsMiddleware
 from app.core.rate_limit import create_rate_limiter
 from app.modules.action_plans.routes import router as action_plans_router
+from app.modules.advanced_features.routes import router as advanced_features_router
 from app.modules.ai_intelligence.routes import router as ai_intelligence_router
+from app.modules.confidence_calibration.routes import router as confidence_calibration_router
 from app.modules.analysis.routes import router as analysis_router
-from app.modules.backtest_experiments.routes import router as backtest_experiments_router
 from app.modules.backfill_plans.routes import router as backfill_plans_router
+from app.modules.backtest_experiments.routes import router as backtest_experiments_router
+from app.modules.backtest_experiments.routes import router as backtest_experiments_router
 from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.artifact_graph.routes import router as artifact_graph_router
 from app.modules.candles.routes import router as candles_router
-from app.modules.chart_screenshots.routes import router as chart_screenshot_router
 from app.modules.data_contracts.routes import router as data_contracts_router
+from app.modules.chart_screenshots.routes import router as chart_screenshot_router
 from app.modules.context_packs.routes import router as context_packs_router
+from app.modules.confidence_calibration.routes import router as confidence_calibration_router
 from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_quality.routes import router as data_quality_router
+from app.modules.data_retention.routes import router as data_retention_router
 from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.decision_readiness.routes import router as decision_readiness_router
 from app.modules.engine_versions.routes import router as engine_versions_router
+from app.modules.event_studies.routes import router as event_studies_router
+from app.modules.event_studies.routes import router as event_studies_router
+from app.modules.engine_executions.routes import router as engine_executions_router
 from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
+from app.modules.intelligence_catalog.routes import router as intelligence_catalog_router
 from app.modules.intelligence_quality.routes import router as intelligence_quality_router
 from app.modules.intelligence_datasets.routes import router as intelligence_datasets_router
+from app.modules.intelligence_metrics.routes import router as intelligence_metrics_router
 from app.modules.intelligence_reports.routes import router as intelligence_reports_router
 from app.modules.live.routes import router as live_router
 from app.modules.llm_explanations.routes import router as llm_explanations_router
@@ -50,12 +60,18 @@ from app.modules.profile_governance.routes import router as profile_governance_r
 from app.modules.profile_simulations.routes import router as profile_simulations_router
 from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
+from app.modules.rule_packs.routes import router as rule_packs_router
 from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
+from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
+from app.modules.rule_packs.routes import router as rule_packs_router
 from app.modules.signals.routes import router as signals_router
 from app.modules.strategy_profiles.routes import router as strategy_profiles_router
+from app.modules.state_machines.routes import router as state_machines_router
 from app.modules.symbols.routes import router as symbols_router
 from app.modules.timeframe_aggregation.routes import router as timeframe_aggregation_router
 from app.modules.users.routes import router as users_router
+from app.modules.webhook_outbox.routes import router as webhook_outbox_router
+from app.modules.webhook_outbox.routes import router as webhook_outbox_router
 from app.modules.workspaces.routes import router as workspaces_router
 from app.modules.historical_cases.routes import router as historical_cases_router
 from app.modules.intelligence_datasets.routes import router as intelligence_datasets_router
@@ -111,8 +127,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(users_router, prefix=resolved_settings.api_prefix)
     app.include_router(symbols_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_sources_router, prefix=resolved_settings.api_prefix)
+    app.include_router(data_retention_router, prefix=resolved_settings.api_prefix)
     app.include_router(engine_versions_router, prefix=resolved_settings.api_prefix)
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
+    app.include_router(intelligence_catalog_router, prefix=resolved_settings.api_prefix)
     app.include_router(provider_polling_router, prefix=resolved_settings.api_prefix)
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
@@ -124,35 +142,49 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(audit_timeline_router, prefix=resolved_settings.api_prefix)
     app.include_router(strategy_profiles_router, prefix=resolved_settings.api_prefix)
     app.include_router(signals_router, prefix=resolved_settings.api_prefix)
+    app.include_router(rule_packs_router, prefix=resolved_settings.api_prefix)
     app.include_router(news_events_router, prefix=resolved_settings.api_prefix)
     app.include_router(news_router, prefix=resolved_settings.api_prefix)
+    app.include_router(event_studies_router, prefix=resolved_settings.api_prefix)
     app.include_router(notifications_router, prefix=resolved_settings.api_prefix)
     app.include_router(operator_reviews_router, prefix=resolved_settings.api_prefix)
+    app.include_router(engine_executions_router, prefix=resolved_settings.api_prefix)
     app.include_router(explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(llm_explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(outcomes_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_diagnostics_router, prefix=resolved_settings.api_prefix)
+    app.include_router(confidence_calibration_router, prefix=resolved_settings.api_prefix)
     app.include_router(backtest_experiments_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_governance_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_simulations_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_datasets_router, prefix=resolved_settings.api_prefix)
     app.include_router(operator_playbooks_router, prefix=resolved_settings.api_prefix)
+    app.include_router(backtest_experiments_router, prefix=resolved_settings.api_prefix)
+    app.include_router(advanced_features_router, prefix=resolved_settings.api_prefix)
+    app.include_router(rule_packs_router, prefix=resolved_settings.api_prefix)
+    app.include_router(event_studies_router, prefix=resolved_settings.api_prefix)
+    app.include_router(confidence_calibration_router, prefix=resolved_settings.api_prefix)
+    app.include_router(webhook_outbox_router, prefix=resolved_settings.api_prefix)
     app.include_router(reasoning_router, prefix=resolved_settings.api_prefix)
     app.include_router(scenario_ensembles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(scenario_ensembles_router, prefix=resolved_settings.api_prefix)
     app.include_router(action_plans_router, prefix=resolved_settings.api_prefix)
+    app.include_router(context_packs_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_sessions_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_reports_router, prefix=resolved_settings.api_prefix)
+    app.include_router(intelligence_metrics_router, prefix=resolved_settings.api_prefix)
     app.include_router(decision_readiness_router, prefix=resolved_settings.api_prefix)
     app.include_router(operator_playbooks_router, prefix=resolved_settings.api_prefix)
     app.include_router(ai_intelligence_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_scans_router, prefix=resolved_settings.api_prefix)
     app.include_router(timeframe_aggregation_router, prefix=resolved_settings.api_prefix)
+    app.include_router(webhook_outbox_router, prefix=resolved_settings.api_prefix)
     app.include_router(artifact_graph_router, prefix=resolved_settings.api_prefix)
+    app.include_router(state_machines_router, prefix=resolved_settings.api_prefix)
     app.include_router(backfill_plans_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_contracts_router, prefix=resolved_settings.api_prefix)
     return app
 
 
-    app.include_router(context_packs_router, prefix=resolved_settings.api_prefix)
 app = create_app()

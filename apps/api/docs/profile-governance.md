@@ -127,3 +127,9 @@ The backend stores enough state for a future UI to show:
 - complete draft event timeline
 
 The UI should keep approval and promotion as separate explicit operator actions.
+## Integrated Engine Boundary
+
+Profile drafts are manual governance records. Aggregation context, provider polling, scenario
+ensembles, and backtest experiments may provide evidence for operator review, but drafts are not
+auto-promoted, are not used for production classification until explicitly promoted, and never mutate
+historical final signals.

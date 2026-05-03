@@ -6,6 +6,12 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 ## Current Architecture
 
+- Workspace intelligence catalog metadata indexing and search endpoints exist for cross-artifact discovery without external search infrastructure or raw payload storage.
+
+- A backend-only intelligence state machine registry exists under `apps/api/app/modules/state_machines/` for versioned lifecycle definitions, valid transition inspection, terminal states, optional transition validation, and validation audit records.
+
+- Internal intelligence metrics endpoints and optional database snapshots exist for backend operational/product counters.
+
 - Operator review queue backend exists under `apps/api/app/modules/operator_reviews/` as a backend-only human workflow state layer for intelligence artifacts. It records review items and events only; it does not execute trades, send alerts, call LLMs, mutate signals, accept chart screenshot analysis, or change strategy profiles.
 - Market session context backend exists under `apps/api/app/modules/market_sessions/` as a deterministic context layer for analysis runs and signals. It stores rough UTC session labels for audit and later grouping without mutating signal classification, outcomes, diagnostics, or strategy profiles.
 
@@ -20,10 +26,16 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Backend operational hardening now includes production-safe settings validation, configurable CORS, optional API key guard, request limits, Redis-backed rate limits, structured request logs, readiness/liveness/Redis/worker health routes, standalone worker entrypoints, and an optional supervised multi-worker process entrypoint.
 - The analysis run lifecycle exists under `apps/api/app/modules/analysis/`.
 - Deterministic feature engineering exists under `apps/api/app/modules/features/`.
+- Deterministic advanced price-action feature snapshots exist under `apps/api/app/modules/advanced_features/`.
+- Rule pack and reproducibility manifest persistence exists under `apps/api/app/modules/rule_packs/`.
+- Event study and news reaction analysis exists under `apps/api/app/modules/event_studies/`.
+- Confidence calibration curves and reliability table persistence exists under `apps/api/app/modules/confidence_calibration/`.
+- Safe webhook outbox persistence exists under `apps/api/app/modules/webhook_outbox/`.
 - Deterministic indicator calculation exists under `apps/api/app/modules/indicators/`.
 - Deterministic pattern candidate detection exists under `apps/api/app/modules/patterns/`.
 - Signal outcome evaluation exists under `apps/api/app/modules/outcomes/`.
 - Outcome-based strategy profile and pattern diagnostics exist under `apps/api/app/modules/profile_diagnostics/`.
+- Confidence calibration analytics exist under `apps/api/app/modules/confidence_calibration/` as a downstream reliability layer over persisted deterministic signals and outcomes.
 - Backtest experiment cohort analysis exists under `apps/api/app/modules/backtest_experiments/`.
 - The durable backend roadmap is documented in `docs/backend-only-implementation-plan.md`.
 - The Phase 0 backend architecture plan is documented in `docs/backend-phase-0-architecture-plan.md`.
@@ -76,11 +88,17 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Backend-safe reasoning action planning is implemented as an optional manual layer that converts persisted scenario suggestions into validated, idempotent, auditable backend follow-up items for outcome evaluation, replay, news correlation, waiting for final candles, human review, or no action.
 - Signal outcome evaluation is implemented as a separate truth loop after persisted deterministic signals. It measures observed final-candle follow-through, favorable movement, adverse movement, reversal, insufficient data, and historical behavior by horizon without calculating broker PnL or changing signal classification.
 - Outcome-based profile diagnostics are implemented downstream of stored signals and outcomes. They persist profile/pattern diagnostics and advisory calibration recommendations for operator review without auto-changing strategy profiles, classifier thresholds, action plans, or execution behavior.
+- Confidence calibration analytics are implemented downstream of stored deterministic signals and outcomes. They persist confidence-bin reliability tables by horizon and optional filters without mutating signals, confidence scores, classifiers, outcomes, strategy profiles, alerts, or execution behavior.
 - Read-only intelligence reports are implemented as a composition layer over persisted deterministic, LLM, reasoning, action-plan, outcome, diagnostics, audit, and screenshot artifacts. They do not mutate signals, run replay, execute actions, evaluate outcomes, run diagnostics, or generate LLM output.
 - Read-only audit timelines are implemented as chronological traceability views over persisted analysis, signal, explanation, news, outcome, reasoning, action-plan, replay, chart screenshot, diagnostic, and audit artifacts. They expose artifact graphs, missing-section reporting, redacted/truncated metadata, and deterministic completeness scores without mutating source artifacts or running backend work.
 - Grounded AI intelligence analyst runs are implemented downstream of read-only intelligence reports. They persist advisory insight cards and claim-level citations to stored artifacts, but they do not classify signals, override deterministic outputs, create executable action items, mutate strategy profiles, send notifications, or perform broker/order/position work.
 - Deterministic intelligence quality gates are implemented downstream of persisted analysis artifacts and signals. They persist quality runs, quality findings, diagnostic shadow classification comparisons, and review recommendations without mutating final signals, selecting candidates, changing strategy profiles, running replay, evaluating outcomes, executing actions, triggering LLM calls, or producing trading advice.
 - Operator notifications are implemented as a safe persisted outbox with user preferences, in-app delivery, idempotency, leases, and worker-ready dispatch state. They must not become trading alerts, financial-advice messages, broker workflows, or external delivery without explicit provider configuration and safety controls.
+- Advanced price-action feature snapshots are implemented as an optional deterministic layer over final candles for impulse, correction, wick pressure, movement efficiency, compression/expansion, swing structure, support/resistance zones, exhaustion risk, and liquidity sweep candidate context. They do not mutate signals, change classification behavior, auto-run broker workflows, send alerts, or provide financial advice.
+- Rule packs and reproducibility manifests are audit/provenance artifacts for deterministic replay and reporting. They must not change signal classification behavior unless a future explicit replay path consumes them.
+- Event studies describe observed reactions around persisted news events and must not claim causation or modify news correlation, signals, outcomes, or strategy profiles.
+- Confidence calibration summarizes historical reliability alignment and must not train models, rewrite confidence scores, or auto-adjust strategy profiles.
+- Webhook outbox stores held backend events only. This merge does not implement webhook delivery, alerts, target secret management, or external notification dispatch.
 - Market watchlists and scheduled scans are implemented as backend-only orchestration over stored candle data. They create bounded deterministic analysis runs from final candles by default, optionally request existing reasoning/action-plan layers when configured, and do not send alerts/notifications, execute action items, call brokers, fetch external market data, or provide financial advice.
 - Multi-timeframe candle aggregation is implemented as a deterministic backend layer that derives complete higher-timeframe candles from final lower-timeframe candles, records lineage and completeness, and stores multi-timeframe context without mutating existing signal classifications.
 - Later phases add live scanning, deeper external integrations, and performance tuning.
@@ -89,6 +107,14 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Update this file when architecture, roadmap, constraints, or important decisions become durable.
 
 ## Completed Major Slices
+
+- Implemented workspace intelligence catalog and search index metadata table, indexing service, search APIs, and documentation for cross-artifact discovery.
+
+- Implemented intelligence state machine registry persistence, default lifecycle definitions, optional transition validation APIs, and documentation.
+
+- Implemented intelligence_metric_snapshots persistence, reusable intelligence metrics collector/repository/service/routes, missing-module warnings, operational health summary counters, and docs.
+
+- Implemented rule_packs and analysis_reproducibility_manifests persistence, default deterministic rule pack seeding, manifest generation APIs for analysis runs and signals, replay support status checks against the current engine registry, and rule-pack documentation.
 
 - Implemented deterministic candle/data quality intelligence monitor with persisted runs/findings, candle range checks, data source checks, live subscription stale checks, quality labels, analysis-use metadata, API routes, and documentation.
 
@@ -120,6 +146,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented reasoning_action_plans and reasoning_action_items persistence, backend-safe action validation, scenario-to-action planner, due action executor, scheduled reasoning action worker, action plan APIs, audit events, documentation, and unit tests.
 - Implemented signal_outcomes and outcome_evaluation_runs migration/models, deterministic outcome calculator, bounded backfill service, signal/analysis outcome APIs, on-demand aggregation APIs for patterns/strategy profiles/symbols, audit events, documentation, and unit tests.
 - Implemented strategy_profile_diagnostic_runs, strategy_profile_diagnostics, pattern_outcome_diagnostics, and calibration_recommendations migration/models, deterministic diagnostic calculator, advisory recommender, bounded diagnostic APIs, documentation, and unit tests.
+- Implemented confidence_calibration_runs and confidence_calibration_bins persistence, confidence-bin reliability calculator, bounded calibration APIs, settings defaults, and documentation.
 - Implemented chart_screenshot_runs migration/model, chart_screenshot data source type, screenshot-derived candle storage linkage, deterministic trend-hypothesis service, manual/external OHLC APIs, deterministic PNG candlestick extraction preview and persistence APIs with request-scoped parser tuning, human review/correction workflow, optional analysis-run triggering, chart decision response API, chart audit report API, chart correction lineage API, and documentation.
 - Implemented read-only intelligence report builder and API contracts for signal, analysis run, reasoning run, outcome, signal outcome, and screenshot decision reports with bounded sections, redaction, missing-section metadata, docs, and unit tests.
 - Implemented read-only audit timeline traceability APIs for analysis runs, signals, reasoning runs, action plans, outcomes, and chart screenshot runs with bounded chronological events, artifact graphs, completeness scoring, redaction/truncation, docs, and unit tests.
@@ -128,6 +155,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented notification_preferences, notification_messages, and notification_worker_runs persistence, notification APIs, in-app outbox dispatch, safety checks, idempotency, worker runtime/entrypoint, docs, and unit tests.
 - Implemented market_watchlists, market_watchlist_items, scheduled_scan_configs, scheduled_scan_runs, and scheduled_scan_run_items persistence, watchlist/config/run APIs, bounded due scan executor, optional `python -m app.workers.market_scan_worker`, supervisor registration, docs, and unit tests.
 - Implemented chart screenshot hardening with Pillow/OpenCV image decoding, Google Vision OCR provider abstraction, axis calibration metadata, candlestick/OHLC bar extraction, line/area unsupported-chart handling, low-confidence review-required gating, docs, and unit tests.
+- Implemented advanced_feature_snapshots persistence, deterministic advanced price-action calculator, analysis-run and signal APIs, settings, docs, and migration.
+- Integrated rule_packs, analysis_reproducibility_manifests, event_study_runs, event_study_results, confidence_calibration_runs, confidence_calibration_bins, webhook_subscriptions, webhook_outbox_events, and webhook_delivery_attempts into shared settings, route registration, model registration, docs, and Alembic merge metadata.
 - Integrated chart screenshot hardening, scheduled scans, audit timeline traceability, and intelligence quality gates into one backend surface with settings-backed defaults, read-only scan/screenshot/quality timeline provenance, diagnostic screenshot quality findings, and a single Alembic head.
 - Documented the advanced deterministic context integration contract for market regime context, historical case retrieval, operator reviews, and decision readiness. These modules are backend-only diagnostic/readiness layers and must not mutate signals, auto-apply calibration, execute action items, call brokers, send alerts, or provide financial advice.
 - Implemented analysis replay metadata/API for latest-engine deterministic replay, golden intelligence fixture structure, and TEST_DATABASE_URL-gated async DB integration test foundation.
@@ -137,12 +166,23 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented production Redis-backed rate limiting with local/test in-memory fallback, staging/production Redis configuration validation, Redis health checks, operational docs, and unit coverage.
 - Implemented production worker supervisor orchestration for live feed, stale monitor, reasoning action, and notification runtimes with component selection, graceful shutdown, fail-fast child monitoring, docs, and unit tests.
 - Implemented data contract schema registry and validation tracking for important backend JSONB artifacts with default v1 contracts, strict/loose validation, source-payload validation support, API routes, migration, docs, and focused validator tests.
+- Implemented intelligence backfill plan and item persistence, bounded dry-run planner contracts, missing outcome/context/stale/module plan APIs, safety metadata, docs, and migration.
 - Implemented intelligence artifact dependency graph and invalidation infrastructure for artifact registration, dependency paths, stale marking, invalidation events/items, recomputation candidate listing, API routes, docs, and database schema.
+- Implemented workspace data retention policy planning with dry-run-first run records, itemized cleanup candidates, safe payload redaction apply flow, and data retention documentation.
 - Implemented backtest experiment cohort analysis over existing persisted signals and outcomes with bounded filters, cohort persistence, safe observed behavior metrics, docs, and APIs.
 - Implemented multi-timeframe aggregation and context persistence with derived candle lineage, completion accounting, higher-timeframe agreement scoring, APIs, docs, and settings.
-- Implemented intelligence backfill plan and item persistence, bounded dry-run planner contracts, missing outcome/context/stale/module plan APIs, safety metadata, docs, and migration.
+- Integrated multi-timeframe aggregation, strategy profile governance, provider polling, scenario ensembles, and backtest experiments behind one backend route/model/settings/migration surface with a merge migration.
 
 ## Important Decisions
+
+- Intelligence catalog rows are workspace-scoped metadata pointers to source artifacts. They store bounded titles, summaries, labels, tags, searchable text, and metadata only; source artifacts remain authoritative and are not mutated by indexing.
+
+- The state machine registry is additive. It preserves existing status strings and database constraints, does not force existing services to validate transitions yet, and exists for operator inspection plus future service-by-service adoption.
+
+- Intelligence metrics are internal operational counters only. Missing optional metric source tables are recorded as warnings and do not fail collection. They must not become trading performance claims, broker PnL, alerts, external observability, or financial-advice output.
+
+- Rule packs are registry records for deterministic engine versions, strategy profile references, parser/OCR versions, thresholds, module versions, and replay compatibility metadata. They do not change active strategy profiles automatically.
+- Reproducibility manifests describe persisted analysis and signal provenance for audit/replay compatibility. They snapshot existing artifacts, do not run replay, do not recalculate artifacts, and do not mutate historical analysis or signal outputs.
 
 - Data quality intelligence persists deterministic candle/source health runs and findings. It reads candles, data sources, and live subscriptions, but does not mutate candle storage, analysis runs, signals, outcomes, alerts, broker execution, or LLM classifications.
 
@@ -184,12 +224,14 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - AI intelligence analyst outputs must remain advisory and citation-backed. They may identify inconsistencies, uncertainty, missing data, diagnostic context, risk context, and safe investigation steps, but they must not become deterministic truth, signal classification, strategy auto-tuning, action execution, alerts, broker execution, or financial advice.
 - Intelligence quality gates and shadow classification are diagnostic-only validation layers. They may persist findings and review recommendations, but they must not mutate signals, mark pattern candidates selected, change strategy profiles, run replay, evaluate outcomes, execute action items, call LLM providers, create alerts, or perform broker/order/position work.
 - Notifications are operator-facing backend messages only. Current dispatch supports in-app persistence; email and webhook are modeled as future channels but fail closed as not configured until explicit provider integrations exist.
+- Workspace data retention is an operational hygiene layer only. It defaults to dry-run, preserves itemized audit records, prefers payload redaction over deletion, has no automatic worker, and skips unsupported destructive actions.
 - Reasoning action plans may persist and execute only backend-safe follow-up work. Trading actions such as buy, sell, enter, exit, order placement, leverage, position management, copy trading, or trade execution are rejected and never persisted as executable items.
 - Due reasoning action execution is operational through a separate scheduled worker and the shared `POST /action-items/execute-due` API path. It claims items with database leases, executes only backend-safe deterministic work, records worker runs, skips replay-of-replay by default, and leaves human review pending for a person or future review workflow.
 - Outcome evaluation is downstream of persisted signals and final candles only. It evaluates observed historical behavior after classification, does not mutate original signals, does not calculate broker PnL, and does not produce financial advice.
 - Historical case retrieval is downstream of persisted deterministic artifacts only. It stores deterministic JSON vectors and bounded search records, does not mutate signals or outcomes, does not require pgvector, and must use similar-case/observed-outcome terminology instead of prediction or advice language.
 - Intelligence dataset exports are downstream of persisted artifacts only. They create auditable manifests and redacted records for offline evaluation and QA, not ML training or external upload, and must not include secrets, raw images, raw provider payloads, or raw full candle series by default.
 - Profile diagnostics are downstream of persisted signal outcomes only. They use observed behavior, historical follow-through, confidence calibration, evidence quality, and threshold-review terminology; they do not imply guaranteed performance and do not use profit or win-rate language.
+- Confidence calibration is reliability analysis only. It compares deterministic confidence bins with observed follow-through outcomes, excludes insufficient data from alignment denominators, reports insufficient data separately, and must not become financial advice, signal mutation, classifier override, profile auto-tuning, alerts, broker execution, auto-trading, or profit-oriented reporting.
 - Backtest experiments are downstream of existing persisted signals and outcomes only. They group bounded historical outcome rows into cohorts, never auto-evaluate missing outcomes, never mutate signals or strategy profiles, and never use profit, PnL, win-rate, trading advice, alerts, or broker execution behavior.
 - Replay signal outcomes are stored separately for replay signals and must not mutate original signal outcomes.
 - Replay runs are stored as normal `analysis_runs` with `analysis_mode='replay'`, `replayed_from_analysis_run_id`, `replay_mode`, `engine_snapshot_json`, and `rule_set_snapshot_json`; `latest_engine_version` uses current registered engines/profiles, and `same_engine_version` supports registered current v1 snapshots or returns `unsupported_engine_version`.
@@ -204,9 +246,12 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Chart screenshot OCR uses Google Vision through Application Default Credentials only when `CHART_OCR_ENABLED=true`; manual calibration remains supported and raw uploaded image bytes are not persisted.
 - Chart screenshot deterministic analysis can run only from normalized OHLC candles. Non-OHLC chart types are not converted into synthetic candles, and low extraction/OCR confidence requires accepted human review or correction before analysis triggering.
 - Data contract validation is additive and centralizes compatibility checks for JSONB artifacts. It does not replace existing module-owned Pydantic schemas, mutate stored artifacts, classify signals, generate financial advice, or execute actions.
-- Multi-timeframe aggregation only persists complete derived candles, skips incomplete windows, uses a `derived_aggregation` data source, and preserves existing final candle conflict semantics.
-- Audit timeline defaults are settings-backed and remain read-only; timeline routes may include persisted scheduled scan provenance, chart screenshot provenance, quality findings, and shadow classifications, but they must not run or mutate those systems.
 - Backfill plans are planning contracts only. They persist bounded plan/item records for missing or stale derived artifacts, default to dry-run behavior, never run automatically, and must not mutate source artifacts or call external providers.
+- Advanced feature snapshots use `CandleService` final-candle reads and persist deterministic context only. They are not trading signals, do not classify buy/sell direction, do not update existing signal classification, and do not use LLMs.
+- Reliability modules must use safe terminology: observed reaction, possible relationship, historical follow-through rate, continuation rate, calibration alignment, held outbox event, and deterministic context. Avoid profit, guaranteed, trade advice, causation claims, and webhook alert delivery language.
+- Multi-timeframe aggregation only persists complete derived candles, skips incomplete windows, uses a `derived_aggregation` data source, and preserves existing final candle conflict semantics.
+- The scalable intelligence engine integration keeps timeframe aggregation, profile governance, provider polling, scenario ensembles, and backtest experiments as backend-only deterministic or diagnostic layers. They may read each other's persisted artifacts through explicit services, but they must not auto-promote profile drafts, mutate final signals, run broker workflows, send alerts, train models, or provide financial advice.
+- Audit timeline defaults are settings-backed and remain read-only; timeline routes may include persisted scheduled scan provenance, chart screenshot provenance, quality findings, and shadow classifications, but they must not run or mutate those systems.
 - Decision readiness, market regime context, historical case retrieval, and operator reviews are diagnostic context modules. They may read persisted artifacts and store their own records, but they must not classify signals, override deterministic outputs, auto-create downstream work except through explicit APIs, execute action items, or mutate existing analysis artifacts.
 
 ## Recent Durable Update
@@ -241,6 +286,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Lockfile.
 - Full external live provider websocket integrations beyond the current runtime/provider foundation.
+- Automatic data retention cleanup worker.
 - Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
 - External API integrations beyond current live provider adapters.
 - Deployment configuration beyond the API Dockerfile, CI workflow, and operational docs/env examples.
@@ -254,6 +300,24 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Phase 1 set initial backend conventions; later phases should preserve the small-file modular structure under `apps/api/app/`.
 - Do not start with `candles -> GPT -> answer`; the durable plan requires deterministic intelligence first and AI explanations second.
 - Do not delay the signal/evidence/confidence/risk layer behind optional AI language, news, UI, scanner, or deployment polish.
+
+## Event Study Reaction Analysis
+
+- Deterministic event-study reaction analysis is implemented on top of persisted news/economic events and final candle data.
+- Event studies store pre-event movement, post-event movement, volatility reaction, direction labels, reaction labels, data-quality labels, and summary metadata.
+- Event studies must not claim causation, mutate signals, classify signals, send alerts, call LLMs, execute broker actions, or provide financial advice.
+- Event-study APIs are `POST /event-studies/run`, `GET /event-studies/runs/{run_id}`, `GET /event-studies/runs/{run_id}/results`, and `GET /news-events/{news_event_id}/event-studies`.
+
+## Latest Local Update
+
+- Implemented safe webhook outbox records for future integrations with `webhook_subscriptions`, `webhook_outbox_events`, and `webhook_delivery_attempts`.
+- Webhook outbox is separate from notifications, does not deliver alerts or HTTP requests, and stores sanitized payloads only.
+- Payload redaction excludes secrets, signing secret plaintext, raw images, full candle series, unsafe blocked LLM output, and direct trading-instruction language.
+
+## Latest Durable Update
+
+- Implemented engine execution registry as shared backend intelligence operation tracking with `engine_execution_records`, `engine_execution_events`, service/repository/routes, adapter helpers, idempotency, attempts, produced artifacts, error fields, and worker-ready lock fields.
+- Engine execution records do not run tasks automatically and must not become broker, order, position, auto-trading, alerting, or financial-advice workflows.
 
 ## Standard Verification
 
@@ -281,7 +345,17 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 # Current Session Addition
 
 - Strategy profile governance is implemented as a manual operator workflow for drafts, deterministic validation, review, approval, explicit promotion, and audit history. Draft approval does not activate a profile, promotion is explicit, older active versions remain active unless `deactivatePrevious=true` is requested, and past signals keep their original strategy profile snapshots.
+## Safety Policy Engine
 
+Added a backend-only unified Safety Policy Engine module at `apps/api/app/modules/safety_policies/`.
+
+Durable decisions:
+
+- Default policy set is `core_market_intelligence` version `v1`.
+- Policy sets and evaluations are persisted in `safety_policy_sets` and `safety_policy_evaluations`.
+- The engine centralizes blocked trading actions, unsafe language, causation review flags, invented evidence review flags, prohibited claims, provider payload exposure checks, secret redaction, and public response sanitization.
+- This phase is additive and does not broadly refactor existing deterministic explanations, LLM explanations, reasoning, scenario ensembles, action plans, reports, datasets, webhook outbox, operator playbooks, or decision readiness.
+- Future adoption should call `SafetyPolicyService` from low-risk public output and payload paths first, then move toward existing safety checks after parity coverage exists.
 ## Context Pack Update
 
 - Unified analysis context packs are implemented as a canonical read-only composition layer over persisted signal, analysis run, reasoning run, outcome, chart screenshot, replay, evidence, explanation, audit, quality, decision readiness, report, and optional market-context artifacts.

@@ -1,4 +1,25 @@
 from app.db.base import Base
+from app.modules.advanced_features.models import AdvancedFeatureSnapshot
+from app.modules.confidence_calibration.models import (
+    ConfidenceCalibrationBin,
+    ConfidenceCalibrationRun,
+)
+from app.modules.event_studies.models import EventStudyResult, EventStudyRun
+from app.modules.rule_packs.models import AnalysisReproducibilityManifest, RulePack
+from app.modules.webhook_outbox.models import (
+    WebhookDeliveryAttempt,
+    WebhookOutboxEvent,
+    WebhookSubscription,
+)
+from app.modules.backtest_experiments.models import (
+    BacktestExperimentCohort,
+    BacktestExperimentRun,
+)
+from app.modules.scenario_ensembles.models import (
+    ScenarioConsensusResult,
+    ScenarioEnsembleItem,
+    ScenarioEnsembleRun,
+)
 from app.modules.market_regimes.models import MarketRegimeContext
 from app.modules.action_plans.models import (
     ReasoningActionItem,
@@ -11,25 +32,35 @@ from app.modules.ai_intelligence.models import (
     AiIntelligenceRun,
 )
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
+from app.modules.backfill_plans.models import IntelligenceBackfillItem, IntelligenceBackfillPlan
+from app.modules.backtest_experiments.models import (
+    BacktestExperimentCohort,
+    BacktestExperimentRun,
+)
 from app.modules.artifact_graph.models import (
     ArtifactInvalidationEvent,
     ArtifactInvalidationItem,
     IntelligenceArtifact,
     IntelligenceArtifactDependency,
 )
-from app.modules.backfill_plans.models import IntelligenceBackfillItem, IntelligenceBackfillPlan
-from app.modules.backtest_experiments.models import (
-    BacktestExperimentCohort,
-    BacktestExperimentRun,
-)
 from app.modules.candles.models import Candle
 from app.modules.chart_screenshots.models import ChartScreenshotRun
-from app.modules.data_contracts.models import DataContract, DataContractValidation
+from app.modules.confidence_calibration.models import (
+    ConfidenceCalibrationBin,
+    ConfidenceCalibrationRun,
+)
 from app.modules.data_quality.models import DataQualityFinding, DataQualityRun
 from app.modules.data_quality.models import DataQualityFinding, DataQualityRun
+from app.modules.data_retention.models import (
+    DataRetentionPolicy,
+    DataRetentionRun,
+    DataRetentionRunItem,
+)
 from app.modules.data_sources.models import DataSource
 from app.modules.decision_readiness.models import DecisionReadinessAssessment
 from app.modules.engine_versions.models import EngineVersion
+from app.modules.event_studies.models import EventStudyResult, EventStudyRun
+from app.modules.engine_executions.models import EngineExecutionEvent, EngineExecutionRecord
 from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
 from app.modules.historical_cases.models import HistoricalCaseSearch, HistoricalCaseVector
@@ -39,6 +70,7 @@ from app.modules.intelligence_datasets.models import (
 )
 from app.modules.imports.models import ImportBatch, ImportError
 from app.modules.indicators.models import IndicatorSnapshot
+from app.modules.intelligence_catalog.models import IntelligenceCatalogItem
 from app.modules.intelligence_datasets.models import (
     IntelligenceDatasetExport,
     IntelligenceDatasetExportItem,
@@ -48,6 +80,7 @@ from app.modules.intelligence_quality.models import (
     IntelligenceQualityRun,
     ShadowClassificationResult,
 )
+from app.modules.intelligence_metrics.models import IntelligenceMetricSnapshot
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.market_scans.models import (
@@ -64,6 +97,11 @@ from app.modules.notifications.models import (
     NotificationMessage,
     NotificationPreference,
     NotificationWorkerRun,
+)
+from app.modules.webhook_outbox.models import (
+    WebhookDeliveryAttempt,
+    WebhookOutboxEvent,
+    WebhookSubscription,
 )
 from app.modules.operator_reviews.models import OperatorReviewEvent, OperatorReviewItem
 from app.modules.operator_playbooks.models import (
@@ -94,6 +132,7 @@ from app.modules.scenario_ensembles.models import (
     ScenarioEnsembleItem,
     ScenarioEnsembleRun,
 )
+from app.modules.rule_packs.models import AnalysisReproducibilityManifest, RulePack
 from app.modules.signals.models import (
     Signal,
     SignalConfidenceComponent,
@@ -101,6 +140,10 @@ from app.modules.signals.models import (
     SignalRiskNote,
 )
 from app.modules.strategy_profiles.models import StrategyProfile
+from app.modules.state_machines.models import (
+    StateMachineDefinition,
+    StateTransitionValidation,
+)
 from app.modules.symbols.models import Symbol
 from app.modules.timeframe_aggregation.models import (
     CandleAggregationRun,
@@ -110,48 +153,77 @@ from app.modules.timeframe_aggregation.models import (
 from app.modules.users.models import User
 from app.modules.workspaces.models import Workspace
 
+from app.modules.data_contracts.models import DataContract, DataContractValidation
+
 metadata = Base.metadata
 
 __all__ = [
+    "AdvancedFeatureSnapshot",
+    "AnalysisReproducibilityManifest",
+    "ConfidenceCalibrationBin",
+    "ConfidenceCalibrationRun",
+    "EventStudyResult",
+    "EventStudyRun",
+    "RulePack",
+    "WebhookDeliveryAttempt",
+    "WebhookOutboxEvent",
+    "WebhookSubscription",
+    "BacktestExperimentCohort",
+    "BacktestExperimentRun",
+    "ScenarioConsensusResult",
+    "ScenarioEnsembleItem",
+    "ScenarioEnsembleRun",
     "AnalysisAuditLog",
     "AnalysisRun",
+    "AnalysisReproducibilityManifest",
     "AiIntelligenceClaim",
     "AiIntelligenceInsight",
     "AiIntelligenceRun",
-    "ArtifactInvalidationEvent",
-    "ArtifactInvalidationItem",
     "BacktestExperimentCohort",
     "BacktestExperimentRun",
     "Base",
     "IntelligenceBackfillItem",
     "IntelligenceBackfillPlan",
     "MarketRegimeContext",
+    "ArtifactInvalidationEvent",
+    "ArtifactInvalidationItem",
     "Candle",
     "CandleAggregationRun",
     "ChartScreenshotRun",
-    "DataContract",
-    "DataContractValidation",
+    "ConfidenceCalibrationBin",
+    "ConfidenceCalibrationRun",
     "DataQualityFinding",
     "DataQualityRun",
+    "DataRetentionPolicy",
+    "DataRetentionRun",
+    "DataRetentionRunItem",
+    "DataContract",
+    "DataContractValidation",
     "DataSource",
     "DataQualityFinding",
     "DataQualityRun",
     "DecisionReadinessAssessment",
     "DeterministicExplanation",
+    "EngineExecutionEvent",
+    "EngineExecutionRecord",
     "DerivedCandleLineage",
     "EngineVersion",
+    "EventStudyResult",
+    "EventStudyRun",
     "FeatureSnapshot",
     "HistoricalCaseSearch",
     "HistoricalCaseVector",
     "IntelligenceDatasetExport",
     "IntelligenceDatasetExportItem",
     "IndicatorSnapshot",
+    "IntelligenceCatalogItem",
     "IntelligenceDatasetExport",
     "IntelligenceDatasetExportItem",
     "IntelligenceQualityFinding",
     "IntelligenceQualityRun",
     "ImportBatch",
     "ImportError",
+    "IntelligenceMetricSnapshot",
     "IntelligenceArtifact",
     "IntelligenceArtifactDependency",
     "LiveFeedEvent",
@@ -167,6 +239,9 @@ __all__ = [
     "NotificationMessage",
     "NotificationPreference",
     "NotificationWorkerRun",
+    "WebhookDeliveryAttempt",
+    "WebhookOutboxEvent",
+    "WebhookSubscription",
     "OperatorReviewEvent",
     "OperatorReviewItem",
     "OperatorPlaybook",
@@ -182,6 +257,7 @@ __all__ = [
     "ReasoningActionItem",
     "ReasoningActionPlan",
     "ReasoningActionWorkerRun",
+    "RulePack",
     "SignalNewsCorrelation",
     "Signal",
     "SignalOutcome",
@@ -203,6 +279,8 @@ __all__ = [
     "ProviderPollingError",
     "ProviderPollingRequest",
     "StrategyProfile",
+    "StateMachineDefinition",
+    "StateTransitionValidation",
     "Symbol",
     "User",
     "Workspace",

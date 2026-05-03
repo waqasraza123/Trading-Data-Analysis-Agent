@@ -147,3 +147,10 @@ MULTI_TIMEFRAME_CONTEXT_VERSION=v1
 Scheduled scans can call the aggregation service before analysis or reporting so higher-timeframe
 context is available for diagnostics. That integration is intentionally separate from this module and
 should preserve the same final-candle-only and no-signal-mutation rules.
+
+## Integrated Engine Boundary
+
+Provider polling may create final base candles that later become aggregation inputs. Strategy profile
+governance, scenario ensembles, and backtest experiments may read multi-timeframe context in future
+reporting or readiness flows, but this module does not mutate strategy profiles, signals, outcomes,
+reasoning runs, or scheduled scan configuration.

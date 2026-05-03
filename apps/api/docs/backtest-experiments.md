@@ -88,3 +88,10 @@ GET /backtest-experiments/runs/{run_id}/cohorts
 ## Bounded Reads
 
 `workspaceId` is required and `filters.limit` bounds the source read. The runner does not perform unbounded scans. If no existing outcomes match the filters, the run completes with warnings and no cohorts.
+## Integrated Engine Boundary
+
+Backtest experiments read stored signals, outcomes, and deterministic context. They do not call
+provider polling, run analysis, evaluate missing outcomes, mutate strategy profiles, alter final
+signals, calculate broker accounting, send alerts, or provide financial advice. Public metrics should
+use observed behavior, historical follow-through, continuation rate, reversal rate, and cohort result
+terminology.

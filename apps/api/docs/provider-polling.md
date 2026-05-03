@@ -182,3 +182,9 @@ metadata, error rows, or logs.
 - generic provider-specific mapping configuration
 - websocket live feed runtime changes
 - CSV/JSON import rewrites
+## Integrated Engine Boundary
+
+Provider polling stores normalized candles through the shared candle path. Those candles can later be
+used by multi-timeframe aggregation, analysis, reports, and backtest experiments, but polling does not
+run analysis, trigger scheduled scans, mutate signals, require provider secrets at startup, or interact
+with broker execution.

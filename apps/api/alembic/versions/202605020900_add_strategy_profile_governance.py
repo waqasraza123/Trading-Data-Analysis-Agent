@@ -1,6 +1,6 @@
 """add strategy profile governance
 
-Revision ID: 202605020900
+Revision ID: 202605020900_profile_governance
 Revises: 202604301900
 Create Date: 2026-05-02 09:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605020900"
+revision: str = "202605020900_profile_governance"
 down_revision: str | Sequence[str] | None = "202604301900"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

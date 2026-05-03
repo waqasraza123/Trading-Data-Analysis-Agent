@@ -1,5 +1,11 @@
 # Trading Intelligence API
 
+Confidence calibration analytics are implemented under `/confidence-calibration`. They compare
+persisted deterministic confidence scores with observed follow-through outcomes by confidence bin,
+horizon, and optional profile/pattern/symbol/timeframe filters. This is reliability analysis only:
+it does not calculate profitability, provide financial advice, mutate signals, change classifiers,
+auto-adjust profiles, send alerts, or execute broker actions.
+
 Market session context support is implemented as a deterministic backend-only layer for analysis
 runs and signals. It stores rough UTC session context for grouping and audit only; it does not use
 external exchange calendars, mutate signal classification, send alerts, execute trades, or provide
@@ -229,11 +235,43 @@ SCENARIO_ENSEMBLE_VERSION=v1
 SCENARIO_ENSEMBLE_DEFAULT_PROVIDER=mock
 SCENARIO_ENSEMBLE_MAX_PROVIDERS=3
 SCENARIO_ENSEMBLE_MIN_AGREEMENT_RATIO=0.6000
+BACKTEST_EXPERIMENT_VERSION=v1
+BACKTEST_EXPERIMENT_DEFAULT_LIMIT=100
+BACKTEST_EXPERIMENT_MAX_LIMIT=1000
+BACKTEST_EXPERIMENT_MINIMUM_SAMPLE_SIZE=20
 MARKET_SESSION_VERSION=v1
 MARKET_SESSION_DEFAULT_TIMEZONE=UTC
+ADVANCED_FEATURE_PACK_VERSION=v1
+ADVANCED_FEATURE_MIN_CANDLE_COUNT=20
+ADVANCED_FEATURE_SWING_LOOKBACK=3
+ADVANCED_FEATURE_ZONE_LOOKBACK=80
+ADVANCED_FEATURE_COMPRESSION_LOOKBACK=20
+ADVANCED_FEATURE_EXPANSION_MULTIPLIER=1.5
+ADVANCED_FEATURE_WICK_PRESSURE_THRESHOLD=0.55
+ADVANCED_FEATURE_MOVEMENT_EFFICIENCY_THRESHOLD=0.60
+RULE_PACK_DEFAULT_KEY=default_deterministic_rules
+RULE_PACK_DEFAULT_VERSION=v1
+REPRODUCIBILITY_MANIFEST_VERSION=v1
+EVENT_STUDY_VERSION=v1
+EVENT_STUDY_DEFAULT_PRE_EVENT_MINUTES=60
+EVENT_STUDY_DEFAULT_POST_EVENT_MINUTES=240
+EVENT_STUDY_MIN_CANDLES=5
+EVENT_STUDY_STRONG_REACTION_MULTIPLIER=2.0
+EVENT_STUDY_MODERATE_REACTION_MULTIPLIER=1.25
+CONFIDENCE_CALIBRATION_VERSION=v1
+CONFIDENCE_CALIBRATION_DEFAULT_BINS=10
+CONFIDENCE_CALIBRATION_MINIMUM_SAMPLE_SIZE=20
+CONFIDENCE_CALIBRATION_OVERCONFIDENT_THRESHOLD=0.15
+CONFIDENCE_CALIBRATION_UNDERCONFIDENT_THRESHOLD=0.15
+WEBHOOK_OUTBOX_PAYLOAD_VERSION=v1
+WEBHOOK_OUTBOX_DEFAULT_STATUS=held
+WEBHOOK_OUTBOX_MAX_PAYLOAD_BYTES=32768
 OUTCOME_DEFAULT_HORIZONS_MINUTES=5,15,30,60
 OUTCOME_MIN_FUTURE_CANDLES=3
 OUTCOME_EVALUATION_VERSION=v1
+RULE_PACK_DEFAULT_KEY=core_deterministic
+RULE_PACK_DEFAULT_VERSION=v1
+REPRODUCIBILITY_MANIFEST_VERSION=v1
 MARKET_REGIME_VERSION=v1
 MARKET_REGIME_MIN_CONFIDENCE=0.50
 MARKET_REGIME_STRONG_DATA_QUALITY=0.90
@@ -247,6 +285,8 @@ PROFILE_DIAGNOSTICS_STRONG_FOLLOW_THROUGH_RATE=0.65
 PROFILE_DIAGNOSTICS_HIGH_REVERSAL_RATE=0.35
 PROFILE_DIAGNOSTICS_HIGH_NO_FOLLOW_THROUGH_RATE=0.40
 PROFILE_DIAGNOSTICS_CONFIDENCE_MISALIGNMENT_THRESHOLD=0.45
+PROFILE_GOVERNANCE_DEFAULT_REVIEW_REQUIRED=true
+PROFILE_GOVERNANCE_COMPONENT_WEIGHT_TOLERANCE=0.0001
 HISTORICAL_CASE_VECTOR_VERSION=v1
 HISTORICAL_CASE_DEFAULT_LIMIT=20
 HISTORICAL_CASE_MAX_LIMIT=100
@@ -369,6 +409,36 @@ Feature engineering snapshots are documented in:
 docs/feature-engineering.md
 ```
 
+Advanced price-action feature snapshots are documented in:
+
+```txt
+docs/advanced-features.md
+```
+
+Rule packs and reproducibility manifests are documented in:
+
+```txt
+docs/rule-packs.md
+```
+
+Event study and news reaction analysis is documented in:
+
+```txt
+docs/event-studies.md
+```
+
+Confidence calibration curves and reliability tables are documented in:
+
+```txt
+docs/confidence-calibration.md
+```
+
+Safe webhook outbox behavior is documented in:
+
+```txt
+docs/webhook-outbox.md
+```
+
 Indicator snapshots are documented in:
 
 ```txt
@@ -448,6 +518,12 @@ Outcome-based profile diagnostics are documented in:
 docs/profile-diagnostics.md
 ```
 
+Confidence calibration analytics are documented in:
+
+```txt
+docs/confidence-calibration.md
+```
+
 Strategy profile governance is documented in:
 
 ```txt
@@ -493,6 +569,18 @@ Read-only intelligence reports are documented in:
 docs/intelligence-reports.md
 ```
 
+Workspace intelligence catalog and search indexing are documented in:
+
+```txt
+docs/intelligence-catalog.md
+```
+
+Unified analysis context packs are documented in:
+
+```txt
+docs/context-packs.md
+```
+
 Audit timeline traceability APIs are documented in:
 
 ```txt
@@ -512,6 +600,24 @@ Grounded AI intelligence analyst runs are documented in:
 
 ```txt
 docs/ai-intelligence.md
+```
+
+Internal intelligence metrics are documented in:
+
+```txt
+docs/intelligence-metrics.md
+```
+
+Intelligence metrics APIs expose internal operational/product counters and optional snapshots. They
+do not report trading performance, broker profit and loss, financial advice, or alerts:
+
+```txt
+GET /intelligence-metrics/workspace/{workspace_id}
+GET /intelligence-metrics/global
+POST /intelligence-metrics/snapshots/workspace/{workspace_id}
+POST /intelligence-metrics/snapshots/global
+GET /intelligence-metrics/snapshots/latest
+GET /intelligence-metrics/snapshots
 ```
 
 When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs
@@ -536,6 +642,15 @@ Engine versions are queryable through:
 GET /engine-versions
 GET /engine-versions/{engine_name}
 POST /engine-versions/seed
+```
+
+Intelligence state machine definitions are queryable and can validate lifecycle transitions through:
+
+```txt
+GET /state-machines
+GET /state-machines/{key}
+POST /state-machines/seed-default
+POST /state-machines/validate-transition
 ```
 
 Replay supports `latest_engine_version` and `same_engine_version`. Same-version replay is
@@ -592,6 +707,17 @@ GET /profile-diagnostics/strategy-profiles
 GET /profile-diagnostics/patterns
 GET /profile-diagnostics/recommendations
 PATCH /profile-diagnostics/recommendations/{recommendation_id}
+```
+
+Confidence calibration APIs compare persisted deterministic confidence scores with observed
+follow-through outcomes by bin and horizon. They do not mutate signals, confidence, classifiers, or
+strategy profiles:
+
+```txt
+POST /confidence-calibration/run
+GET /confidence-calibration/runs
+GET /confidence-calibration/runs/{run_id}
+GET /confidence-calibration/runs/{run_id}/bins
 ```
 
 Strategy profile governance APIs create, validate, review, approve, and explicitly promote profile
@@ -676,19 +802,6 @@ GET /scenario-ensembles/{ensemble_run_id}
 GET /scenario-ensembles/{ensemble_run_id}/items
 GET /scenario-ensembles/{ensemble_run_id}/consensus
 ```
-Context pack APIs compose persisted artifacts into bounded redacted source-of-truth bundles for
-downstream backend modules. They are read-only and do not mutate signals, trigger LLM calls, run
-replay, evaluate outcomes, execute action items, call providers, send alerts, or provide financial
-advice:
-
-```txt
-GET /context-packs/signals/{signal_id}
-GET /context-packs/analysis-runs/{analysis_run_id}
-GET /context-packs/reasoning-runs/{reasoning_run_id}
-GET /context-packs/outcomes/{outcome_id}
-GET /context-packs/chart-screenshot-runs/{run_id}
-```
-
 
 Reasoning action plan APIs convert persisted scenario suggestions into bounded backend-safe
 follow-up items and can manually execute due deterministic work:
@@ -718,6 +831,19 @@ GET /intelligence-reports/signals/{signal_id}/outcomes
 GET /intelligence-reports/screenshot-decisions/{decision_id}
 ```
 
+Context pack APIs compose persisted artifacts into bounded redacted source-of-truth bundles for
+downstream backend modules. They are read-only and do not mutate signals, trigger LLM calls, run
+replay, evaluate outcomes, execute action items, call providers, send alerts, or provide financial
+advice:
+
+```txt
+GET /context-packs/signals/{signal_id}
+GET /context-packs/analysis-runs/{analysis_run_id}
+GET /context-packs/reasoning-runs/{reasoning_run_id}
+GET /context-packs/outcomes/{outcome_id}
+GET /context-packs/chart-screenshot-runs/{run_id}
+```
+
 Audit timeline APIs compose persisted artifacts into chronological traceability views with artifact
 graphs, missing-section reporting, bounded metadata, and deterministic completeness scores. They are
 read-only and do not run analysis, replay, diagnostics, outcome evaluation, reasoning, LLM
@@ -742,6 +868,19 @@ GET /ai-intelligence/runs/{run_id}
 GET /ai-intelligence/signals/{signal_id}/runs
 ```
 
+Workspace intelligence catalog APIs index bounded metadata for persisted intelligence artifacts and
+provide workspace-scoped search/filtering without an external search engine or raw payload storage:
+
+```txt
+POST /intelligence-catalog/index
+POST /intelligence-catalog/reindex
+POST /intelligence-catalog/items
+DELETE /intelligence-catalog/items
+GET /intelligence-catalog/search
+GET /intelligence-catalog/items/{item_id}
+GET /intelligence-catalog/by-artifact
+```
+
 Historical case APIs build deterministic case vectors and search similar past cases for comparable
 context and observed outcomes:
 
@@ -762,6 +901,66 @@ GET /intelligence-datasets/exports
 GET /intelligence-datasets/exports/{export_id}
 GET /intelligence-datasets/exports/{export_id}/items
 GET /intelligence-datasets/exports/{export_id}/jsonl
+```
+
+Advanced price-action feature APIs generate deterministic context from final candles only. They do
+not mutate existing signals, classify final signal behavior, run LLMs, send alerts, or provide
+financial advice:
+
+```txt
+POST /analysis-runs/{analysis_run_id}/advanced-features
+GET /analysis-runs/{analysis_run_id}/advanced-features
+POST /signals/{signal_id}/advanced-features
+GET /signals/{signal_id}/advanced-features
+```
+
+Rule pack and reproducibility manifest APIs persist deterministic engine provenance for replay,
+audit, and reportability:
+
+```txt
+POST /rule-packs
+GET /rule-packs
+GET /rule-packs/{key}/{version}
+POST /rule-packs/seed-default
+POST /analysis-runs/{analysis_run_id}/reproducibility-manifest
+GET /analysis-runs/{analysis_run_id}/reproducibility-manifest
+POST /signals/{signal_id}/reproducibility-manifest
+GET /signals/{signal_id}/reproducibility-manifest
+```
+
+Event study APIs describe observed reactions around stored news events. They do not claim causation
+and do not modify news correlation or signal classification:
+
+```txt
+POST /event-studies/run
+GET /event-studies/runs/{run_id}
+GET /event-studies/runs/{run_id}/results
+GET /news-events/{news_event_id}/event-studies
+```
+
+Confidence calibration APIs summarize reliability alignment from stored outcomes. They do not train
+models, adjust strategy profiles, or mutate confidence scores:
+
+```txt
+POST /confidence-calibration/run
+GET /confidence-calibration/runs
+GET /confidence-calibration/runs/{run_id}
+GET /confidence-calibration/runs/{run_id}/bins
+```
+
+Webhook outbox APIs persist held backend events for future delivery infrastructure. This merge does
+not deliver webhooks, require delivery secrets, or expose unsafe LLM output:
+
+```txt
+POST /webhook-subscriptions
+GET /webhook-subscriptions
+GET /webhook-subscriptions/{subscription_id}
+PATCH /webhook-subscriptions/{subscription_id}
+POST /webhook-subscriptions/{subscription_id}/archive
+POST /webhook-outbox/events
+GET /webhook-outbox/events
+GET /webhook-outbox/events/{event_id}
+POST /webhook-outbox/events/{event_id}/cancel
 ```
 
 Notification APIs persist safe operator-facing outbox messages, user preferences, in-app delivery
@@ -794,6 +993,7 @@ Notification behavior is documented in:
 
 ```txt
 docs/notifications.md
+docs/data-retention.md
 ```
 
 Data quality intelligence APIs persist deterministic source and candle integrity audits:
@@ -808,6 +1008,25 @@ GET /data-quality/runs/{run_id}/findings
 
 They do not predict markets, classify signals, provide financial advice, create alerts, execute
 broker actions, mutate analysis results, or change candle final/partial storage behavior.
+
+Engine execution registry behavior is documented in:
+
+```txt
+docs/engine-executions.md
+```
+
+Engine execution APIs track backend intelligence operation requests, idempotency, lifecycle status,
+produced artifacts, errors, attempts, and worker-ready lock fields. They do not run tasks
+automatically and are not broker, order, position, auto-trading, alerting, or financial-advice
+workflows:
+
+```txt
+POST /engine-executions
+GET /engine-executions
+GET /engine-executions/{record_id}
+GET /engine-executions/{record_id}/events
+POST /engine-executions/{record_id}/cancel
+```
 
 Backfill plan APIs create bounded dry-run contracts for missing or stale derived intelligence
 artifacts. They do not execute work automatically, mutate source artifacts, call external providers,
@@ -839,10 +1058,70 @@ Data contract registry and JSONB artifact validation are documented in:
 docs/data-contracts.md
 ```
 
+The intelligence state machine registry is documented in:
+
+```txt
+docs/state-machines.md
+```
+
 Intelligence artifact dependency graph and invalidation behavior is documented in:
 
 ```txt
 docs/artifact-graph.md
+```
+
+Event study reaction analysis is documented in:
+
+```txt
+docs/event-studies.md
+```
+
+Event study APIs measure deterministic pre-event and post-event final-candle behavior around
+persisted news or economic events. They do not claim causation, mutate signals, create alerts, call
+LLMs, execute broker actions, or produce financial advice:
+
+```txt
+POST /event-studies/run
+GET /event-studies/runs/{run_id}
+GET /event-studies/runs/{run_id}/results
+GET /news-events/{news_event_id}/event-studies
+```
+
+Event study settings:
+
+```txt
+EVENT_STUDY_VERSION=v1
+EVENT_STUDY_DEFAULT_PRE_EVENT_MINUTES=30
+EVENT_STUDY_DEFAULT_POST_EVENT_MINUTES=60
+EVENT_STUDY_MIN_CANDLES=5
+EVENT_STUDY_STRONG_REACTION_MULTIPLIER=2.0
+EVENT_STUDY_MODERATE_REACTION_MULTIPLIER=1.25
+```
+
+Rule packs and reproducibility manifests are documented in:
+
+```txt
+docs/rule-packs.md
+```
+
+Rule pack APIs register deterministic version bundles without changing active strategy profile
+behavior:
+
+```txt
+POST /rule-packs
+GET /rule-packs
+GET /rule-packs/{key}/{version}
+POST /rule-packs/seed-default
+```
+
+Reproducibility manifest APIs snapshot existing persisted analysis and signal provenance. They do
+not run replay, mutate historical outputs, classify with LLMs, send alerts, or perform broker work:
+
+```txt
+POST /analysis-runs/{analysis_run_id}/reproducibility-manifest
+GET /analysis-runs/{analysis_run_id}/reproducibility-manifest
+POST /signals/{signal_id}/reproducibility-manifest
+GET /signals/{signal_id}/reproducibility-manifest
 ```
 
 Decision readiness assessment is documented in:
@@ -914,3 +1193,41 @@ POST /operator-reviews/{review_item_id}/resolve
 POST /operator-reviews/{review_item_id}/dismiss
 GET /operator-reviews/{review_item_id}/events
 ```
+## Webhook Outbox
+
+Webhook outbox APIs persist sanitized integration payload records without sending HTTP requests:
+
+```txt
+POST /webhook-subscriptions
+GET /webhook-subscriptions
+GET /webhook-subscriptions/{subscription_id}
+PATCH /webhook-subscriptions/{subscription_id}
+POST /webhook-subscriptions/{subscription_id}/archive
+POST /webhook-outbox/events
+GET /webhook-outbox/events
+GET /webhook-outbox/events/{event_id}
+POST /webhook-outbox/events/{event_id}/cancel
+```
+
+Webhook outbox behavior is documented in:
+
+```txt
+docs/webhook-outbox.md
+```
+## Safety Policy Engine
+
+The API includes a backend-only Safety Policy Engine under `app/modules/safety_policies`.
+It provides reusable evaluation and redaction helpers for blocked trading actions, unsafe direct phrases, causation claims, prohibited output claims, provider payload exposure, and public response sanitization.
+
+Default policy set: `core_market_intelligence` version `v1`.
+
+Routes:
+
+- `GET /safety-policies`
+- `GET /safety-policies/{key}/{version}`
+- `POST /safety-policies/seed-default`
+- `POST /safety-policies/evaluate-text`
+- `POST /safety-policies/evaluate-action`
+- `POST /safety-policies/evaluate-payload`
+
+The engine is additive. Existing explanation, reasoning, reports, datasets, webhook outbox, playbook, and readiness logic can adopt `SafetyPolicyService` incrementally without enabling broker execution, auto-trading, copy trading, alerts, notifications, UI changes, or financial advice.

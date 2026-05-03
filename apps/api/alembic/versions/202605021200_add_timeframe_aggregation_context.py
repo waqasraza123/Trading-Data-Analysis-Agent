@@ -1,6 +1,6 @@
 """add timeframe aggregation context
 
-Revision ID: 202605021200
+Revision ID: 202605021200_timeframe_aggregation
 Revises: f9eb9423c4a2
 Create Date: 2026-05-02 12:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605021200"
+revision: str = "202605021200_timeframe_aggregation"
 down_revision: str | tuple[str, str] | None = "f9eb9423c4a2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
