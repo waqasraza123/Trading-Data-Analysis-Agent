@@ -121,6 +121,10 @@ No UI, broker execution, auto-trading, alerts, or billing is implemented in this
 LLM layers are optional and may only explain or reason from persisted deterministic output.
 Market regime context is deterministic metadata only and does not alter signal classification.
 
+The first read-only frontend surface now lives in `apps/web`. It consumes this API through
+`NEXT_PUBLIC_API_BASE_URL`, renders missing optional endpoints as safe empty states, and keeps
+broker execution and auto-trading outside the product boundary.
+
 Capability registry endpoints:
 
 ```txt

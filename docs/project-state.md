@@ -2,11 +2,13 @@
 
 ## Product
 
-This repository is for an AI Trading Intelligence Agent backend. The planned product is a market intelligence engine, not a chatbot, UI, broker integration, or auto-trading system. It must support both CSV/imported historical candle data and live market data feed ingestion. Both ingestion paths must normalize into the same candle storage model and feed the same deterministic analysis engine.
+This repository is for an AI Trading Intelligence Agent with a deterministic market intelligence backend and a first read-only daily dashboard web surface. The planned product is a market intelligence engine, not a chatbot, broker integration, or auto-trading system. It must support both CSV/imported historical candle data and live market data feed ingestion. Both ingestion paths must normalize into the same candle storage model and feed the same deterministic analysis engine.
 
 ## Current Architecture
 
 - Workspace intelligence catalog metadata indexing and search endpoints exist for cross-artifact discovery without external search infrastructure or raw payload storage.
+
+- The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.
 
 - Intelligence capability registry metadata exists under `apps/api/app/modules/capabilities/` for backend module discovery, API/contract/artifact references, runtime availability, credential requirements, execution type, and safety level inspection.
 
@@ -22,6 +24,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Cross-asset context backend exists under `apps/api/app/modules/cross_asset_context/` as a deterministic final-candle-only layer for correlation, co-movement, divergence, and lead/lag context across related symbols. It does not infer causation, mutate signals, call LLMs, send alerts, execute broker actions, or provide financial advice.
 - Rolling market state memory exists under `apps/api/app/modules/market_memory/` as a cached deterministic latest-context layer per workspace, symbol, optional source, timeframe, and state version. It reads persisted artifacts only and does not run analysis, evaluate outcomes, mutate signals, call LLMs, send alerts, execute brokers, or provide financial advice.
 - Signal digests exist under `apps/api/app/modules/signal_digests/` as persisted read-only daily/session/custom/watchlist summaries over stored deterministic artifacts. They create digest run/item records only and do not run analysis, evaluate outcomes, call LLMs, classify or override signals, send notifications, execute brokers, auto-trade, copy-trade, or provide financial advice.
+- Daily Trading Dashboard web app exists under `apps/web` with `/dashboard`, `/signals/[signalId]`, and `/symbols/[symbolId]` routes. It uses `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_APP_NAME`, a typed fetch wrapper with timeout/error handling, safe 404/missing-endpoint fallbacks, reusable dashboard/detail components, and non-advisory market-intelligence copy.
 - Market memory, cohort drift, pattern attribution, scenario outcomes, and synthetic fixtures are integrated behind one backend route/model/settings/documentation surface. Their schema-producing migrations converge through `202605031300_market_memory_drift_attribution_scenario_merge`; synthetic fixtures remain table-free and development-safe.
 - Actionable setup context exists under `apps/api/app/modules/setup_context/` as a backend-only, non-advisory context layer over persisted signals and related artifacts. It stores invalidation context, observation zones, target context zones, wait conditions, avoid reasons, timeframe agreement, data-quality warnings, risk notes, and next backend-safe observations without mutating signals, strategy profiles, outcomes, action items, reports, alerts, brokers, or LLM classifications.
 
@@ -62,7 +65,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Read `docs/_local/current-session.md` if it exists before starting work.
 - Do not invent architecture before the first product slice establishes it.
 - Follow `docs/backend-only-implementation-plan.md` for backend scope and build order unless a later durable decision supersedes it.
-- Backend scope is FastAPI + Neon PostgreSQL first; no UI, broker execution, copy trading, social trading, or financial-advice output in the initial backend.
+- Backend scope is FastAPI + Neon PostgreSQL first; the frontend is a read-only operator cockpit over existing backend artifacts. No broker execution, copy trading, social trading, auto-trading, or financial-advice output belongs in the product.
 - CSV, JSON import, API polling, and live feed ingestion must converge through one candle validation/normalization/storage path.
 - Live feed candles must track partial vs final state; analysis uses final candles by default and includes partial candles only when explicitly requested.
 - Deterministic engines calculate and classify; AI/LLMs may explain only supplied evidence and must never classify or override signals.
@@ -78,7 +81,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 ## Current Roadmap
 
-- Build the backend only, following the phase order in `docs/backend-only-implementation-plan.md`.
+- Continue backend-first development while maintaining the first read-only dashboard surface under `apps/web`.
 - Use `docs/backend-only-implementation-plan.md` as the phase-by-phase roadmap.
 - Phase 1 FastAPI + Neon foundation is implemented.
 - Phase 2 core database schema is implemented for workspaces, users, symbols, data_sources, import_batches, import_errors, candles, live_feed_subscriptions, live_feed_events, analysis_runs, analysis_audit_logs, and engine_versions.
