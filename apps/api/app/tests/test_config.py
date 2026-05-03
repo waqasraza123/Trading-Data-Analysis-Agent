@@ -55,6 +55,13 @@ def test_settings_load_defaults() -> None:
         == "trading-intelligence-api-provider-polling/0.1"
     )
     assert settings.binance_public_rest_base_url == "https://api.binance.com"
+    assert settings.provider_health_version == "v1"
+    assert settings.provider_health_fresh_seconds_1m == 180
+    assert settings.provider_health_fresh_seconds_5m == 600
+    assert settings.provider_health_fresh_seconds_15m == 1800
+    assert settings.provider_health_fresh_seconds_1h == 7200
+    assert settings.provider_health_max_failures_degraded == 2
+    assert settings.provider_health_max_failures_failing == 5
     assert settings.chart_unsupported_rejection_enabled is True
     assert settings.audit_timeline_max_events == 200
     assert settings.audit_timeline_max_audit_events == 100

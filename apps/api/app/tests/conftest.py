@@ -48,6 +48,7 @@ APP_TABLES = (
     "intelligence_quality_findings",
     "intelligence_quality_runs",
     "setup_contexts",
+    "provider_health_snapshots",
     "rolling_market_state_snapshots",
     "calibration_recommendations",
     "cohort_drift_results",

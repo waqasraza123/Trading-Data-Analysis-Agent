@@ -16,6 +16,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Workspace daily brief composition for "what should I review now?"
 - API health, worker status, failed fetch states, and last refreshed timestamp.
 - Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
+- Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
 
@@ -92,6 +93,10 @@ The client composes data from optional backend APIs:
 - `GET /candles/quality`
 - `GET /live/subscriptions`
 - `GET /provider-polling/requests`
+- `GET /provider-health/snapshots`
+- `GET /provider-health/workspaces/{workspace_id}/summary`
+- `POST /provider-health/workspaces/{workspace_id}/refresh`
+- `POST /provider-health/snapshots/{snapshot_id}/prepare-gap-recovery`
 - `POST /data-quality/candle-range/run`
 - `POST /candle-gap-recovery/plans`
 - `GET /candle-gap-recovery/plans/{plan_id}/items`
@@ -248,6 +253,7 @@ The onboarding workflow is an operator setup surface for ingestion readiness:
 - Run freshness checks for latest final candle time, recent candle count, candle quality, data quality run label, market memory freshness, live subscription status, and provider polling status.
 - Create candle gap recovery plans for the checked windows and display gap ranges, expected candle counts, and recovery methods.
 - Prepare provider polling request metadata with `createRequests=false`. The workflow does not execute external provider calls.
+- Refresh provider health snapshots when the backend supports them and review source status, symbol/timeframe freshness, missing candles, polling failures, and recovery preparation.
 - Summarize ready symbols, degraded symbols, missing data, stale live feeds, and backend next actions.
 
 Provider keys and paid provider secrets are not entered in the frontend. Source credentials must be configured in backend environment or server-side secret management. The workflow does not create trades, alerts, broker connections, or financial-advice output.

@@ -117,6 +117,13 @@ candles in live or imported datasets, groups adjacent missing timestamps into re
 records provider-polling/manual-import planning metadata, and can create pending provider polling
 request rows without executing external provider fetches.
 
+Provider health snapshots are implemented under `/provider-health`. They aggregate persisted data
+source state, candle freshness, missing candles, provider polling successes/failures, live
+subscription state, data quality, market memory, and gap recovery plans into an operational data
+reliability workflow. They do not call external providers, mutate candles, auto-create polling
+requests outside the explicit gap recovery route, execute broker actions, send alerts, auto-trade,
+or provide financial advice.
+
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 LLM layers are optional and may only explain or reason from persisted deterministic output.
 Market regime context is deterministic metadata only and does not alter signal classification.
@@ -131,6 +138,10 @@ The web data onboarding route at `/data/onboarding` uses existing backend contra
 `/provider-polling/requests`, and `/candle-gap-recovery`. It prepares recovery metadata with
 `createRequests=false` and does not execute external provider fetches. Provider credentials remain
 server-side; the UI does not accept provider API keys.
+
+The same route also reads `/provider-health` when available to show provider/source health, stale or
+missing candles, recent polling failures, prepare-only recovery planning, and deterministic-analysis
+readiness.
 
 The integrated daily workflow pages in `apps/web` use the existing backend surface only. `/brief`
 and `/triage` are frontend composition layers over market memory, signals, outcomes, setup context,

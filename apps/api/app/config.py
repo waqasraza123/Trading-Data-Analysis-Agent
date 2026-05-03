@@ -215,6 +215,13 @@ class Settings(BaseSettings):
     provider_polling_max_candles_per_request: int = Field(default=1000, ge=1, le=5000)
     provider_polling_user_agent: str = "trading-intelligence-api-provider-polling/0.1"
     binance_public_rest_base_url: str = "https://api.binance.com"
+    provider_health_version: str = "v1"
+    provider_health_fresh_seconds_1m: int = Field(default=180, ge=1)
+    provider_health_fresh_seconds_5m: int = Field(default=600, ge=1)
+    provider_health_fresh_seconds_15m: int = Field(default=1800, ge=1)
+    provider_health_fresh_seconds_1h: int = Field(default=7200, ge=1)
+    provider_health_max_failures_degraded: int = Field(default=2, ge=1)
+    provider_health_max_failures_failing: int = Field(default=5, ge=1)
     candle_gap_recovery_version: str = "v1"
     candle_gap_recovery_max_gaps: int = Field(default=500, ge=1, le=10000)
     candle_gap_recovery_max_range_days: int = Field(default=30, ge=1, le=366)
@@ -542,6 +549,7 @@ class Settings(BaseSettings):
         "setup_context_version",
         "signal_digest_version",
         "journal_review_version",
+        "provider_health_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

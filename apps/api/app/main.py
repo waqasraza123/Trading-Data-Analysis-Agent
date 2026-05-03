@@ -59,6 +59,7 @@ from app.modules.pattern_attribution.routes import router as pattern_attribution
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
 from app.modules.profile_governance.routes import router as profile_governance_router
 from app.modules.profile_simulations.routes import router as profile_simulations_router
+from app.modules.provider_health.routes import router as provider_health_router
 from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.rule_packs.routes import router as rule_packs_router
@@ -131,6 +132,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         engine_versions_router,
         imports_router,
         provider_polling_router,
+        provider_health_router,
         live_router,
         candles_router,
         data_quality_router,

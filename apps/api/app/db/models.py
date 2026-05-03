@@ -113,6 +113,7 @@ from app.modules.profile_simulations.models import (
     StrategyProfileSimulationResult,
     StrategyProfileSimulationRun,
 )
+from app.modules.provider_health.models import ProviderHealthSnapshot
 from app.modules.provider_polling.models import ProviderPollingError, ProviderPollingRequest
 from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
 from app.modules.rule_packs.models import AnalysisReproducibilityManifest, RulePack
@@ -253,6 +254,7 @@ __all__ = [
     "PatternCandidate",
     "PatternOutcomeDiagnostic",
     "ProviderPollingError",
+    "ProviderHealthSnapshot",
     "ProviderPollingRequest",
     "ReasoningActionItem",
     "ReasoningActionPlan",

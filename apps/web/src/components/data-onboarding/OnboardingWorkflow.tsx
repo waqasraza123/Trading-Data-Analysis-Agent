@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ProviderHealthDashboard } from "@/components/provider-health/ProviderHealthDashboard";
 import { countCandles, getCandleQuality, getLatestCandle } from "@/lib/api/candles";
 import { createDataSource, listDataSources } from "@/lib/api/dataSources";
 import { runCandleRangeQuality } from "@/lib/api/dataQuality";
@@ -89,6 +90,8 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
     selection.symbolIds.includes(symbol.id),
   );
   const validation = validateSelection(selection);
+  const providerHealthFailure =
+    initialData.failures.find((failure) => failure.label === "Provider health") || null;
 
   useEffect(() => {
     const restored = readStoredSelection(initialData);
@@ -293,6 +296,24 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
           failures={initialData.failures}
         />
       )}
+      <ProviderHealthDashboard
+        workspace={selectedWorkspace}
+        symbols={initialData.symbols}
+        dataSources={dataSources}
+        initialSnapshots={initialData.providerHealthSnapshots}
+        initialSummary={initialData.providerHealthSummary}
+        initialError={
+          providerHealthFailure
+            ? {
+                status: providerHealthFailure.status,
+                code: "provider_health_unavailable",
+                message: providerHealthFailure.message || "Provider health unavailable",
+                url: "",
+                missing: providerHealthFailure.missing,
+              }
+            : null
+        }
+      />
       <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="surface h-fit rounded-lg p-4">
           <div className="space-y-2">

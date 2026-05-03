@@ -6,6 +6,10 @@ import type {
   UUID,
   Workspace,
 } from "@/lib/api/types";
+import type {
+  ProviderHealthSnapshot,
+  ProviderHealthSummary,
+} from "@/lib/provider-health/types";
 
 export const onboardingTimeframes = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"] as const;
 
@@ -43,6 +47,8 @@ export type OnboardingInitialData = {
   symbols: SymbolRead[];
   dataSources: DataSource[];
   memorySnapshots: MarketMemorySnapshot[];
+  providerHealthSnapshots: ProviderHealthSnapshot[];
+  providerHealthSummary: ProviderHealthSummary | null;
   failures: OnboardingFailure[];
   lastUpdatedAt: string;
 };
