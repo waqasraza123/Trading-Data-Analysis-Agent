@@ -69,6 +69,17 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    explanation_comparison_version: str = "v1"
+    explanation_comparison_alignment_threshold: Decimal = Field(
+        default=Decimal("0.7500"),
+        ge=0,
+        le=1,
+    )
+    explanation_comparison_review_threshold: Decimal = Field(
+        default=Decimal("0.5000"),
+        ge=0,
+        le=1,
+    )
     backtest_experiment_version: str = "v1"
     backtest_experiment_default_limit: int = Field(default=100, ge=1, le=5000)
     backtest_experiment_max_limit: int = Field(default=1000, ge=1, le=10000)

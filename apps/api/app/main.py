@@ -36,6 +36,7 @@ from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.event_studies.routes import router as event_studies_router
 from app.modules.event_studies.routes import router as event_studies_router
 from app.modules.engine_executions.routes import router as engine_executions_router
+from app.modules.explanation_comparison.routes import router as explanation_comparison_router
 from app.modules.explanations.routes import router as explanations_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.intelligence_catalog.routes import router as intelligence_catalog_router
@@ -150,6 +151,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(operator_reviews_router, prefix=resolved_settings.api_prefix)
     app.include_router(engine_executions_router, prefix=resolved_settings.api_prefix)
     app.include_router(explanations_router, prefix=resolved_settings.api_prefix)
+    app.include_router(explanation_comparison_router, prefix=resolved_settings.api_prefix)
     app.include_router(llm_explanations_router, prefix=resolved_settings.api_prefix)
     app.include_router(outcomes_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_diagnostics_router, prefix=resolved_settings.api_prefix)

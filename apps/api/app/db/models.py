@@ -61,6 +61,10 @@ from app.modules.decision_readiness.models import DecisionReadinessAssessment
 from app.modules.engine_versions.models import EngineVersion
 from app.modules.event_studies.models import EventStudyResult, EventStudyRun
 from app.modules.engine_executions.models import EngineExecutionEvent, EngineExecutionRecord
+from app.modules.explanation_comparison.models import (
+    ExplanationComparisonFinding,
+    ExplanationComparisonRun,
+)
 from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
 from app.modules.historical_cases.models import HistoricalCaseSearch, HistoricalCaseVector
@@ -206,6 +210,8 @@ __all__ = [
     "DeterministicExplanation",
     "EngineExecutionEvent",
     "EngineExecutionRecord",
+    "ExplanationComparisonFinding",
+    "ExplanationComparisonRun",
     "DerivedCandleLineage",
     "EngineVersion",
     "EventStudyResult",

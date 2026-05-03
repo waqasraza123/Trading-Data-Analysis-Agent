@@ -20,7 +20,8 @@ FastAPI backend for deterministic market intelligence over imported and live-ori
 candle data. The backend stores market data, calculates features and indicators, classifies
 signals with rules, generates safe deterministic and optional grounded LLM explanations from
 persisted artifacts, supports optional multi-LLM grounded scenario reasoning and scenario ensemble
-consensus diagnostics, supports replay from
+consensus diagnostics, compares persisted explanation layers for deterministic disagreement
+analysis, supports replay from
 stored candles, persists deterministic news/event context, evaluates observed historical outcomes
 after persisted signals, stores outcome-based profile diagnostics and advisory calibration
 recommendations, converts persisted reasoning scenarios into backend-safe follow-up action plans,
@@ -235,6 +236,9 @@ SCENARIO_ENSEMBLE_VERSION=v1
 SCENARIO_ENSEMBLE_DEFAULT_PROVIDER=mock
 SCENARIO_ENSEMBLE_MAX_PROVIDERS=3
 SCENARIO_ENSEMBLE_MIN_AGREEMENT_RATIO=0.6000
+EXPLANATION_COMPARISON_VERSION=v1
+EXPLANATION_COMPARISON_ALIGNMENT_THRESHOLD=0.7500
+EXPLANATION_COMPARISON_REVIEW_THRESHOLD=0.5000
 BACKTEST_EXPERIMENT_VERSION=v1
 BACKTEST_EXPERIMENT_DEFAULT_LIMIT=100
 BACKTEST_EXPERIMENT_MAX_LIMIT=1000
@@ -497,6 +501,12 @@ Scenario ensemble consensus diagnostics are documented in:
 
 ```txt
 docs/scenario-ensembles.md
+```
+
+Explanation comparison and disagreement analysis is documented in:
+
+```txt
+docs/explanation-comparison.md
 ```
 
 Backend-safe reasoning action plans are documented in:
@@ -801,6 +811,17 @@ GET /signals/{signal_id}/scenario-ensembles
 GET /scenario-ensembles/{ensemble_run_id}
 GET /scenario-ensembles/{ensemble_run_id}/items
 GET /scenario-ensembles/{ensemble_run_id}/consensus
+```
+
+Explanation comparison APIs compare persisted deterministic explanations, LLM explanations,
+scenario reasoning, and scenario ensemble context for review intelligence only. They do not call
+LLM providers, generate explanations, mutate signals, advise, alert, or execute:
+
+```txt
+POST /signals/{signal_id}/explanation-comparison
+GET /signals/{signal_id}/explanation-comparison/latest
+GET /explanation-comparisons/{run_id}
+GET /explanation-comparisons/{run_id}/findings
 ```
 
 Reasoning action plan APIs convert persisted scenario suggestions into bounded backend-safe
