@@ -8,6 +8,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Workspace intelligence catalog metadata indexing and search endpoints exist for cross-artifact discovery without external search infrastructure or raw payload storage.
 
+- Intelligence capability registry metadata exists under `apps/api/app/modules/capabilities/` for backend module discovery, API/contract/artifact references, runtime availability, credential requirements, execution type, and safety level inspection.
+
 - A backend-only intelligence state machine registry exists under `apps/api/app/modules/state_machines/` for versioned lifecycle definitions, valid transition inspection, terminal states, optional transition validation, and validation audit records.
 
 - Internal intelligence metrics endpoints and optional database snapshots exist for backend operational/product counters.
@@ -75,6 +77,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Historical CSV/JSON import pipeline wiring is implemented.
 - Live feed ingestion foundation is implemented with provider adapters, subscription lifecycle APIs, raw event audit storage, stale checks, and shared candle normalization.
 - Market data provider polling is implemented under `apps/api/app/modules/provider_polling/` for backend-only historical/recent OHLC ingestion through `api_polling` data sources and the shared candle normalization/storage path.
+- Real-time candle gap recovery planning exists under `apps/api/app/modules/candle_gap_recovery/` as planning metadata for missing final candles and optional pending provider polling request creation without external fetch execution.
 - Candle query and data quality APIs are implemented.
 - Analysis run lifecycle is implemented with historical/live-window run creation, candle preflight, audit logs, retry handling, insufficient-data status, feature snapshot persistence, indicator snapshot persistence, pattern candidate persistence, deterministic signal classification persistence, and deterministic explanation persistence.
 - Deterministic feature engineering snapshots are implemented.
@@ -113,6 +116,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 ## Completed Major Slices
 
 - Implemented workspace intelligence catalog and search index metadata table, indexing service, search APIs, and documentation for cross-artifact discovery.
+
+- Implemented intelligence_capabilities persistence, default capability registry, runtime availability summaries, capability APIs, and documentation.
 
 - Implemented intelligence state machine registry persistence, default lifecycle definitions, optional transition validation APIs, and documentation.
 
@@ -178,11 +183,15 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented walk-forward validation over stored deterministic signals and outcomes with bounded filters, inferred or explicit validation periods, window persistence, horizon comparisons, safe stability/degradation metrics, docs, and APIs.
 - Implemented multi-timeframe aggregation and context persistence with derived candle lineage, completion accounting, higher-timeframe agreement scoring, APIs, docs, and settings.
 - Integrated multi-timeframe aggregation, strategy profile governance, provider polling, scenario ensembles, and backtest experiments behind one backend route/model/settings/migration surface with a merge migration.
+- Implemented real-time candle gap recovery plan and item persistence, final-candle gap detection, provider polling preparation metadata, optional pending provider polling request row creation, APIs, docs, and settings.
 - Implemented cross-asset context runs/results, deterministic correlation and lead/lag calculation, analysis-run and signal APIs, settings, docs, and migration.
+- Integrated cross-asset context, walk-forward validation, candle gap recovery, explanation comparison, and capability registry behind one route/model/settings/documentation surface with a final Alembic merge migration.
 
 ## Important Decisions
 
 - Intelligence catalog rows are workspace-scoped metadata pointers to source artifacts. They store bounded titles, summaries, labels, tags, searchable text, and metadata only; source artifacts remain authoritative and are not mutated by indexing.
+
+- Capability registry rows are global backend metadata records. They describe module existence, contracts, routes, artifacts, dependencies, credentials, execution type, and safety boundaries only; they do not execute modules, mutate intelligence artifacts, start workers, call providers, send alerts, run broker workflows, or provide financial advice.
 
 - The state machine registry is additive. It preserves existing status strings and database constraints, does not force existing services to validate transitions yet, and exists for operator inspection plus future service-by-service adoption.
 
@@ -196,6 +205,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Operator reviews are operator-facing workflow records only. They may point at chart screenshots, signals, analysis runs, reasoning runs, action items, quality findings, calibration recommendations, outcomes, or manual sources, but they must not mutate those sources or become trade approvals, alerts, notifications, broker workflows, copy trading, auto-trading, or financial advice.
 - Market session context uses rough UTC windows for forex, classifies crypto as 24/7, and deliberately avoids invented stock/index/commodity exchange hours without an exchange calendar. It is market context only and must not become financial advice, alerts, broker execution, or signal mutation.
 - Cross-asset context reads stored final candles only, aligns symbols by timestamp, stores contextual correlation/divergence/lead-lag labels, and must not become causation inference, deterministic signal mutation, trade recommendation, alerting, broker execution, or financial advice.
+- The integrated context/diagnostics modules are additive. They may persist contextual records and readiness/report evidence for future consumers, but they must not mutate final signals, auto-trigger provider polling, call LLMs for classification, create alerts, execute broker workflows, claim causation, or provide financial advice.
 
 - `docs/project-state.md` is committed durable memory and should describe long-lived project facts.
 - `docs/_local/current-session.md` is local scratch memory and should not be committed.
@@ -213,6 +223,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Historical imports must use the shared candle normalization and repository path; they do not bypass candle validation.
 - CSV imports require `csv_upload` sources; JSON imports require `json_import` sources.
 - Provider polling requires `api_polling` sources and supported adapters. It is market-data ingestion only, with no broker execution, order placement, alerts, UI, auto-trading, financial advice, or paid provider key requirement at startup.
+- Candle gap recovery is planning-only. It reads final candles, records missing final-candle ranges, can create pending provider polling request rows when explicitly requested, and must not call providers, mutate candles directly, send alerts, execute brokers, auto-trade, or provide financial advice.
 - Live subscriptions require `websocket_live` data sources and supported provider adapters.
 - Live provider messages are persisted as `live_feed_events` before candle processing, and provider workers should call the same live ingestion service boundary.
 - The current Binance adapter normalizes kline payloads only; persistent websocket lifecycle remains a later worker slice.

@@ -23,7 +23,9 @@ from app.modules.backtest_experiments.routes import router as backtest_experimen
 from app.modules.backtest_experiments.routes import router as backtest_experiments_router
 from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.artifact_graph.routes import router as artifact_graph_router
+from app.modules.candle_gap_recovery.routes import router as candle_gap_recovery_router
 from app.modules.candles.routes import router as candles_router
+from app.modules.capabilities.routes import router as capabilities_router
 from app.modules.data_contracts.routes import router as data_contracts_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
 from app.modules.context_packs.routes import router as context_packs_router
@@ -130,6 +132,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(users_router, prefix=resolved_settings.api_prefix)
     app.include_router(symbols_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_sources_router, prefix=resolved_settings.api_prefix)
+    app.include_router(capabilities_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_retention_router, prefix=resolved_settings.api_prefix)
     app.include_router(engine_versions_router, prefix=resolved_settings.api_prefix)
     app.include_router(imports_router, prefix=resolved_settings.api_prefix)
@@ -137,6 +140,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(provider_polling_router, prefix=resolved_settings.api_prefix)
     app.include_router(live_router, prefix=resolved_settings.api_prefix)
     app.include_router(candles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(candle_gap_recovery_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(chart_screenshot_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_quality_router, prefix=resolved_settings.api_prefix)

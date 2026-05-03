@@ -52,7 +52,12 @@ from app.modules.artifact_graph.models import (
     IntelligenceArtifact,
     IntelligenceArtifactDependency,
 )
+from app.modules.candle_gap_recovery.models import (
+    CandleGapRecoveryItem,
+    CandleGapRecoveryPlan,
+)
 from app.modules.candles.models import Candle
+from app.modules.capabilities.models import IntelligenceCapability
 from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.confidence_calibration.models import (
     ConfidenceCalibrationBin,
@@ -206,6 +211,8 @@ __all__ = [
     "ArtifactInvalidationEvent",
     "ArtifactInvalidationItem",
     "Candle",
+    "CandleGapRecoveryItem",
+    "CandleGapRecoveryPlan",
     "CandleAggregationRun",
     "ChartScreenshotRun",
     "ConfidenceCalibrationBin",
@@ -245,6 +252,7 @@ __all__ = [
     "IntelligenceQualityRun",
     "ImportBatch",
     "ImportError",
+    "IntelligenceCapability",
     "IntelligenceMetricSnapshot",
     "IntelligenceArtifact",
     "IntelligenceArtifactDependency",

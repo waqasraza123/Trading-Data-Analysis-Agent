@@ -89,6 +89,7 @@ class Settings(BaseSettings):
     walk_forward_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     walk_forward_degradation_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     walk_forward_improvement_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    capability_registry_default_version: str = "v1"
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
     market_session_version: str = "v1"
@@ -202,6 +203,9 @@ class Settings(BaseSettings):
     provider_polling_max_candles_per_request: int = Field(default=1000, ge=1, le=5000)
     provider_polling_user_agent: str = "trading-intelligence-api-provider-polling/0.1"
     binance_public_rest_base_url: str = "https://api.binance.com"
+    candle_gap_recovery_version: str = "v1"
+    candle_gap_recovery_max_gaps: int = Field(default=500, ge=1, le=10000)
+    candle_gap_recovery_max_range_days: int = Field(default=30, ge=1, le=366)
     data_quality_version: str = "v1"
     data_quality_strong_threshold: Decimal = Field(default=Decimal("0.95"), ge=0, le=1)
     data_quality_acceptable_threshold: Decimal = Field(default=Decimal("0.85"), ge=0, le=1)
@@ -375,6 +379,15 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
+    @field_validator("candle_gap_recovery_version")
+    @classmethod
+    def validate_candle_gap_recovery_version(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "CANDLE_GAP_RECOVERY_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
     @field_validator("binance_public_rest_base_url")
     @classmethod
     def validate_binance_public_rest_base_url(cls, value: str) -> str:
@@ -472,6 +485,7 @@ class Settings(BaseSettings):
         "scenario_ensemble_version",
         "backtest_experiment_version",
         "walk_forward_validation_version",
+        "capability_registry_default_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
@@ -606,7 +620,11 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return normalized_value
 
-    @field_validator("timeframe_aggregation_version", "multi_timeframe_context_version")
+    @field_validator(
+        "timeframe_aggregation_version",
+        "multi_timeframe_context_version",
+        "cross_asset_context_version",
+    )
     @classmethod
     def validate_timeframe_aggregation_versions(cls, value: str) -> str:
         normalized_value = value.strip()

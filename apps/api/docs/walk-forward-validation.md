@@ -4,7 +4,7 @@ Walk-forward validation analyzes stored deterministic signals and stored signal 
 chronological validation windows. It is a historical diagnostics runner for profile behavior,
 pattern behavior, confidence alignment, stability, degradation, and sample coverage.
 
-It is not a profit backtest, broker simulation, alerting workflow, financial-advice feature,
+It is not a broker-accounting backtest, broker simulation, alerting workflow, financial-advice feature,
 auto-trading feature, or strategy-profile mutation path.
 
 ## Purpose
@@ -56,7 +56,7 @@ Walk-forward validation:
 - does not execute trades;
 - does not send alerts;
 - does not provide financial advice;
-- does not calculate broker accounting or profit metrics.
+- does not calculate broker accounting metrics.
 
 ## Settings
 

@@ -5,7 +5,7 @@ candles across related symbols for the same analysis window.
 
 It stores contextual correlation, co-movement, divergence, and lead/lag observations. It does not
 infer causation, classify signals, mutate existing signals, provide financial advice, send alerts,
-call LLMs, execute broker actions, or recommend buy/sell decisions.
+call LLMs, execute broker actions, or provide directional instructions.
 
 ## Purpose
 
@@ -191,8 +191,8 @@ CROSS_ASSET_DIVERGENCE_THRESHOLD=0.60
 
 Cross-asset context is contextual intelligence only. It may say that related symbols showed
 correlation, co-movement, divergence, lead/lag, cross-asset confirmation, or cross-asset conflict.
-It must not say that one asset caused another to move, guarantee movement, recommend a trade,
-calculate profit, create alerts, or change deterministic signal classification.
+It must not claim causation, promise movement, provide directional instructions, create alerts, or
+change deterministic signal classification.
 
 ## Future Integration
 

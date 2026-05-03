@@ -4,7 +4,14 @@ Walk-forward validation is implemented under `/walk-forward-validations`. It ana
 deterministic signals and stored outcomes across chronological validation windows to summarize
 observed follow-through, reversal behavior, confidence alignment, stability, degradation, and
 sample-size coverage. It does not evaluate missing outcomes, mutate signals, modify strategy
-profiles, calculate profit metrics, send alerts, execute broker actions, or provide financial advice.
+profiles, perform broker accounting, send alerts, execute broker actions, or provide financial advice.
+
+The intelligence capability registry is implemented under `/capabilities`. It documents installed
+backend intelligence modules, API references, input and output contracts, produced artifacts,
+dependencies, runtime availability, provider credential requirements, execution type, and safety
+level. It is metadata/configuration only and does not run modules, call providers, mutate
+intelligence artifacts, send alerts, execute broker actions, auto-trade, or provide financial
+advice.
 
 Cross-asset context support is implemented under `/analysis-runs/{id}/cross-asset-context`,
 `/signals/{id}/cross-asset-context`, and `/cross-asset-context/runs/{id}/results`. It compares
@@ -15,7 +22,7 @@ advice, send alerts, call LLMs, or execute broker actions.
 Confidence calibration analytics are implemented under `/confidence-calibration`. They compare
 persisted deterministic confidence scores with observed follow-through outcomes by confidence bin,
 horizon, and optional profile/pattern/symbol/timeframe filters. This is reliability analysis only:
-it does not calculate profitability, provide financial advice, mutate signals, change classifiers,
+it does not calculate broker accounting metrics, provide financial advice, mutate signals, change classifiers,
 auto-adjust profiles, send alerts, or execute broker actions.
 
 Market session context support is implemented as a deterministic backend-only layer for analysis
@@ -49,9 +56,23 @@ adapters under `/provider-polling`. It supports a deterministic mock provider, B
 klines without credentials, and a safe generic OHLC HTTP stub. Provider polling requires
 `api_polling` data sources and normalizes into the existing candle validator/repository path.
 
+Candle gap recovery planning is implemented under `/candle-gap-recovery`. It detects missing final
+candles in live or imported datasets, groups adjacent missing timestamps into recovery items,
+records provider-polling/manual-import planning metadata, and can create pending provider polling
+request rows without executing external provider fetches.
+
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 LLM layers are optional and may only explain or reason from persisted deterministic output.
 Market regime context is deterministic metadata only and does not alter signal classification.
+
+Capability registry endpoints:
+
+```txt
+GET /capabilities
+GET /capabilities/{key}
+POST /capabilities/seed-default
+GET /capabilities/summary
+```
 
 ## Commands
 
@@ -260,6 +281,7 @@ WALK_FORWARD_DEFAULT_WINDOW_DAYS=30
 WALK_FORWARD_MINIMUM_SAMPLE_SIZE=20
 WALK_FORWARD_DEGRADATION_THRESHOLD=0.20
 WALK_FORWARD_IMPROVEMENT_THRESHOLD=0.20
+CAPABILITY_REGISTRY_DEFAULT_VERSION=v1
 MARKET_SESSION_VERSION=v1
 MARKET_SESSION_DEFAULT_TIMEZONE=UTC
 ADVANCED_FEATURE_PACK_VERSION=v1
@@ -344,6 +366,9 @@ PROVIDER_POLLING_TIMEOUT_SECONDS=20
 PROVIDER_POLLING_MAX_CANDLES_PER_REQUEST=1000
 PROVIDER_POLLING_USER_AGENT=trading-intelligence-api-provider-polling/0.1
 BINANCE_PUBLIC_REST_BASE_URL=https://api.binance.com
+CANDLE_GAP_RECOVERY_VERSION=v1
+CANDLE_GAP_RECOVERY_MAX_GAPS=500
+CANDLE_GAP_RECOVERY_MAX_RANGE_DAYS=30
 WORKER_SUPERVISOR_COMPONENTS=
 WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
 BACKFILL_PLAN_VERSION=v1
@@ -416,6 +441,18 @@ Candle/data quality intelligence APIs are documented in:
 
 ```txt
 docs/data-quality.md
+```
+
+Real-time candle gap recovery planning APIs are documented in:
+
+```txt
+docs/candle-gap-recovery.md
+```
+
+Cross-asset context APIs are documented in:
+
+```txt
+docs/cross-asset-context.md
 ```
 
 Analysis run lifecycle is documented in:
@@ -538,6 +575,12 @@ Explanation comparison and disagreement analysis is documented in:
 docs/explanation-comparison.md
 ```
 
+Intelligence capability registry APIs are documented in:
+
+```txt
+docs/capabilities.md
+```
+
 Backend-safe reasoning action plans are documented in:
 
 ```txt
@@ -648,7 +691,7 @@ docs/intelligence-metrics.md
 ```
 
 Intelligence metrics APIs expose internal operational/product counters and optional snapshots. They
-do not report trading performance, broker profit and loss, financial advice, or alerts:
+do not report trading performance, broker accounting, financial advice, or alerts:
 
 ```txt
 GET /intelligence-metrics/workspace/{workspace_id}
@@ -769,6 +812,18 @@ GET /walk-forward-validations/runs
 GET /walk-forward-validations/runs/{run_id}
 GET /walk-forward-validations/runs/{run_id}/windows
 GET /walk-forward-validations/runs/{run_id}/comparisons
+```
+
+Cross-asset context APIs compare stored final candles across related symbols for contextual
+alignment, co-movement, divergence, and possible lead/lag only. They do not infer causation, mutate
+signals, advise, alert, or execute broker workflows:
+
+```txt
+POST /analysis-runs/{analysis_run_id}/cross-asset-context
+GET /analysis-runs/{analysis_run_id}/cross-asset-context
+POST /signals/{signal_id}/cross-asset-context
+GET /signals/{signal_id}/cross-asset-context
+GET /cross-asset-context/runs/{run_id}/results
 ```
 
 Strategy profile governance APIs create, validate, review, approve, and explicitly promote profile

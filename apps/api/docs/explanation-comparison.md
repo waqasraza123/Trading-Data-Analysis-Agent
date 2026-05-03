@@ -116,7 +116,7 @@ The comparator flags:
 - unsupported news/event mentions when no news correlation exists
 - news causation language
 - unsupported numeric claims not present in compared persisted artifacts
-- unsafe trading instruction or guarantee language
+- unsafe direct instruction or certainty language
 - LLM bias or pattern mismatch against the persisted signal
 - omitted medium/high/critical risk notes
 - unsupported scenario backend actions
