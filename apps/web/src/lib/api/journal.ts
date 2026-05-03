@@ -1,5 +1,5 @@
-import { apiGet } from "./client";
-import type { ApiResult, JournalEntry, UUID } from "./types";
+import { apiGet, apiPost } from "./client";
+import type { ApiResult, JournalEntry, JournalEntryCreateRequest, UUID } from "./types";
 
 export function listJournalEntries(params: {
   workspaceId: UUID;
@@ -15,4 +15,8 @@ export function listJournalEntries(params: {
       limit: 10,
     },
   });
+}
+
+export function createJournalEntry(payload: JournalEntryCreateRequest): Promise<ApiResult<JournalEntry>> {
+  return apiPost<JournalEntry>("/journal-entries", payload, { optional: true });
 }

@@ -21,7 +21,7 @@ export function formatDecimal(value: number | string | null | undefined): string
 }
 
 export function formatInteger(value: number | null | undefined): string {
-  if (!Number.isFinite(value)) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
     return "0";
   }
   return new Intl.NumberFormat("en", { maximumFractionDigits: 0 }).format(value);

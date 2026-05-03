@@ -48,6 +48,18 @@ export type SymbolRead = {
   updated_at: string;
 };
 
+export type DataSource = {
+  id: UUID;
+  workspace_id: UUID;
+  name: string;
+  source_type: string;
+  provider: string;
+  status: string;
+  config_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Watchlist = {
   id: UUID;
   workspace_id: UUID;
@@ -337,19 +349,284 @@ export type JournalEntry = {
   updated_at: string;
 };
 
+export type JournalEntryCreateRequest = {
+  workspaceId: UUID;
+  userId?: UUID | null;
+  signalId?: UUID | null;
+  analysisRunId?: UUID | null;
+  setupContextId?: UUID | null;
+  chartScreenshotRunId?: UUID | null;
+  title: string;
+  status?: string;
+  decisionType: string;
+  confidenceBefore?: string | number | null;
+  userBias?: string | null;
+  userNotes: string;
+  tags?: string[];
+  metadata?: JsonRecord;
+};
+
 export type ActionItem = {
   id: UUID;
   workspace_id: UUID;
   action_plan_id: UUID;
+  source_type?: string;
+  source_id?: UUID;
+  signal_id?: UUID | null;
+  analysis_run_id?: UUID | null;
+  reasoning_run_id?: UUID | null;
   action_type: string;
   status: string;
-  source_scenario_id: UUID | null;
-  title: string;
-  description: string;
+  priority?: string;
+  source_scenario_id?: UUID | null;
+  title?: string;
+  description?: string;
   due_at: string | null;
+  horizon_minutes?: number | null;
+  idempotency_key?: string;
+  input_json?: JsonRecord;
+  result_json?: JsonRecord | null;
+  error_code?: string | null;
+  error_message?: string | null;
+  attempts?: number;
+  max_attempts?: number;
+  last_attempted_at?: string | null;
+  locked_by?: string | null;
+  locked_until?: string | null;
+  completed_at?: string | null;
+  metadata_json?: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ActionPlanRead = {
+  id: UUID;
+  workspace_id: UUID;
+  source_type: string;
+  source_id: UUID;
+  signal_id: UUID | null;
+  analysis_run_id: UUID | null;
+  reasoning_run_id: UUID | null;
+  status: string;
+  plan_version: string;
+  created_from: string;
+  summary: string;
   metadata_json: JsonRecord;
   created_at: string;
   updated_at: string;
+};
+
+export type ActionPlanResponse = {
+  plan: ActionPlanRead;
+  items: ActionItem[];
+  rejected_actions: JsonRecord[];
+  skipped_actions: JsonRecord[];
+};
+
+export type IntelligenceQualityRun = {
+  id: UUID;
+  workspace_id: UUID;
+  analysis_run_id: UUID | null;
+  signal_id: UUID | null;
+  source_type: string;
+  status: string;
+  quality_score: string;
+  quality_label: string;
+  gate_version: string;
+  shadow_version: string;
+  checked_at: string;
+  summary: string;
+  metadata_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type IntelligenceQualityFinding = {
+  id: UUID;
+  workspace_id: UUID;
+  quality_run_id: UUID;
+  finding_type: string;
+  severity: string;
+  code: string;
+  title: string;
+  message: string;
+  artifact_type: string;
+  artifact_id: UUID | null;
+  expected_value: string | null;
+  observed_value: string | null;
+  metadata_json: JsonRecord;
+  created_at: string;
+};
+
+export type ShadowClassificationResult = {
+  id: UUID;
+  workspace_id: UUID;
+  quality_run_id: UUID;
+  analysis_run_id: UUID;
+  signal_id: UUID | null;
+  strategy_profile_key: string;
+  strategy_profile_version: string;
+  classification_status: string;
+  bias: string;
+  pattern_type: string | null;
+  confidence_score: string | null;
+  confidence_label: string | null;
+  selected_candidate_id: UUID | null;
+  agreement_with_final: string;
+  disagreement_reason: string | null;
+  metadata_json: JsonRecord;
+  created_at: string;
+};
+
+export type IntelligenceQualityResponse = {
+  quality_run: IntelligenceQualityRun;
+  findings: IntelligenceQualityFinding[];
+  shadow_classifications: ShadowClassificationResult[];
+};
+
+export type HistoricalCaseSignalSummary = {
+  signal_id: UUID;
+  symbol_id: UUID;
+  timeframe: string;
+  strategy_profile_key: string | null;
+  strategy_profile_version: string | null;
+  pattern_type: string | null;
+  bias: string;
+  classification_status: string;
+  confidence_score: string | null;
+  confidence_label: string | null;
+  summary: string | null;
+};
+
+export type HistoricalCaseSearchResult = {
+  matched_signal_id: UUID;
+  analysis_run_id: UUID;
+  similarity_score: string;
+  matched_reasons: string[];
+  differing_reasons: string[];
+  signal_summary: HistoricalCaseSignalSummary;
+  outcome_summary: JsonRecord | null;
+  deterministic_explanation_summary: string | null;
+};
+
+export type HistoricalCaseSearchRead = {
+  source_signal_id: UUID | null;
+  source_analysis_run_id: UUID | null;
+  search_version: string;
+  result_count: number;
+  results: HistoricalCaseSearchResult[];
+};
+
+export type ReasoningRun = {
+  id: UUID;
+  workspace_id: UUID;
+  analysis_run_id: UUID | null;
+  signal_id: UUID | null;
+  outcome_id: UUID | null;
+  source_type: string;
+  provider: string;
+  model: string;
+  prompt_version: string;
+  reasoning_type: string;
+  status: string;
+  input_snapshot_json: JsonRecord;
+  output_json: JsonRecord | null;
+  output_text: string | null;
+  safety_status: string;
+  grounding_status: string;
+  blocked_terms_json: string[];
+  grounding_issues_json: string[];
+  tokens_input: number | null;
+  tokens_output: number | null;
+  estimated_cost: string | null;
+  latency_ms: number | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ScenarioItem = {
+  scenario_type: string;
+  scenario_label: string;
+  possibility_label: string;
+  supporting_evidence: string[];
+  conflicting_evidence: string[];
+  outcome_history: JsonRecord | null;
+  next_observations: string[];
+  suggested_backend_actions: string[];
+  risk_notes: string[];
+};
+
+export type ScenarioReasoningResponse = {
+  reasoning_run: ReasoningRun;
+  summary: string;
+  scenarios: ScenarioItem[];
+  limitations: string[];
+};
+
+export type MultiTimeframeContext = {
+  id: UUID;
+  workspace_id: UUID;
+  analysis_run_id: UUID | null;
+  signal_id: UUID | null;
+  symbol_id: UUID;
+  source_id: UUID | null;
+  primary_timeframe: string;
+  context_timeframes_json: string[];
+  context_version: string;
+  trend_alignment: string;
+  volatility_alignment: string;
+  range_alignment: string;
+  agreement_score: string;
+  agreement_label: string;
+  context_summary: string;
+  context_json: JsonRecord;
+  warnings_json: JsonRecord[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type CrossAssetContextRun = {
+  id: UUID;
+  workspace_id: UUID;
+  analysis_run_id: UUID | null;
+  signal_id: UUID | null;
+  base_symbol_id: UUID;
+  timeframe: string;
+  source_id: UUID | null;
+  context_version: string;
+  status: string;
+  start_time: string;
+  end_time: string;
+  compared_symbol_count: number;
+  result_count: number;
+  summary: string;
+  metadata_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CrossAssetContextResult = {
+  id: UUID;
+  workspace_id: UUID;
+  context_run_id: UUID;
+  base_symbol_id: UUID;
+  compared_symbol_id: UUID;
+  timeframe: string;
+  start_time: string;
+  end_time: string;
+  base_move: string;
+  compared_move: string;
+  base_direction: string;
+  compared_direction: string;
+  correlation_score: string;
+  alignment_label: string;
+  lead_lag_offset_candles: number | null;
+  lead_lag_label: string;
+  divergence_score: string;
+  data_quality_label: string;
+  metadata_json: JsonRecord;
+  created_at: string;
 };
 
 export type HealthResponse = {

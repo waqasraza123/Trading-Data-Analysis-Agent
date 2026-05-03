@@ -7,20 +7,52 @@ type RequestOptions = {
   timeoutMs?: number;
   optional?: boolean;
 };
+type RequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 const defaultTimeoutMs = 7000;
 
 export async function apiGet<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
+  return apiRequest<T>("GET", path, undefined, options);
+}
+
+export function apiPost<T>(
+  path: string,
+  body?: unknown,
+  options: RequestOptions = {},
+): Promise<ApiResult<T>> {
+  return apiRequest<T>("POST", path, body, options);
+}
+
+export function apiPatch<T>(
+  path: string,
+  body?: unknown,
+  options: RequestOptions = {},
+): Promise<ApiResult<T>> {
+  return apiRequest<T>("PATCH", path, body, options);
+}
+
+export function apiDelete<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
+  return apiRequest<T>("DELETE", path, undefined, options);
+}
+
+async function apiRequest<T>(
+  method: RequestMethod,
+  path: string,
+  body: unknown,
+  options: RequestOptions,
+): Promise<ApiResult<T>> {
   const env = getPublicEnv();
   const url = buildUrl(env.apiBaseUrl, path, options.query);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || defaultTimeoutMs);
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method,
       headers: {
         accept: "application/json",
+        ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
+      body: body === undefined ? undefined : JSON.stringify(stripUndefined(body)),
       cache: "no-store",
       signal: controller.signal,
     });
@@ -105,6 +137,20 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stripUndefined(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefined(item));
+  }
+  if (!isRecord(value)) {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, nestedValue]) => nestedValue !== undefined)
+      .map(([key, nestedValue]) => [key, stripUndefined(nestedValue)]),
+  );
 }
 
 function normalizeApiPayload(value: unknown): unknown {
