@@ -142,6 +142,11 @@ from app.modules.timeframe_aggregation.models import (
     DerivedCandleLineage,
     MultiTimeframeContext,
 )
+from app.modules.trading_journal.models import (
+    JournalEntry,
+    JournalEntryAttachment,
+    JournalEntryReview,
+)
 from app.modules.users.models import User
 from app.modules.walk_forward_validation.models import (
     WalkForwardValidationComparison,
@@ -217,6 +222,9 @@ __all__ = [
     "IntelligenceMetricSnapshot",
     "IntelligenceQualityFinding",
     "IntelligenceQualityRun",
+    "JournalEntry",
+    "JournalEntryAttachment",
+    "JournalEntryReview",
     "LiveFeedEvent",
     "LiveFeedSubscription",
     "LlmExplanation",

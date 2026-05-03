@@ -1,5 +1,11 @@
 # Trading Intelligence API
 
+Trading journal feedback is implemented under `/journal-entries`. It records user/operator
+decision notes around observed, ignored, reviewed, paper-followed, or externally handled setups and
+compares those notes with later deterministic outcomes. It does not add UI, broker execution,
+broker imports, auto-trading, copy trading, financial advice, PnL calculations, signal mutation, or
+outcome mutation.
+
 Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
 pattern candidates contributed to final signals and observed outcomes by detector type, selected
 candidate, rejected candidate, blocked candidate, horizon, profile, symbol, and timeframe. It is

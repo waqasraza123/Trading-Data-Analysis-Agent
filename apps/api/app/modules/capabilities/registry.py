@@ -289,6 +289,35 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
     CapabilityDefinition(
+        key="trading_journal",
+        name="Trading Journal Feedback Loop",
+        category=CapabilityCategory.OUTCOME,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
+        module_path="app.modules.trading_journal",
+        produced_artifacts=(
+            "journal_entries",
+            "journal_entry_reviews",
+            "journal_entry_attachments",
+        ),
+        route_refs=(
+            "/journal-entries",
+            "/journal-entries/{entry_id}/review",
+            "/journal-entries/{entry_id}/attachments",
+        ),
+        dependencies=("signal_classification", "outcomes", "operator_reviews"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=False,
+            safe_to_run_automatically=False,
+            notes=(
+                "Records user decision notes and deterministic outcome comparisons only; "
+                "no broker execution, signal mutation, or financial advice."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
         key="scenario_outcomes",
         name="Scenario Hypothesis Outcome Tracking",
         category=CapabilityCategory.OUTCOME,

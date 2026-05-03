@@ -70,6 +70,7 @@ from app.modules.strategy_profiles.routes import router as strategy_profiles_rou
 from app.modules.symbols.routes import router as symbols_router
 from app.modules.synthetic_fixtures.routes import router as synthetic_fixtures_router
 from app.modules.timeframe_aggregation.routes import router as timeframe_aggregation_router
+from app.modules.trading_journal.routes import router as trading_journal_router
 from app.modules.users.routes import router as users_router
 from app.modules.walk_forward_validation.routes import router as walk_forward_validation_router
 from app.modules.webhook_outbox.routes import router as webhook_outbox_router
@@ -141,6 +142,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         strategy_profiles_router,
         signals_router,
         outcomes_router,
+        trading_journal_router,
         market_memory_router,
         cohort_drift_router,
         pattern_attribution_router,
