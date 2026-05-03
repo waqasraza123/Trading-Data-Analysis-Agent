@@ -313,6 +313,11 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    daily_workflow_version: str = "v1"
+    daily_workflow_max_symbols: int = Field(default=100, ge=1, le=1000)
+    daily_workflow_max_scan_items: int = Field(default=500, ge=1, le=5000)
+    daily_workflow_enable_provider_polling: bool = False
+    daily_workflow_enable_notifications: bool = False
     preference_profile_default_max_stale_seconds: int = Field(default=7200, ge=1)
     journal_review_version: str = "v1"
     artifact_graph_version: str = "v1"
@@ -530,6 +535,7 @@ class Settings(BaseSettings):
         "signal_digest_version",
         "daily_brief_version",
         "signal_priority_version",
+        "daily_workflow_version",
         "journal_review_version",
         "provider_health_version",
         "scanner_preset_version",
@@ -862,8 +868,7 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if self.market_regime_strong_data_quality < self.market_regime_acceptable_data_quality:
             msg = (
-                "MARKET_REGIME_STRONG_DATA_QUALITY must be >= "
-                "MARKET_REGIME_ACCEPTABLE_DATA_QUALITY"
+                "MARKET_REGIME_STRONG_DATA_QUALITY must be >= MARKET_REGIME_ACCEPTABLE_DATA_QUALITY"
             )
             raise ValueError(msg)
         if self.historical_case_default_limit > self.historical_case_max_limit:
@@ -871,8 +876,7 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if self.decision_readiness_ready_threshold < self.decision_readiness_review_threshold:
             msg = (
-                "DECISION_READINESS_READY_THRESHOLD must be >= "
-                "DECISION_READINESS_REVIEW_THRESHOLD"
+                "DECISION_READINESS_READY_THRESHOLD must be >= DECISION_READINESS_REVIEW_THRESHOLD"
             )
             raise ValueError(msg)
         if self.app_env == AppEnvironment.PRODUCTION and not self.audit_timeline_redaction_enabled:

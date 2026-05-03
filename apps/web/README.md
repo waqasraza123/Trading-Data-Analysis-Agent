@@ -21,6 +21,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
 - Scanner preset gallery for creating watchlists and scheduled scan configs from backend templates without running scans on apply.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
+- One-click daily workflow control for provider health refresh, recovery planning, deterministic scans, setup context generation, review-priority scoring, digest generation, and brief navigation.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
 
@@ -123,6 +124,11 @@ The client composes data from optional backend APIs:
 - `POST /notification-events/{event_id}/acknowledge`
 - `POST /notification-events/{event_id}/archive`
 - `GET /notification-events/{event_id}/attempts`
+- `POST /daily-workflows/run`
+- `GET /daily-workflows/runs`
+- `GET /daily-workflows/runs/{run_id}`
+- `GET /daily-workflows/runs/{run_id}/steps`
+- `POST /daily-workflows/runs/{run_id}/cancel`
 - `POST /data-quality/candle-range/run`
 - `POST /candle-gap-recovery/plans`
 - `GET /candle-gap-recovery/plans/{plan_id}/items`
@@ -158,6 +164,8 @@ http://127.0.0.1:3000/dashboard
 http://127.0.0.1:3000/brief
 http://127.0.0.1:3000/scanner
 http://127.0.0.1:3000/triage
+http://127.0.0.1:3000/notifications
+http://127.0.0.1:3000/quality
 http://127.0.0.1:3000/review/outcomes
 http://127.0.0.1:3000/journal
 http://127.0.0.1:3000/preferences/strategy
@@ -167,7 +175,7 @@ http://127.0.0.1:3000/data/onboarding
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
 Use `/command-center?workspaceId=<workspace-id>` as the default start page for the daily workflow.
 Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.
-Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`.
+Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`, and a daily workflow run can be opened with `?workflowRunId=<workflow-run-id>`.
 Use `/triage?workspaceId=<workspace-id>` to review deterministic signals by triage column. Filters support workspace, symbol, timeframe, bias, confidence, triage column, data freshness, profile key, preference profile, only fresh, and only review required.
 Use `/review/outcomes?workspaceId=<workspace-id>` to review recent signal outcomes, linked journal notes, and optional diagnostics.
 Use `/quality?workspaceId=<workspace-id>` to review the signal quality scoreboard. Filters support workspace, strategy profile, symbol, timeframe, pattern, horizon, and date range.
@@ -194,18 +202,20 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 
 The integrated web surface is arranged for a deterministic daily review loop:
 
-1. Start in `/command-center` to see what changed, provider freshness, review-priority signals, confirmation needs, outcome review, scanner status, journal prompts, and backend-safe next actions.
-2. Verify data freshness in `/data/onboarding`.
-3. Run deterministic watchlist scans in `/scanner`.
-4. Rank stored signals by review priority in `/command-center` or `/triage`.
+1. Verify data freshness in `/data/onboarding` or the command center freshness panel.
+2. Use “Run daily scan” in `/command-center` or `/scanner` to refresh status, prepare recovery plans, run deterministic scans, generate setup context, score review priority, and generate digest/brief context.
+3. Use scanner presets in `/scanner` when a repeatable session, watchlist, or data-repair scan configuration is useful.
+4. Read `/brief` for the persisted backend daily brief, with frontend composition as fallback.
 5. Triage stored signals in `/triage`, optionally scoped by a preference profile.
 6. Inspect setup context in `/signals/[signalId]`.
 7. Add or update observational journal notes in `/journal`.
 8. Review observed outcomes in `/review/outcomes`.
-9. Review quality, calibration, validation, and drift in `/quality`.
-10. Revisit digest summaries in `/brief`, `/command-center`, `/dashboard`, or symbol detail.
+9. Review in-app notification events in `/notifications` and diagnostic warnings in `/quality`.
+10. Revisit summaries in `/command-center`, `/dashboard`, `/brief`, or symbol detail.
 
-The shared navigation links Command Center, Brief, Triage, Scanner, Notifications, Data, Quality, Preferences, Review, and Journal. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to the quality scoreboard.
+The “Run daily scan” control does not execute notifications, broker actions, or external provider polling by default. It shows completed, skipped, and failed workflow steps and links to produced brief, scan run, and signal records.
+
+The shared navigation links Command Center, Brief, Scanner, Triage, Quality, Notifications, Data, Journal, and Preferences. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to notification events and the quality scoreboard.
 
 ## Notification Inbox
 
@@ -236,8 +246,10 @@ Sections:
 - Avoid / no directional signal: no directional signal, low data quality, conflicting evidence, range/chop/fakeout context, and unresolved review conditions.
 - Outcome review: observed continuation, observed reversal, and no-follow-through outcomes linked back to setup detail.
 - Scanner status: due scan configs, selected scan runs, failed/skipped run counts, and `/scanner` links.
+- Notification status: unread in-app intelligence event count and `/notifications` review link when events are available.
+- Quality warnings: diagnostics, calibration, drift, or data-coverage warnings linked to `/quality`.
 - Journal prompt: reviewed signals without journal notes when detectable, plus recent journal entries.
-- Next backend-safe actions: run deterministic scan, inspect setup context, review data freshness, prepare gap recovery, evaluate outcome after horizon, review journal, and inspect audit timeline.
+- Next backend-safe actions: open scanner presets, run deterministic scan, inspect setup context, review notification events, review quality warnings, review data freshness, prepare gap recovery, evaluate outcome after horizon, review journal, and inspect audit timeline.
 
 The command center keeps all copy non-advisory. It is not a broker terminal, not an auto-trading page, and not financial advice. It does not call broker APIs, create broker instructions, send external notifications, or execute action items.
 

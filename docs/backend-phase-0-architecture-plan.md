@@ -137,7 +137,7 @@ Optional provider keys must not be required at startup unless the corresponding 
 - No current package manager exists, so Phase 1 will set long-lived Python tooling conventions.
 - No real Neon URL is present; DB health and migration tests need environment-gated behavior or a local/test database fallback.
 - Live feed support adds idempotency and partial/final candle complexity that must be designed into the schema from Phase 2.
-- Financial-domain wording must stay cautious and must not imply guaranteed outcomes or trading advice.
+- Financial-domain wording must stay cautious and must not imply certainty about market outcomes or trading advice.
 - First implementation choices will define repository conventions because the repo is otherwise empty.
 
 ## Phase 1 Files To Create / Change

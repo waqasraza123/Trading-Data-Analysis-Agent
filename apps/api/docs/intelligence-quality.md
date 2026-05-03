@@ -165,12 +165,15 @@ Response:
 If a latest run already exists for the same source, gate version, and shadow version,
 `forceRecompute=false` returns it. `forceRecompute=true` creates a new run.
 
-## Future Use
+## UI Use
 
-This module is intended for operator review workflows, audit composition, and future UI surfaces
-that need predictable quality findings before presenting or trusting downstream intelligence.
+The web `/quality` page composes stored quality, outcome, calibration, validation, drift,
+attribution, and cohort artifacts into a read-only scoreboard. It shows observed behavior,
+confidence alignment, data coverage, and review warnings only. It does not run diagnostics
+automatically, calculate account results, execute broker workflows, send notifications, or provide
+financial advice.
 
 ## Not Included
 
-This phase does not add UI, auto-correction, automatic profile mutation, broker execution,
-auto-trading, alerts/notifications, billing, ML training, or external provider credentials.
+This phase does not add auto-correction, automatic profile mutation, broker execution,
+auto-trading, alerts, billing, ML training, or external provider credentials.

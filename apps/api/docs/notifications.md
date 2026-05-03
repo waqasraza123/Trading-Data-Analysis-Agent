@@ -205,13 +205,16 @@ Existing worker settings still control the legacy in-app notification worker.
 
 ## Safety Boundaries
 
+The web `/notifications` page is an in-app inbox over sanitized `notification_events`. It supports
+filtering, event review, source links, delivery-attempt inspection, and read/acknowledge/archive
+state when the backend inbox APIs are available. It does not trigger external delivery by default.
+
 The notification engine does not:
 
-- create UI
 - execute broker actions
 - place orders
 - auto-trade
-- send trade advice
+- send market advice
 - include raw candles or raw chart images
 - include secrets or unsafe LLM output
 - send external messages unless configured and explicitly invoked

@@ -18,12 +18,14 @@ export function CommandCenterHeader({ data }: { data: CommandCenterData }) {
           {data.backendUnavailable && <Badge value="Backend unavailable" tone="danger" />}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
         <SummaryPill label="Review first" value={data.summary.reviewFirstCount} />
         <SummaryPill label="Needs confirmation" value={data.summary.confirmationCount} />
         <SummaryPill label="Data ready" value={data.summary.dataReadyCount || data.summary.freshSymbolCount} />
         <SummaryPill label="Missing candles" value={data.summary.missingCandleCount} />
         <SummaryPill label="Outcome ready" value={data.summary.outcomeReadyCount} />
+        <SummaryPill label="Unread events" value={data.summary.unreadNotificationCount} />
+        <SummaryPill label="Quality warnings" value={data.summary.qualityWarningCount} />
       </div>
     </section>
   );

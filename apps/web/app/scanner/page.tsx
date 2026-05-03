@@ -10,12 +10,14 @@ import { ScannerHeader } from "@/components/scanner/ScannerHeader";
 import { ScannerPresetGallery } from "@/components/scanner/ScannerPresetGallery";
 import { ScannerStatusPanel } from "@/components/scanner/ScannerStatusPanel";
 import { WatchlistManager } from "@/components/scanner/WatchlistManager";
+import { DailyWorkflowPanel } from "@/components/daily-workflows/DailyWorkflowPanel";
 import { getScannerData } from "@/lib/api/scanner";
 
 type ScannerPageProps = {
   searchParams: Promise<{
     workspaceId?: string;
     runId?: string;
+    workflowRunId?: string;
   }>;
 };
 
@@ -33,6 +35,14 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
             message="Seed or create a workspace before scanner controls can create watchlists or scheduled scans."
           />
         )}
+        <DailyWorkflowPanel
+          workspaceId={data.workspace?.id || null}
+          watchlistId={data.watchlists[0]?.watchlist.id || null}
+          runs={data.dailyWorkflowRuns}
+          selectedRun={data.selectedDailyWorkflowRun}
+          selectedSteps={data.selectedDailyWorkflowSteps}
+          basePath="/scanner"
+        />
         <ScannerStatusPanel data={data} />
         <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-6">

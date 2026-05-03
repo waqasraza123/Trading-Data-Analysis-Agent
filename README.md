@@ -55,7 +55,7 @@ It does:
 - Persist deterministic feature snapshots.
 - Persist deterministic indicator snapshots for EMA, RSI, MACD, and ATR.
 - Persist deterministic news/event correlation context without causation claims.
-- Run bounded backtest experiments that summarize historical signal outcome cohorts without PnL, win-rate, broker execution, or trade advice.
+- Run bounded backtest experiments that summarize historical signal outcome cohorts without account-result metrics, broker execution, or trade advice.
 - Store audit logs for analysis runs.
 - Expose typed APIs for future UI, scanner, replay, and explanation layers.
 
@@ -63,7 +63,7 @@ It does not:
 
 - Execute trades.
 - Connect to brokers for order placement.
-- Produce guaranteed buy or sell instructions.
+- Produce direct order instructions or certainty claims.
 - Replace regulated financial advice.
 - Let an LLM classify market signals or override deterministic engines.
 - Provide a frontend UI in the current phase.
@@ -412,7 +412,7 @@ Before a production deployment, verify:
 - API ingress applies TLS, rate limits, and request-size limits.
 - Provider credentials are scoped and rotated.
 - Market-data provider terms are satisfied.
-- No endpoint implies guaranteed trading outcomes or regulated financial advice.
+- No endpoint implies certainty about market outcomes or regulated financial advice.
 
 ## Security And Compliance
 
@@ -479,7 +479,7 @@ Out of scope for the current backend phase:
 - Auto-trading.
 - Copy trading.
 - Social trading.
-- Guaranteed trade recommendations.
+- Certainty-based market recommendations.
 
 ## Contributing
 

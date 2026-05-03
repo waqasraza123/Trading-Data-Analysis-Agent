@@ -1,6 +1,8 @@
 import { getPublicEnv } from "@/config/env";
 import { getWorkspaceBrief } from "./brief";
+import { listNotificationEvents } from "./notifications";
 import { getProviderHealthSummary, listProviderHealthSnapshots } from "./providerHealth";
+import { getQualityScoreboardData } from "./quality";
 import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
 import { listJournalEntries } from "./journal";
@@ -12,6 +14,7 @@ import type { ApiFailure, ApiResult, JournalEntry, UUID } from "./types";
 export async function getCommandCenterData(params: {
   workspaceId?: string;
   preferenceProfileId?: string;
+  workflowRunId?: string;
 }): Promise<CommandCenterData> {
   const env = getPublicEnv();
   const [brief, triage, scanner] = await Promise.all([
@@ -20,7 +23,7 @@ export async function getCommandCenterData(params: {
     getScannerData(params),
   ]);
   const workspace = triage.workspace || scanner.workspace || null;
-  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures } = workspace
+  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures } = workspace
     ? await fetchCommandCenterWorkspaceContext(workspace.id, triage.allCandidates.slice(0, 10).map((candidate) => candidate.signal.signal.id))
     : {
         recentJournalEntries: [],
@@ -29,6 +32,11 @@ export async function getCommandCenterData(params: {
         providerHealthSummary: null,
         providerHealthSnapshots: [],
         providerHealthFailures: [],
+        notificationUnreadCount: 0,
+        notificationReviewCount: 0,
+        notificationFailures: [],
+        qualityWarnings: [],
+        qualityFailures: [],
       };
 
   return composeCommandCenter({
@@ -47,6 +55,11 @@ export async function getCommandCenterData(params: {
     journalEntriesBySignalId,
     journalFailures,
     providerHealthFailures,
+    notificationUnreadCount,
+    notificationReviewCount,
+    notificationFailures,
+    qualityWarnings,
+    qualityFailures,
   });
 }
 
@@ -60,14 +73,23 @@ async function fetchCommandCenterWorkspaceContext(
   providerHealthSummary: ProviderHealthSummary | null;
   providerHealthSnapshots: ProviderHealthSnapshot[];
   providerHealthFailures: CommandCenterFailure[];
+  notificationUnreadCount: number;
+  notificationReviewCount: number;
+  notificationFailures: CommandCenterFailure[];
+  qualityWarnings: CommandCenterData["qualityWarnings"];
+  qualityFailures: CommandCenterFailure[];
 }> {
-  const [journalContext, providerHealthContext] = await Promise.all([
+  const [journalContext, providerHealthContext, notificationContext, qualityContext] = await Promise.all([
     fetchJournalContext(workspaceId, signalIds),
     fetchProviderHealthContext(workspaceId),
+    fetchNotificationContext(workspaceId),
+    fetchQualityContext(workspaceId),
   ]);
   return {
     ...journalContext,
     ...providerHealthContext,
+    ...notificationContext,
+    ...qualityContext,
   };
 }
 
@@ -118,6 +140,45 @@ async function fetchProviderHealthContext(
     providerHealthSummary,
     providerHealthSnapshots,
     providerHealthFailures: failures,
+  };
+}
+
+async function fetchNotificationContext(
+  workspaceId: UUID,
+): Promise<{
+  notificationUnreadCount: number;
+  notificationReviewCount: number;
+  notificationFailures: CommandCenterFailure[];
+}> {
+  const failures: CommandCenterFailure[] = [];
+  const [unreadResult, reviewResult] = await Promise.all([
+    listNotificationEvents({ workspaceId, inboxStatus: "unread", limit: 500 }),
+    listNotificationEvents({ workspaceId, inboxStatus: "acknowledged", limit: 500 }),
+  ]);
+  const unreadEvents = readOptionalList("Unread notification events", unreadResult, failures);
+  const reviewEvents = readOptionalList("Acknowledged notification events", reviewResult, failures);
+  return {
+    notificationUnreadCount: unreadEvents.length,
+    notificationReviewCount: reviewEvents.length,
+    notificationFailures: failures,
+  };
+}
+
+async function fetchQualityContext(
+  workspaceId: UUID,
+): Promise<{
+  qualityWarnings: CommandCenterData["qualityWarnings"];
+  qualityFailures: CommandCenterFailure[];
+}> {
+  const data = await getQualityScoreboardData({ workspaceId });
+  return {
+    qualityWarnings: data.warnings.slice(0, 4),
+    qualityFailures: data.failures.map((failure) => ({
+      label: `Quality ${failure.label}`,
+      status: failure.status,
+      message: failure.message,
+      missing: failure.missing,
+    })),
   };
 }
 

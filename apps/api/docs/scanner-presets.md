@@ -23,6 +23,10 @@ Presets create passive records. A scan runs only through the existing explicit s
 such as `POST /scheduled-scan-configs/{scan_config_id}/run`, `POST /scheduled-scan-configs/run-due`,
 or the scheduled scan worker when a config later becomes due.
 
+In the daily workflow, presets sit after data freshness review and before explicit scan execution.
+They are shortcuts for creating repeatable watchlist/session review configuration, not automation
+that runs analysis on apply.
+
 ## Settings
 
 ```txt

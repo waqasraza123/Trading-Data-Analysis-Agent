@@ -1,5 +1,11 @@
 import { getPublicEnv } from "@/config/env";
 import { apiDelete, apiGet, apiPatch, apiPost } from "./client";
+import {
+  dailyWorkflowFailure,
+  getDailyWorkflowRun,
+  listDailyWorkflowRuns,
+  listDailyWorkflowSteps,
+} from "./dailyWorkflows";
 import { listWorkspaces } from "./market";
 import { getSignal } from "./signals";
 import { getApiHealth, getWorkerStatus } from "./status";
@@ -230,6 +236,7 @@ export function listScannerScanRunItems(
 export async function getScannerData(params: {
   workspaceId?: string;
   runId?: string;
+  workflowRunId?: string;
 }): Promise<ScannerData> {
   const env = getPublicEnv();
   const failures: ScannerData["failures"] = [];
@@ -252,6 +259,7 @@ export async function getScannerData(params: {
       apiBaseUrl: env.apiBaseUrl,
       requestedWorkspaceId: params.workspaceId || null,
       selectedRunId: params.runId || null,
+      selectedWorkflowRunId: params.workflowRunId || null,
       workspace,
       workspaces,
       symbols,
@@ -264,9 +272,13 @@ export async function getScannerData(params: {
       selectedRun: null,
       selectedRunItems: [],
       selectedRunSignals: [],
+      dailyWorkflowRuns: [],
+      selectedDailyWorkflowRun: null,
+      selectedDailyWorkflowSteps: [],
       health,
       workerStatus,
       failures,
+      dailyWorkflowFailures: [],
       lastUpdatedAt: new Date().toISOString(),
     };
   }
@@ -278,6 +290,8 @@ export async function getScannerData(params: {
     scanConfigsResult,
     dueConfigsResult,
     selectedRunResult,
+    dailyWorkflowRunsResult,
+    selectedDailyWorkflowRunResult,
   ] =
     await Promise.all([
       listScannerDataSources(workspace.id),
@@ -286,6 +300,8 @@ export async function getScannerData(params: {
       listScannerScanConfigs(workspace.id),
       listScannerDueScanConfigs(workspace.id),
       params.runId ? getScannerScanRun(params.runId) : Promise.resolve(null),
+      listDailyWorkflowRuns({ workspaceId: workspace.id, limit: 10 }),
+      params.workflowRunId ? getDailyWorkflowRun(params.workflowRunId) : Promise.resolve(null),
     ]);
   const dataSources = readResult("Data sources", sourcesResult, [], failures);
   const presets = readResult("Scanner presets", presetsResult, [], failures);
@@ -295,12 +311,35 @@ export async function getScannerData(params: {
   const selectedRun = selectedRunResult
     ? readNullableResult("Selected scan run", selectedRunResult, failures)
     : null;
+  const dailyWorkflowFailures: ScannerData["dailyWorkflowFailures"] = [];
+  const dailyWorkflowRuns = readDailyWorkflowList(
+    "Daily workflow runs",
+    dailyWorkflowRunsResult,
+    dailyWorkflowFailures,
+  );
+  const selectedDailyWorkflowRun = selectedDailyWorkflowRunResult
+    ? readDailyWorkflowNullable(
+        "Selected daily workflow run",
+        selectedDailyWorkflowRunResult,
+        dailyWorkflowFailures,
+      )
+    : dailyWorkflowRuns[0] || null;
   const watchlists = await loadWatchlistsWithItems(rawWatchlists, failures);
   const selectedRunItemsResult = selectedRun ? await listScannerScanRunItems(selectedRun.id) : null;
   const selectedRunItems = selectedRunItemsResult
     ? readResult("Selected scan run items", selectedRunItemsResult, [], failures)
     : [];
   const selectedRunSignals = await loadSignals(selectedRun?.signal_ids_json || [], failures);
+  const selectedDailyWorkflowStepsResult = selectedDailyWorkflowRun
+    ? await listDailyWorkflowSteps(selectedDailyWorkflowRun.id)
+    : null;
+  const selectedDailyWorkflowSteps = selectedDailyWorkflowStepsResult
+    ? readDailyWorkflowList(
+        "Daily workflow steps",
+        selectedDailyWorkflowStepsResult,
+        dailyWorkflowFailures,
+      )
+    : [];
   const recentRuns = selectedRun ? [selectedRun] : [];
 
   return {
@@ -308,6 +347,7 @@ export async function getScannerData(params: {
     apiBaseUrl: env.apiBaseUrl,
     requestedWorkspaceId: params.workspaceId || null,
     selectedRunId: params.runId || null,
+    selectedWorkflowRunId: params.workflowRunId || null,
     workspace,
     workspaces,
     symbols,
@@ -320,9 +360,13 @@ export async function getScannerData(params: {
     selectedRun,
     selectedRunItems,
     selectedRunSignals,
+    dailyWorkflowRuns,
+    selectedDailyWorkflowRun,
+    selectedDailyWorkflowSteps,
     health,
     workerStatus,
     failures,
+    dailyWorkflowFailures,
     lastUpdatedAt: new Date().toISOString(),
   };
 }
@@ -390,4 +434,32 @@ function readNullableResult<T>(
 
 function toFailure(label: string, result: ApiFailure): ScannerData["failures"][number] {
   return scannerFailure(label, result);
+}
+
+function readDailyWorkflowList<T>(
+  label: string,
+  result: ApiResult<T[]>,
+  failures: ScannerData["dailyWorkflowFailures"],
+): T[] {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing) {
+    failures.push(dailyWorkflowFailure(label, result));
+  }
+  return [];
+}
+
+function readDailyWorkflowNullable<T>(
+  label: string,
+  result: ApiResult<T>,
+  failures: ScannerData["dailyWorkflowFailures"],
+): T | null {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing) {
+    failures.push(dailyWorkflowFailure(label, result));
+  }
+  return null;
 }

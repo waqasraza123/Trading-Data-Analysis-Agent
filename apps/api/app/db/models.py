@@ -39,6 +39,7 @@ from app.modules.cross_asset_context.models import (
     CrossAssetContextRun,
 )
 from app.modules.daily_briefs.models import DailyBriefItem, DailyBriefRun
+from app.modules.daily_workflows.models import DailyWorkflowRun, DailyWorkflowStep
 from app.modules.data_contracts.models import DataContract, DataContractValidation
 from app.modules.data_quality.models import DataQualityFinding, DataQualityRun
 from app.modules.data_retention.models import (
@@ -204,6 +205,8 @@ __all__ = [
     "DataSource",
     "DailyBriefItem",
     "DailyBriefRun",
+    "DailyWorkflowRun",
+    "DailyWorkflowStep",
     "DecisionReadinessAssessment",
     "DerivedCandleLineage",
     "DeterministicExplanation",

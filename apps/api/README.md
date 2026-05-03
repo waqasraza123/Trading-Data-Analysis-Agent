@@ -153,6 +153,19 @@ reliability workflow. They do not call external providers, mutate candles, auto-
 requests outside the explicit gap recovery route, execute broker actions, send alerts, auto-trade,
 or provide financial advice.
 
+Daily workflows are implemented under `/daily-workflows`. They persist one auditable backend
+orchestration for refreshing provider health, preparing recovery plans, running deterministic
+scheduled scans, generating setup context, scoring review priority, refreshing market memory,
+generating signal digests, and generating daily brief records when that backend module is installed.
+They do not execute broker actions, execute notifications, auto-trade, call external providers
+unless provider polling is explicitly enabled, or provide financial advice. See
+`docs/daily-workflows.md`.
+
+The integrated daily product flow is data freshness -> run workflow -> scanner presets -> brief ->
+triage -> setup detail -> journal/outcome review. Notifications are in-app intelligence events for
+review state only, not external delivery by default. Quality scoreboard data is observed behavior
+and diagnostics only, not account-performance or broker-result reporting.
+
 Daily workflow integration uses these backend modules together without adding broker execution:
 
 ```txt

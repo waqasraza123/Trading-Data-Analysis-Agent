@@ -21,6 +21,10 @@ The builder composes stored artifacts when present:
 
 Generation does not trigger scans, provider polling, outcome evaluation, LLM calls, notifications, or action execution.
 
+In the daily product flow, the brief is read after data freshness review, explicit workflow run,
+scanner preset setup, and deterministic scan completion. It remains a stored summary over existing
+artifacts and never becomes an execution or notification trigger.
+
 ## Sections
 
 - `summary`: counts for symbols reviewed, fresh symbols, stale/degraded symbols, review-first items, confirmation items, avoid conditions, recent outcomes, and pending backend actions.
@@ -84,7 +88,7 @@ Indexes support workspace/type/latest queries, watchlist/latest queries, brief i
 
 Allowed language includes bullish bias, bearish bias, neutral, no directional signal, setup context, invalidation context, observation zone, target context zone, review recommended, needs confirmation, avoid condition, stale data, conflicting evidence, observed follow-through, observed reversal, and watch next.
 
-The builder sanitizes banned phrases such as buy now, sell now, enter trade, exit trade, take profit, stop loss, use leverage, guaranteed, profit, win rate, and trade alert.
+The builder sanitizes unsafe direct-order instructions, leverage prompts, certainty claims, account-result claims, and external alert wording.
 
 ## Frontend
 

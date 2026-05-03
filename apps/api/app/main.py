@@ -27,6 +27,7 @@ from app.modules.confidence_calibration.routes import router as confidence_calib
 from app.modules.context_packs.routes import router as context_packs_router
 from app.modules.cross_asset_context.routes import router as cross_asset_context_router
 from app.modules.daily_briefs.routes import router as daily_briefs_router
+from app.modules.daily_workflows.routes import router as daily_workflows_router
 from app.modules.data_contracts.routes import router as data_contracts_router
 from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_retention.routes import router as data_retention_router
@@ -37,7 +38,6 @@ from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.event_studies.routes import router as event_studies_router
 from app.modules.explanation_comparison.routes import router as explanation_comparison_router
 from app.modules.explanations.routes import router as explanations_router
-from app.modules.historical_cases.routes import router as historical_cases_router
 from app.modules.imports.routes import router as imports_router
 from app.modules.intelligence_catalog.routes import router as intelligence_catalog_router
 from app.modules.intelligence_datasets.routes import router as intelligence_datasets_router
@@ -132,6 +132,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         users_router,
         symbols_router,
         data_sources_router,
+        daily_workflows_router,
         daily_briefs_router,
         capabilities_router,
         engine_versions_router,

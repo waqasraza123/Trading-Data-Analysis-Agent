@@ -11,6 +11,7 @@ import { CommandCenterNextActions } from "@/components/command-center/CommandCen
 import { CommandCenterOutcomeReview } from "@/components/command-center/CommandCenterOutcomeReview";
 import { CommandCenterPrioritySetups } from "@/components/command-center/CommandCenterPrioritySetups";
 import { CommandCenterScanStatus } from "@/components/command-center/CommandCenterScanStatus";
+import { DailyWorkflowPanel } from "@/components/daily-workflows/DailyWorkflowPanel";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCommandCenterData } from "@/lib/api/commandCenter";
 
@@ -18,6 +19,7 @@ type CommandCenterPageProps = {
   searchParams: Promise<{
     workspaceId?: string;
     preferenceProfileId?: string;
+    workflowRunId?: string;
   }>;
 };
 
@@ -31,6 +33,15 @@ export default async function CommandCenterPage({ searchParams }: CommandCenterP
         <CommandCenterHeader data={data} />
         {!data.workspace && <CommandCenterEmptyState />}
         <CommandCenterErrorState failures={data.failures} backendUnavailable={data.backendUnavailable} />
+        <DailyWorkflowPanel
+          workspaceId={data.workspace?.id || null}
+          watchlistId={data.dailyWorkflowDefaultWatchlistId}
+          preferenceProfileId={data.selectedPreferenceProfile?.id || null}
+          runs={data.dailyWorkflowRuns}
+          selectedRun={data.selectedDailyWorkflowRun}
+          selectedSteps={data.selectedDailyWorkflowSteps}
+          basePath="/command-center"
+        />
         <CommandCenterMorningBrief data={data} />
         <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_390px]">
           <div className="space-y-6">

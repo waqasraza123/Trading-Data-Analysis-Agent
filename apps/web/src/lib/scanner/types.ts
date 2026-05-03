@@ -11,6 +11,7 @@ import type {
   WorkerStatusResponse,
   Workspace,
 } from "@/lib/api/types";
+import type { DailyWorkflowFailure, DailyWorkflowRun, DailyWorkflowStep } from "@/lib/daily-workflows/types";
 
 export type ScannerFailure = {
   label: string;
@@ -139,6 +140,7 @@ export type ScannerData = {
   apiBaseUrl: string;
   requestedWorkspaceId: UUID | null;
   selectedRunId: UUID | null;
+  selectedWorkflowRunId: UUID | null;
   workspace: Workspace | null;
   workspaces: Workspace[];
   symbols: SymbolRead[];
@@ -151,9 +153,13 @@ export type ScannerData = {
   selectedRun: ScheduledScanRun | null;
   selectedRunItems: ScheduledScanRunItem[];
   selectedRunSignals: SignalClassification[];
+  dailyWorkflowRuns: DailyWorkflowRun[];
+  selectedDailyWorkflowRun: DailyWorkflowRun | null;
+  selectedDailyWorkflowSteps: DailyWorkflowStep[];
   health: HealthResponse | null;
   workerStatus: WorkerStatusResponse | null;
   failures: ScannerFailure[];
+  dailyWorkflowFailures: DailyWorkflowFailure[];
   lastUpdatedAt: string;
 };
 

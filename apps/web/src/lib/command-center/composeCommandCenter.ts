@@ -47,6 +47,11 @@ type ComposeCommandCenterInput = {
   journalEntriesBySignalId: Map<UUID, JournalEntry[]>;
   journalFailures: CommandCenterFailure[];
   providerHealthFailures: CommandCenterFailure[];
+  notificationUnreadCount: number;
+  notificationReviewCount: number;
+  notificationFailures: CommandCenterFailure[];
+  qualityWarnings: CommandCenterData["qualityWarnings"];
+  qualityFailures: CommandCenterFailure[];
 };
 
 const reviewColumns: TriageColumnKey[] = ["high_quality_context"];
@@ -61,7 +66,10 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     input.scanner.failures,
     input.journalFailures,
     input.providerHealthFailures,
+    input.notificationFailures,
+    input.qualityFailures,
   );
+  const dailyWorkflowFailures = input.scanner.dailyWorkflowFailures;
   const whatChanged = buildWhatChanged(input.brief, input.triage, workspaceId);
   const dataReadiness = buildDataReadiness(input.brief, input.providerHealthSnapshots, workspaceId);
   const reviewFirst = buildReviewFirst(input.triage, workspaceId);
@@ -77,6 +85,8 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     input.providerHealthSummary,
     input.providerHealthSnapshots,
     journalPrompts,
+    input.notificationUnreadCount,
+    input.qualityWarnings,
     workspaceId,
   );
   const navigationItems = buildNavigationItems(workspaceId);
@@ -92,6 +102,13 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     providerHealthSnapshots: input.providerHealthSnapshots,
     generatedAt: input.generatedAt,
     backendUnavailable,
+    dailyWorkflowRuns: input.scanner.dailyWorkflowRuns,
+    selectedDailyWorkflowRun: input.scanner.selectedDailyWorkflowRun,
+    selectedDailyWorkflowSteps: input.scanner.selectedDailyWorkflowSteps,
+    dailyWorkflowDefaultWatchlistId: input.scanner.watchlists[0]?.watchlist.id || null,
+    notificationUnreadCount: input.notificationUnreadCount,
+    notificationReviewCount: input.notificationReviewCount,
+    qualityWarnings: input.qualityWarnings,
     summary: {
       changedItemCount: whatChanged.length,
       freshSymbolCount: input.providerHealthSummary?.fresh_count ?? input.brief.summary.freshSymbols,
@@ -99,6 +116,8 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
       missingCandleCount: input.providerHealthSummary?.missing_candle_count ?? 0,
       providerFailureCount: input.providerHealthSummary?.provider_failure_count ?? 0,
       dataReadyCount: input.providerHealthSummary?.ready_for_deterministic_analysis_count ?? 0,
+      unreadNotificationCount: input.notificationUnreadCount,
+      qualityWarningCount: input.qualityWarnings.length,
       reviewFirstCount: reviewFirst.length,
       confirmationCount: needsConfirmation.length,
       avoidCount: avoidItems.length,
@@ -130,6 +149,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
       navigationItems: sectionStatus("Daily workflow links", navigationItems.length, failures, []),
     },
     failures,
+    dailyWorkflowFailures,
   };
 }
 
@@ -348,11 +368,22 @@ function buildNextActions(
   providerHealthSummary: ProviderHealthSummary | null,
   providerHealthSnapshots: ProviderHealthSnapshot[],
   journalPrompts: CommandCenterJournalItem[],
+  notificationUnreadCount: number,
+  qualityWarnings: CommandCenterData["qualityWarnings"],
   workspaceId: UUID | null,
 ): CommandCenterNextAction[] {
   const actions: CommandCenterNextAction[] = [];
+  if (scanner.presets.length > 0) {
+    actions.push(action("open-scanner-presets", "Open scanner presets", `${scanner.presets.length} preset templates are available for explicit scan setup.`, "Scanner", "info", commandCenterHref("/scanner", workspaceId)));
+  }
   if (scanner.dueScanConfigs.length > 0) {
     actions.push(action("run-deterministic-scan", "Run deterministic scan", `${scanner.dueScanConfigs.length} scan configs are due.`, "Scanner", "warning", commandCenterHref("/scanner", workspaceId)));
+  }
+  if (notificationUnreadCount > 0) {
+    actions.push(action("review-notification-events", "Review notification events", `${notificationUnreadCount} unread in-app intelligence events are waiting.`, "Notifications", "info", commandCenterHref("/notifications", workspaceId)));
+  }
+  if (qualityWarnings.length > 0) {
+    actions.push(action("review-quality-warnings", "Review quality warnings", qualityWarnings[0].detail, "Quality", qualityWarnings.some((item) => item.severity === "danger") ? "danger" : "warning", commandCenterHref("/quality", workspaceId)));
   }
   const needsProviderRecovery =
     (providerHealthSummary?.missing_candle_count || 0) > 0 ||
@@ -374,7 +405,7 @@ function buildNextActions(
   if (journalPrompts.length > 0) {
     actions.push(action("review-journal", "Review journal", `${journalPrompts.length} journal prompts or notes available.`, "Journal", "neutral", journalPrompts[0].href));
   }
-  return uniqueBy(actions, (item) => item.id).slice(0, 7);
+  return uniqueBy(actions, (item) => item.id).slice(0, 8);
 }
 
 function buildNavigationItems(workspaceId: UUID | null): CommandCenterNavigationItem[] {
@@ -382,6 +413,7 @@ function buildNavigationItems(workspaceId: UUID | null): CommandCenterNavigation
     { id: "brief", label: "Brief", detail: "Read what changed first.", href: commandCenterHref("/brief", workspaceId), tone: "info" },
     { id: "triage", label: "Triage", detail: "Sort signals by review state.", href: commandCenterHref("/triage", workspaceId), tone: "warning" },
     { id: "scanner", label: "Scanner", detail: "Run or inspect deterministic scans.", href: commandCenterHref("/scanner", workspaceId), tone: "good" },
+    { id: "notifications", label: "Notifications", detail: "Review in-app intelligence events.", href: commandCenterHref("/notifications", workspaceId), tone: "info" },
     { id: "data", label: "Data", detail: "Review freshness and recovery setup.", href: commandCenterHref("/data/onboarding", workspaceId), tone: "neutral" },
     { id: "quality", label: "Quality", detail: "Review signal quality and drift.", href: commandCenterHref("/quality", workspaceId), tone: "info" },
     { id: "preferences", label: "Preferences", detail: "Set review workflow filters.", href: commandCenterHref("/preferences/strategy", workspaceId), tone: "neutral" },

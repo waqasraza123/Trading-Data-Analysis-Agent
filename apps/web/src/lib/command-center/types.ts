@@ -1,4 +1,5 @@
 import type { JournalEntry, UUID, Workspace } from "@/lib/api/types";
+import type { DailyWorkflowFailure, DailyWorkflowRun, DailyWorkflowStep } from "@/lib/daily-workflows/types";
 import type { PreferenceProfile } from "@/lib/preferences/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
 
@@ -26,6 +27,8 @@ export type CommandCenterSummary = {
   missingCandleCount: number;
   providerFailureCount: number;
   dataReadyCount: number;
+  unreadNotificationCount: number;
+  qualityWarningCount: number;
   reviewFirstCount: number;
   confirmationCount: number;
   avoidCount: number;
@@ -123,6 +126,13 @@ export type CommandCenterNextAction = {
   href: string;
 };
 
+export type CommandCenterQualityWarning = {
+  id: string;
+  title: string;
+  detail: string;
+  severity: "info" | "warning" | "danger";
+};
+
 export type CommandCenterNavigationItem = {
   id: string;
   label: string;
@@ -141,6 +151,13 @@ export type CommandCenterData = {
   providerHealthSnapshots: ProviderHealthSnapshot[];
   generatedAt: string;
   backendUnavailable: boolean;
+  dailyWorkflowRuns: DailyWorkflowRun[];
+  selectedDailyWorkflowRun: DailyWorkflowRun | null;
+  selectedDailyWorkflowSteps: DailyWorkflowStep[];
+  dailyWorkflowDefaultWatchlistId: UUID | null;
+  notificationUnreadCount: number;
+  notificationReviewCount: number;
+  qualityWarnings: CommandCenterQualityWarning[];
   summary: CommandCenterSummary;
   whatChanged: CommandCenterChangedItem[];
   dataReadiness: CommandCenterDataReadinessItem[];
@@ -165,4 +182,5 @@ export type CommandCenterData = {
     navigationItems: CommandCenterSectionStatus;
   };
   failures: CommandCenterFailure[];
+  dailyWorkflowFailures: DailyWorkflowFailure[];
 };

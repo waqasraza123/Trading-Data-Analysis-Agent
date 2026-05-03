@@ -69,6 +69,11 @@ def test_settings_load_defaults() -> None:
     assert str(settings.signal_priority_stale_penalty) == "0.30"
     assert str(settings.signal_priority_conflict_penalty) == "0.25"
     assert str(settings.signal_priority_review_required_threshold) == "0.50"
+    assert settings.daily_workflow_version == "v1"
+    assert settings.daily_workflow_max_symbols == 100
+    assert settings.daily_workflow_max_scan_items == 500
+    assert settings.daily_workflow_enable_provider_polling is False
+    assert settings.daily_workflow_enable_notifications is False
     assert settings.preference_profile_default_max_stale_seconds == 7200
     assert settings.chart_unsupported_rejection_enabled is True
     assert settings.audit_timeline_max_events == 200
