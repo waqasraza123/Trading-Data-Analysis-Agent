@@ -156,6 +156,10 @@ market_regimes
 market_sessions
 cross_asset_context
 walk_forward_validation
+market_memory
+pattern_attribution
+cohort_drift
+scenario_outcomes
 candle_gap_recovery
 explanation_comparison
 data_quality
@@ -176,6 +180,10 @@ The registry includes the merged context and diagnostics modules:
 
 - `cross_asset_context` records final-candle-only co-movement, divergence, and possible lead/lag context.
 - `walk_forward_validation` records validation-window behavior from existing signals and outcomes.
+- `market_memory` records latest deterministic context snapshots from persisted artifacts only.
+- `pattern_attribution` records candidate attribution diagnostics without mutating detectors, candidates, or signals.
+- `cohort_drift` records baseline-versus-recent cohort behavior changes from existing signals and outcomes.
+- `scenario_outcomes` records deterministic support labels for persisted scenario hypotheses against stored outcomes.
 - `candle_gap_recovery` records missing final-candle recovery plans and optional pending polling rows without executing provider fetches.
 - `explanation_comparison` records persisted explanation alignment findings without calling LLM providers or regenerating explanations.
 

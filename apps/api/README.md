@@ -1,10 +1,28 @@
 # Trading Intelligence API
 
+Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
+pattern candidates contributed to final signals and observed outcomes by detector type, selected
+candidate, rejected candidate, blocked candidate, horizon, profile, symbol, and timeframe. It is
+diagnostic only: it does not mutate candidates or detectors, change final signal classification,
+auto-tune profiles, call LLMs, send alerts, execute broker actions, or provide financial advice.
+
 Rolling market state memory is implemented under `/market-memory`. It stores one latest
 deterministic context snapshot per workspace, symbol, optional source, timeframe, and state version
 for faster reporting, scans, readiness checks, and future UI. It reads persisted final candles and
 deterministic artifacts only; it does not run analysis, evaluate outcomes, call LLMs, mutate
 signals, send alerts, execute broker actions, auto-trade, or provide financial advice.
+
+Signal cohort drift detection is implemented under `/cohort-drift`. It compares recent stored
+signal/outcome behavior against a baseline period by cohort and horizon, stores drift labels,
+severity, safe rate deltas, confidence alignment drift, low-sample states, and review metadata. It
+does not mutate signals or outcomes, modify strategy profiles, call LLMs, send alerts, execute
+broker actions, or provide financial advice.
+
+Scenario hypothesis outcome tracking is implemented under `/reasoning/scenarios`,
+`/reasoning/runs`, and `/scenario-outcomes`. It compares persisted scenario hypotheses with stored
+signal outcomes, writes separate support-label rows and summary runs, and does not call LLMs,
+generate new scenarios, mutate source artifacts, execute broker actions, or provide financial
+advice.
 
 Walk-forward validation is implemented under `/walk-forward-validations`. It analyzes stored
 deterministic signals and stored outcomes across chronological validation windows to summarize
@@ -24,6 +42,11 @@ with an optional guarded `/synthetic-fixtures/generate` endpoint and
 `python -m app.cli synthetic-fixtures generate` CLI helper. They create repeatable development and
 testing OHLC inputs only; they do not fetch external data, mutate production data, run analysis,
 send alerts, execute broker actions, auto-trade, or provide financial advice.
+
+These deterministic modules connect through persisted artifacts only: market memory summarizes the
+latest context, cohort drift and pattern attribution read stored signal outcomes, scenario outcomes
+read persisted scenario hypotheses and outcomes, and synthetic fixtures only generate exportable
+inputs for development and tests.
 
 Cross-asset context support is implemented under `/analysis-runs/{id}/cross-asset-context`,
 `/signals/{id}/cross-asset-context`, and `/cross-asset-context/runs/{id}/results`. It compares
@@ -296,6 +319,9 @@ SCENARIO_ENSEMBLE_VERSION=v1
 SCENARIO_ENSEMBLE_DEFAULT_PROVIDER=mock
 SCENARIO_ENSEMBLE_MAX_PROVIDERS=3
 SCENARIO_ENSEMBLE_MIN_AGREEMENT_RATIO=0.6000
+SCENARIO_OUTCOME_EVALUATION_VERSION=v1
+SCENARIO_OUTCOME_DEFAULT_HORIZON_MINUTES=30
+SCENARIO_OUTCOME_SUPPORT_THRESHOLD=0.6000
 EXPLANATION_COMPARISON_VERSION=v1
 EXPLANATION_COMPARISON_ALIGNMENT_THRESHOLD=0.7500
 EXPLANATION_COMPARISON_REVIEW_THRESHOLD=0.5000
@@ -308,6 +334,13 @@ WALK_FORWARD_DEFAULT_WINDOW_DAYS=30
 WALK_FORWARD_MINIMUM_SAMPLE_SIZE=20
 WALK_FORWARD_DEGRADATION_THRESHOLD=0.20
 WALK_FORWARD_IMPROVEMENT_THRESHOLD=0.20
+COHORT_DRIFT_VERSION=v1
+COHORT_DRIFT_MINIMUM_SAMPLE_SIZE=20
+COHORT_DRIFT_MILD_THRESHOLD=0.10
+COHORT_DRIFT_MODERATE_THRESHOLD=0.20
+COHORT_DRIFT_SEVERE_THRESHOLD=0.35
+COHORT_DRIFT_DEFAULT_BASELINE_DAYS=90
+COHORT_DRIFT_DEFAULT_COMPARISON_DAYS=30
 CAPABILITY_REGISTRY_DEFAULT_VERSION=v1
 SYNTHETIC_FIXTURES_API_ENABLED=false
 SYNTHETIC_FIXTURES_DEFAULT_SEED=12345
@@ -369,6 +402,10 @@ PROFILE_DIAGNOSTICS_STRONG_FOLLOW_THROUGH_RATE=0.65
 PROFILE_DIAGNOSTICS_HIGH_REVERSAL_RATE=0.35
 PROFILE_DIAGNOSTICS_HIGH_NO_FOLLOW_THROUGH_RATE=0.40
 PROFILE_DIAGNOSTICS_CONFIDENCE_MISALIGNMENT_THRESHOLD=0.45
+PATTERN_ATTRIBUTION_VERSION=v1
+PATTERN_ATTRIBUTION_MINIMUM_SAMPLE_SIZE=20
+PATTERN_ATTRIBUTION_HIGH_REJECTION_RATE=0.50
+PATTERN_ATTRIBUTION_HIGH_REVERSAL_RATE=0.35
 PROFILE_GOVERNANCE_DEFAULT_REVIEW_REQUIRED=true
 PROFILE_GOVERNANCE_COMPONENT_WEIGHT_TOLERANCE=0.0001
 HISTORICAL_CASE_VECTOR_VERSION=v1
@@ -639,6 +676,12 @@ Outcome-based profile diagnostics are documented in:
 
 ```txt
 docs/profile-diagnostics.md
+```
+
+Pattern detector attribution diagnostics are documented in:
+
+```txt
+docs/pattern-attribution.md
 ```
 
 Confidence calibration analytics are documented in:

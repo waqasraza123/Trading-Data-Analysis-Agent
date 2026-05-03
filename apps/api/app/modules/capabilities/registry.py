@@ -487,6 +487,90 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         ),
     ),
     CapabilityDefinition(
+        key="market_memory",
+        name="Rolling Market State Memory",
+        category=CapabilityCategory.REPORTING,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.market_memory",
+        produced_artifacts=("rolling_market_state_snapshots",),
+        route_refs=(
+            "/market-memory/snapshots",
+            "/market-memory/snapshots/by-symbol",
+            "/market-memory/workspaces/{workspace_id}/refresh",
+        ),
+        dependencies=(
+            "datasets",
+            "analysis_lifecycle",
+            "signal_classification",
+            "outcomes",
+            "data_quality",
+            "market_regimes",
+            "market_sessions",
+            "cross_asset_context",
+        ),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            safe_to_run_automatically=False,
+            notes=(
+                "Caches latest deterministic context from persisted artifacts only; "
+                "does not run analysis or mutate source artifacts."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
+        key="pattern_attribution",
+        name="Pattern Detector Attribution",
+        category=CapabilityCategory.DIAGNOSTICS,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.pattern_attribution",
+        produced_artifacts=("pattern_attribution_runs", "pattern_attribution_results"),
+        route_refs=(
+            "/pattern-attribution/run",
+            "/pattern-attribution/runs",
+            "/pattern-attribution/runs/{run_id}/results",
+        ),
+        dependencies=("analysis_lifecycle", "signal_classification", "outcomes"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            safe_to_run_automatically=False,
+            notes=(
+                "Attributes stored pattern candidates against final signals and stored outcomes "
+                "without candidate, detector, or signal mutation."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
+        key="cohort_drift",
+        name="Signal Cohort Drift Detection",
+        category=CapabilityCategory.DIAGNOSTICS,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.cohort_drift",
+        produced_artifacts=("cohort_drift_runs", "cohort_drift_results"),
+        route_refs=(
+            "/cohort-drift/run",
+            "/cohort-drift/runs",
+            "/cohort-drift/runs/{run_id}/results",
+            "/cohort-drift/results/recent",
+        ),
+        dependencies=("signal_classification", "outcomes", "market_sessions", "market_regimes"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            notes=(
+                "Compares recent stored signal/outcome cohort behavior against a "
+                "baseline period without source artifact mutation."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
         key="candle_gap_recovery",
         name="Candle Gap Recovery Planner",
         category=CapabilityCategory.OPERATIONS,

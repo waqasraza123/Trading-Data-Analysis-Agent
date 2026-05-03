@@ -92,6 +92,13 @@ class Settings(BaseSettings):
     walk_forward_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     walk_forward_degradation_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     walk_forward_improvement_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    cohort_drift_version: str = "v1"
+    cohort_drift_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    cohort_drift_mild_threshold: Decimal = Field(default=Decimal("0.10"), ge=0, le=1)
+    cohort_drift_moderate_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    cohort_drift_severe_threshold: Decimal = Field(default=Decimal("0.35"), ge=0, le=1)
+    cohort_drift_default_baseline_days: int = Field(default=90, ge=1, le=3660)
+    cohort_drift_default_comparison_days: int = Field(default=30, ge=1, le=3660)
     capability_registry_default_version: str = "v1"
     synthetic_fixtures_api_enabled: bool = False
     synthetic_fixtures_default_seed: int = Field(default=12345, ge=0)
@@ -250,6 +257,18 @@ class Settings(BaseSettings):
     )
     profile_diagnostics_confidence_misalignment_threshold: Decimal = Field(
         default=Decimal("0.45"),
+        ge=0,
+        le=1,
+    )
+    pattern_attribution_version: str = "v1"
+    pattern_attribution_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    pattern_attribution_high_rejection_rate: Decimal = Field(
+        default=Decimal("0.50"),
+        ge=0,
+        le=1,
+    )
+    pattern_attribution_high_reversal_rate: Decimal = Field(
+        default=Decimal("0.35"),
         ge=0,
         le=1,
     )
@@ -497,6 +516,7 @@ class Settings(BaseSettings):
         "scenario_outcome_evaluation_version",
         "backtest_experiment_version",
         "walk_forward_validation_version",
+        "cohort_drift_version",
         "capability_registry_default_version",
         "market_memory_state_version",
     )
@@ -637,6 +657,7 @@ class Settings(BaseSettings):
         "timeframe_aggregation_version",
         "multi_timeframe_context_version",
         "cross_asset_context_version",
+        "pattern_attribution_version",
     )
     @classmethod
     def validate_timeframe_aggregation_versions(cls, value: str) -> str:

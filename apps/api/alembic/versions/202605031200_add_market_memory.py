@@ -69,14 +69,11 @@ def upgrade() -> None:
         sa.CheckConstraint(
             "data_quality_label in "
             "('strong', 'acceptable', 'degraded', 'poor', 'insufficient', 'unknown')",
-            name=(
-                "ck_rolling_market_state_snapshots_"
-                "rolling_market_state_data_quality_label_allowed"
-            ),
+            name="rolling_market_state_data_quality_label_allowed",
         ),
         sa.CheckConstraint(
             "freshness_label in ('fresh', 'stale', 'delayed', 'no_data', 'unknown')",
-            name="ck_rolling_market_state_snapshots_rolling_market_state_freshness_label_allowed",
+            name="rolling_market_state_freshness_label_allowed",
         ),
         sa.ForeignKeyConstraint(
             ["latest_analysis_run_id"],
