@@ -1,3 +1,4 @@
+import { WorkflowLinks } from "@/components/layout/workflow-links";
 import type { Workspace } from "@/lib/api/types";
 import type { OnboardingSelection, OnboardingStepKey } from "@/lib/data-onboarding/types";
 
@@ -32,22 +33,25 @@ export function DataOnboardingHeader({
             Configure source coverage and verify current final-candle readiness before deterministic analysis.
           </p>
         </div>
-        <div className="grid gap-2">
-          <label className="text-xs font-semibold uppercase text-slate-500" htmlFor="workspace-select">
-            Workspace
-          </label>
-          <select
-            id="workspace-select"
-            value={selection.workspaceId || ""}
-            onChange={(event) => onWorkspaceChange(event.target.value)}
-            className="min-w-60 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm"
-          >
-            {workspaces.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            <label className="text-xs font-semibold uppercase text-slate-500" htmlFor="workspace-select">
+              Workspace
+            </label>
+            <select
+              id="workspace-select"
+              value={selection.workspaceId || ""}
+              onChange={(event) => onWorkspaceChange(event.target.value)}
+              className="min-w-60 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm"
+            >
+              {workspaces.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <WorkflowLinks workspaceId={selection.workspaceId} targets={["brief", "triage", "scanner"]} />
         </div>
       </div>
       <div className="surface rounded-lg p-4">

@@ -107,11 +107,14 @@ Open:
 
 ```txt
 http://127.0.0.1:3000/dashboard
+http://127.0.0.1:3000/brief
 http://127.0.0.1:3000/scanner
 http://127.0.0.1:3000/triage
+http://127.0.0.1:3000/data/onboarding
 ```
 
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
+Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.
 Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`.
 Use `/triage?workspaceId=<workspace-id>` to review deterministic signals by triage column. Filters support workspace, symbol, timeframe, bias, confidence, triage column, data freshness, profile key, only fresh, and only review required.
 Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding workflow. The page persists selected workspace, source, symbols, and timeframes in the URL and browser storage.
@@ -125,6 +128,20 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 - `/brief` renders the workspace daily brief, composed in the web client layer from existing optional backend endpoints.
 - `/signals/[signalId]` renders a full read-only setup detail view, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
 - `/symbols/[symbolId]` renders symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs.
+
+## Daily Workflow Loop
+
+The integrated web surface is arranged for a deterministic daily review loop:
+
+1. Ingest or verify fresh data in `/data/onboarding`.
+2. Run deterministic watchlist scans in `/scanner`.
+3. Review the workspace cockpit in `/brief`.
+4. Triage stored signals in `/triage`.
+5. Inspect setup context in `/signals/[signalId]`.
+6. Add optional observational journal notes from setup detail.
+7. Revisit observed outcomes and digest summaries in `/brief`, `/dashboard`, or symbol detail.
+
+The shared navigation links Dashboard, Brief, Triage, Scanner, and Data Onboarding. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; symbol pages link back into scanner and onboarding.
 
 ## Setup Detail View
 

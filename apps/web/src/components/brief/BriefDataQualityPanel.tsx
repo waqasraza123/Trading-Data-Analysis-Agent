@@ -39,6 +39,14 @@ export function BriefDataQualityPanel({ brief }: { brief: WorkspaceBrief }) {
                     Review symbol
                   </Link>
                 )}
+                {brief.workspace && (
+                  <Link
+                    className="text-xs font-medium text-slate-500 hover:text-[var(--strong)]"
+                    href={`/data/onboarding?workspaceId=${brief.workspace.id}${issue.symbolId ? `&symbolIds=${issue.symbolId}` : ""}${issue.timeframe ? `&timeframes=${encodeURIComponent(issue.timeframe)}` : ""}`}
+                  >
+                    Data onboarding
+                  </Link>
+                )}
               </div>
             </div>
           ))}

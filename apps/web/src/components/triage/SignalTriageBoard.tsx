@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/empty-states/empty-state";
+import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { triageColumns } from "@/lib/triage/labels";
 import type { TriageBoardData } from "@/lib/triage/types";
 import { SignalTriageColumn } from "./SignalTriageColumn";
@@ -18,8 +19,11 @@ export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
             Prioritize stored deterministic signals by context quality, confirmation needs, conflicts, data freshness, and review state.
           </p>
         </div>
-        <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
-          Workspace {data.workspace?.name || "not selected"}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
+            Workspace {data.workspace?.name || "not selected"}
+          </div>
+          <WorkflowLinks workspaceId={data.workspace?.id} targets={["brief", "scanner", "dataOnboarding"]} />
         </div>
       </section>
       {!data.workspace ? (

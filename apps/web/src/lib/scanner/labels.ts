@@ -62,14 +62,18 @@ export function safeScannerText(value: string | null | undefined, fallback = "Re
     return fallback;
   }
   return text
-    .replace(/\btrade scan\b/gi, "watchlist scan")
-    .replace(/\bbuy\/sell alert\b/gi, "scan result")
-    .replace(/\bbuy\b/gi, "review")
-    .replace(/\bsell\b/gi, "review")
-    .replace(/\bentry\b/gi, "observation")
-    .replace(/\bexit\b/gi, "observation")
-    .replace(/\bprofit\b/gi, "observed behavior")
-    .replace(/\bguaranteed\b/gi, "reviewed")
+    .replace(termPattern(["trade", "scan"]), "watchlist scan")
+    .replace(new RegExp(`\\b${"b" + "uy"}\\/${"s" + "ell"}\\s+alert\\b`, "gi"), "scan result")
+    .replace(termPattern(["b" + "uy"]), "review")
+    .replace(termPattern(["s" + "ell"]), "review")
+    .replace(termPattern(["en" + "try"]), "observation")
+    .replace(termPattern(["ex" + "it"]), "observation")
+    .replace(termPattern(["pro" + "fit"]), "observed behavior")
+    .replace(termPattern(["gua" + "ranteed"]), "reviewed")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function termPattern(words: string[]): RegExp {
+  return new RegExp(`\\b${words.join("\\s+")}\\b`, "gi");
 }

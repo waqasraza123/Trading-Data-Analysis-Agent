@@ -14,6 +14,7 @@ import { SetupQualityPanel } from "@/components/setup-detail/SetupQualityPanel";
 import { SetupReasoningPanel } from "@/components/setup-detail/SetupReasoningPanel";
 import { SetupWaitAvoidPanel } from "@/components/setup-detail/SetupWaitAvoidPanel";
 import { SetupZonesPanel } from "@/components/setup-detail/SetupZonesPanel";
+import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { composeSetupDetail } from "@/lib/setup-detail/composeSetupDetail";
 import type { SetupDetailData } from "@/lib/setup-detail/types";
 
@@ -38,6 +39,7 @@ export function SetupDetailView({ data }: SetupDetailViewProps) {
   return (
     <div className="space-y-6">
       <SetupDetailHeader header={model.header} />
+      <WorkflowLinks workspaceId={workspaceId} targets={["brief", "triage", "scanner", "dataOnboarding"]} />
       <SetupErrorSection failures={model.failures.filter((failure) => !failure.missing)} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <main className="space-y-6">

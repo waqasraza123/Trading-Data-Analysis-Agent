@@ -132,6 +132,13 @@ The web data onboarding route at `/data/onboarding` uses existing backend contra
 `createRequests=false` and does not execute external provider fetches. Provider credentials remain
 server-side; the UI does not accept provider API keys.
 
+The integrated daily workflow pages in `apps/web` use the existing backend surface only. `/brief`
+and `/triage` are frontend composition layers over market memory, signals, outcomes, setup context,
+decision readiness, action items, operator reviews, signal digests, watchlists, scheduled scans,
+data-quality, market sessions/regimes, intelligence reports, audit timelines, and journal APIs.
+No backend daily brief or triage router is required. Missing optional endpoints should return 404
+or standard API errors; the web client maps those into section-level unavailable states.
+
 The integrated dashboard surface now reads signal digests and setup context when those endpoints
 are available. Digest items may reference setup context rows, and journal entries can link to setup
 context rows for later deterministic review. Notification events remain optional, explicitly

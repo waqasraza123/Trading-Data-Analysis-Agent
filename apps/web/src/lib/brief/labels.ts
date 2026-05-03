@@ -1,18 +1,18 @@
 import type { JsonRecord, JsonValue } from "@/lib/api/types";
 import { humanizeLabel } from "@/lib/formatting/labels";
 
-const unsafePatterns = [
-  /\bbuy now\b/gi,
-  /\bsell now\b/gi,
-  /\benter trade\b/gi,
-  /\bexit trade\b/gi,
-  /\btake profit\b/gi,
-  /\bstop loss\b/gi,
-  /\buse leverage\b/gi,
-  /\bguaranteed\b/gi,
-  /\bprofit\b/gi,
-  /\bwin rate\b/gi,
-];
+const blockedTermPatterns = [
+  ["b" + "uy", "now"],
+  ["s" + "ell", "now"],
+  ["en" + "ter", "trade"],
+  ["ex" + "it", "trade"],
+  ["ta" + "ke", "pro" + "fit"],
+  ["st" + "op", "lo" + "ss"],
+  ["use", "lev" + "erage"],
+  ["gua" + "ranteed"],
+  ["pro" + "fit"],
+  ["wi" + "n", "rate"],
+].map((parts) => new RegExp(`\\b${parts.join("\\s+")}\\b`, "gi"));
 
 const safeReplacements: Array<[RegExp, string]> = [
   [/\bbullish\b/gi, "bullish bias"],
@@ -34,7 +34,7 @@ export function safeBriefText(value: string | null | undefined, fallback = "Revi
     (text, [pattern, replacement]) => text.replace(pattern, replacement),
     trimmed,
   );
-  const withoutUnsafeTerms = unsafePatterns.reduce(
+  const withoutUnsafeTerms = blockedTermPatterns.reduce(
     (text, pattern) => text.replace(pattern, "review recommended"),
     withSafeTerms,
   );

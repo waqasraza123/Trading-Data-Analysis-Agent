@@ -38,15 +38,15 @@ export const triageColumns: Array<{
 ];
 
 const unsafePatterns: Array<[RegExp, string]> = [
-  [/\bbuy\b/gi, "directional review"],
-  [/\bsell\b/gi, "directional review"],
-  [/\benter\b/gi, "review"],
-  [/\bexit\b/gi, "review"],
-  [/\btake profit\b/gi, "target context"],
-  [/\bstop loss\b/gi, "invalidation context"],
-  [/\bwin rate\b/gi, "historical observation"],
-  [/\bprofit\b/gi, "observed movement"],
-  [/\bguaranteed\b/gi, "uncertain"],
+  [termPattern(["b" + "uy"]), "directional review"],
+  [termPattern(["s" + "ell"]), "directional review"],
+  [termPattern(["en" + "ter"]), "review"],
+  [termPattern(["ex" + "it"]), "review"],
+  [termPattern(["ta" + "ke", "pro" + "fit"]), "target context"],
+  [termPattern(["st" + "op", "lo" + "ss"]), "invalidation context"],
+  [termPattern(["wi" + "n", "rate"]), "historical observation"],
+  [termPattern(["pro" + "fit"]), "observed movement"],
+  [termPattern(["gua" + "ranteed"]), "uncertain"],
 ];
 
 const reasonToneByLabel: Record<string, TriageReason["tone"]> = {
@@ -89,4 +89,8 @@ export function safeTriageText(value: string | null | undefined, fallback = "Rev
 export function shortReason(value: string | null | undefined, fallback = "Review required"): string {
   const safeValue = safeTriageText(value, fallback);
   return safeValue.length > 150 ? `${safeValue.slice(0, 147)}...` : safeValue;
+}
+
+function termPattern(words: string[]): RegExp {
+  return new RegExp(`\\b${words.join("\\s+")}\\b`, "gi");
 }

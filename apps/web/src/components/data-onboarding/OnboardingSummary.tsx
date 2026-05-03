@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MetricCard } from "@/components/layout/panel";
 import { Badge, toneForQuality } from "@/components/status/badge";
 import { summarizeDataHealth } from "@/lib/data-onboarding/composeDataHealth";
@@ -30,6 +31,10 @@ export function OnboardingSummary({
     (count, row) => count + (row.preparation?.prepared_request_count || 0),
     0,
   );
+  const readyRows = healthRows.filter((row) => row.status === "ready");
+  const scannerHref = readyRows[0]
+    ? `/scanner?workspaceId=${readyRows[0].target.workspaceId}`
+    : "/scanner";
 
   return (
     <section className="surface rounded-lg p-5">
@@ -56,7 +61,14 @@ export function OnboardingSummary({
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
             <div className="rounded-lg border border-[var(--line)] p-4">
-              <h4 className="text-sm font-semibold text-[var(--strong)]">Per-symbol status</h4>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-[var(--strong)]">Per-symbol status</h4>
+                {readyRows.length > 0 && (
+                  <Link className="text-sm font-medium text-[var(--info)]" href={scannerHref}>
+                    Open scanner
+                  </Link>
+                )}
+              </div>
               <div className="mt-3 grid gap-2">
                 {healthRows.map((row) => (
                   <div key={`${row.target.symbol.id}-${row.target.timeframe}`} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-[var(--panel-muted)] px-3 py-2 text-sm">

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Badge } from "@/components/status/badge";
 import type { ScannerData } from "@/lib/scanner/types";
 
@@ -14,9 +14,7 @@ export function ScannerHeader({ data }: { data: ScannerData }) {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Badge value={data.workspace?.name || "No workspace"} tone={data.workspace ? "info" : "warning"} />
-        <Link className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800" href="/dashboard">
-          Dashboard
-        </Link>
+        <WorkflowLinks workspaceId={data.workspace?.id} targets={["dashboard", "brief", "triage", "dataOnboarding"]} />
       </div>
     </section>
   );

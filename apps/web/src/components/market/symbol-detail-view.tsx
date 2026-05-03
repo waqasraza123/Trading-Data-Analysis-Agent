@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { Panel } from "@/components/layout/panel";
+import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { OutcomeList } from "@/components/outcomes/outcome-list";
 import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
 import type {
@@ -53,6 +54,7 @@ export function SymbolDetailView({
             <Badge value={workspace?.name || "No workspace"} tone="info" />
           </div>
         </div>
+        <WorkflowLinks workspaceId={workspace?.id} targets={["brief", "triage", "scanner", "dataOnboarding"]} className="mt-5" />
       </Panel>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">

@@ -36,6 +36,14 @@ export function BriefAvoidConditions({ brief }: { brief: WorkspaceBrief }) {
                     Review signal
                   </Link>
                 )}
+                {brief.workspace && item.symbolId && (
+                  <Link
+                    className="text-xs font-medium text-slate-500 hover:text-[var(--strong)]"
+                    href={`/data/onboarding?workspaceId=${brief.workspace.id}&symbolIds=${item.symbolId}${item.timeframe ? `&timeframes=${encodeURIComponent(item.timeframe)}` : ""}`}
+                  >
+                    Data onboarding
+                  </Link>
+                )}
               </div>
             </div>
           ))}

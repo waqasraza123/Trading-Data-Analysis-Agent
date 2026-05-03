@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
+import { workflowHref } from "@/components/layout/workflow-links";
 import { formatDateTime, formatRelativeTime } from "@/lib/formatting/dates";
 import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { formatPercent } from "@/lib/formatting/numbers";
@@ -13,6 +14,9 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
   const topEvidence = candidate.signal.evidence[0]?.message || candidate.signal.signal.summary;
   const topRisk = candidate.signal.risk_notes[0]?.message || candidate.setupContext?.risk_notes_json[0]?.message;
   const setupQuality = candidate.setupContext?.setup_quality_label || "Context unavailable";
+  const workspaceId = signal.workspace_id;
+  const dataOnboardingBaseHref = workflowHref("dataOnboarding", workspaceId);
+  const dataOnboardingHref = `${dataOnboardingBaseHref}${dataOnboardingBaseHref.includes("?") ? "&" : "?"}symbolIds=${signal.symbol_id}&timeframes=${encodeURIComponent(signal.timeframe)}`;
 
   return (
     <article className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4">
@@ -57,6 +61,11 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
         {candidate.setupContext && (
           <Link className="rounded-md border border-[var(--line)] px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900" href={`/signals/${signal.id}#setup-context`}>
             Setup context
+          </Link>
+        )}
+        {candidate.classification.column === "stale_data_issue" && (
+          <Link className="rounded-md border border-[var(--line)] px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900" href={dataOnboardingHref}>
+            Data onboarding
           </Link>
         )}
       </div>
