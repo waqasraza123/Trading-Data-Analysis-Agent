@@ -3,11 +3,13 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings, get_settings
 from app.core.errors import AppError
 from app.core.time import utc_now
 from app.modules.analysis.models import AnalysisRun
 from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.outcomes.models import SignalOutcome
+from app.modules.setup_context.models import SetupContext
 from app.modules.signals.models import Signal
 from app.modules.trading_journal.models import (
     JournalEntry,
@@ -30,8 +32,9 @@ from app.modules.workspaces.models import Workspace
 
 
 class TradingJournalService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, settings: Settings | None = None) -> None:
         self.session = session
+        self.settings = settings or get_settings()
         self.repository = TradingJournalRepository(session)
 
     async def create_journal_entry(self, payload: JournalEntryCreateRequest) -> JournalEntryRead:
@@ -47,6 +50,7 @@ class TradingJournalService:
             payload.workspace_id,
             payload.chart_screenshot_run_id,
         )
+        await self.validate_setup_context(payload.workspace_id, payload.setup_context_id)
         entry = await self.repository.create_entry(
             JournalEntry(
                 workspace_id=payload.workspace_id,
@@ -125,6 +129,7 @@ class TradingJournalService:
             )
             entry.chart_screenshot_run_id = payload.chart_screenshot_run_id
         if "setup_context_id" in fields:
+            await self.validate_setup_context(entry.workspace_id, payload.setup_context_id)
             entry.setup_context_id = payload.setup_context_id
         if payload.title is not None:
             entry.title = payload.title
@@ -197,6 +202,7 @@ class TradingJournalService:
             **result.metadata,
             **(metadata or {}),
             "deterministicTemplate": True,
+            "journalReviewVersion": self.settings.journal_review_version,
             "llmUsed": False,
             "mutatedSignal": False,
             "mutatedOutcome": False,
@@ -297,6 +303,7 @@ class TradingJournalService:
             "analysis_run": AnalysisRun,
             "chart_screenshot_run": ChartScreenshotRun,
             "outcome": SignalOutcome,
+            "setup_context": SetupContext,
             "signal": Signal,
             "user": User,
         }
@@ -349,6 +356,23 @@ class TradingJournalService:
                 422,
                 "signal_analysis_run_mismatch",
                 "Signal does not belong to the analysis run",
+            )
+
+    async def validate_setup_context(
+        self,
+        workspace_id: UUID,
+        setup_context_id: UUID | None,
+    ) -> None:
+        if setup_context_id is None:
+            return
+        setup_context = await self.session.get(SetupContext, setup_context_id)
+        if setup_context is None:
+            raise AppError(404, "setup_context_not_found", "Setup context not found")
+        if setup_context.workspace_id != workspace_id:
+            raise AppError(
+                422,
+                "workspace_mismatch",
+                "Setup context belongs to a different workspace",
             )
 
 

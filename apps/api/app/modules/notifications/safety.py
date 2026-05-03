@@ -50,7 +50,7 @@ UNSAFE_LLM_KEYS = {
 BLOCKED_TEXT_RE = re.compile(
     r"\b(buy|sell|entry|exit|leverage|place order|execute trade|open position|"
     r"close position|stop[- ]?loss|take[- ]?profit|financial advice|"
-    r"guaranteed profit|risk[- ]?free|cannot lose)\b",
+    r"guaranteed profit|win rate|risk[- ]?free|cannot lose)\b",
     re.IGNORECASE,
 )
 

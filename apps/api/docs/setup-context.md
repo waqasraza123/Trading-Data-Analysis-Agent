@@ -27,8 +27,8 @@ Allowed language:
 - not a trade instruction
 
 Blocked language includes direct market actions, order language, leverage language, and direct
-profit/risk management wording. Setup context must not tell a user to buy, sell, enter, exit, place
-orders, use leverage, or treat any zone as an instruction.
+account-return or risk-management wording. Setup context must not tell a user to place
+orders, use margin, change positions, or treat any zone as an instruction.
 
 ## Stored Artifact
 
@@ -59,7 +59,7 @@ fallback. They are not entries.
 ## Target Context
 
 Target context zones describe plausible next support/resistance/range context for analysis. They are
-not take-profit instructions and must not be presented as realized or guaranteed movement.
+not directive target instructions and must not be presented as realized or certain movement.
 
 ## Setup Quality
 
@@ -99,9 +99,9 @@ SETUP_CONTEXT_REVIEW_THRESHOLD=0.4500
 
 Thresholds must be ordered strong >= acceptable >= review.
 
-## Future Dashboard Use
+## Dashboard Use
 
-Future UI or reports can show setup context as reviewable backend intelligence:
+The daily dashboard and signal detail page show setup context as reviewable backend intelligence:
 
 - bias and quality label
 - invalidation context

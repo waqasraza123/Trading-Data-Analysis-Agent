@@ -123,7 +123,7 @@ request_human_review
 no_action
 ```
 
-Rejected trading actions such as order placement, position entry/exit, stop-loss/take-profit
+Rejected trading actions such as order placement, position changes, and risk-management instructions
 changes, leverage, and copy trading remain invalid and are never made executable.
 
 ## APIs

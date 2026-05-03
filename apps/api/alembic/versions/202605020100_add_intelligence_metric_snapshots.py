@@ -1,6 +1,6 @@
 """add intelligence metric snapshots
 
-Revision ID: 202605020100
+Revision ID: 202605020110_intelligence_metric_snapshots
 Revises: 202604301900
 Create Date: 2026-05-02 01:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605020100"
+revision: str = "202605020110_intelligence_metric_snapshots"
 down_revision: str | Sequence[str] | None = "202604301900"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

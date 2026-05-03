@@ -1,6 +1,6 @@
 """add decision readiness assessments
 
-Revision ID: 202605021100
+Revision ID: 202605021100_decision_readiness_assessments
 Revises: 202604301900
 Create Date: 2026-05-02 11:00:00.000000
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "202605021100"
+revision: str = "202605021100_decision_readiness_assessments"
 down_revision: str | Sequence[str] | None = "202604301900"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

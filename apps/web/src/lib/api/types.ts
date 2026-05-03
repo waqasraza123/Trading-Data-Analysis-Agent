@@ -251,6 +251,92 @@ export type DecisionReadinessAssessmentResponse = {
   next_steps: string[];
 };
 
+export type SetupContext = {
+  id: UUID;
+  workspace_id: UUID;
+  signal_id: UUID;
+  analysis_run_id: UUID;
+  symbol_id: UUID;
+  timeframe: string;
+  context_version: string;
+  status: string;
+  directional_bias: string;
+  setup_quality_label: string;
+  setup_quality_score: string;
+  invalidation_context_json: JsonRecord[];
+  observation_zones_json: JsonRecord[];
+  target_context_zones_json: JsonRecord[];
+  wait_conditions_json: JsonRecord[];
+  avoid_reasons_json: JsonRecord[];
+  timeframe_agreement_json: JsonRecord;
+  data_quality_warnings_json: JsonRecord[];
+  risk_notes_json: JsonRecord[];
+  next_observations_json: JsonRecord[];
+  summary: string;
+  metadata_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SignalDigestRun = {
+  id: UUID;
+  workspace_id: UUID;
+  digest_type: string;
+  status: string;
+  digest_version: string;
+  title: string;
+  period_start: string;
+  period_end: string;
+  timezone: string;
+  filters_json: JsonRecord;
+  summary_json: JsonRecord;
+  section_counts_json: Record<string, number>;
+  warnings_json: JsonRecord[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type SignalDigestItem = {
+  id: UUID;
+  workspace_id: UUID;
+  digest_run_id: UUID;
+  item_type: string;
+  symbol_id: UUID | null;
+  signal_id: UUID | null;
+  setup_context_id: UUID | null;
+  analysis_run_id: UUID | null;
+  outcome_id: UUID | null;
+  action_item_id: UUID | null;
+  news_event_id: UUID | null;
+  priority: string;
+  title: string;
+  summary: string;
+  tags_json: string[];
+  metadata_json: JsonRecord;
+  sort_order: number;
+  created_at: string;
+};
+
+export type JournalEntry = {
+  id: UUID;
+  workspace_id: UUID;
+  user_id: UUID | null;
+  signal_id: UUID | null;
+  analysis_run_id: UUID | null;
+  setup_context_id: UUID | null;
+  chart_screenshot_run_id: UUID | null;
+  title: string;
+  status: string;
+  decision_type: string;
+  confidence_before: string | null;
+  user_bias: string | null;
+  user_notes: string;
+  tags: string[];
+  metadata: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ActionItem = {
   id: UUID;
   workspace_id: UUID;

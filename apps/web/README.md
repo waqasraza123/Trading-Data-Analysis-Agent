@@ -32,12 +32,16 @@ The client composes data from optional backend APIs:
 - `GET /analysis-runs/{analysis_run_id}/signal`
 - `GET /signals/{signal_id}`
 - `GET /signals/{signal_id}/outcomes`
+- `GET /signals/{signal_id}/setup-context`
 - `GET /signals/{signal_id}/market-regime`
 - `GET /signals/{signal_id}/market-session`
 - `GET /decision-readiness/signals/{signal_id}/latest`
 - `GET /intelligence-reports/signals/{signal_id}`
 - `GET /audit-timeline/signals/{signal_id}`
 - `GET /action-items/due`
+- `GET /signal-digests`
+- `GET /signal-digests/{digest_id}/items`
+- `GET /journal-entries` for later journal navigation hooks
 
 Missing optional endpoints render empty states or backend-state warnings instead of crashing the page.
 
@@ -86,5 +90,8 @@ The dashboard expects backend modules to be deployed incrementally:
 - If market memory is unavailable, watchlists and symbols still render.
 - If reports are unavailable, signal pages use signal, evidence, confidence, outcomes, readiness, context, and audit endpoints individually.
 - If readiness is unavailable, readiness panels hide behind safe empty states.
+- If setup context is unavailable, setup panels show unavailable context without blocking signals.
+- If signal digests are unavailable, digest panels show an empty state and the rest of the cockpit remains usable.
+- Journal APIs are typed for later navigation but journal UI is not forced into the dashboard.
 - If scans are unavailable, scan panels render empty states.
 - If API or worker health fails, backend state shows the failed fetch without blocking the rest of the UI.

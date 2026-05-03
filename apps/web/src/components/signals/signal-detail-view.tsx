@@ -5,12 +5,14 @@ import { OutcomeList } from "@/components/outcomes/outcome-list";
 import { ConfidenceList } from "@/components/signals/confidence-list";
 import { JsonSection } from "@/components/signals/json-section";
 import { RiskNoteList } from "@/components/signals/risk-note-list";
+import { SetupContextPanel } from "@/components/signals/setup-context-panel";
 import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
 import type {
   AuditTimeline,
   ContextRead,
   DecisionReadinessAssessmentResponse,
   IntelligenceReport,
+  SetupContext,
   SignalClassification,
   SignalOutcome,
 } from "@/lib/api/types";
@@ -26,6 +28,7 @@ type SignalDetailViewProps = {
   marketRegime: ContextRead | null;
   marketSession: ContextRead | null;
   auditTimeline: AuditTimeline | null;
+  setupContext: SetupContext | null;
 };
 
 export function SignalDetailView({
@@ -36,6 +39,7 @@ export function SignalDetailView({
   marketRegime,
   marketSession,
   auditTimeline,
+  setupContext,
 }: SignalDetailViewProps) {
   if (!signal && !report) {
     return <EmptyState title="Signal not available" message="The API did not return a signal or report for this identifier." />;
@@ -81,6 +85,9 @@ export function SignalDetailView({
               </Panel>
               <Panel title="Outcomes" eyebrow="Observed horizons">
                 <OutcomeList outcomes={outcomes} />
+              </Panel>
+              <Panel title="Setup Context" eyebrow="Non-advisory context">
+                <SetupContextPanel setupContext={setupContext} />
               </Panel>
             </>
           )}

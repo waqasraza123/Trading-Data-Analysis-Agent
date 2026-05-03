@@ -326,6 +326,7 @@ class Settings(BaseSettings):
         le=1,
     )
     signal_digest_stale_data_priority: str = "high"
+    journal_review_version: str = "v1"
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
     artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
@@ -540,6 +541,7 @@ class Settings(BaseSettings):
         "market_memory_state_version",
         "setup_context_version",
         "signal_digest_version",
+        "journal_review_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
@@ -569,26 +571,6 @@ class Settings(BaseSettings):
             raise ValueError(msg) from error
         return normalized_value
 
-    @field_validator("notification_default_quiet_hours_timezone")
-    @classmethod
-    def validate_notification_default_quiet_hours_timezone(cls, value: str) -> str:
-        normalized_value = value.strip() or "UTC"
-        try:
-            ZoneInfo(normalized_value)
-        except ZoneInfoNotFoundError as error:
-            msg = "NOTIFICATION_DEFAULT_QUIET_HOURS_TIMEZONE must be a valid IANA timezone"
-            raise ValueError(msg) from error
-        return normalized_value
-
-    @field_validator("notification_webhook_user_agent")
-    @classmethod
-    def validate_notification_webhook_user_agent(cls, value: str) -> str:
-        normalized_value = value.strip()
-        if not normalized_value:
-            msg = "NOTIFICATION_WEBHOOK_USER_AGENT must not be empty"
-            raise ValueError(msg)
-        return normalized_value
-
     @field_validator("signal_digest_default_timezone")
     @classmethod
     def validate_signal_digest_default_timezone(cls, value: str) -> str:
@@ -606,6 +588,26 @@ class Settings(BaseSettings):
         normalized_value = value.strip().lower()
         if normalized_value not in {"low", "normal", "high", "urgent"}:
             msg = "SIGNAL_DIGEST_STALE_DATA_PRIORITY must be low, normal, high, or urgent"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("notification_default_quiet_hours_timezone")
+    @classmethod
+    def validate_notification_default_quiet_hours_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "NOTIFICATION_DEFAULT_QUIET_HOURS_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("notification_webhook_user_agent")
+    @classmethod
+    def validate_notification_webhook_user_agent(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "NOTIFICATION_WEBHOOK_USER_AGENT must not be empty"
             raise ValueError(msg)
         return normalized_value
 

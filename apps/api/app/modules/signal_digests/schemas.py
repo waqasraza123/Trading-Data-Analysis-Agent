@@ -135,6 +135,7 @@ class SignalDigestItemRead(ApiReadSchema):
     item_type: SignalDigestItemType
     symbol_id: UUID | None
     signal_id: UUID | None
+    setup_context_id: UUID | None
     analysis_run_id: UUID | None
     outcome_id: UUID | None
     action_item_id: UUID | None

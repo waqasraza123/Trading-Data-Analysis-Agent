@@ -41,7 +41,7 @@ export async function apiGet<T>(path: string, options: RequestOptions = {}): Pro
       ok: true,
       status: response.status,
       url,
-      data: payload as T,
+      data: normalizeApiPayload(payload) as T,
     };
   } catch (error) {
     const isAbort = error instanceof Error && error.name === "AbortError";
@@ -105,4 +105,23 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeApiPayload(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeApiPayload(item));
+  }
+  if (!isRecord(value)) {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [
+      camelToSnake(key),
+      normalizeApiPayload(nestedValue),
+    ]),
+  );
+}
+
+function camelToSnake(value: string): string {
+  return value.replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`);
 }

@@ -76,6 +76,7 @@ class SignalDigestDraftItem:
     metadata: dict[str, object] = field(default_factory=dict)
     symbol_id: UUID | None = None
     signal_id: UUID | None = None
+    setup_context_id: UUID | None = None
     analysis_run_id: UUID | None = None
     outcome_id: UUID | None = None
     action_item_id: UUID | None = None
@@ -290,6 +291,7 @@ def build_top_bias_item(context: SignalDigestSignalContext) -> SignalDigestDraft
         metadata=signal_metadata(signal, context),
         symbol_id=signal.symbol_id,
         signal_id=signal.id,
+        setup_context_id=context.setup_context_id,
         analysis_run_id=signal.analysis_run_id,
     )
 
@@ -310,6 +312,7 @@ def build_no_signal_item(context: SignalDigestSignalContext) -> SignalDigestDraf
         metadata=signal_metadata(signal, context),
         symbol_id=signal.symbol_id,
         signal_id=signal.id,
+        setup_context_id=context.setup_context_id,
         analysis_run_id=signal.analysis_run_id,
     )
 
@@ -329,6 +332,7 @@ def build_conflict_item(context: SignalDigestSignalContext) -> SignalDigestDraft
         metadata=signal_metadata(signal, context),
         symbol_id=signal.symbol_id,
         signal_id=signal.id,
+        setup_context_id=context.setup_context_id,
         analysis_run_id=signal.analysis_run_id,
     )
 
@@ -558,6 +562,7 @@ def build_signal_watch_condition_item(context: SignalDigestSignalContext) -> Sig
         },
         symbol_id=signal.symbol_id,
         signal_id=signal.id,
+        setup_context_id=context.setup_context_id,
         analysis_run_id=signal.analysis_run_id,
     )
 
@@ -674,6 +679,7 @@ def signal_metadata(signal: Signal, context: SignalDigestSignalContext) -> dict[
         "confidenceLabel": signal.confidence_label,
         "evidenceCount": context.evidence_count,
         "riskCount": context.risk_count,
+        "setupContextId": context.setup_context_id,
         "timeframe": signal.timeframe,
         "patternType": signal.pattern_type,
         "noSignalReason": signal.no_signal_reason,

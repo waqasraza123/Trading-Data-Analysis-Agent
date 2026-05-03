@@ -54,7 +54,7 @@ The prompt requires the model to explain only supplied facts, avoid financial ad
 This is analysis based on available backend data, not a trade instruction.
 ```
 
-Safety blocks phrases such as `buy now`, `sell now`, `guaranteed`, `risk-free`, `use leverage`, `take this trade`, `enter now`, and `exit now`.
+Safety blocks direct order instructions, certainty claims, impossible-risk claims, margin instructions, and directive position language.
 
 When news correlations exist, the LLM input includes only event title, event type, event time,
 currency/asset, importance, correlation label, score, time delta, direction/volatility reaction,
@@ -63,7 +63,7 @@ news, events, announcements, or headlines.
 
 Grounding checks flag invented numeric values, unsupported pattern mentions, news/event mentions
 without persisted news correlation input, news/event mentions that do not match persisted event
-descriptors, trade instruction language, news causation claims, and guaranteed outcomes.
+descriptors, direct order instruction language, news causation claims, and certainty claims.
 
 If output is unsafe or clearly ungrounded, the API returns and persists deterministic fallback text instead of unsafe model text.
 

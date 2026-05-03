@@ -105,5 +105,5 @@ operator can see that an output existed and why it was blocked.
 Reports are read-only market intelligence packets. They do not provide financial advice, broker
 execution, order placement, copy trading, auto-trading, alerts, or notifications.
 
-Reports do not recommend buy/sell/enter/exit/leverage actions, do not imply guaranteed behavior,
+Reports do not recommend direct order, position, or margin actions, do not imply certain behavior,
 and do not classify or override deterministic signals with LLM output.

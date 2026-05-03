@@ -5,6 +5,7 @@ import { Panel } from "@/components/layout/panel";
 import { OutcomeList } from "@/components/outcomes/outcome-list";
 import { ConfidenceList } from "@/components/signals/confidence-list";
 import { RiskNoteList } from "@/components/signals/risk-note-list";
+import { SetupContextPanel } from "@/components/signals/setup-context-panel";
 import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
 import type { DashboardData } from "@/lib/api/dashboard";
 import { formatDateTime } from "@/lib/formatting/dates";
@@ -74,6 +75,10 @@ export function SignalFocusPanel({ data }: { data: DashboardData }) {
             <div>
               <h3 className="mb-3 text-sm font-semibold uppercase text-slate-500">Outcome history</h3>
               <OutcomeList outcomes={data.selectedOutcomes} />
+            </div>
+            <div>
+              <h3 className="mb-3 text-sm font-semibold uppercase text-slate-500">Setup context</h3>
+              <SetupContextPanel setupContext={data.selectedSetupContext} />
             </div>
           </div>
           <aside className="space-y-5">

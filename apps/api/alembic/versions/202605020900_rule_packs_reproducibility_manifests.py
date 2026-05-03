@@ -1,6 +1,6 @@
 """add rule packs and reproducibility manifests
 
-Revision ID: 202605020900
+Revision ID: 202605020970_rule_packs_reproducibility
 Revises: f9eb9423c4a2
 Create Date: 2026-05-02 09:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605020900"
+revision: str = "202605020970_rule_packs_reproducibility"
 down_revision: str | None = "f9eb9423c4a2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

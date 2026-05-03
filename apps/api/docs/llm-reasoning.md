@@ -2,7 +2,7 @@
 
 The scenario reasoning layer is an optional backend intelligence layer over stored deterministic
 artifacts. It does not classify signals, override deterministic outputs, execute orders, provide
-financial advice, or predict guaranteed outcomes.
+financial advice, or predict certain outcomes.
 
 ## Purpose
 
@@ -104,7 +104,7 @@ Allowed backend actions are:
 ## Safety And Grounding
 
 Safety blocks direct trade instructions and prohibited claims such as buy/sell-now language,
-enter/exit instructions, leverage, order placement, guaranteed outcomes, risk-free claims, and
+position-change instructions, margin instructions, order placement, certainty claims, impossible-risk claims, and
 certain future direction claims.
 
 Grounding blocks output that mentions patterns or strategy profiles not in input, numeric values not

@@ -1,7 +1,7 @@
 """add confidence calibration analytics
 
 Revision ID: 202605021400
-Revises: 202605021330
+Revises: 202605021330_provider_polling
 Create Date: 2026-05-02 14:00:00.000000
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "202605021400"
-down_revision: str | Sequence[str] | None = "202605021330"
+down_revision: str | Sequence[str] | None = "202605021330_provider_polling"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -14,7 +14,7 @@ The runner answers questions such as:
 
 Backtest experiments only read existing `signals`, `signal_outcomes`, and optional contextual rows such as `signal_news_correlations`. They do not create signal outcomes, evaluate future candles, mutate signals, change strategy profiles, run profile diagnostics, send alerts, place broker orders, or execute trades.
 
-The output avoids profit, PnL, and win-rate terminology. Metrics are historical behavior observations over persisted outcome labels and movement fields.
+The output avoids broker-accounting and outcome-ratio sales terminology. Metrics are historical behavior observations over persisted outcome labels and movement fields.
 
 ## Cohorts
 

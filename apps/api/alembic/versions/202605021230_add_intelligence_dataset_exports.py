@@ -1,7 +1,7 @@
 """add intelligence dataset exports
 
-Revision ID: 202605021230
-Revises: 202605021200
+Revision ID: 202605021250_intelligence_dataset_exports
+Revises: 202605021240_advanced_intelligence_operations
 Create Date: 2026-05-02 12:30:00.000000
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "202605021230"
-down_revision: str | tuple[str, str] | None = "202605021200"
+revision: str = "202605021250_intelligence_dataset_exports"
+down_revision: str | tuple[str, str] | None = "202605021240_advanced_intelligence_operations"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

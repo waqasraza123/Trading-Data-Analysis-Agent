@@ -396,6 +396,7 @@ def draft_item_to_model(
         item_type=draft.item_type.value,
         symbol_id=draft.symbol_id,
         signal_id=draft.signal_id,
+        setup_context_id=draft.setup_context_id,
         analysis_run_id=draft.analysis_run_id,
         outcome_id=draft.outcome_id,
         action_item_id=draft.action_item_id,

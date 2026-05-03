@@ -1,7 +1,7 @@
 """add scenario ensemble consensus
 
 Revision ID: 202605021300_scenario_ensembles
-Revises: 202605021230
+Revises: 202605021250_intelligence_dataset_exports
 Create Date: 2026-05-02 13:00:00.000000
 """
 
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 revision: str = "202605021300_scenario_ensembles"
-down_revision: str | Sequence[str] | None = "202605021230"
+down_revision: str | Sequence[str] | None = "202605021250_intelligence_dataset_exports"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

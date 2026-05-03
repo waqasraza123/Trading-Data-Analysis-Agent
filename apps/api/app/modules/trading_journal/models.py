@@ -74,6 +74,7 @@ class JournalEntry(Base):
         Index("ix_journal_entries_workspace_created_at", "workspace_id", "created_at"),
         Index("ix_journal_entries_signal_id", "signal_id"),
         Index("ix_journal_entries_analysis_run_id", "analysis_run_id"),
+        Index("ix_journal_entries_setup_context_id", "setup_context_id"),
         Index("ix_journal_entries_decision_type", "decision_type"),
     )
 
@@ -98,7 +99,11 @@ class JournalEntry(Base):
         ForeignKey("analysis_runs.id", ondelete="SET NULL"),
         nullable=True,
     )
-    setup_context_id: Mapped[UUID | None] = mapped_column(PostgresUUID(as_uuid=True), nullable=True)
+    setup_context_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("setup_contexts.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     chart_screenshot_run_id: Mapped[UUID | None] = mapped_column(
         PostgresUUID(as_uuid=True),
         ForeignKey("chart_screenshot_runs.id", ondelete="SET NULL"),

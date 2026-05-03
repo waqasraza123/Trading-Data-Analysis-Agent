@@ -2,7 +2,9 @@ import { getPublicEnv } from "@/config/env";
 import { listAnalysisRuns, listMarketMemorySnapshots, listSymbols, listWorkspaces } from "./market";
 import { listSignalOutcomes } from "./outcomes";
 import { getLatestSignalReadiness } from "./readiness";
+import { listSignalDigestItems, listSignalDigests } from "./signal-digests";
 import { getAnalysisRunSignal, getSignal } from "./signals";
+import { getSignalSetupContext } from "./setup-context";
 import { getApiHealth, getWorkerStatus, listDueActionItems } from "./status";
 import {
   listDueScheduledScanConfigs,
@@ -20,7 +22,10 @@ import type {
   MarketMemorySnapshot,
   ScheduledScanConfig,
   SignalClassification,
+  SignalDigestItem,
+  SignalDigestRun,
   SignalOutcome,
+  SetupContext,
   SymbolRead,
   UUID,
   Watchlist,
@@ -54,7 +59,10 @@ export type DashboardData = {
   dueScans: ScheduledScanConfig[];
   analysisRuns: AnalysisRun[];
   dueActionItems: ActionItem[];
+  signalDigests: SignalDigestRun[];
+  latestDigestItems: SignalDigestItem[];
   selectedSignal: SignalClassification | null;
+  selectedSetupContext: SetupContext | null;
   selectedOutcomes: SignalOutcome[];
   selectedReadiness: DecisionReadinessAssessmentResponse | null;
   health: HealthResponse | null;
@@ -96,7 +104,10 @@ export async function getDashboardData(params: {
       dueScans: [],
       analysisRuns: [],
       dueActionItems: [],
+      signalDigests: [],
+      latestDigestItems: [],
       selectedSignal: null,
+      selectedSetupContext: null,
       selectedOutcomes: [],
       selectedReadiness: null,
       health,
@@ -113,6 +124,7 @@ export async function getDashboardData(params: {
     dueScansResult,
     analysisRunsResult,
     dueActionItemsResult,
+    signalDigestsResult,
   ] = await Promise.all([
     listWatchlists(workspace.id),
     listMarketMemorySnapshots(workspace.id),
@@ -120,6 +132,7 @@ export async function getDashboardData(params: {
     listDueScheduledScanConfigs(workspace.id),
     listAnalysisRuns(workspace.id),
     listDueActionItems(workspace.id),
+    listSignalDigests(workspace.id),
   ]);
 
   const rawWatchlists = readResult("Watchlists", watchlistsResult, [], failures);
@@ -128,6 +141,12 @@ export async function getDashboardData(params: {
   const dueScans = readResult("Due scan configs", dueScansResult, [], failures);
   const analysisRuns = readResult("Analysis runs", analysisRunsResult, [], failures);
   const dueActionItems = readResult("Backend action items", dueActionItemsResult, [], failures);
+  const signalDigests = readResult("Signal digests", signalDigestsResult, [], failures);
+  const latestDigest = signalDigests[0] || null;
+  const latestDigestItemsResult = latestDigest ? await listSignalDigestItems(latestDigest.id) : null;
+  const latestDigestItems = latestDigestItemsResult
+    ? readResult("Signal digest items", latestDigestItemsResult, [], failures)
+    : [];
   const watchlistItemsResults = await Promise.all(
     rawWatchlists.map(async (watchlist) => ({
       watchlist,
@@ -147,17 +166,21 @@ export async function getDashboardData(params: {
     latestAnalysisRunId,
     failures,
   );
-  const [selectedOutcomesResult, selectedReadinessResult] = selectedSignal
+  const [selectedOutcomesResult, selectedReadinessResult, selectedSetupContextResult] = selectedSignal
     ? await Promise.all([
         listSignalOutcomes(selectedSignal.signal.id),
         getLatestSignalReadiness(selectedSignal.signal.id),
+        getSignalSetupContext(selectedSignal.signal.id),
       ])
-    : [null, null];
+    : [null, null, null];
   const selectedOutcomes = selectedOutcomesResult
     ? readResult("Selected signal outcomes", selectedOutcomesResult, [], failures)
     : [];
   const selectedReadiness = selectedReadinessResult
     ? readNullableResult("Selected signal readiness", selectedReadinessResult, failures)
+    : null;
+  const selectedSetupContext = selectedSetupContextResult
+    ? readNullableResult("Selected setup context", selectedSetupContextResult, failures)
     : null;
 
   return {
@@ -173,7 +196,10 @@ export async function getDashboardData(params: {
     dueScans,
     analysisRuns,
     dueActionItems,
+    signalDigests,
+    latestDigestItems,
     selectedSignal,
+    selectedSetupContext,
     selectedOutcomes,
     selectedReadiness,
     health,

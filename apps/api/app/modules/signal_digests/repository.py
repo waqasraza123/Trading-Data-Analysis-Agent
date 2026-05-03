@@ -18,6 +18,7 @@ from app.modules.market_scans.models import (
 from app.modules.market_sessions.models import MarketSessionContext
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.outcomes.models import SignalOutcome
+from app.modules.setup_context.models import SetupContext
 from app.modules.signal_digests.models import SignalDigestItem, SignalDigestRun
 from app.modules.signals.models import Signal, SignalEvidence, SignalRiskNote
 from app.modules.symbols.models import Symbol
@@ -37,6 +38,7 @@ class SignalDigestSignalContext:
     symbol: Symbol
     evidence_count: int
     risk_count: int
+    setup_context_id: UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -202,17 +204,37 @@ class SignalDigestRepository:
         result = await self.session.execute(statement)
         rows = result.all()
         signals = [row[0] for row in rows]
-        evidence_counts = await self.count_evidence_by_signal([signal.id for signal in signals])
-        risk_counts = await self.count_risk_notes_by_signal([signal.id for signal in signals])
+        signal_ids = [signal.id for signal in signals]
+        evidence_counts = await self.count_evidence_by_signal(signal_ids)
+        risk_counts = await self.count_risk_notes_by_signal(signal_ids)
+        setup_context_ids = await self.latest_setup_context_ids_by_signal(signal_ids)
         return [
             SignalDigestSignalContext(
                 signal=row[0],
                 symbol=row[1],
                 evidence_count=evidence_counts.get(row[0].id, 0),
                 risk_count=risk_counts.get(row[0].id, 0),
+                setup_context_id=setup_context_ids.get(row[0].id),
             )
             for row in rows
         ]
+
+    async def latest_setup_context_ids_by_signal(
+        self,
+        signal_ids: list[UUID],
+    ) -> dict[UUID, UUID]:
+        if not signal_ids:
+            return {}
+        statement = (
+            select(SetupContext.signal_id, SetupContext.id)
+            .where(SetupContext.signal_id.in_(signal_ids))
+            .order_by(SetupContext.signal_id.asc(), SetupContext.created_at.desc())
+        )
+        result = await self.session.execute(statement)
+        latest_by_signal: dict[UUID, UUID] = {}
+        for row in result:
+            latest_by_signal.setdefault(row.signal_id, row.id)
+        return latest_by_signal
 
     async def count_evidence_by_signal(self, signal_ids: list[UUID]) -> dict[UUID, int]:
         if not signal_ids:

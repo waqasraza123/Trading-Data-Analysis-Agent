@@ -122,6 +122,7 @@ class SignalDigestItem(Base):
         Index("ix_signal_digest_items_run_type", "digest_run_id", "item_type"),
         Index("ix_signal_digest_items_symbol_id", "symbol_id"),
         Index("ix_signal_digest_items_signal_id", "signal_id"),
+        Index("ix_signal_digest_items_setup_context_id", "setup_context_id"),
         Index("ix_signal_digest_items_priority", "priority"),
     )
 
@@ -145,6 +146,11 @@ class SignalDigestItem(Base):
     signal_id: Mapped[UUID | None] = mapped_column(
         PostgresUUID(as_uuid=True),
         ForeignKey("signals.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    setup_context_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("setup_contexts.id", ondelete="SET NULL"),
         nullable=True,
     )
     analysis_run_id: Mapped[UUID | None] = mapped_column(

@@ -12,7 +12,7 @@ LLMs for classification, or provide financial advice.
 Trading journal feedback is implemented under `/journal-entries`. It records user/operator
 decision notes around observed, ignored, reviewed, paper-followed, or externally handled setups and
 compares those notes with later deterministic outcomes. It does not add UI, broker execution,
-broker imports, auto-trading, copy trading, financial advice, PnL calculations, signal mutation, or
+broker imports, auto-trading, copy trading, financial advice, account-return calculations, signal mutation, or
 outcome mutation.
 
 Signal digests are implemented under `/signal-digests`. They persist deterministic daily, session,
@@ -124,6 +124,11 @@ Market regime context is deterministic metadata only and does not alter signal c
 The first read-only frontend surface now lives in `apps/web`. It consumes this API through
 `NEXT_PUBLIC_API_BASE_URL`, renders missing optional endpoints as safe empty states, and keeps
 broker execution and auto-trading outside the product boundary.
+
+The integrated dashboard surface now reads signal digests and setup context when those endpoints
+are available. Digest items may reference setup context rows, and journal entries can link to setup
+context rows for later deterministic review. Notification events remain optional, explicitly
+created, safety-filtered, and never auto-delivered by digest or setup-context generation.
 
 Capability registry endpoints:
 

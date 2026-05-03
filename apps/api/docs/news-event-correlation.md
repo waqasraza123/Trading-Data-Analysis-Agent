@@ -23,7 +23,7 @@ It must not say:
 
 ```txt
 the event definitely caused the move
-guaranteed cause
+certain cause
 confirmed reason
 trade because of this news
 ```

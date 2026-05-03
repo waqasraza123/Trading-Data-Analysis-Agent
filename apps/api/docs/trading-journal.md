@@ -5,7 +5,7 @@ deterministic setup artifacts. It lets a user record whether they observed, igno
 paper-followed a setup, then compare that user decision note with a later deterministic signal
 outcome.
 
-This module does not place broker orders, execute broker workflows, calculate PnL, provide
+This module does not place broker orders, execute broker workflows, calculate account returns, provide
 financial advice, create copy-trading behavior, mutate signals, or mutate outcomes.
 
 ## Purpose
@@ -31,8 +31,7 @@ journal_entry_reviews
 journal_entry_attachments
 ```
 
-`journal_entries.setup_context_id` is nullable UUID metadata. It is intentionally not a foreign key
-until a durable setup-context table exists in the backend.
+`journal_entries.setup_context_id` is nullable and references `setup_contexts.id` when provided.
 
 ## Status Values
 
@@ -154,6 +153,7 @@ Known reference types are workspace-validated when possible:
 analysis_run
 chart_screenshot_run
 outcome
+setup_context
 signal
 user
 ```

@@ -3,6 +3,7 @@ import { BackendStatePanel } from "@/components/dashboard/backend-state-panel";
 import { FollowUpPanel } from "@/components/dashboard/follow-up-panel";
 import { MarketBoard } from "@/components/dashboard/market-board";
 import { SignalFocusPanel } from "@/components/dashboard/signal-focus-panel";
+import { SignalDigestPanel } from "@/components/dashboard/signal-digest-panel";
 import { TopSummaryRail } from "@/components/dashboard/top-summary-rail";
 import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
 import { EmptyState } from "@/components/empty-states/empty-state";
@@ -49,6 +50,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
           <div className="space-y-6">
             <AvoidConditions data={data} />
+            <SignalDigestPanel data={data} />
             <WatchlistPanel data={data} />
             <FollowUpPanel data={data} />
           </div>

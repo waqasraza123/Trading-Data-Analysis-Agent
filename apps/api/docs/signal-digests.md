@@ -36,6 +36,7 @@ broker integration, auto-trading workflow, copy-trading workflow, or LLM generat
 `signal_digest_items` stores bounded section items linked back to source artifacts when available:
 
 - signal
+- setup context
 - analysis run
 - outcome
 - action item
@@ -233,9 +234,9 @@ Request:
 - `SIGNAL_DIGEST_HIGH_CONFIDENCE_THRESHOLD`, default `0.70`
 - `SIGNAL_DIGEST_STALE_DATA_PRIORITY`, default `high`
 
-## Future Integration
+## Dashboard and Notification Integration
 
-Future dashboard or alert integrations may read digest runs and items, but this module does not
-send notifications, email, Telegram, Discord, webhook deliveries, broker actions, or external
-messages. Any future delivery path must preserve safe wording, deterministic provenance, and the
+The daily dashboard reads digest runs and items when available. Notification integrations may create
+`digest.created` events only through explicit API requests; digest creation does not auto-deliver
+messages. Any delivery path must preserve safe wording, deterministic provenance, and the
 no-financial-advice boundary.

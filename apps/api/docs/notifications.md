@@ -50,6 +50,10 @@ readiness.blocked
 operator_review.opened
 ```
 
+`digest.created` events are not created or delivered automatically by digest generation. They must
+be created explicitly through the notification event API and delivered explicitly through the
+delivery API.
+
 Supported severities:
 
 ```txt

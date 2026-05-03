@@ -45,7 +45,7 @@ Explicitly rejected actions include:
 - `exit_trade`
 - `place_order`
 - `set_stop_loss`
-- `set_take_profit`
+- `target_instruction`
 - `use_leverage`
 - `open_position`
 - `close_position`

@@ -1,6 +1,6 @@
 """add data retention policies
 
-Revision ID: 202605020900
+Revision ID: 202605020940_data_retention_policies
 Revises: 202604291530
 Create Date: 2026-05-02 09:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605020900"
+revision: str = "202605020940_data_retention_policies"
 down_revision: str | tuple[str, str] | None = "202604291530"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

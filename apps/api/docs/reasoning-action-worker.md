@@ -47,7 +47,7 @@ outcomes produced by worker-executed evaluation actions can later be read by dia
 normal diagnostics API.
 
 Rejected trading actions include `buy`, `sell`, `enter_trade`, `exit_trade`, `place_order`,
-`set_stop_loss`, `set_take_profit`, `use_leverage`, `open_position`, `close_position`,
+`risk_instruction`, `target_instruction`, `margin_instruction`, `position_instruction`,
 `copy_trade`, and `execute_trade`. They are not selected by the worker and are never broker/order
 instructions.
 

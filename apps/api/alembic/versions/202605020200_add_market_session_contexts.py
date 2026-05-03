@@ -1,7 +1,7 @@
 """add market session contexts
 
 Revision ID: 202605020200
-Revises: 202605020100
+Revises: 202605020100_operator_review_queue, 202605020110_intelligence_metric_snapshots, 202605020120_artifact_graph
 Create Date: 2026-05-02 02:00:00.000000
 """
 
@@ -12,7 +12,11 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "202605020200"
-down_revision: str | Sequence[str] | None = "202605020100"
+down_revision: str | Sequence[str] | None = (
+    "202605020100_operator_review_queue",
+    "202605020110_intelligence_metric_snapshots",
+    "202605020120_artifact_graph",
+)
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

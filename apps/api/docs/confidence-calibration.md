@@ -33,5 +33,5 @@ GET /confidence-calibration/runs/{run_id}/bins
 ## Safe Terms
 
 Use calibration alignment, reliability table, historical follow-through rate, continuation rate,
-overconfidence review, and underconfidence review. Avoid profit, profitable, guaranteed, trade
+overconfidence review, and underconfidence review. Avoid broker-accounting, certainty, direct order
 advice, and auto-tuning language.
