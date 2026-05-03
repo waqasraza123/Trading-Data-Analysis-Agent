@@ -289,6 +289,30 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
     CapabilityDefinition(
+        key="scenario_outcomes",
+        name="Scenario Hypothesis Outcome Tracking",
+        category=CapabilityCategory.OUTCOME,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.scenario_outcomes",
+        produced_artifacts=("scenario_hypothesis_outcomes", "scenario_outcome_summary_runs"),
+        route_refs=(
+            "/reasoning/scenarios/{scenario_hypothesis_id}/outcome",
+            "/reasoning/runs/{reasoning_run_id}/scenario-outcomes",
+            "/scenario-outcomes/summary",
+        ),
+        dependencies=("scenario_reasoning", "outcomes", "news_correlation"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            notes=(
+                "Evaluates persisted scenario hypotheses against stored signal outcomes only; "
+                "does not call LLMs or mutate source artifacts."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
         key="profile_diagnostics",
         name="Profile Diagnostics",
         category=CapabilityCategory.DIAGNOSTICS,

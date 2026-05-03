@@ -69,6 +69,9 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    scenario_outcome_evaluation_version: str = "v1"
+    scenario_outcome_default_horizon_minutes: int = Field(default=30, gt=0)
+    scenario_outcome_support_threshold: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
     explanation_comparison_version: str = "v1"
     explanation_comparison_alignment_threshold: Decimal = Field(
         default=Decimal("0.7500"),
@@ -485,6 +488,7 @@ class Settings(BaseSettings):
         "historical_case_vector_version",
         "decision_readiness_assessment_version",
         "scenario_ensemble_version",
+        "scenario_outcome_evaluation_version",
         "backtest_experiment_version",
         "walk_forward_validation_version",
         "capability_registry_default_version",

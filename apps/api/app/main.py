@@ -67,6 +67,7 @@ from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.rule_packs.routes import router as rule_packs_router
 from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
 from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
+from app.modules.scenario_outcomes.routes import router as scenario_outcomes_router
 from app.modules.rule_packs.routes import router as rule_packs_router
 from app.modules.signals.routes import router as signals_router
 from app.modules.strategy_profiles.routes import router as strategy_profiles_router
@@ -178,6 +179,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reasoning_router, prefix=resolved_settings.api_prefix)
     app.include_router(scenario_ensembles_router, prefix=resolved_settings.api_prefix)
     app.include_router(scenario_ensembles_router, prefix=resolved_settings.api_prefix)
+    app.include_router(scenario_outcomes_router, prefix=resolved_settings.api_prefix)
     app.include_router(action_plans_router, prefix=resolved_settings.api_prefix)
     app.include_router(context_packs_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_sessions_router, prefix=resolved_settings.api_prefix)

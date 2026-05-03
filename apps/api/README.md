@@ -592,6 +592,12 @@ Scenario ensemble consensus diagnostics are documented in:
 docs/scenario-ensembles.md
 ```
 
+Scenario hypothesis outcome tracking is documented in:
+
+```txt
+docs/scenario-outcomes.md
+```
+
 Explanation comparison and disagreement analysis is documented in:
 
 ```txt
@@ -930,6 +936,18 @@ GET /signals/{signal_id}/scenario-ensembles
 GET /scenario-ensembles/{ensemble_run_id}
 GET /scenario-ensembles/{ensemble_run_id}/items
 GET /scenario-ensembles/{ensemble_run_id}/consensus
+```
+
+Scenario hypothesis outcome APIs evaluate persisted scenario hypotheses against later stored signal
+outcomes. They do not generate reasoning, call LLMs, inspect candles directly, mutate hypotheses,
+signals, or outcomes, advise, alert, or execute:
+
+```txt
+POST /reasoning/scenarios/{scenario_hypothesis_id}/outcome
+POST /reasoning/runs/{reasoning_run_id}/scenario-outcomes
+GET /reasoning/runs/{reasoning_run_id}/scenario-outcomes
+POST /scenario-outcomes/summary
+GET /scenario-outcomes/summary/{summary_run_id}
 ```
 
 Explanation comparison APIs compare persisted deterministic explanations, LLM explanations,

@@ -29,6 +29,10 @@ from app.modules.scenario_ensembles.models import (
     ScenarioEnsembleItem,
     ScenarioEnsembleRun,
 )
+from app.modules.scenario_outcomes.models import (
+    ScenarioHypothesisOutcome,
+    ScenarioOutcomeSummaryRun,
+)
 from app.modules.market_regimes.models import MarketRegimeContext
 from app.modules.action_plans.models import (
     ReasoningActionItem,
@@ -151,6 +155,10 @@ from app.modules.scenario_ensembles.models import (
     ScenarioEnsembleItem,
     ScenarioEnsembleRun,
 )
+from app.modules.scenario_outcomes.models import (
+    ScenarioHypothesisOutcome,
+    ScenarioOutcomeSummaryRun,
+)
 from app.modules.rule_packs.models import AnalysisReproducibilityManifest, RulePack
 from app.modules.signals.models import (
     Signal,
@@ -197,6 +205,8 @@ __all__ = [
     "ScenarioConsensusResult",
     "ScenarioEnsembleItem",
     "ScenarioEnsembleRun",
+    "ScenarioHypothesisOutcome",
+    "ScenarioOutcomeSummaryRun",
     "AnalysisAuditLog",
     "AnalysisRun",
     "AnalysisReproducibilityManifest",
@@ -301,6 +311,8 @@ __all__ = [
     "ScenarioConsensusResult",
     "ScenarioEnsembleItem",
     "ScenarioEnsembleRun",
+    "ScenarioHypothesisOutcome",
+    "ScenarioOutcomeSummaryRun",
     "ScheduledScanConfig",
     "ScheduledScanRun",
     "ScheduledScanRunItem",
