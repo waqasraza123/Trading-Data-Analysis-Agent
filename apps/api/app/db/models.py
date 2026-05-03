@@ -24,6 +24,7 @@ from app.modules.backtest_experiments.models import (
 )
 from app.modules.candles.models import Candle
 from app.modules.chart_screenshots.models import ChartScreenshotRun
+from app.modules.data_contracts.models import DataContract, DataContractValidation
 from app.modules.data_quality.models import DataQualityFinding, DataQualityRun
 from app.modules.data_quality.models import DataQualityFinding, DataQualityRun
 from app.modules.data_sources.models import DataSource
@@ -128,6 +129,8 @@ __all__ = [
     "Candle",
     "CandleAggregationRun",
     "ChartScreenshotRun",
+    "DataContract",
+    "DataContractValidation",
     "DataQualityFinding",
     "DataQualityRun",
     "DataSource",

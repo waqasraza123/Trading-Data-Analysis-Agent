@@ -833,6 +833,12 @@ Disposable database validation, integration fixtures, and smoke commands are doc
 docs/integration-tests.md
 ```
 
+Data contract registry and JSONB artifact validation are documented in:
+
+```txt
+docs/data-contracts.md
+```
+
 Intelligence artifact dependency graph and invalidation behavior is documented in:
 
 ```txt

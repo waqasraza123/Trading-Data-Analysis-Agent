@@ -21,6 +21,7 @@ from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.artifact_graph.routes import router as artifact_graph_router
 from app.modules.candles.routes import router as candles_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
+from app.modules.data_contracts.routes import router as data_contracts_router
 from app.modules.context_packs.routes import router as context_packs_router
 from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_quality.routes import router as data_quality_router
@@ -149,6 +150,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(timeframe_aggregation_router, prefix=resolved_settings.api_prefix)
     app.include_router(artifact_graph_router, prefix=resolved_settings.api_prefix)
     app.include_router(backfill_plans_router, prefix=resolved_settings.api_prefix)
+    app.include_router(data_contracts_router, prefix=resolved_settings.api_prefix)
     return app
 
 
