@@ -46,6 +46,15 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
         <Select name="column" label="Triage column" value={filters.column} options={triageColumns.map((column) => ({ value: column.key, label: column.title }))} />
         <Select name="freshness" label="Data freshness" value={filters.freshness} options={freshnessLabels.map((item) => ({ value: item, label: humanizeLabel(item) }))} />
         <Select name="profileKey" label="Profile key" value={filters.profileKey} options={profileKeys.map((item) => ({ value: item, label: item }))} />
+        <Select
+          name="preferenceProfileId"
+          label="Preference profile"
+          value={filters.preferenceProfileId}
+          options={data.preferenceProfiles.map((profile) => ({
+            value: profile.id,
+            label: profile.is_default ? `${profile.name} (default)` : profile.name,
+          }))}
+        />
       </div>
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300">
         <label className="inline-flex items-center gap-2">

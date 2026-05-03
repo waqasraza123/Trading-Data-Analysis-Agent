@@ -169,19 +169,6 @@ class Settings(BaseSettings):
     event_study_min_candles: int = Field(default=5, ge=1)
     event_study_strong_reaction_multiplier: Decimal = Field(default=Decimal("2.0"), gt=0)
     event_study_moderate_reaction_multiplier: Decimal = Field(default=Decimal("1.25"), gt=0)
-    confidence_calibration_version: str = "v1"
-    confidence_calibration_default_bins: int = Field(default=10, ge=2, le=100)
-    confidence_calibration_minimum_sample_size: int = Field(default=20, ge=1)
-    confidence_calibration_overconfident_threshold: Decimal = Field(
-        default=Decimal("0.15"),
-        ge=0,
-        le=1,
-    )
-    confidence_calibration_underconfident_threshold: Decimal = Field(
-        default=Decimal("0.15"),
-        ge=0,
-        le=1,
-    )
     webhook_outbox_payload_version: str = "v1"
     webhook_outbox_default_status: str = "held"
     webhook_outbox_max_payload_bytes: int = Field(default=32768, ge=1024)
@@ -225,31 +212,12 @@ class Settings(BaseSettings):
     candle_gap_recovery_version: str = "v1"
     candle_gap_recovery_max_gaps: int = Field(default=500, ge=1, le=10000)
     candle_gap_recovery_max_range_days: int = Field(default=30, ge=1, le=366)
-    data_quality_version: str = "v1"
-    data_quality_strong_threshold: Decimal = Field(default=Decimal("0.95"), ge=0, le=1)
-    data_quality_acceptable_threshold: Decimal = Field(default=Decimal("0.85"), ge=0, le=1)
-    data_quality_degraded_threshold: Decimal = Field(default=Decimal("0.70"), ge=0, le=1)
-    data_quality_outlier_range_multiplier: Decimal = Field(default=Decimal("4.0"), gt=0)
-    data_quality_stale_live_seconds: int = Field(default=300, ge=1)
     news_correlation_pre_event_minutes: int = Field(default=5, ge=0, le=1440)
     news_correlation_post_event_minutes: int = Field(default=30, ge=1, le=1440)
     news_correlation_max_events_per_signal: int = Field(default=10, ge=1, le=100)
-    event_study_version: str = "v1"
-    event_study_default_pre_event_minutes: int = Field(default=30, ge=0, le=10080)
-    event_study_default_post_event_minutes: int = Field(default=60, ge=1, le=10080)
-    event_study_min_candles: int = Field(default=5, ge=1, le=10000)
-    event_study_strong_reaction_multiplier: Decimal = Field(default=Decimal("2.0"), gt=0)
-    event_study_moderate_reaction_multiplier: Decimal = Field(default=Decimal("1.25"), gt=0)
     outcome_default_horizons_minutes: list[int] = Field(default_factory=lambda: [5, 15, 30, 60])
     outcome_min_future_candles: int = Field(default=3, ge=1, le=500)
     outcome_evaluation_version: str = "v1"
-    rule_pack_default_key: str = "core_deterministic"
-    rule_pack_default_version: str = "v1"
-    reproducibility_manifest_version: str = "v1"
-    market_regime_version: str = "v1"
-    market_regime_min_confidence: Decimal = Field(default=Decimal("0.50"), ge=0, le=1)
-    market_regime_strong_data_quality: Decimal = Field(default=Decimal("0.90"), ge=0, le=1)
-    market_regime_acceptable_data_quality: Decimal = Field(default=Decimal("0.75"), ge=0, le=1)
     profile_diagnostics_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     profile_diagnostics_strong_follow_through_rate: Decimal = Field(
         default=Decimal("0.65"),
@@ -289,19 +257,15 @@ class Settings(BaseSettings):
     confidence_calibration_default_bins: str = "0-0.39,0.40-0.64,0.65-0.79,0.80-1.0"
     confidence_calibration_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     confidence_calibration_overconfident_threshold: Decimal = Field(
-        default=Decimal("0.25"),
+        default=Decimal("0.15"),
         ge=0,
         le=1,
     )
     confidence_calibration_underconfident_threshold: Decimal = Field(
-        default=Decimal("0.25"),
+        default=Decimal("0.15"),
         ge=0,
         le=1,
     )
-    historical_case_vector_version: str = "v1"
-    historical_case_default_limit: int = Field(default=20, ge=1, le=1000)
-    historical_case_max_limit: int = Field(default=100, ge=1, le=1000)
-    historical_case_min_score: Decimal = Field(default=Decimal("0.40"), ge=0, le=1)
     timeframe_aggregation_version: str = "v1"
     timeframe_aggregation_min_completeness: Decimal = Field(default=Decimal("1.0"), ge=0, le=1)
     timeframe_aggregation_allowed_targets: list[str] = Field(
@@ -343,6 +307,7 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    preference_profile_default_max_stale_seconds: int = Field(default=7200, ge=1)
     journal_review_version: str = "v1"
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
@@ -385,8 +350,6 @@ class Settings(BaseSettings):
     intelligence_dataset_default_limit: int = Field(default=500, ge=1, le=5000)
     intelligence_dataset_max_limit: int = Field(default=5000, ge=1, le=50000)
     intelligence_dataset_max_text_length: int = Field(default=2000, ge=100, le=20000)
-    market_session_version: str = "v1"
-    market_session_default_timezone: str = "UTC"
     operator_playbook_version: str = "v1"
     operator_playbook_seed_enabled: bool = True
     engine_execution_default_max_attempts: int = Field(default=3, ge=1, le=100)

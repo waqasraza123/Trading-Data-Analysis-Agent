@@ -51,7 +51,7 @@ export function DataOnboardingHeader({
               ))}
             </select>
           </div>
-          <WorkflowLinks workspaceId={selection.workspaceId} targets={["brief", "triage", "scanner"]} />
+          <WorkflowLinks workspaceId={selection.workspaceId} targets={["commandCenter", "brief", "triage", "scanner", "preferences", "review"]} />
         </div>
       </div>
       <div className="surface rounded-lg p-4">

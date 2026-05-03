@@ -39,7 +39,7 @@ export function SetupDetailView({ data }: SetupDetailViewProps) {
   return (
     <div className="space-y-6">
       <SetupDetailHeader header={model.header} />
-      <WorkflowLinks workspaceId={workspaceId} targets={["brief", "triage", "scanner", "dataOnboarding"]} />
+      <WorkflowLinks workspaceId={workspaceId} targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review", "journal"]} />
       <SetupErrorSection failures={model.failures.filter((failure) => !failure.missing)} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <main className="space-y-6">

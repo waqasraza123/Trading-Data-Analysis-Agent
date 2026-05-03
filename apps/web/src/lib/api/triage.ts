@@ -13,6 +13,12 @@ import type {
 import { apiGet } from "./client";
 import { listMarketMemorySnapshots, listSymbols, listWorkspaces } from "./market";
 import { listSignalOutcomes } from "./outcomes";
+import {
+  getDefaultPreferenceProfile,
+  getPreferenceProfile,
+  listPreferenceProfiles,
+  matchPreferenceProfileSignal,
+} from "./preferenceProfiles";
 import { getLatestSignalReadiness } from "./readiness";
 import { getSignalReport } from "./reports";
 import { getSignalPriorityScore } from "./signal-priority";
@@ -26,6 +32,7 @@ import type {
   SignalClassification,
   UUID,
 } from "./types";
+import type { PreferenceProfile } from "@/lib/preferences/types";
 
 const signalCandidateLimit = 48;
 
@@ -46,25 +53,45 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
       workspace: null,
       workspaces,
       symbols,
+      preferenceProfiles: [],
+      selectedPreferenceProfile: null,
       filters,
       candidates: [],
       allCandidates: [],
+      unfilteredCandidateCount: 0,
       failures,
       lastLoadedAt: new Date().toISOString(),
     };
   }
 
   const resolvedFilters = { ...filters, workspaceId: workspace.id };
-  const [memoryResult, analysisRunsResult, actionItemsResult, reviewsResult] = await Promise.all([
+  const [
+    memoryResult,
+    analysisRunsResult,
+    actionItemsResult,
+    reviewsResult,
+    preferenceProfilesResult,
+    selectedPreferenceProfileResult,
+  ] = await Promise.all([
     listMarketMemorySnapshots(workspace.id),
     listAnalysisRunsForTriage(workspace.id),
     listDueActionItemsForTriage(workspace.id),
     listOperatorReviewsForTriage(workspace.id),
+    listPreferenceProfiles({ workspaceId: workspace.id }),
+    filters.preferenceProfileId
+      ? getPreferenceProfile(filters.preferenceProfileId)
+      : getDefaultPreferenceProfile(workspace.id),
   ]);
   const memorySnapshots = readResult("Market memory", memoryResult, [], failures);
   const analysisRuns = readResult("Analysis runs", analysisRunsResult, [], failures);
   const actionItems = readResult("Backend action items", actionItemsResult, [], failures);
   const reviews = readResult("Operator reviews", reviewsResult, [], failures);
+  const preferenceProfiles = readOptionalBaseList("Preference profiles", preferenceProfilesResult, failures);
+  const selectedPreferenceProfile = readOptionalBaseResult(
+    filters.preferenceProfileId ? "Selected preference profile" : "Default preference profile",
+    selectedPreferenceProfileResult,
+    failures,
+  );
   const signalRefs = await resolveSignalRefs(memorySnapshots, analysisRuns, failures);
   const symbolMap = new Map(symbols.map((symbol) => [symbol.id, symbol]));
   const memoryBySignalId = new Map<UUID, MarketMemorySnapshot>();
@@ -93,7 +120,14 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
     }),
   );
 
-  const candidates = allCandidates.filter((candidate) => matchesFilters(candidate, resolvedFilters));
+  const preferenceScopedCandidates = await applyPreferenceProfileFilter(
+    allCandidates,
+    selectedPreferenceProfile,
+    failures,
+  );
+  const candidates = preferenceScopedCandidates.filter((candidate) =>
+    matchesFilters(candidate, resolvedFilters),
+  );
 
   return {
     appName: env.appName,
@@ -102,9 +136,15 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
     workspace,
     workspaces,
     symbols,
-    filters: resolvedFilters,
+    preferenceProfiles,
+    selectedPreferenceProfile,
+    filters: {
+      ...resolvedFilters,
+      preferenceProfileId: selectedPreferenceProfile?.id || filters.preferenceProfileId,
+    },
     candidates: sortCandidates(candidates),
-    allCandidates: sortCandidates(allCandidates),
+    allCandidates: sortCandidates(preferenceScopedCandidates),
+    unfilteredCandidateCount: allCandidates.length,
     failures,
     lastLoadedAt: new Date().toISOString(),
   };
@@ -120,6 +160,7 @@ function parseTriageFilters(params: Record<string, string | undefined>): TriageF
     column: parseColumn(params.column),
     freshness: params.freshness,
     profileKey: params.profileKey,
+    preferenceProfileId: params.preferenceProfileId,
     onlyFresh: parseBoolean(params.onlyFresh),
     onlyReviewRequired: parseBoolean(params.onlyReviewRequired),
   };
@@ -280,6 +321,41 @@ function matchesFilters(candidate: TriageCandidate, filters: TriageFilterState):
   );
 }
 
+async function applyPreferenceProfileFilter(
+  candidates: TriageCandidate[],
+  profile: PreferenceProfile | null,
+  failures: TriageFailure[],
+): Promise<TriageCandidate[]> {
+  if (!profile) {
+    return candidates;
+  }
+  const matchResults = await Promise.all(
+    candidates.map(async (candidate) => ({
+      candidate,
+      result: await matchPreferenceProfileSignal(profile.id, candidate.signal.signal.id),
+    })),
+  );
+  let matchEndpointUnavailable = false;
+  const scopedCandidates: TriageCandidate[] = [];
+  for (const { candidate, result } of matchResults) {
+    if (result.ok) {
+      if (result.data.matches) {
+        scopedCandidates.push(candidate);
+      }
+      continue;
+    }
+    if (result.error.missing) {
+      matchEndpointUnavailable = true;
+      continue;
+    }
+    failures.push(toFailure("Preference profile match", result));
+  }
+  if (matchEndpointUnavailable) {
+    return candidates;
+  }
+  return scopedCandidates;
+}
+
 function sortCandidates(candidates: TriageCandidate[]): TriageCandidate[] {
   const columnOrder = [
     "review_required",
@@ -372,6 +448,34 @@ function readOptionalPriorityResult<T>(
     failures.push(toFailure(label, result));
   }
   return null;
+}
+
+function readOptionalBaseResult<T>(
+  label: string,
+  result: ApiResult<T>,
+  failures: TriageFailure[],
+): T | null {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing) {
+    failures.push(toFailure(label, result));
+  }
+  return null;
+}
+
+function readOptionalBaseList<T>(
+  label: string,
+  result: ApiResult<T[]>,
+  failures: TriageFailure[],
+): T[] {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing) {
+    failures.push(toFailure(label, result));
+  }
+  return [];
 }
 
 function toFailure(label: string, result: ApiFailure): TriageFailure {
