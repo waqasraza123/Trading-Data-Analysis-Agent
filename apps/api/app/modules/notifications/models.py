@@ -56,6 +56,57 @@ class NotificationSourceType(StrEnum):
     SCREENSHOT_DECISION = "screenshot_decision"
 
 
+class NotificationDeliveryChannelType(StrEnum):
+    WEBHOOK = "webhook"
+    EMAIL = "email"
+    TELEGRAM = "telegram"
+    DISCORD = "discord"
+
+
+class NotificationChannelStatus(StrEnum):
+    ACTIVE = "active"
+    PAUSED = "paused"
+    ARCHIVED = "archived"
+
+
+class BackendNotificationEventType(StrEnum):
+    SIGNAL_CLASSIFIED = "signal.classified"
+    SIGNAL_REVIEW_RECOMMENDED = "signal.review_recommended"
+    OUTCOME_EVALUATED = "outcome.evaluated"
+    DIGEST_CREATED = "digest.created"
+    DATA_QUALITY_DEGRADED = "data_quality.degraded"
+    MARKET_MEMORY_STALE = "market_memory.stale"
+    REASONING_ACTION_DUE = "reasoning.action_due"
+    READINESS_BLOCKED = "readiness.blocked"
+    OPERATOR_REVIEW_OPENED = "operator_review.opened"
+
+
+class NotificationEventSeverity(StrEnum):
+    INFO = "info"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class NotificationEventStatus(StrEnum):
+    PENDING = "pending"
+    HELD = "held"
+    DELIVERED = "delivered"
+    PARTIALLY_DELIVERED = "partially_delivered"
+    BLOCKED = "blocked"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+
+class NotificationDeliveryAttemptStatus(StrEnum):
+    PENDING = "pending"
+    DELIVERED = "delivered"
+    SKIPPED = "skipped"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+
+
 class NotificationPreference(Base):
     __tablename__ = "notification_preferences"
     __table_args__ = (
@@ -267,6 +318,172 @@ class NotificationWorkerRun(Base):
     )
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    created_at = created_at_column()
+
+
+class NotificationDeliveryChannel(Base):
+    __tablename__ = "notification_channels"
+    __table_args__ = (
+        CheckConstraint(
+            "channel_type in ('webhook', 'email', 'telegram', 'discord')",
+            name="notification_channels_channel_type_allowed",
+        ),
+        CheckConstraint(
+            "status in ('active', 'paused', 'archived')",
+            name="notification_channels_status_allowed",
+        ),
+        Index(
+            "ix_notification_channels_workspace_status_channel_type",
+            "workspace_id",
+            "status",
+            "channel_type",
+        ),
+    )
+
+    id = uuid_primary_key()
+    workspace_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    channel_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False)
+    config_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    secret_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    event_types_json: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    severity_filter_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    quiet_hours_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    created_at = created_at_column()
+    updated_at = updated_at_column()
+
+
+class NotificationEvent(Base):
+    __tablename__ = "notification_events"
+    __table_args__ = (
+        CheckConstraint(
+            "event_type in ('signal.classified', 'signal.review_recommended', "
+            "'outcome.evaluated', 'digest.created', 'data_quality.degraded', "
+            "'market_memory.stale', 'reasoning.action_due', 'readiness.blocked', "
+            "'operator_review.opened')",
+            name="notification_events_event_type_allowed",
+        ),
+        CheckConstraint(
+            "severity in ('info', 'low', 'medium', 'high', 'critical')",
+            name="notification_events_severity_allowed",
+        ),
+        CheckConstraint(
+            "status in ('pending', 'held', 'delivered', 'partially_delivered', "
+            "'blocked', 'cancelled', 'failed')",
+            name="notification_events_status_allowed",
+        ),
+        CheckConstraint(
+            "safety_status in ('passed', 'blocked', 'redacted', 'review_recommended')",
+            name="notification_events_safety_status_allowed",
+        ),
+        Index(
+            "ix_notification_events_workspace_event_status",
+            "workspace_id",
+            "event_type",
+            "status",
+        ),
+        Index("ix_notification_events_source", "source_type", "source_id"),
+        Index("ix_notification_events_dedupe_key", "dedupe_key"),
+    )
+
+    id = uuid_primary_key()
+    workspace_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    event_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    source_id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), nullable=False)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    title: Mapped[str] = mapped_column(String(180), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    payload_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    safety_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    dedupe_key: Mapped[str] = mapped_column(String(220), nullable=False)
+    created_at = created_at_column()
+    updated_at = updated_at_column()
+
+
+class NotificationDeliveryAttempt(Base):
+    __tablename__ = "notification_delivery_attempts"
+    __table_args__ = (
+        CheckConstraint(
+            "status in ('pending', 'delivered', 'skipped', 'failed', 'blocked')",
+            name="notification_delivery_attempts_status_allowed",
+        ),
+        Index("ix_notification_delivery_attempts_notification_event_id", "notification_event_id"),
+        Index(
+            "ix_notification_delivery_attempts_channel_status",
+            "channel_id",
+            "status",
+        ),
+    )
+
+    id = uuid_primary_key()
+    workspace_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    notification_event_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("notification_events.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    channel_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("notification_channels.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(String(24), nullable=False)
+    attempted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    response_status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    response_body_excerpt: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_json: Mapped[dict[str, object]] = mapped_column(
         JSONB,

@@ -1177,8 +1177,11 @@ POST /webhook-outbox/events/{event_id}/cancel
 ```
 
 Notification APIs persist safe operator-facing outbox messages, user preferences, in-app delivery
-state, and worker dispatch state. They do not send trade instructions, create broker actions, or
-deliver external email/webhook messages yet:
+state, and worker dispatch state. Notification delivery engine APIs add sanitized backend
+intelligence events, provider-configured channels, dedupe, quiet hours, severity routing, delivery
+attempts, and an explicit webhook HTTP POST path gated by `NOTIFICATIONS_ENABLED=true`.
+Email, Telegram, and Discord adapters are safe stubs in this phase. No notification path sends
+trade instructions, creates broker actions, auto-trades, or provides financial advice:
 
 ```txt
 PUT /notifications/preferences
@@ -1186,6 +1189,16 @@ POST /notifications
 GET /notifications
 POST /notifications/dispatch-due
 GET /notifications/worker/status
+POST /notification-channels
+GET /notification-channels
+GET /notification-channels/{channel_id}
+PATCH /notification-channels/{channel_id}
+POST /notification-channels/{channel_id}/archive
+POST /notification-events
+GET /notification-events
+GET /notification-events/{event_id}
+POST /notification-events/{event_id}/deliver
+GET /notification-events/{event_id}/attempts
 ```
 
 Multi-timeframe aggregation APIs derive complete higher-timeframe candles from final lower-timeframe

@@ -84,6 +84,9 @@ from app.modules.market_scans.models import (
 from app.modules.market_sessions.models import MarketSessionContext
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.notifications.models import (
+    NotificationDeliveryAttempt,
+    NotificationDeliveryChannel,
+    NotificationEvent,
     NotificationMessage,
     NotificationPreference,
     NotificationWorkerRun,
@@ -224,6 +227,9 @@ __all__ = [
     "MarketWatchlistItem",
     "MultiTimeframeContext",
     "NewsEvent",
+    "NotificationDeliveryAttempt",
+    "NotificationDeliveryChannel",
+    "NotificationEvent",
     "NotificationMessage",
     "NotificationPreference",
     "NotificationWorkerRun",

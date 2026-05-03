@@ -329,6 +329,12 @@ class Settings(BaseSettings):
     notification_worker_lock_seconds: int = Field(default=120, ge=1)
     notification_worker_max_attempts: int = Field(default=3, ge=1, le=100)
     notification_worker_jitter_seconds: float = Field(default=2, ge=0)
+    notifications_enabled: bool = False
+    notification_delivery_timeout_seconds: int = Field(default=10, ge=1, le=120)
+    notification_max_payload_bytes: int = Field(default=16000, ge=1024, le=262144)
+    notification_dedupe_window_seconds: int = Field(default=3600, ge=0, le=2_592_000)
+    notification_default_quiet_hours_timezone: str = "UTC"
+    notification_webhook_user_agent: str = "trading-intelligence-notifications/0.1"
     market_scan_worker_enabled: bool = False
     market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
@@ -548,6 +554,26 @@ class Settings(BaseSettings):
             raise ValueError(msg) from error
         return normalized_value
 
+    @field_validator("notification_default_quiet_hours_timezone")
+    @classmethod
+    def validate_notification_default_quiet_hours_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "NOTIFICATION_DEFAULT_QUIET_HOURS_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("notification_webhook_user_agent")
+    @classmethod
+    def validate_notification_webhook_user_agent(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "NOTIFICATION_WEBHOOK_USER_AGENT must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
     @field_validator("advanced_feature_pack_version")
     @classmethod
     def validate_advanced_feature_pack_version(cls, value: str) -> str:
@@ -623,7 +649,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_event_study_reaction_multipliers(self) -> Self:
-        if self.event_study_strong_reaction_multiplier < self.event_study_moderate_reaction_multiplier:
+        if (
+            self.event_study_strong_reaction_multiplier
+            < self.event_study_moderate_reaction_multiplier
+        ):
             msg = (
                 "EVENT_STUDY_STRONG_REACTION_MULTIPLIER must be greater than or equal to "
                 "EVENT_STUDY_MODERATE_REACTION_MULTIPLIER"
