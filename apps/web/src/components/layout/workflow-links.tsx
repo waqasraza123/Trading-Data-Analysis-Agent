@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export type WorkflowTarget = "dashboard" | "brief" | "triage" | "scanner" | "dataOnboarding";
+export type WorkflowTarget = "dashboard" | "brief" | "triage" | "scanner" | "dataOnboarding" | "review" | "journal";
 
 type WorkflowLinksProps = {
   workspaceId?: string | null;
@@ -14,6 +14,8 @@ const workflowTargets: Record<WorkflowTarget, { href: string; label: string }> =
   triage: { href: "/triage", label: "Triage" },
   scanner: { href: "/scanner", label: "Scanner" },
   dataOnboarding: { href: "/data/onboarding", label: "Data Onboarding" },
+  review: { href: "/review/outcomes", label: "Outcome Review" },
+  journal: { href: "/journal", label: "Journal" },
 };
 
 const linkClassName =
@@ -21,7 +23,7 @@ const linkClassName =
 
 export function WorkflowLinks({
   workspaceId,
-  targets = ["brief", "triage", "scanner", "dataOnboarding"],
+  targets = ["brief", "triage", "scanner", "review", "journal", "dataOnboarding"],
   className = "",
 }: WorkflowLinksProps) {
   return (

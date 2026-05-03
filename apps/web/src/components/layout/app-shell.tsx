@@ -12,6 +12,8 @@ export function AppShell({ appName, children }: AppShellProps) {
     { href: "/brief", label: "Brief" },
     { href: "/triage", label: "Triage" },
     { href: "/scanner", label: "Scanner" },
+    { href: "/review/outcomes", label: "Review" },
+    { href: "/journal", label: "Journal" },
     { href: "/data/onboarding", label: "Data Onboarding" },
   ];
 

@@ -431,3 +431,10 @@ Durable decisions:
 - Unified analysis context packs are implemented as a canonical read-only composition layer over persisted signal, analysis run, reasoning run, outcome, chart screenshot, replay, evidence, explanation, audit, quality, decision readiness, report, and optional market-context artifacts.
 - Context packs produce bounded, redacted, typed source-of-truth artifact snapshots for downstream backend modules and do not mutate signals, trigger LLM calls, run replay, evaluate outcomes, execute actions, call external providers, send alerts, or provide financial advice.
 - Context pack APIs are `GET /context-packs/signals/{signal_id}`, `GET /context-packs/analysis-runs/{analysis_run_id}`, `GET /context-packs/reasoning-runs/{reasoning_run_id}`, `GET /context-packs/outcomes/{outcome_id}`, and `GET /context-packs/chart-screenshot-runs/{run_id}`.
+
+## Outcome Journal Review Loop UI
+
+- Added `/review/outcomes` as a frontend composition layer over recent analysis runs, signal outcomes, journal entries, signal digests, profile diagnostics, confidence calibration, cohort drift, and pattern attribution endpoints.
+- Added `/journal` and `/journal/[entryId]` for reflection note creation, editing, archival, and backend-supported review against observed outcomes.
+- The workflow is for review and learning only. It excludes broker execution, auto-trading, broker imports, account-result fields, order fields, margin fields, sizing fields, and financial advice.
+- No backend changes were required; missing optional endpoints render unavailable, hidden, or empty states.
