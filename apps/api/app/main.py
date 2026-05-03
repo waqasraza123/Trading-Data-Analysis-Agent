@@ -73,6 +73,7 @@ from app.modules.timeframe_aggregation.routes import router as timeframe_aggrega
 from app.modules.users.routes import router as users_router
 from app.modules.webhook_outbox.routes import router as webhook_outbox_router
 from app.modules.webhook_outbox.routes import router as webhook_outbox_router
+from app.modules.walk_forward_validation.routes import router as walk_forward_validation_router
 from app.modules.workspaces.routes import router as workspaces_router
 from app.modules.historical_cases.routes import router as historical_cases_router
 from app.modules.intelligence_datasets.routes import router as intelligence_datasets_router
@@ -157,6 +158,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(profile_diagnostics_router, prefix=resolved_settings.api_prefix)
     app.include_router(confidence_calibration_router, prefix=resolved_settings.api_prefix)
     app.include_router(backtest_experiments_router, prefix=resolved_settings.api_prefix)
+    app.include_router(walk_forward_validation_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_governance_router, prefix=resolved_settings.api_prefix)
     app.include_router(profile_simulations_router, prefix=resolved_settings.api_prefix)
     app.include_router(intelligence_datasets_router, prefix=resolved_settings.api_prefix)

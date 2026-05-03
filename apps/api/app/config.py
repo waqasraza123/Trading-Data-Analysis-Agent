@@ -84,6 +84,11 @@ class Settings(BaseSettings):
     backtest_experiment_default_limit: int = Field(default=100, ge=1, le=5000)
     backtest_experiment_max_limit: int = Field(default=1000, ge=1, le=10000)
     backtest_experiment_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    walk_forward_validation_version: str = "v1"
+    walk_forward_default_window_days: int = Field(default=30, ge=1, le=3660)
+    walk_forward_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    walk_forward_degradation_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    walk_forward_improvement_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
     market_session_version: str = "v1"
@@ -460,6 +465,7 @@ class Settings(BaseSettings):
         "decision_readiness_assessment_version",
         "scenario_ensemble_version",
         "backtest_experiment_version",
+        "walk_forward_validation_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

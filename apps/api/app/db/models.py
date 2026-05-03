@@ -15,6 +15,11 @@ from app.modules.backtest_experiments.models import (
     BacktestExperimentCohort,
     BacktestExperimentRun,
 )
+from app.modules.walk_forward_validation.models import (
+    WalkForwardValidationComparison,
+    WalkForwardValidationRun,
+    WalkForwardValidationWindow,
+)
 from app.modules.scenario_ensembles.models import (
     ScenarioConsensusResult,
     ScenarioEnsembleItem,
@@ -174,6 +179,9 @@ __all__ = [
     "WebhookSubscription",
     "BacktestExperimentCohort",
     "BacktestExperimentRun",
+    "WalkForwardValidationComparison",
+    "WalkForwardValidationRun",
+    "WalkForwardValidationWindow",
     "ScenarioConsensusResult",
     "ScenarioEnsembleItem",
     "ScenarioEnsembleRun",

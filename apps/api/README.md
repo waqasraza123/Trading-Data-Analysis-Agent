@@ -1,5 +1,11 @@
 # Trading Intelligence API
 
+Walk-forward validation is implemented under `/walk-forward-validations`. It analyzes stored
+deterministic signals and stored outcomes across chronological validation windows to summarize
+observed follow-through, reversal behavior, confidence alignment, stability, degradation, and
+sample-size coverage. It does not evaluate missing outcomes, mutate signals, modify strategy
+profiles, calculate profit metrics, send alerts, execute broker actions, or provide financial advice.
+
 Confidence calibration analytics are implemented under `/confidence-calibration`. They compare
 persisted deterministic confidence scores with observed follow-through outcomes by confidence bin,
 horizon, and optional profile/pattern/symbol/timeframe filters. This is reliability analysis only:
@@ -243,6 +249,11 @@ BACKTEST_EXPERIMENT_VERSION=v1
 BACKTEST_EXPERIMENT_DEFAULT_LIMIT=100
 BACKTEST_EXPERIMENT_MAX_LIMIT=1000
 BACKTEST_EXPERIMENT_MINIMUM_SAMPLE_SIZE=20
+WALK_FORWARD_VALIDATION_VERSION=v1
+WALK_FORWARD_DEFAULT_WINDOW_DAYS=30
+WALK_FORWARD_MINIMUM_SAMPLE_SIZE=20
+WALK_FORWARD_DEGRADATION_THRESHOLD=0.20
+WALK_FORWARD_IMPROVEMENT_THRESHOLD=0.20
 MARKET_SESSION_VERSION=v1
 MARKET_SESSION_DEFAULT_TIMEZONE=UTC
 ADVANCED_FEATURE_PACK_VERSION=v1
@@ -435,6 +446,12 @@ Confidence calibration curves and reliability tables are documented in:
 
 ```txt
 docs/confidence-calibration.md
+```
+
+Walk-forward validation is documented in:
+
+```txt
+docs/walk-forward-validation.md
 ```
 
 Safe webhook outbox behavior is documented in:
@@ -728,6 +745,18 @@ POST /confidence-calibration/run
 GET /confidence-calibration/runs
 GET /confidence-calibration/runs/{run_id}
 GET /confidence-calibration/runs/{run_id}/bins
+```
+
+Walk-forward validation APIs summarize stored outcome behavior across chronological validation
+windows. They do not evaluate missing outcomes, mutate signals, change strategy profiles, advise,
+alert, or execute broker workflows:
+
+```txt
+POST /walk-forward-validations/run
+GET /walk-forward-validations/runs
+GET /walk-forward-validations/runs/{run_id}
+GET /walk-forward-validations/runs/{run_id}/windows
+GET /walk-forward-validations/runs/{run_id}/comparisons
 ```
 
 Strategy profile governance APIs create, validate, review, approve, and explicitly promote profile
