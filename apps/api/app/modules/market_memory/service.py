@@ -139,8 +139,6 @@ class MarketMemoryService:
         symbol = await self.symbol_repository.get_by_id(symbol_id)
         if symbol is None:
             raise AppError(404, "symbol_not_found", "Symbol not found")
-        if symbol.workspace_id != workspace_id:
-            raise AppError(422, "workspace_symbol_mismatch", "Symbol does not belong to workspace")
         if source_id is None:
             return
         data_source = await self.data_source_repository.get_by_id(source_id)
