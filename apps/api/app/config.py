@@ -297,6 +297,12 @@ class Settings(BaseSettings):
         le=1,
     )
     signal_digest_stale_data_priority: str = "high"
+    daily_brief_version: str = "v1"
+    daily_brief_default_timezone: str = "UTC"
+    daily_brief_max_items: int = Field(default=150, ge=1, le=500)
+    daily_brief_review_first_limit: int = Field(default=20, ge=1, le=100)
+    daily_brief_outcome_update_limit: int = Field(default=20, ge=1, le=100)
+    daily_brief_action_item_limit: int = Field(default=30, ge=1, le=100)
     signal_priority_version: str = "v1"
     signal_priority_high_threshold: Decimal = Field(default=Decimal("0.75"), ge=0, le=1)
     signal_priority_medium_threshold: Decimal = Field(default=Decimal("0.55"), ge=0, le=1)
@@ -521,6 +527,7 @@ class Settings(BaseSettings):
         "market_memory_state_version",
         "setup_context_version",
         "signal_digest_version",
+        "daily_brief_version",
         "signal_priority_version",
         "journal_review_version",
         "provider_health_version",
@@ -561,6 +568,17 @@ class Settings(BaseSettings):
             ZoneInfo(normalized_value)
         except ZoneInfoNotFoundError as error:
             msg = "SIGNAL_DIGEST_DEFAULT_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("daily_brief_default_timezone")
+    @classmethod
+    def validate_daily_brief_default_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "DAILY_BRIEF_DEFAULT_TIMEZONE must be a valid IANA timezone"
             raise ValueError(msg) from error
         return normalized_value
 

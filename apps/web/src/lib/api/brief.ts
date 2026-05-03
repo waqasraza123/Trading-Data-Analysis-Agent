@@ -5,7 +5,20 @@ import {
   type BriefSignalBundle,
   type BriefWatchlistWithItems,
 } from "@/lib/brief/composeBrief";
-import type { BriefFailure, WorkspaceBrief } from "@/lib/brief/types";
+import type {
+  BriefActiveSetupItem,
+  BriefAvoidConditionItem,
+  BriefDataQualityIssue,
+  BriefDigestSummary,
+  BriefFailure,
+  BriefOutcomeUpdateItem,
+  BriefPendingActionItem,
+  BriefReviewNeededItem,
+  BriefSectionStatus,
+  BriefWatchNextItem,
+  WorkspaceBrief,
+} from "@/lib/brief/types";
+import { getLatestWorkspaceDailyBrief } from "./dailyBriefs";
 import { listAnalysisRuns, listMarketMemorySnapshots, listSymbols, listWorkspaces } from "./market";
 import { listSignalOutcomes } from "./outcomes";
 import {
@@ -26,6 +39,7 @@ import {
 } from "./watchlists";
 import type {
   ApiResult,
+  JsonRecord,
   HealthResponse,
   ScheduledScanConfig,
   SignalDigestItem,
@@ -72,6 +86,23 @@ export async function getWorkspaceBrief(params: { workspaceId?: string }): Promi
       backendUnavailable,
       generatedAt,
     });
+  }
+
+  const backendBriefResult = await getLatestWorkspaceDailyBrief({ workspaceId: workspace.id });
+  if (backendBriefResult.ok) {
+    return composeWorkspaceBriefFromBackend({
+      appName: env.appName,
+      apiBaseUrl: env.apiBaseUrl,
+      requestedWorkspaceId: params.workspaceId || null,
+      workspace,
+      generatedAt: backendBriefResult.data.generated_at,
+      brief: backendBriefResult.data,
+      failures,
+      backendUnavailable,
+    });
+  }
+  if (!backendBriefResult.error.missing && backendBriefResult.error.status !== 0) {
+    failures.push(toBriefFailure("Backend daily brief", backendBriefResult));
   }
 
   const [
@@ -253,4 +284,277 @@ function isBackendUnavailable(
 
 function unique<T>(values: T[]): T[] {
   return Array.from(new Set(values));
+}
+
+function composeWorkspaceBriefFromBackend(input: {
+  appName: string;
+  apiBaseUrl: string;
+  requestedWorkspaceId: string | null;
+  workspace: Workspace;
+  generatedAt: string;
+  brief: {
+    id: UUID;
+    summary_json: JsonRecord;
+    sections_json: JsonRecord;
+    warnings_json: JsonRecord[];
+  };
+  failures: BriefFailure[];
+  backendUnavailable: boolean;
+}): WorkspaceBrief {
+  const counts = readRecord(input.brief.summary_json.counts);
+  const reviewFirst = readSection(input.brief.sections_json.review_first);
+  const needsConfirmation = readSection(input.brief.sections_json.needs_confirmation);
+  const avoidConditions = readSection(input.brief.sections_json.avoid_conditions);
+  const dataFreshness = readSection(input.brief.sections_json.data_freshness);
+  const outcomeUpdates = readSection(input.brief.sections_json.outcome_updates);
+  const watchNext = readSection(input.brief.sections_json.watch_next);
+  const pendingActions = readSection(input.brief.sections_json.pending_actions);
+  const marketContext = readSection(input.brief.sections_json.market_context);
+  const backendWarnings = input.brief.warnings_json.map((warning) => ({
+    label: "Backend daily brief",
+    status: 200,
+    message: readString(warning.message) || readString(warning.code) || "Daily brief warning",
+    missing: false,
+  }));
+
+  return {
+    appName: input.appName,
+    apiBaseUrl: input.apiBaseUrl,
+    workspace: { id: input.workspace.id, name: input.workspace.name },
+    requestedWorkspaceId: input.requestedWorkspaceId,
+    generatedAt: input.generatedAt,
+    backendUnavailable: input.backendUnavailable,
+    summary: {
+      totalSymbolsReviewed: readNumber(counts.total_symbols_reviewed),
+      freshSymbols: readNumber(counts.fresh_symbols),
+      staleOrDegradedSymbols: readNumber(counts.stale_degraded_symbols),
+      activeSetupCount: readNumber(counts.review_first_count),
+      reviewRecommendedCount:
+        readNumber(counts.needs_confirmation_count) + readNumber(counts.avoid_condition_count),
+      recentOutcomeUpdateCount: readNumber(counts.recent_outcome_count),
+      pendingBackendActionCount: readNumber(counts.pending_backend_action_count),
+    },
+    marketFocus: marketContext.slice(0, 8).map(toMarketFocusItem),
+    activeSetups: reviewFirst.slice(0, 8).map(toActiveSetupItem),
+    avoidConditions: avoidConditions.slice(0, 12).map(toAvoidConditionItem),
+    outcomeUpdates: outcomeUpdates.slice(0, 8).map(toOutcomeUpdateItem),
+    pendingActions: pendingActions.slice(0, 8).map(toPendingActionItem),
+    dataQualityIssues: dataFreshness.slice(0, 10).map(toDataQualityIssue),
+    watchNext: watchNext.slice(0, 8).map(toWatchNextItem),
+    reviewNeeded: needsConfirmation.slice(0, 8).map(toReviewNeededItem),
+    digestSummaries: [...reviewFirst, ...needsConfirmation, ...avoidConditions, ...outcomeUpdates]
+      .slice(0, 6)
+      .map(toDigestSummary),
+    sectionStatuses: {
+      workspace: readyStatus("Workspace", true),
+      marketFocus: readyStatus("Market focus", marketContext.length > 0),
+      activeSetups: readyStatus("Active setups", reviewFirst.length > 0),
+      avoidConditions: readyStatus("Avoid conditions", avoidConditions.length > 0),
+      outcomeUpdates: readyStatus("Outcome updates", outcomeUpdates.length > 0),
+      pendingActions: readyStatus("Pending actions", pendingActions.length > 0),
+      dataQuality: readyStatus("Data quality", dataFreshness.length > 0),
+      watchNext: readyStatus("Watch next", watchNext.length > 0),
+      reviewNeeded: readyStatus("Review needed", needsConfirmation.length > 0),
+      digests: readyStatus("Backend daily brief", true),
+    },
+    failures: [...input.failures, ...backendWarnings],
+  };
+}
+
+type BackendSectionItem = JsonRecord & {
+  id?: string;
+  item_type?: string;
+  priority?: string;
+  title?: string;
+  summary?: string;
+  reason?: string;
+  symbol_id?: string | null;
+  signal_id?: string | null;
+  outcome_id?: string | null;
+  action_item_id?: string | null;
+  source_type?: string | null;
+  source_id?: string | null;
+  metadata?: JsonRecord;
+};
+
+function toMarketFocusItem(item: BackendSectionItem) {
+  return {
+    id: sectionItemId(item, "market"),
+    symbolId: readUuid(item.symbol_id) || "",
+    symbol: readMetadataSymbol(item) || "Workspace",
+    displayName: readMetadataSymbol(item) || "Market context",
+    timeframe: readString(item.metadata?.timeframe) || "Context",
+    latestBias: readString(item.metadata?.bias) || "neutral",
+    confidenceLabel: readString(item.metadata?.confidence_label) || "Context",
+    freshnessLabel: "fresh",
+    dataQualityLabel: readString(item.metadata?.data_quality_label) || "available",
+    marketRegimeLabel: readString(item.metadata?.trend_regime) || readString(item.title) || "Context",
+    marketSessionLabel: readString(item.metadata?.session_label) || "Context",
+    setupQualityLabel: readString(item.metadata?.agreement_label) || "Context",
+    topWarning: readString(item.reason) || "Review context",
+    signalId: readUuid(item.signal_id),
+  };
+}
+
+function toActiveSetupItem(item: BackendSectionItem): BriefActiveSetupItem {
+  const signalId = readUuid(item.signal_id) || "";
+  return {
+    signalId,
+    symbolId: readUuid(item.symbol_id) || "",
+    symbol: readMetadataSymbol(item) || "Setup",
+    timeframe: readString(item.metadata?.timeframe) || "Context",
+    bias: readString(item.metadata?.bias) || "directional context",
+    patternType: readString(item.metadata?.pattern_type) || "Setup context",
+    confidenceLabel: readString(item.metadata?.confidence_label) || "Context",
+    setupQualityLabel: readString(item.metadata?.setup_quality_label) || "Context",
+    keyEvidence: [readString(item.reason) || readString(item.summary) || "Review recommended"],
+    invalidationContext: null,
+    waitCondition: null,
+    reviewLink: signalId ? `/signals/${signalId}` : "/brief",
+  };
+}
+
+function toAvoidConditionItem(item: BackendSectionItem): BriefAvoidConditionItem {
+  return {
+    id: sectionItemId(item, "avoid"),
+    symbolId: readUuid(item.symbol_id),
+    symbol: readMetadataSymbol(item) || "Workspace",
+    timeframe: readString(item.metadata?.timeframe),
+    condition: readString(item.title) || "Avoid condition",
+    reason: readString(item.reason) || readString(item.summary) || "Review context",
+    severity: readString(item.priority) || "normal",
+    source: readString(item.source_type) || "Daily brief",
+    signalId: readUuid(item.signal_id),
+  };
+}
+
+function toOutcomeUpdateItem(item: BackendSectionItem): BriefOutcomeUpdateItem {
+  return {
+    id: sectionItemId(item, "outcome"),
+    signalId: readUuid(item.signal_id) || "",
+    symbolId: readUuid(item.symbol_id) || "",
+    symbol: readMetadataSymbol(item) || "Outcome",
+    timeframe: readString(item.metadata?.timeframe) || "Context",
+    horizon: `${readNumber(item.metadata?.horizon_minutes)} min`,
+    outcomeLabel: readString(item.metadata?.outcome_label) || "outcome update",
+    observationLabel: readString(item.summary) || "Outcome update",
+    safeSummary: readString(item.reason) || "Observed outcome update available.",
+  };
+}
+
+function toPendingActionItem(item: BackendSectionItem): BriefPendingActionItem {
+  return {
+    id: readUuid(item.action_item_id) || sectionItemId(item, "action"),
+    actionType: readString(item.metadata?.action_type) || readString(item.source_type) || "backend follow-up",
+    status: readString(item.metadata?.status) || "pending",
+    dueTime: readString(item.metadata?.due_at),
+    source: readString(item.source_type) || "Daily brief",
+    safeLabel: readString(item.summary) || "Backend-safe action due",
+  };
+}
+
+function toDataQualityIssue(item: BackendSectionItem): BriefDataQualityIssue {
+  return {
+    id: sectionItemId(item, "data"),
+    symbolId: readUuid(item.symbol_id),
+    symbol: readMetadataSymbol(item) || "Workspace",
+    timeframe: readString(item.metadata?.timeframe),
+    label: readString(item.title) || "Data freshness",
+    detail: readString(item.reason) || readString(item.summary) || "Review data freshness",
+    severity: readString(item.priority) || "normal",
+    source: readString(item.source_type) || "Daily brief",
+  };
+}
+
+function toWatchNextItem(item: BackendSectionItem): BriefWatchNextItem {
+  return {
+    id: sectionItemId(item, "watch"),
+    symbolId: readUuid(item.symbol_id) || "",
+    symbol: readMetadataSymbol(item) || "Workspace",
+    timeframe: readString(item.metadata?.timeframe) || "Context",
+    observation: readString(item.summary) || "Watch next",
+    reason: readString(item.reason) || "Review context",
+    sourceArtifact: readString(item.source_type) || "Daily brief",
+    signalId: readUuid(item.signal_id),
+  };
+}
+
+function toReviewNeededItem(item: BackendSectionItem): BriefReviewNeededItem {
+  return {
+    id: sectionItemId(item, "review"),
+    label: readString(item.title) || "Needs confirmation",
+    reason: readString(item.reason) || readString(item.summary) || "Review context",
+    priority: readString(item.priority) || "normal",
+    source: readString(item.source_type) || "Daily brief",
+    signalId: readUuid(item.signal_id),
+  };
+}
+
+function toDigestSummary(item: BackendSectionItem): BriefDigestSummary {
+  return {
+    id: sectionItemId(item, "digest"),
+    title: readString(item.title) || "Daily brief item",
+    summary: readString(item.summary) || "Daily brief context",
+    priority: readString(item.priority) || "normal",
+    itemType: readString(item.item_type) || "daily_brief",
+    signalId: readUuid(item.signal_id),
+  };
+}
+
+function readyStatus(label: string, hasData: boolean): BriefSectionStatus {
+  if (!hasData) {
+    return {
+      state: "empty",
+      label: `${label} empty`,
+      message: "No matching backend brief items were returned.",
+    };
+  }
+  return {
+    state: "ready",
+    label,
+    message: "Section data loaded from backend daily brief.",
+  };
+}
+
+function readSection(value: unknown): BackendSectionItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(isRecord).map((item) => item as BackendSectionItem);
+}
+
+function readRecord(value: unknown): JsonRecord {
+  return isRecord(value) ? (value as JsonRecord) : {};
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function readUuid(value: unknown): UUID | null {
+  return readString(value);
+}
+
+function readNumber(value: unknown): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function sectionItemId(item: BackendSectionItem, fallback: string): string {
+  return readString(item.id) || readString(item.source_id) || readString(item.signal_id) || fallback;
+}
+
+function readMetadataSymbol(item: BackendSectionItem): string | null {
+  const title = readString(item.title);
+  return readString(item.metadata?.symbol) || (title ? title.split(" ")[0] : null);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

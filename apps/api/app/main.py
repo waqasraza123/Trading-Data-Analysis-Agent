@@ -26,6 +26,7 @@ from app.modules.cohort_drift.routes import router as cohort_drift_router
 from app.modules.confidence_calibration.routes import router as confidence_calibration_router
 from app.modules.context_packs.routes import router as context_packs_router
 from app.modules.cross_asset_context.routes import router as cross_asset_context_router
+from app.modules.daily_briefs.routes import router as daily_briefs_router
 from app.modules.data_contracts.routes import router as data_contracts_router
 from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_retention.routes import router as data_retention_router
@@ -130,6 +131,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         users_router,
         symbols_router,
         data_sources_router,
+        daily_briefs_router,
         capabilities_router,
         engine_versions_router,
         imports_router,

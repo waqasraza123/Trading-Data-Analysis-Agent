@@ -35,6 +35,15 @@ gates, readiness checks, news/event correlations, and backend follow-up records.
 analysis, evaluate outcomes, call LLMs, classify or override signals, send notifications, execute
 broker actions, auto-trade, copy-trade, or provide financial advice.
 
+Daily briefs are implemented under `/daily-briefs` and
+`/workspaces/{workspace_id}/daily-brief/latest`. They persist the canonical backend daily command
+center contract from existing stored artifacts, including signal digests, market memory, signal
+priority, setup context, provider health, data quality, outcomes, backend-safe action items,
+watchlists/scans, decision readiness, market regimes/sessions, multi-timeframe context,
+cross-asset context, and journal follow-ups. They do not trigger scans, provider polling, outcome
+evaluation, LLM calls, notifications, action execution, broker workflows, auto-trading, or
+financial advice. See `docs/daily-briefs.md`.
+
 Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
 pattern candidates contributed to final signals and observed outcomes by detector type, selected
 candidate, rejected candidate, blocked candidate, horizon, profile, symbol, and timeframe. It is
@@ -171,13 +180,14 @@ The same route also reads `/provider-health` when available to show provider/sou
 missing candles, recent polling failures, prepare-only recovery planning, and deterministic-analysis
 readiness.
 
-The integrated daily workflow pages in `apps/web` use the existing backend surface only. `/brief`,
-`/command-center`, and `/triage` are frontend composition layers over provider health, market
-memory, signal priority, preference profiles, signals, outcomes, setup context, decision readiness,
-action items, operator reviews, signal digests, watchlists, scheduled scans, data-quality, market
-sessions/regimes, intelligence reports, audit timelines, and journal APIs.
-No backend daily brief or triage router is required. Missing optional endpoints should return 404
-or standard API errors; the web client maps those into section-level unavailable states.
+The integrated daily workflow pages in `apps/web` prefer the backend daily brief when available.
+`/brief` and `/command-center` read `/workspaces/{workspace_id}/daily-brief/latest` first, then
+fall back to the existing frontend composition over provider health, market memory, signal
+priority, preference profiles, signals, outcomes, setup context, decision readiness, action items,
+operator reviews, signal digests, watchlists, scheduled scans, data-quality, market
+sessions/regimes, intelligence reports, audit timelines, and journal APIs. Missing optional
+endpoints should return 404 or standard API errors; the web client maps those into safe fallback
+states.
 
 The integrated dashboard surface now reads signal digests and setup context when those endpoints
 are available. Digest items may reference setup context rows, and journal entries can link to setup

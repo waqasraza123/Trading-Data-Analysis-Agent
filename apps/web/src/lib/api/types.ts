@@ -349,6 +349,49 @@ export type SignalDigestItem = {
   created_at: string;
 };
 
+export type DailyBriefRun = {
+  id: UUID;
+  workspace_id: UUID;
+  digest_id: UUID | null;
+  watchlist_id: UUID | null;
+  status: string;
+  brief_type: string;
+  brief_version: string;
+  period_start: string;
+  period_end: string;
+  timezone: string;
+  filters_json: JsonRecord;
+  summary_json: JsonRecord;
+  sections_json: JsonRecord;
+  warnings_json: JsonRecord[];
+  generated_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DailyBriefItem = {
+  id: UUID;
+  workspace_id: UUID;
+  brief_run_id: UUID;
+  item_type: string;
+  priority: string;
+  symbol_id: UUID | null;
+  signal_id: UUID | null;
+  analysis_run_id: UUID | null;
+  outcome_id: UUID | null;
+  action_item_id: UUID | null;
+  setup_context_id: UUID | null;
+  source_type: string | null;
+  source_id: UUID | null;
+  title: string;
+  summary: string;
+  reason: string;
+  tags_json: string[];
+  metadata_json: JsonRecord;
+  sort_order: number;
+  created_at: string;
+};
+
 export type JournalEntry = {
   id: UUID;
   workspace_id: UUID;

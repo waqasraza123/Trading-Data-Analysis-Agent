@@ -73,6 +73,10 @@ The client composes data from optional backend APIs:
 - `GET /action-items/due`
 - `GET /signal-digests`
 - `GET /signal-digests/{digest_id}/items`
+- `GET /workspaces/{workspace_id}/daily-brief/latest`
+- `GET /daily-briefs`
+- `GET /daily-briefs/{brief_id}`
+- `GET /daily-briefs/{brief_id}/items`
 - `GET /outcomes/performance/patterns`
 - `GET /profile-diagnostics/strategy-profiles`
 - `GET /profile-diagnostics/patterns`
@@ -177,7 +181,7 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
 - `/preferences/strategy` renders personal strategy preference profiles for review filtering only.
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
-- `/brief` renders the workspace daily brief, composed in the web client layer from existing optional backend endpoints.
+- `/brief` renders the workspace daily brief, preferring the backend daily brief endpoint and falling back to web client composition from existing optional backend endpoints.
 - `/signals/[signalId]` renders a full read-only setup detail view, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
 - `/symbols/[symbolId]` renders symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs.
 
@@ -216,7 +220,7 @@ notifications.
 
 ## Daily Trading Command Center
 
-The command center is a frontend composition layer in `apps/web/src/lib/api/commandCenter.ts` and `apps/web/src/lib/command-center/composeCommandCenter.ts`. It does not add a backend endpoint. It composes the existing provider health, signal priority, preference profile, brief, triage, scanner, journal, market memory, digest, outcome, readiness, review, action item, and health clients into one start page.
+The command center is a frontend composition layer in `apps/web/src/lib/api/commandCenter.ts` and `apps/web/src/lib/command-center/composeCommandCenter.ts`. It uses the backend daily brief through the shared brief client when a persisted brief is available, then falls back to the existing provider health, signal priority, preference profile, triage, scanner, journal, market memory, digest, outcome, readiness, review, action item, and health clients.
 
 Sections:
 
