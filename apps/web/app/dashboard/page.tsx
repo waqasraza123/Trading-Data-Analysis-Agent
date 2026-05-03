@@ -9,6 +9,7 @@ import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { AppShell } from "@/components/layout/app-shell";
 import { getDashboardData } from "@/lib/api/dashboard";
+import Link from "next/link";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -35,6 +36,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
             Workspace {data.workspace?.name || "not selected"}
           </div>
+          <Link
+            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900"
+            href={`/triage${data.workspace ? `?workspaceId=${data.workspace.id}` : ""}`}
+          >
+            Open triage board
+          </Link>
         </section>
         {!data.workspace && (
           <EmptyState

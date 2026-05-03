@@ -86,9 +86,11 @@ export function SignalDetailView({
               <Panel title="Outcomes" eyebrow="Observed horizons">
                 <OutcomeList outcomes={outcomes} />
               </Panel>
-              <Panel title="Setup Context" eyebrow="Non-advisory context">
-                <SetupContextPanel setupContext={setupContext} />
-              </Panel>
+              <div id="setup-context">
+                <Panel title="Setup Context" eyebrow="Non-advisory context">
+                  <SetupContextPanel setupContext={setupContext} />
+                </Panel>
+              </div>
             </>
           )}
           {report && (
