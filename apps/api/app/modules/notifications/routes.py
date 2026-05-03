@@ -9,7 +9,9 @@ from app.modules.notifications.models import (
     BackendNotificationEventType,
     NotificationChannelStatus,
     NotificationDeliveryChannelType,
+    NotificationEventSeverity,
     NotificationEventStatus,
+    NotificationInboxStatus,
     NotificationStatus,
 )
 from app.modules.notifications.schemas import (
@@ -21,6 +23,7 @@ from app.modules.notifications.schemas import (
     NotificationDeliveryResponse,
     NotificationDispatchRequest,
     NotificationDispatchResponse,
+    NotificationEventAcknowledgeRequest,
     NotificationEventCreate,
     NotificationEventRead,
     NotificationPreferenceRead,
@@ -129,6 +132,9 @@ async def list_notification_events(
     workspace_id: UUID,
     event_type: BackendNotificationEventType | None = None,
     status: NotificationEventStatus | None = None,
+    severity: NotificationEventSeverity | None = None,
+    source_type: Annotated[str | None, Query(min_length=1, max_length=80)] = None,
+    inbox_status: NotificationInboxStatus | None = None,
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[NotificationEventRead]:
@@ -136,6 +142,9 @@ async def list_notification_events(
         workspace_id=workspace_id,
         event_type=event_type,
         status=status,
+        severity=severity,
+        source_type=source_type,
+        inbox_status=inbox_status,
         limit=limit,
         offset=offset,
     )
@@ -148,6 +157,37 @@ async def get_notification_event(
     service: Annotated[NotificationService, Depends(get_notification_service)],
 ) -> NotificationEventRead:
     event = await service.get_notification_event(event_id)
+    return NotificationEventRead.model_validate(event)
+
+
+@router.post("/notification-events/{event_id}/read", response_model=NotificationEventRead)
+async def mark_notification_event_read(
+    event_id: UUID,
+    service: Annotated[NotificationService, Depends(get_notification_service)],
+) -> NotificationEventRead:
+    event = await service.mark_notification_event_read(event_id)
+    return NotificationEventRead.model_validate(event)
+
+
+@router.post("/notification-events/{event_id}/acknowledge", response_model=NotificationEventRead)
+async def acknowledge_notification_event(
+    event_id: UUID,
+    service: Annotated[NotificationService, Depends(get_notification_service)],
+    payload: NotificationEventAcknowledgeRequest | None = None,
+) -> NotificationEventRead:
+    event = await service.acknowledge_notification_event(
+        event_id,
+        user_id=payload.user_id if payload is not None else None,
+    )
+    return NotificationEventRead.model_validate(event)
+
+
+@router.post("/notification-events/{event_id}/archive", response_model=NotificationEventRead)
+async def archive_notification_event(
+    event_id: UUID,
+    service: Annotated[NotificationService, Depends(get_notification_service)],
+) -> NotificationEventRead:
+    event = await service.archive_notification_event(event_id)
     return NotificationEventRead.model_validate(event)
 
 

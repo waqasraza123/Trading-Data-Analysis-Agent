@@ -48,6 +48,9 @@ market_memory.stale
 reasoning.action_due
 readiness.blocked
 operator_review.opened
+scan.completed
+provider_health.degraded
+gap_recovery.needed
 ```
 
 `digest.created` events are not created or delivered automatically by digest generation. They must
@@ -74,6 +77,15 @@ partially_delivered
 blocked
 cancelled
 failed
+```
+
+Inbox statuses are separate from delivery status:
+
+```txt
+unread
+read
+acknowledged
+archived
 ```
 
 ## Safety Filtering
@@ -155,9 +167,15 @@ Event APIs:
 POST /notification-events
 GET /notification-events
 GET /notification-events/{event_id}
+POST /notification-events/{event_id}/read
+POST /notification-events/{event_id}/acknowledge
+POST /notification-events/{event_id}/archive
 POST /notification-events/{event_id}/deliver
 GET /notification-events/{event_id}/attempts
 ```
+
+The inbox APIs update in-product review state only. They do not deliver events externally and do
+not alter source artifacts.
 
 Existing in-app notification APIs remain available:
 

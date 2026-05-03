@@ -1287,9 +1287,20 @@ POST /notification-channels/{channel_id}/archive
 POST /notification-events
 GET /notification-events
 GET /notification-events/{event_id}
+POST /notification-events/{event_id}/read
+POST /notification-events/{event_id}/acknowledge
+POST /notification-events/{event_id}/archive
 POST /notification-events/{event_id}/deliver
 GET /notification-events/{event_id}/attempts
 ```
+
+`notification_events` also carry in-product inbox state: `unread`, `read`, `acknowledged`,
+and `archived`. These fields make sanitized backend intelligence events reviewable inside the
+web app without invoking external delivery. Supported inbox event types are signal classification,
+review recommendation, outcome evaluation, digest creation, data-quality degradation, stale market
+memory, due reasoning action, blocked readiness, opened operator review, completed scan, degraded
+provider health, and needed gap recovery. Inbox copy must stay non-advisory and must not become
+trading alerts or broker workflow language.
 
 Multi-timeframe aggregation APIs derive complete higher-timeframe candles from final lower-timeframe
 candles, store lineage, and build context without changing existing signal classifications:

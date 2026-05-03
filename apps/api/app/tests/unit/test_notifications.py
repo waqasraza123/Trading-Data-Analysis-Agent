@@ -8,8 +8,12 @@ from app.config import AppEnvironment, Settings
 from app.core.errors import AppError
 from app.core.time import utc_now
 from app.modules.notifications.models import (
+    BackendNotificationEventType,
     NotificationChannel,
+    NotificationEvent,
+    NotificationEventSeverity,
     NotificationEventType,
+    NotificationInboxStatus,
     NotificationMessage,
     NotificationPreference,
     NotificationSeverity,
@@ -20,6 +24,7 @@ from app.modules.notifications.models import (
 from app.modules.notifications.repository import NotificationRepository
 from app.modules.notifications.schemas import (
     NotificationCreateRequest,
+    NotificationEventCreate,
     NotificationPreferenceUpsert,
 )
 from app.modules.notifications.service import NotificationService
@@ -36,6 +41,7 @@ class FakeSession:
 class FakeNotificationRepository:
     def __init__(self) -> None:
         self.messages: dict[UUID, NotificationMessage] = {}
+        self.events: dict[UUID, NotificationEvent] = {}
         self.messages_by_key: dict[tuple[UUID, str], NotificationMessage] = {}
         self.preferences: dict[tuple[UUID, UUID, str, str], NotificationPreference] = {}
         self.worker_runs: list[NotificationWorkerRun] = []
@@ -136,6 +142,48 @@ class FakeNotificationRepository:
         self.messages[message.id] = message
         return message
 
+    async def create_event(self, event: NotificationEvent) -> NotificationEvent:
+        self.ensure_event_fields(event)
+        self.events[event.id] = event
+        return event
+
+    async def get_event(self, event_id: UUID) -> NotificationEvent | None:
+        return self.events.get(event_id)
+
+    async def get_recent_event_by_dedupe_key(
+        self,
+        workspace_id: UUID,
+        dedupe_key: str,
+        statuses: set[object],
+        since: datetime,
+    ) -> NotificationEvent | None:
+        return None
+
+    async def list_events(
+        self,
+        workspace_id: UUID,
+        event_type: object | None = None,
+        status: object | None = None,
+        severity: str | None = None,
+        source_type: str | None = None,
+        inbox_status: object | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[NotificationEvent]:
+        rows = [
+            event
+            for event in self.events.values()
+            if event.workspace_id == workspace_id
+            and (severity is None or event.severity == severity)
+            and (source_type is None or event.source_type == source_type)
+        ]
+        return rows[offset : offset + limit]
+
+    async def update_event(self, event: NotificationEvent) -> NotificationEvent:
+        self.ensure_event_fields(event)
+        self.events[event.id] = event
+        return event
+
     async def create_worker_run(
         self,
         worker_id: str,
@@ -207,6 +255,15 @@ class FakeNotificationRepository:
             preference.created_at = now
         if getattr(preference, "updated_at", None) is None:
             preference.updated_at = now
+
+    def ensure_event_fields(self, event: NotificationEvent) -> None:
+        now = utc_now()
+        if getattr(event, "id", None) is None:
+            event.id = uuid4()
+        if getattr(event, "created_at", None) is None:
+            event.created_at = now
+        if getattr(event, "updated_at", None) is None:
+            event.updated_at = now
 
 
 def make_service(repository: FakeNotificationRepository) -> NotificationService:
@@ -314,3 +371,30 @@ async def test_dispatch_due_notifications_fails_unconfigured_external_channel() 
     assert result.failed_count == 1
     assert repository.messages[message.id].status == NotificationStatus.FAILED.value
     assert repository.messages[message.id].error_code == "notification_channel_not_configured"
+
+
+@pytest.mark.asyncio
+async def test_notification_event_can_be_acknowledged_for_inbox_review() -> None:
+    workspace_id = uuid4()
+    user_id = uuid4()
+    repository = FakeNotificationRepository()
+    service = make_service(repository)
+    event = await service.create_notification_event(
+        NotificationEventCreate(
+            workspace_id=workspace_id,
+            event_type=BackendNotificationEventType.PROVIDER_HEALTH_DEGRADED,
+            source_type="provider_health",
+            source_id=uuid4(),
+            severity=NotificationEventSeverity.MEDIUM,
+            title="Provider degraded",
+            summary="Review stored provider health context.",
+            payload_json={"sourceType": "provider_health"},
+        )
+    )
+
+    acknowledged = await service.acknowledge_notification_event(event.id, user_id=user_id)
+
+    assert acknowledged.inbox_status == NotificationInboxStatus.ACKNOWLEDGED.value
+    assert acknowledged.read_at is not None
+    assert acknowledged.acknowledged_at is not None
+    assert acknowledged.acknowledged_by_user_id == user_id

@@ -19,6 +19,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
+- In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
 
@@ -107,6 +108,12 @@ The client composes data from optional backend APIs:
 - `GET /provider-health/workspaces/{workspace_id}/summary`
 - `POST /provider-health/workspaces/{workspace_id}/refresh`
 - `POST /provider-health/snapshots/{snapshot_id}/prepare-gap-recovery`
+- `GET /notification-events`
+- `GET /notification-events/{event_id}`
+- `POST /notification-events/{event_id}/read`
+- `POST /notification-events/{event_id}/acknowledge`
+- `POST /notification-events/{event_id}/archive`
+- `GET /notification-events/{event_id}/attempts`
 - `POST /data-quality/candle-range/run`
 - `POST /candle-gap-recovery/plans`
 - `GET /candle-gap-recovery/plans/{plan_id}/items`
@@ -189,7 +196,23 @@ The integrated web surface is arranged for a deterministic daily review loop:
 9. Review quality, calibration, validation, and drift in `/quality`.
 10. Revisit digest summaries in `/brief`, `/command-center`, `/dashboard`, or symbol detail.
 
-The shared navigation links Command Center, Brief, Triage, Scanner, Data, Quality, Preferences, Review, and Journal. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to the quality scoreboard.
+The shared navigation links Command Center, Brief, Triage, Scanner, Notifications, Data, Quality, Preferences, Review, and Journal. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to the quality scoreboard.
+
+## Notification Inbox
+
+The notification inbox at `/notifications` is an in-app review surface over sanitized
+`notification_events`. It lists supported intelligence events, filters by inbox state, severity,
+event type, delivery state, and source type, shows safe payload summaries, redaction warnings,
+delivery attempts, and source links for signals, outcomes, digests, provider health, data quality,
+action items, scans, gap recovery, and journal entries.
+
+Supported event types are signal classification, review recommendation, outcome evaluation,
+digest creation, data-quality degradation, stale market memory, due reasoning action, blocked
+readiness, opened operator review, completed scan, degraded provider health, and needed gap
+recovery. The UI uses safe language such as Review needed, Data stale, Scan completed, Outcome
+ready, Setup context available, Provider degraded, and Gap recovery needed. It is not an external
+delivery surface, broker workflow, or trading-alert page, and it does not trigger realtime
+notifications.
 
 ## Daily Trading Command Center
 

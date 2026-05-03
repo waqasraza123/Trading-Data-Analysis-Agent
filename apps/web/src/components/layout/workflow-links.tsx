@@ -6,6 +6,7 @@ export type WorkflowTarget =
   | "brief"
   | "triage"
   | "scanner"
+  | "notifications"
   | "dataOnboarding"
   | "quality"
   | "preferences"
@@ -24,6 +25,7 @@ export const workflowTargets: Record<WorkflowTarget, { href: string; label: stri
   brief: { href: "/brief", label: "Brief" },
   triage: { href: "/triage", label: "Triage" },
   scanner: { href: "/scanner", label: "Scanner" },
+  notifications: { href: "/notifications", label: "Notifications" },
   dataOnboarding: { href: "/data/onboarding", label: "Data" },
   quality: { href: "/quality", label: "Quality" },
   preferences: { href: "/preferences/strategy", label: "Preferences" },
@@ -36,6 +38,7 @@ export const primaryWorkflowTargets: WorkflowTarget[] = [
   "brief",
   "triage",
   "scanner",
+  "notifications",
   "dataOnboarding",
   "quality",
   "preferences",

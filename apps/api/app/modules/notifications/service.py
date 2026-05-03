@@ -30,6 +30,7 @@ from app.modules.notifications.models import (
     NotificationEvent,
     NotificationEventSeverity,
     NotificationEventStatus,
+    NotificationInboxStatus,
     NotificationMessage,
     NotificationPreference,
     NotificationSeverity,
@@ -264,6 +265,7 @@ class NotificationService:
             },
             safety_status=safety.safety_status.value,
             dedupe_key=dedupe_key,
+            inbox_status=NotificationInboxStatus.UNREAD.value,
         )
         event = await self.repository.create_event(event)
         await self.session.commit()
@@ -378,6 +380,9 @@ class NotificationService:
         workspace_id: UUID,
         event_type: BackendNotificationEventType | None = None,
         status: NotificationEventStatus | None = None,
+        severity: NotificationEventSeverity | None = None,
+        source_type: str | None = None,
+        inbox_status: NotificationInboxStatus | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[NotificationEvent]:
@@ -385,6 +390,9 @@ class NotificationService:
             workspace_id=workspace_id,
             event_type=event_type,
             status=status,
+            severity=severity.value if severity is not None else None,
+            source_type=source_type.strip().lower() if source_type else None,
+            inbox_status=inbox_status,
             limit=limit,
             offset=offset,
         )
@@ -393,6 +401,41 @@ class NotificationService:
         event = await self.repository.get_event(event_id)
         if event is None:
             raise AppError(404, "notification_event_not_found", "Notification event not found")
+        return event
+
+    async def mark_notification_event_read(self, event_id: UUID) -> NotificationEvent:
+        event = await self.get_notification_event(event_id)
+        if event.read_at is None:
+            event.read_at = utc_now()
+        if event.inbox_status == NotificationInboxStatus.UNREAD.value:
+            event.inbox_status = NotificationInboxStatus.READ.value
+        event = await self.repository.update_event(event)
+        await self.session.commit()
+        return event
+
+    async def acknowledge_notification_event(
+        self,
+        event_id: UUID,
+        user_id: UUID | None = None,
+    ) -> NotificationEvent:
+        event = await self.get_notification_event(event_id)
+        now = utc_now()
+        if event.read_at is None:
+            event.read_at = now
+        if event.acknowledged_at is None:
+            event.acknowledged_at = now
+        if user_id is not None:
+            event.acknowledged_by_user_id = user_id
+        event.inbox_status = NotificationInboxStatus.ACKNOWLEDGED.value
+        event = await self.repository.update_event(event)
+        await self.session.commit()
+        return event
+
+    async def archive_notification_event(self, event_id: UUID) -> NotificationEvent:
+        event = await self.get_notification_event(event_id)
+        event.inbox_status = NotificationInboxStatus.ARCHIVED.value
+        event = await self.repository.update_event(event)
+        await self.session.commit()
         return event
 
     async def list_delivery_attempts(

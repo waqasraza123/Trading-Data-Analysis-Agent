@@ -79,6 +79,9 @@ class BackendNotificationEventType(StrEnum):
     REASONING_ACTION_DUE = "reasoning.action_due"
     READINESS_BLOCKED = "readiness.blocked"
     OPERATOR_REVIEW_OPENED = "operator_review.opened"
+    SCAN_COMPLETED = "scan.completed"
+    PROVIDER_HEALTH_DEGRADED = "provider_health.degraded"
+    GAP_RECOVERY_NEEDED = "gap_recovery.needed"
 
 
 class NotificationEventSeverity(StrEnum):
@@ -97,6 +100,13 @@ class NotificationEventStatus(StrEnum):
     BLOCKED = "blocked"
     CANCELLED = "cancelled"
     FAILED = "failed"
+
+
+class NotificationInboxStatus(StrEnum):
+    UNREAD = "unread"
+    READ = "read"
+    ACKNOWLEDGED = "acknowledged"
+    ARCHIVED = "archived"
 
 
 class NotificationDeliveryAttemptStatus(StrEnum):
@@ -398,7 +408,8 @@ class NotificationEvent(Base):
             "event_type in ('signal.classified', 'signal.review_recommended', "
             "'outcome.evaluated', 'digest.created', 'data_quality.degraded', "
             "'market_memory.stale', 'reasoning.action_due', 'readiness.blocked', "
-            "'operator_review.opened')",
+            "'operator_review.opened', 'scan.completed', 'provider_health.degraded', "
+            "'gap_recovery.needed')",
             name="notification_events_event_type_allowed",
         ),
         CheckConstraint(
@@ -414,11 +425,21 @@ class NotificationEvent(Base):
             "safety_status in ('passed', 'blocked', 'redacted', 'review_recommended')",
             name="notification_events_safety_status_allowed",
         ),
+        CheckConstraint(
+            "inbox_status in ('unread', 'read', 'acknowledged', 'archived')",
+            name="notification_events_inbox_status_allowed",
+        ),
         Index(
             "ix_notification_events_workspace_event_status",
             "workspace_id",
             "event_type",
             "status",
+        ),
+        Index(
+            "ix_notification_events_workspace_inbox_status_created",
+            "workspace_id",
+            "inbox_status",
+            "created_at",
         ),
         Index("ix_notification_events_source", "source_type", "source_id"),
         Index("ix_notification_events_dedupe_key", "dedupe_key"),
@@ -445,6 +466,22 @@ class NotificationEvent(Base):
     )
     safety_status: Mapped[str] = mapped_column(String(32), nullable=False)
     dedupe_key: Mapped[str] = mapped_column(String(220), nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    acknowledged_by_user_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    inbox_status: Mapped[str] = mapped_column(
+        String(24),
+        nullable=False,
+        default=NotificationInboxStatus.UNREAD.value,
+        server_default=NotificationInboxStatus.UNREAD.value,
+    )
     created_at = created_at_column()
     updated_at = updated_at_column()
 

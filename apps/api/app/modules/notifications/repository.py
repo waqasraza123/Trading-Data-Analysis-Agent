@@ -12,6 +12,7 @@ from app.modules.notifications.models import (
     NotificationDeliveryChannel,
     NotificationEvent,
     NotificationEventStatus,
+    NotificationInboxStatus,
     NotificationMessage,
     NotificationPreference,
     NotificationStatus,
@@ -333,6 +334,9 @@ class NotificationRepository:
         workspace_id: UUID,
         event_type: BackendNotificationEventType | None = None,
         status: NotificationEventStatus | None = None,
+        severity: str | None = None,
+        source_type: str | None = None,
+        inbox_status: NotificationInboxStatus | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[NotificationEvent]:
@@ -347,6 +351,12 @@ class NotificationRepository:
             statement = statement.where(NotificationEvent.event_type == event_type.value)
         if status is not None:
             statement = statement.where(NotificationEvent.status == status.value)
+        if severity is not None:
+            statement = statement.where(NotificationEvent.severity == severity)
+        if source_type is not None:
+            statement = statement.where(NotificationEvent.source_type == source_type)
+        if inbox_status is not None:
+            statement = statement.where(NotificationEvent.inbox_status == inbox_status.value)
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

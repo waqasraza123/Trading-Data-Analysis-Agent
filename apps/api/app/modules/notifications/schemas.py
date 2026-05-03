@@ -14,6 +14,7 @@ from app.modules.notifications.models import (
     NotificationEventSeverity,
     NotificationEventStatus,
     NotificationEventType,
+    NotificationInboxStatus,
     NotificationSeverity,
     NotificationSourceType,
     NotificationStatus,
@@ -197,13 +198,21 @@ class NotificationEventRead(ApiReadSchema):
     source_id: UUID
     severity: NotificationEventSeverity
     status: NotificationEventStatus
+    inbox_status: NotificationInboxStatus
     title: str
     summary: str
     payload_json: dict[str, Any]
     safety_status: str
     dedupe_key: str
+    read_at: datetime | None
+    acknowledged_at: datetime | None
+    acknowledged_by_user_id: UUID | None
     created_at: datetime
     updated_at: datetime
+
+
+class NotificationEventAcknowledgeRequest(ApiSchema):
+    user_id: UUID | None = None
 
 
 class NotificationDeliveryAttemptRead(ApiReadSchema):
