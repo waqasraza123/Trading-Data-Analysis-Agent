@@ -14,6 +14,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Operator review queue backend exists under `apps/api/app/modules/operator_reviews/` as a backend-only human workflow state layer for intelligence artifacts. It records review items and events only; it does not execute trades, send alerts, call LLMs, mutate signals, accept chart screenshot analysis, or change strategy profiles.
 - Market session context backend exists under `apps/api/app/modules/market_sessions/` as a deterministic context layer for analysis runs and signals. It stores rough UTC session labels for audit and later grouping without mutating signal classification, outcomes, diagnostics, or strategy profiles.
+- Cross-asset context backend exists under `apps/api/app/modules/cross_asset_context/` as a deterministic final-candle-only layer for correlation, co-movement, divergence, and lead/lag context across related symbols. It does not infer causation, mutate signals, call LLMs, send alerts, execute broker actions, or provide financial advice.
 
 - Git repository uses local branch `main` tracking `origin/main`.
 - Phase 1 backend foundation exists under `apps/api/`.
@@ -177,6 +178,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Implemented walk-forward validation over stored deterministic signals and outcomes with bounded filters, inferred or explicit validation periods, window persistence, horizon comparisons, safe stability/degradation metrics, docs, and APIs.
 - Implemented multi-timeframe aggregation and context persistence with derived candle lineage, completion accounting, higher-timeframe agreement scoring, APIs, docs, and settings.
 - Integrated multi-timeframe aggregation, strategy profile governance, provider polling, scenario ensembles, and backtest experiments behind one backend route/model/settings/migration surface with a merge migration.
+- Implemented cross-asset context runs/results, deterministic correlation and lead/lag calculation, analysis-run and signal APIs, settings, docs, and migration.
 
 ## Important Decisions
 
@@ -193,6 +195,7 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Operator reviews are operator-facing workflow records only. They may point at chart screenshots, signals, analysis runs, reasoning runs, action items, quality findings, calibration recommendations, outcomes, or manual sources, but they must not mutate those sources or become trade approvals, alerts, notifications, broker workflows, copy trading, auto-trading, or financial advice.
 - Market session context uses rough UTC windows for forex, classifies crypto as 24/7, and deliberately avoids invented stock/index/commodity exchange hours without an exchange calendar. It is market context only and must not become financial advice, alerts, broker execution, or signal mutation.
+- Cross-asset context reads stored final candles only, aligns symbols by timestamp, stores contextual correlation/divergence/lead-lag labels, and must not become causation inference, deterministic signal mutation, trade recommendation, alerting, broker execution, or financial advice.
 
 - `docs/project-state.md` is committed durable memory and should describe long-lived project facts.
 - `docs/_local/current-session.md` is local scratch memory and should not be committed.

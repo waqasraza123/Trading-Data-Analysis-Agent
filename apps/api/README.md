@@ -6,6 +6,12 @@ observed follow-through, reversal behavior, confidence alignment, stability, deg
 sample-size coverage. It does not evaluate missing outcomes, mutate signals, modify strategy
 profiles, calculate profit metrics, send alerts, execute broker actions, or provide financial advice.
 
+Cross-asset context support is implemented under `/analysis-runs/{id}/cross-asset-context`,
+`/signals/{id}/cross-asset-context`, and `/cross-asset-context/runs/{id}/results`. It compares
+stored final candles across related symbols for deterministic correlation, co-movement, divergence,
+and possible lead/lag context only. It does not infer causation, mutate signals, provide financial
+advice, send alerts, call LLMs, or execute broker actions.
+
 Confidence calibration analytics are implemented under `/confidence-calibration`. They compare
 persisted deterministic confidence scores with observed follow-through outcomes by confidence bin,
 horizon, and optional profile/pattern/symbol/timeframe filters. This is reliability analysis only:
@@ -295,6 +301,12 @@ TIMEFRAME_AGGREGATION_VERSION=v1
 TIMEFRAME_AGGREGATION_MIN_COMPLETENESS=1.0
 TIMEFRAME_AGGREGATION_ALLOWED_TARGETS=5m,15m,30m,1h,4h
 MULTI_TIMEFRAME_CONTEXT_VERSION=v1
+CROSS_ASSET_CONTEXT_VERSION=v1
+CROSS_ASSET_MIN_CANDLES=20
+CROSS_ASSET_MAX_COMPARED_SYMBOLS=20
+CROSS_ASSET_LEAD_LAG_MAX_OFFSET=5
+CROSS_ASSET_ALIGNMENT_THRESHOLD=0.60
+CROSS_ASSET_DIVERGENCE_THRESHOLD=0.60
 PROFILE_DIAGNOSTICS_MINIMUM_SAMPLE_SIZE=20
 PROFILE_DIAGNOSTICS_STRONG_FOLLOW_THROUGH_RATE=0.65
 PROFILE_DIAGNOSTICS_HIGH_REVERSAL_RATE=0.35

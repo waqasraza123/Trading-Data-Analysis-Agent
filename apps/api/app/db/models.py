@@ -4,6 +4,10 @@ from app.modules.confidence_calibration.models import (
     ConfidenceCalibrationBin,
     ConfidenceCalibrationRun,
 )
+from app.modules.cross_asset_context.models import (
+    CrossAssetContextResult,
+    CrossAssetContextRun,
+)
 from app.modules.event_studies.models import EventStudyResult, EventStudyRun
 from app.modules.rule_packs.models import AnalysisReproducibilityManifest, RulePack
 from app.modules.webhook_outbox.models import (
@@ -171,6 +175,8 @@ __all__ = [
     "AnalysisReproducibilityManifest",
     "ConfidenceCalibrationBin",
     "ConfidenceCalibrationRun",
+    "CrossAssetContextResult",
+    "CrossAssetContextRun",
     "EventStudyResult",
     "EventStudyRun",
     "RulePack",
@@ -204,6 +210,8 @@ __all__ = [
     "ChartScreenshotRun",
     "ConfidenceCalibrationBin",
     "ConfidenceCalibrationRun",
+    "CrossAssetContextResult",
+    "CrossAssetContextRun",
     "DataQualityFinding",
     "DataQualityRun",
     "DataRetentionPolicy",

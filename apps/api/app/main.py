@@ -16,6 +16,7 @@ from app.modules.action_plans.routes import router as action_plans_router
 from app.modules.advanced_features.routes import router as advanced_features_router
 from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.confidence_calibration.routes import router as confidence_calibration_router
+from app.modules.cross_asset_context.routes import router as cross_asset_context_router
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.backfill_plans.routes import router as backfill_plans_router
 from app.modules.backtest_experiments.routes import router as backtest_experiments_router
@@ -183,6 +184,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(intelligence_quality_router, prefix=resolved_settings.api_prefix)
     app.include_router(market_scans_router, prefix=resolved_settings.api_prefix)
     app.include_router(timeframe_aggregation_router, prefix=resolved_settings.api_prefix)
+    app.include_router(cross_asset_context_router, prefix=resolved_settings.api_prefix)
     app.include_router(webhook_outbox_router, prefix=resolved_settings.api_prefix)
     app.include_router(artifact_graph_router, prefix=resolved_settings.api_prefix)
     app.include_router(state_machines_router, prefix=resolved_settings.api_prefix)

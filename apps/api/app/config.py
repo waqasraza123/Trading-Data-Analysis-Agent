@@ -273,6 +273,12 @@ class Settings(BaseSettings):
         default_factory=lambda: ["5m", "15m", "30m", "1h", "4h"]
     )
     multi_timeframe_context_version: str = "v1"
+    cross_asset_context_version: str = "v1"
+    cross_asset_min_candles: int = Field(default=20, ge=1, le=10000)
+    cross_asset_max_compared_symbols: int = Field(default=20, ge=1, le=1000)
+    cross_asset_lead_lag_max_offset: int = Field(default=5, ge=0, le=100)
+    cross_asset_alignment_threshold: Decimal = Field(default=Decimal("0.60"), ge=0, le=1)
+    cross_asset_divergence_threshold: Decimal = Field(default=Decimal("0.60"), ge=0, le=1)
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
     artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
