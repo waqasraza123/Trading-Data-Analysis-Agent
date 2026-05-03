@@ -23,7 +23,7 @@ export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
           <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
             Workspace {data.workspace?.name || "not selected"}
           </div>
-          <WorkflowLinks workspaceId={data.workspace?.id} targets={["brief", "scanner", "dataOnboarding"]} />
+          <WorkflowLinks workspaceId={data.workspace?.id} targets={["commandCenter", "brief", "scanner", "dataOnboarding", "preferences", "review"]} />
         </div>
       </section>
       {!data.workspace ? (

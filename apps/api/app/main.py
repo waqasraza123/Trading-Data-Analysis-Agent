@@ -56,6 +56,7 @@ from app.modules.operator_playbooks.routes import router as operator_playbooks_r
 from app.modules.operator_reviews.routes import router as operator_reviews_router
 from app.modules.outcomes.routes import router as outcomes_router
 from app.modules.pattern_attribution.routes import router as pattern_attribution_router
+from app.modules.preference_profiles.routes import router as preference_profiles_router
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
 from app.modules.profile_governance.routes import router as profile_governance_router
 from app.modules.profile_simulations.routes import router as profile_simulations_router
@@ -154,6 +155,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         market_memory_router,
         cohort_drift_router,
         pattern_attribution_router,
+        preference_profiles_router,
         confidence_calibration_router,
         profile_diagnostics_router,
         backtest_experiments_router,

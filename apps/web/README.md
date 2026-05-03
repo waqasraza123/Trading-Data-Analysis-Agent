@@ -14,10 +14,12 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Backend follow-up action items.
 - Signal triage board for deterministic prioritization.
 - Workspace daily brief composition for "what should I review now?"
+- Daily command center start page for a tight morning-to-review workflow.
 - API health, worker status, failed fetch states, and last refreshed timestamp.
 - Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
+- Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
 
 ## Backend Endpoints Used
@@ -79,6 +81,14 @@ The client composes data from optional backend APIs:
 - `GET /cohort-drift/results/recent`
 - `GET /pattern-attribution/runs`
 - `GET /pattern-attribution/runs/{run_id}/results`
+- `GET /preference-profiles`
+- `GET /preference-profiles/default`
+- `POST /preference-profiles`
+- `PATCH /preference-profiles/{profile_id}`
+- `POST /preference-profiles/{profile_id}/archive`
+- `POST /preference-profiles/{profile_id}/set-default`
+- `GET /preference-profiles/{profile_id}/filter-context`
+- `POST /preference-profiles/{profile_id}/match-signal/{signal_id}`
 - `GET /journal-entries`
 - `POST /journal-entries`
 - `GET /journal-entries/{entry_id}`
@@ -127,30 +137,36 @@ npm run dev
 Open:
 
 ```txt
+http://127.0.0.1:3000/command-center
 http://127.0.0.1:3000/dashboard
 http://127.0.0.1:3000/brief
 http://127.0.0.1:3000/scanner
 http://127.0.0.1:3000/triage
 http://127.0.0.1:3000/review/outcomes
 http://127.0.0.1:3000/journal
+http://127.0.0.1:3000/preferences/strategy
 http://127.0.0.1:3000/data/onboarding
 ```
 
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
+Use `/command-center?workspaceId=<workspace-id>` as the default start page for the daily workflow.
 Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.
 Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`.
-Use `/triage?workspaceId=<workspace-id>` to review deterministic signals by triage column. Filters support workspace, symbol, timeframe, bias, confidence, triage column, data freshness, profile key, only fresh, and only review required.
+Use `/triage?workspaceId=<workspace-id>` to review deterministic signals by triage column. Filters support workspace, symbol, timeframe, bias, confidence, triage column, data freshness, profile key, preference profile, only fresh, and only review required.
 Use `/review/outcomes?workspaceId=<workspace-id>` to review recent signal outcomes, linked journal notes, and optional diagnostics.
 Use `/journal?workspaceId=<workspace-id>` to create and review reflection notes. Optional `signalId`, `analysisRunId`, `setupContextId`, and `outcomeId` query params prefill context links.
+Use `/preferences/strategy?workspaceId=<workspace-id>` to create and maintain review preference profiles. A profile can be selected with `?profileId=<profile-id>`.
 Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding workflow. The page persists selected workspace, source, symbols, and timeframes in the URL and browser storage.
 
 ## Routes
 
 - `/dashboard` renders the daily operator cockpit.
+- `/command-center` renders the Daily Trading Command Center start page over existing read-only backend artifacts.
 - `/scanner` renders watchlist scanner controls for backend deterministic scan orchestration.
 - `/triage` renders the read-only signal triage board over deterministic signal artifacts.
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
+- `/preferences/strategy` renders personal strategy preference profiles for review filtering only.
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/brief` renders the workspace daily brief, composed in the web client layer from existing optional backend endpoints.
 - `/signals/[signalId]` renders a full read-only setup detail view, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
@@ -160,16 +176,35 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 
 The integrated web surface is arranged for a deterministic daily review loop:
 
-1. Ingest or verify fresh data in `/data/onboarding`.
-2. Run deterministic watchlist scans in `/scanner`.
-3. Review the workspace cockpit in `/brief`.
-4. Triage stored signals in `/triage`.
-5. Inspect setup context in `/signals/[signalId]`.
-6. Review observed outcomes in `/review/outcomes`.
+1. Start in `/command-center` to see what changed, provider freshness, review-priority signals, confirmation needs, outcome review, scanner status, journal prompts, and backend-safe next actions.
+2. Verify data freshness in `/data/onboarding`.
+3. Run deterministic watchlist scans in `/scanner`.
+4. Rank stored signals by review priority in `/command-center` or `/triage`.
+5. Triage stored signals in `/triage`, optionally scoped by a preference profile.
+6. Inspect setup context in `/signals/[signalId]`.
 7. Add or update observational journal notes in `/journal`.
-8. Revisit observed outcomes and digest summaries in `/brief`, `/dashboard`, or symbol detail.
+8. Review observed outcomes in `/review/outcomes`.
+9. Revisit digest summaries in `/brief`, `/command-center`, `/dashboard`, or symbol detail.
 
-The shared navigation links Dashboard, Brief, Triage, Scanner, Outcome Review, Journal, and Data Onboarding. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding.
+The shared navigation links Command Center, Brief, Triage, Scanner, Data, Preferences, Review, and Journal. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding.
+
+## Daily Trading Command Center
+
+The command center is a frontend composition layer in `apps/web/src/lib/api/commandCenter.ts` and `apps/web/src/lib/command-center/composeCommandCenter.ts`. It does not add a backend endpoint. It composes the existing provider health, signal priority, preference profile, brief, triage, scanner, journal, market memory, digest, outcome, readiness, review, action item, and health clients into one start page.
+
+Sections:
+
+- What changed: latest digest items, new signal context, outcome-ready items, stale data changes, and review-required items.
+- Data readiness: data fresh, data stale, missing candles, provider degraded, polling failed, recovery plan needed, and a link to `/data/onboarding`.
+- Review first: high quality, fresh, or high review-priority signals linking to `/signals/[signalId]`.
+- Needs confirmation: medium confidence, mixed context, stale-but-recoverable data, pending outcomes, and triage links.
+- Avoid / no directional signal: no directional signal, low data quality, conflicting evidence, range/chop/fakeout context, and unresolved review conditions.
+- Outcome review: observed continuation, observed reversal, and no-follow-through outcomes linked back to setup detail.
+- Scanner status: due scan configs, selected scan runs, failed/skipped run counts, and `/scanner` links.
+- Journal prompt: reviewed signals without journal notes when detectable, plus recent journal entries.
+- Next backend-safe actions: run deterministic scan, inspect setup context, review data freshness, prepare gap recovery, evaluate outcome after horizon, review journal, and inspect audit timeline.
+
+The command center keeps all copy non-advisory. It is not a broker terminal, not an auto-trading page, and not financial advice. It does not call broker APIs, create broker instructions, send external notifications, or execute action items.
 
 ## Outcome Review Loop
 

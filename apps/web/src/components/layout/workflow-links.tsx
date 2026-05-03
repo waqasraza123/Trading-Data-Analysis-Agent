@@ -1,6 +1,15 @@
 import Link from "next/link";
 
-export type WorkflowTarget = "dashboard" | "brief" | "triage" | "scanner" | "dataOnboarding" | "review" | "journal";
+export type WorkflowTarget =
+  | "commandCenter"
+  | "dashboard"
+  | "brief"
+  | "triage"
+  | "scanner"
+  | "dataOnboarding"
+  | "preferences"
+  | "review"
+  | "journal";
 
 type WorkflowLinksProps = {
   workspaceId?: string | null;
@@ -8,22 +17,35 @@ type WorkflowLinksProps = {
   className?: string;
 };
 
-const workflowTargets: Record<WorkflowTarget, { href: string; label: string }> = {
+export const workflowTargets: Record<WorkflowTarget, { href: string; label: string }> = {
+  commandCenter: { href: "/command-center", label: "Command Center" },
   dashboard: { href: "/dashboard", label: "Dashboard" },
   brief: { href: "/brief", label: "Brief" },
   triage: { href: "/triage", label: "Triage" },
   scanner: { href: "/scanner", label: "Scanner" },
-  dataOnboarding: { href: "/data/onboarding", label: "Data Onboarding" },
-  review: { href: "/review/outcomes", label: "Outcome Review" },
+  dataOnboarding: { href: "/data/onboarding", label: "Data" },
+  preferences: { href: "/preferences/strategy", label: "Preferences" },
+  review: { href: "/review/outcomes", label: "Review" },
   journal: { href: "/journal", label: "Journal" },
 };
+
+export const primaryWorkflowTargets: WorkflowTarget[] = [
+  "commandCenter",
+  "brief",
+  "triage",
+  "scanner",
+  "dataOnboarding",
+  "preferences",
+  "review",
+  "journal",
+];
 
 const linkClassName =
   "rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900";
 
 export function WorkflowLinks({
   workspaceId,
-  targets = ["brief", "triage", "scanner", "review", "journal", "dataOnboarding"],
+  targets = primaryWorkflowTargets,
   className = "",
 }: WorkflowLinksProps) {
   return (

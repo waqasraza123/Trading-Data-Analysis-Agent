@@ -14,7 +14,7 @@ export function ScannerHeader({ data }: { data: ScannerData }) {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Badge value={data.workspace?.name || "No workspace"} tone={data.workspace ? "info" : "warning"} />
-        <WorkflowLinks workspaceId={data.workspace?.id} targets={["dashboard", "brief", "triage", "dataOnboarding"]} />
+        <WorkflowLinks workspaceId={data.workspace?.id} targets={["commandCenter", "brief", "triage", "dataOnboarding", "preferences", "review", "journal"]} />
       </div>
     </section>
   );

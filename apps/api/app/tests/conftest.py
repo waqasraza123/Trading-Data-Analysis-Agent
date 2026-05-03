@@ -50,6 +50,7 @@ APP_TABLES = (
     "signal_priority_scores",
     "setup_contexts",
     "provider_health_snapshots",
+    "personal_strategy_preference_profiles",
     "rolling_market_state_snapshots",
     "calibration_recommendations",
     "cohort_drift_results",

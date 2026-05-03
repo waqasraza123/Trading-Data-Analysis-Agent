@@ -1,5 +1,12 @@
 # Trading Intelligence API
 
+Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
+workspace or user define preferred markets, symbols, sessions, timeframes, patterns, confidence
+thresholds, setup-quality thresholds, stale-data tolerance, confirmation requirements, avoid lists,
+and notification preference categories for review workflows only. They do not mutate deterministic
+strategy profiles, change signal classification, execute broker workflows, auto-trade, copy-trade,
+or provide financial advice. See `docs/preference-profiles.md`.
+
 Actionable setup context is implemented under `/signals/{id}/setup-context` and
 `/analysis-runs/{id}/setup-context`. It persists structured non-advisory setup context from existing
 signals, evidence, confidence, risk notes, advanced features, market regime/session context,
@@ -131,6 +138,20 @@ reliability workflow. They do not call external providers, mutate candles, auto-
 requests outside the explicit gap recovery route, execute broker actions, send alerts, auto-trade,
 or provide financial advice.
 
+Daily workflow integration uses these backend modules together without adding broker execution:
+
+```txt
+/provider-health
+/signal-priorities
+/preference-profiles
+/journal-entries
+/signals/{signal_id}/outcomes
+```
+
+The intended product loop is data freshness, deterministic scan, review-priority ranking, triage,
+setup inspection, journal reflection, and observed outcome review. Stored deterministic artifacts
+remain the source of truth.
+
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 LLM layers are optional and may only explain or reason from persisted deterministic output.
 Market regime context is deterministic metadata only and does not alter signal classification.
@@ -150,10 +171,11 @@ The same route also reads `/provider-health` when available to show provider/sou
 missing candles, recent polling failures, prepare-only recovery planning, and deterministic-analysis
 readiness.
 
-The integrated daily workflow pages in `apps/web` use the existing backend surface only. `/brief`
-and `/triage` are frontend composition layers over market memory, signals, outcomes, setup context,
-decision readiness, action items, operator reviews, signal digests, watchlists, scheduled scans,
-data-quality, market sessions/regimes, intelligence reports, audit timelines, and journal APIs.
+The integrated daily workflow pages in `apps/web` use the existing backend surface only. `/brief`,
+`/command-center`, and `/triage` are frontend composition layers over provider health, market
+memory, signal priority, preference profiles, signals, outcomes, setup context, decision readiness,
+action items, operator reviews, signal digests, watchlists, scheduled scans, data-quality, market
+sessions/regimes, intelligence reports, audit timelines, and journal APIs.
 No backend daily brief or triage router is required. Missing optional endpoints should return 404
 or standard API errors; the web client maps those into section-level unavailable states.
 
@@ -351,10 +373,10 @@ CHART_OCR_TIMEOUT_SECONDS=10
 CHART_OCR_MIN_CONFIDENCE=0.6500
 CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE=0.7500
 DATA_QUALITY_VERSION=v1
-DATA_QUALITY_STRONG_THRESHOLD=0.95
-DATA_QUALITY_ACCEPTABLE_THRESHOLD=0.85
-DATA_QUALITY_DEGRADED_THRESHOLD=0.70
-DATA_QUALITY_OUTLIER_RANGE_MULTIPLIER=4.0
+DATA_QUALITY_STRONG_THRESHOLD=0.9500
+DATA_QUALITY_ACCEPTABLE_THRESHOLD=0.8500
+DATA_QUALITY_DEGRADED_THRESHOLD=0.7000
+DATA_QUALITY_OUTLIER_RANGE_MULTIPLIER=5.0000
 DATA_QUALITY_STALE_LIVE_SECONDS=300
 CHART_UNSUPPORTED_REJECTION_ENABLED=true
 AUDIT_TIMELINE_MAX_EVENTS=200
@@ -426,7 +448,7 @@ EVENT_STUDY_MIN_CANDLES=5
 EVENT_STUDY_STRONG_REACTION_MULTIPLIER=2.0
 EVENT_STUDY_MODERATE_REACTION_MULTIPLIER=1.25
 CONFIDENCE_CALIBRATION_VERSION=v1
-CONFIDENCE_CALIBRATION_DEFAULT_BINS=10
+CONFIDENCE_CALIBRATION_DEFAULT_BINS=0-0.39,0.40-0.64,0.65-0.79,0.80-1.0
 CONFIDENCE_CALIBRATION_MINIMUM_SAMPLE_SIZE=20
 CONFIDENCE_CALIBRATION_OVERCONFIDENT_THRESHOLD=0.15
 CONFIDENCE_CALIBRATION_UNDERCONFIDENT_THRESHOLD=0.15

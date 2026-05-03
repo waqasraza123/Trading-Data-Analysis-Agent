@@ -14,18 +14,25 @@ export function TriageSummary({ data }: { data: TriageBoardData }) {
   const visibleCount = data.candidates.length;
   const freshCount = data.allCandidates.filter((candidate) => candidate.memory?.freshness_label === "fresh").length;
   const missingContextCount = data.allCandidates.filter((candidate) => candidate.missingContexts.length > 0).length;
+  const scopedCount = data.allCandidates.length;
+  const profileDetail = data.selectedPreferenceProfile
+    ? `${data.selectedPreferenceProfile.name} scope`
+    : "All profiles";
 
   return (
     <section className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
         <MetricCard label="Visible candidates" value={formatInteger(visibleCount)} detail="After filters" />
+        <MetricCard label="Preference scope" value={formatInteger(scopedCount)} detail={profileDetail} />
         <MetricCard label="Review required" value={formatInteger(counts.get("review_required") || 0)} detail="Manual attention" />
         <MetricCard label="Needs confirmation" value={formatInteger(counts.get("needs_confirmation") || 0)} detail="Wait for context" />
         <MetricCard label="Conflicted" value={formatInteger(counts.get("conflicted") || 0)} detail="Mixed evidence" />
         <MetricCard label="Fresh candidates" value={formatInteger(freshCount)} detail="Market memory" />
-        <MetricCard label="Missing context" value={formatInteger(missingContextCount)} detail="Optional APIs" />
+        <MetricCard label="Unscoped candidates" value={formatInteger(data.unfilteredCandidateCount)} detail="Before preferences" />
       </div>
-      <p className="text-xs text-slate-500">Last loaded {formatDateTime(data.lastLoadedAt)}</p>
+      <p className="text-xs text-slate-500">
+        Last loaded {formatDateTime(data.lastLoadedAt)}. Missing optional context {formatInteger(missingContextCount)}.
+      </p>
     </section>
   );
 }

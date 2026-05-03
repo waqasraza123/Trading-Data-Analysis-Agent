@@ -33,7 +33,7 @@ export function BriefHeader({ brief }: { brief: WorkspaceBrief }) {
             Workspace dashboard
           </Link>
         )}
-        <WorkflowLinks workspaceId={brief.workspace?.id} targets={["triage", "scanner", "dataOnboarding"]} />
+        <WorkflowLinks workspaceId={brief.workspace?.id} targets={["commandCenter", "triage", "scanner", "dataOnboarding", "preferences", "review", "journal"]} />
       </div>
     </section>
   );

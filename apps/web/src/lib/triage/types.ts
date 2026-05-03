@@ -12,6 +12,7 @@ import type {
   UUID,
   Workspace,
 } from "@/lib/api/types";
+import type { PreferenceProfile } from "@/lib/preferences/types";
 
 export type TriageColumnKey =
   | "high_quality_context"
@@ -30,6 +31,7 @@ export type TriageFilterState = {
   column?: TriageColumnKey;
   freshness?: string;
   profileKey?: string;
+  preferenceProfileId?: UUID;
   onlyFresh: boolean;
   onlyReviewRequired: boolean;
 };
@@ -140,9 +142,12 @@ export type TriageBoardData = {
   workspace: Workspace | null;
   workspaces: Workspace[];
   symbols: SymbolRead[];
+  preferenceProfiles: PreferenceProfile[];
+  selectedPreferenceProfile: PreferenceProfile | null;
   filters: TriageFilterState;
   candidates: TriageCandidate[];
   allCandidates: TriageCandidate[];
+  unfilteredCandidateCount: number;
   failures: TriageFailure[];
   lastLoadedAt: string;
 };

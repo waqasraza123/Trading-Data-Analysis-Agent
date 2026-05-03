@@ -80,6 +80,10 @@ snapshot window, then delegates to the existing recovery preparation workflow. B
 prepare-only provider polling metadata. It creates pending polling request rows only when
 `createRequests=true`.
 
+The web workflow uses provider health snapshots in `/command-center` and `/data/onboarding` to
+show data fresh, data stale, missing candles, provider degraded, polling failed, recovery plan
+needed, and ready for deterministic analysis states.
+
 ## API
 
 ```txt

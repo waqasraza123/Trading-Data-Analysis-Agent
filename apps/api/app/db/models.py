@@ -99,6 +99,7 @@ from app.modules.pattern_attribution.models import (
     PatternAttributionRun,
 )
 from app.modules.patterns.models import PatternCandidate
+from app.modules.preference_profiles.models import PersonalStrategyPreferenceProfile
 from app.modules.profile_diagnostics.models import (
     CalibrationRecommendation,
     PatternOutcomeDiagnostic,
@@ -254,6 +255,7 @@ __all__ = [
     "PatternAttributionRun",
     "PatternCandidate",
     "PatternOutcomeDiagnostic",
+    "PersonalStrategyPreferenceProfile",
     "ProviderPollingError",
     "ProviderHealthSnapshot",
     "ProviderPollingRequest",

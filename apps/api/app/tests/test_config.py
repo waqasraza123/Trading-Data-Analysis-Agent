@@ -62,6 +62,13 @@ def test_settings_load_defaults() -> None:
     assert settings.provider_health_fresh_seconds_1h == 7200
     assert settings.provider_health_max_failures_degraded == 2
     assert settings.provider_health_max_failures_failing == 5
+    assert settings.signal_priority_version == "v1"
+    assert str(settings.signal_priority_high_threshold) == "0.75"
+    assert str(settings.signal_priority_medium_threshold) == "0.55"
+    assert str(settings.signal_priority_stale_penalty) == "0.30"
+    assert str(settings.signal_priority_conflict_penalty) == "0.25"
+    assert str(settings.signal_priority_review_required_threshold) == "0.50"
+    assert settings.preference_profile_default_max_stale_seconds == 7200
     assert settings.chart_unsupported_rejection_enabled is True
     assert settings.audit_timeline_max_events == 200
     assert settings.audit_timeline_max_audit_events == 100

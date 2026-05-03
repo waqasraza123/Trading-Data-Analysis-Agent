@@ -29,7 +29,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
             <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
               Workspace {data.workspace?.name || "not selected"}
             </div>
-            <WorkflowLinks workspaceId={data.workspace?.id} targets={["review", "triage", "brief"]} />
+            <WorkflowLinks workspaceId={data.workspace?.id} targets={["commandCenter", "review", "triage", "brief", "preferences"]} />
           </div>
         </section>
         {!data.workspace ? (

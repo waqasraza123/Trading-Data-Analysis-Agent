@@ -108,11 +108,11 @@ List filters:
 - `symbolId`
 - `timeframe`
 
-## Future Dashboard Use
+## Web Workflow Use
 
-The web triage board may read `GET /signals/{signal_id}/priority-score` and sort cards by
-`priority_score` when available. If the endpoint or score row is unavailable, the board keeps its
-existing deterministic triage classification and time-based fallback ordering.
+The command center and triage board read `GET /signals/{signal_id}/priority-score` and sort review
+cards by `priority_score` when available. If the endpoint or score row is unavailable, the board
+keeps its existing deterministic triage classification and time-based fallback ordering.
 
 This module should remain backend-first, deterministic, and non-advisory. Future work can add
 workspace-level batch scoring jobs, richer dashboard filters, and operator review analytics without
