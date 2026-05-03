@@ -13,6 +13,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Recent outcome observations by horizon.
 - Backend follow-up action items.
 - API health, worker status, failed fetch states, and last refreshed timestamp.
+- Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
 
 ## Backend Endpoints Used
 
@@ -42,6 +43,17 @@ The client composes data from optional backend APIs:
 - `GET /signal-digests`
 - `GET /signal-digests/{digest_id}/items`
 - `GET /journal-entries` for later journal navigation hooks
+- `GET /data-sources`
+- `POST /data-sources`
+- `GET /candles/latest`
+- `GET /candles/count`
+- `GET /candles/quality`
+- `GET /live/subscriptions`
+- `GET /provider-polling/requests`
+- `POST /data-quality/candle-range/run`
+- `POST /candle-gap-recovery/plans`
+- `GET /candle-gap-recovery/plans/{plan_id}/items`
+- `POST /candle-gap-recovery/plans/{plan_id}/prepare-provider-polling`
 
 Missing optional endpoints render empty states or backend-state warnings instead of crashing the page.
 
@@ -72,12 +84,27 @@ http://127.0.0.1:3000/dashboard
 ```
 
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
+Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding workflow. The page persists selected workspace, source, symbols, and timeframes in the URL and browser storage.
 
 ## Routes
 
 - `/dashboard` renders the daily operator cockpit.
+- `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/signals/[signalId]` renders a read-only signal report, falling back to individual signal APIs when report data is unavailable.
 - `/symbols/[symbolId]` renders symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs.
+
+## Data Onboarding Workflow
+
+The onboarding workflow is an operator setup surface for ingestion readiness:
+
+- Select an existing data source or create a minimal source config when the backend allows it.
+- Select one or more symbols and supported candle timeframes.
+- Run freshness checks for latest final candle time, recent candle count, candle quality, data quality run label, market memory freshness, live subscription status, and provider polling status.
+- Create candle gap recovery plans for the checked windows and display gap ranges, expected candle counts, and recovery methods.
+- Prepare provider polling request metadata with `createRequests=false`. The workflow does not execute external provider calls.
+- Summarize ready symbols, degraded symbols, missing data, stale live feeds, and backend next actions.
+
+Provider keys and paid provider secrets are not entered in the frontend. Source credentials must be configured in backend environment or server-side secret management. The workflow does not create trades, alerts, broker connections, or financial-advice output.
 
 ## Safety Language
 

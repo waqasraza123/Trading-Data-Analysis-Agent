@@ -125,6 +125,13 @@ The first read-only frontend surface now lives in `apps/web`. It consumes this A
 `NEXT_PUBLIC_API_BASE_URL`, renders missing optional endpoints as safe empty states, and keeps
 broker execution and auto-trading outside the product boundary.
 
+The web data onboarding route at `/data/onboarding` uses existing backend contracts for
+`/data-sources`, `/symbols`, `/candles/latest`, `/candles/count`, `/candles/quality`,
+`/data-quality/candle-range/run`, `/market-memory/snapshots`, `/live/subscriptions`,
+`/provider-polling/requests`, and `/candle-gap-recovery`. It prepares recovery metadata with
+`createRequests=false` and does not execute external provider fetches. Provider credentials remain
+server-side; the UI does not accept provider API keys.
+
 The integrated dashboard surface now reads signal digests and setup context when those endpoints
 are available. Digest items may reference setup context rows, and journal entries can link to setup
 context rows for later deterministic review. Notification events remain optional, explicitly
