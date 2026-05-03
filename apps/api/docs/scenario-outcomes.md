@@ -122,4 +122,4 @@ Summary run statuses:
 
 ## Historical Reliability Use
 
-Summary runs let operators inspect which scenario types, providers, and persisted reasoning runs were often supported or contradicted after outcomes existed. This is reliability analysis of reasoning artifacts, not signal performance or broker-accounting output.
+Summary runs let operators inspect which scenario types, providers, and persisted reasoning runs were often supported or contradicted after outcomes existed. This is reliability analysis of reasoning artifacts, not signal performance or trading PnL.
