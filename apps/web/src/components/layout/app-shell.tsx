@@ -19,6 +19,9 @@ export function AppShell({ appName, children }: AppShellProps) {
             <Link className="rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/dashboard">
               Dashboard
             </Link>
+            <Link className="rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/scanner">
+              Scanner
+            </Link>
             <Link className="rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/triage">
               Triage
             </Link>
