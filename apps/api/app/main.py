@@ -71,6 +71,7 @@ from app.modules.rule_packs.routes import router as rule_packs_router
 from app.modules.signals.routes import router as signals_router
 from app.modules.strategy_profiles.routes import router as strategy_profiles_router
 from app.modules.state_machines.routes import router as state_machines_router
+from app.modules.synthetic_fixtures.routes import router as synthetic_fixtures_router
 from app.modules.symbols.routes import router as symbols_router
 from app.modules.timeframe_aggregation.routes import router as timeframe_aggregation_router
 from app.modules.users.routes import router as users_router
@@ -192,6 +193,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(webhook_outbox_router, prefix=resolved_settings.api_prefix)
     app.include_router(artifact_graph_router, prefix=resolved_settings.api_prefix)
     app.include_router(state_machines_router, prefix=resolved_settings.api_prefix)
+    app.include_router(synthetic_fixtures_router, prefix=resolved_settings.api_prefix)
     app.include_router(backfill_plans_router, prefix=resolved_settings.api_prefix)
     app.include_router(data_contracts_router, prefix=resolved_settings.api_prefix)
     return app

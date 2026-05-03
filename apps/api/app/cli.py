@@ -11,6 +11,13 @@ from app.core.logging import configure_logging
 from app.db.session import get_async_session_factory
 from app.modules.seeding.service import SeedService
 from app.modules.smoke.service import SmokeService
+from app.modules.synthetic_fixtures.generator import SyntheticFixtureGenerator
+from app.modules.synthetic_fixtures.schemas import (
+    SyntheticFixtureGenerateRequest,
+    SyntheticFixtureOutputFormat,
+    SyntheticFixturePattern,
+    SyntheticVolumeBehavior,
+)
 
 
 async def run_seed_command() -> None:
@@ -76,6 +83,45 @@ async def run_smoke_command(database_url_env: str, include_write_tests: bool) ->
         print(json.dumps(result.to_dict(), default=str, sort_keys=True))
 
 
+def run_synthetic_fixture_generate_command(args: argparse.Namespace) -> None:
+    settings = get_settings()
+    request = SyntheticFixtureGenerateRequest(
+        pattern=args.pattern,
+        symbol=args.symbol,
+        timeframe=args.timeframe,
+        start_time=args.start_time,
+        candle_count=args.candle_count,
+        start_price=args.start_price,
+        volatility=args.volatility,
+        volume_behavior=args.volume_behavior,
+        seed=args.seed,
+        include_malformed=args.include_malformed,
+        output_format=args.output_format,
+        workspace_id=args.workspace_id,
+        user_id=args.user_id,
+        source_id=args.source_id,
+        symbol_id=args.symbol_id,
+    )
+    response = SyntheticFixtureGenerator(settings.synthetic_fixtures_default_seed).generate(request)
+    if request.output_format == SyntheticFixtureOutputFormat.CSV:
+        print(response.csv_text or "")
+        return
+    if request.output_format == SyntheticFixtureOutputFormat.JSON_IMPORT_PAYLOAD:
+        print(json.dumps(response.json_import_payload, default=str, sort_keys=True))
+        return
+    if request.output_format == SyntheticFixtureOutputFormat.CANDLES:
+        candles = [candle.model_dump(mode="json") for candle in response.candles]
+        print(json.dumps(candles, default=str, sort_keys=True))
+        return
+    print(
+        json.dumps(
+            response.model_dump(mode="json", by_alias=True, exclude_none=True),
+            default=str,
+            sort_keys=True,
+        )
+    )
+
+
 def configure_database_url(database_url_env: str, allow_test_fallback: bool) -> str:
     database_url = os.environ.get(database_url_env)
     if database_url is None and allow_test_fallback:
@@ -98,6 +144,39 @@ def main() -> None:
     write_group = smoke_parser.add_mutually_exclusive_group()
     write_group.add_argument("--skip-write-tests", action="store_true", default=True)
     write_group.add_argument("--include-write-tests", action="store_true")
+    synthetic_parser = subparsers.add_parser("synthetic-fixtures")
+    synthetic_subparsers = synthetic_parser.add_subparsers(
+        dest="synthetic_command",
+        required=True,
+    )
+    generate_parser = synthetic_subparsers.add_parser("generate")
+    generate_parser.add_argument(
+        "--pattern",
+        choices=[pattern.value for pattern in SyntheticFixturePattern],
+        required=True,
+    )
+    generate_parser.add_argument("--symbol", default="EURUSD")
+    generate_parser.add_argument("--timeframe", default="1m")
+    generate_parser.add_argument("--start-time", default="2026-01-01T00:00:00Z")
+    generate_parser.add_argument("--candle-count", type=int, default=40)
+    generate_parser.add_argument("--start-price", default="1.1000")
+    generate_parser.add_argument("--volatility", default="0.0005")
+    generate_parser.add_argument(
+        "--volume-behavior",
+        choices=[behavior.value for behavior in SyntheticVolumeBehavior],
+        default=SyntheticVolumeBehavior.FLAT.value,
+    )
+    generate_parser.add_argument("--seed", type=int, default=None)
+    generate_parser.add_argument("--include-malformed", action="store_true")
+    generate_parser.add_argument(
+        "--output-format",
+        choices=[output_format.value for output_format in SyntheticFixtureOutputFormat],
+        default=SyntheticFixtureOutputFormat.CANDLES.value,
+    )
+    generate_parser.add_argument("--workspace-id", default=None)
+    generate_parser.add_argument("--user-id", default=None)
+    generate_parser.add_argument("--source-id", default=None)
+    generate_parser.add_argument("--symbol-id", default=None)
     args = parser.parse_args()
     if args.command == "seed":
         asyncio.run(run_seed_command())
@@ -108,6 +187,8 @@ def main() -> None:
                 include_write_tests=args.include_write_tests,
             )
         )
+    if args.command == "synthetic-fixtures" and args.synthetic_command == "generate":
+        run_synthetic_fixture_generate_command(args)
 
 
 if __name__ == "__main__":

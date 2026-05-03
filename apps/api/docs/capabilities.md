@@ -160,6 +160,7 @@ candle_gap_recovery
 explanation_comparison
 data_quality
 datasets
+synthetic_fixtures
 webhook_outbox
 safety_policies
 decision_readiness

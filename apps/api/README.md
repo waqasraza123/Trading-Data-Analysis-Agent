@@ -13,6 +13,12 @@ level. It is metadata/configuration only and does not run modules, call provider
 intelligence artifacts, send alerts, execute broker actions, auto-trade, or provide financial
 advice.
 
+Deterministic synthetic candle fixtures are implemented under `app.modules.synthetic_fixtures`
+with an optional guarded `/synthetic-fixtures/generate` endpoint and
+`python -m app.cli synthetic-fixtures generate` CLI helper. They create repeatable development and
+testing OHLC inputs only; they do not fetch external data, mutate production data, run analysis,
+send alerts, execute broker actions, auto-trade, or provide financial advice.
+
 Cross-asset context support is implemented under `/analysis-runs/{id}/cross-asset-context`,
 `/signals/{id}/cross-asset-context`, and `/cross-asset-context/runs/{id}/results`. It compares
 stored final candles across related symbols for deterministic correlation, co-movement, divergence,
@@ -73,6 +79,15 @@ GET /capabilities/{key}
 POST /capabilities/seed-default
 GET /capabilities/summary
 ```
+
+Synthetic fixture generation endpoint:
+
+```txt
+POST /synthetic-fixtures/generate
+```
+
+The endpoint is disabled unless `SYNTHETIC_FIXTURES_API_ENABLED=true` and is unavailable in
+production. The CLI helper does not require database access.
 
 ## Commands
 
@@ -143,6 +158,12 @@ Run the read-only backend smoke command:
 
 ```sh
 TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/python -m app.cli smoke
+```
+
+Generate deterministic synthetic candle fixture CSV:
+
+```sh
+.venv/bin/python -m app.cli synthetic-fixtures generate --pattern bullish_breakout --output-format csv
 ```
 
 Run smoke write checks only against a disposable database:
@@ -282,6 +303,8 @@ WALK_FORWARD_MINIMUM_SAMPLE_SIZE=20
 WALK_FORWARD_DEGRADATION_THRESHOLD=0.20
 WALK_FORWARD_IMPROVEMENT_THRESHOLD=0.20
 CAPABILITY_REGISTRY_DEFAULT_VERSION=v1
+SYNTHETIC_FIXTURES_API_ENABLED=false
+SYNTHETIC_FIXTURES_DEFAULT_SEED=12345
 MARKET_SESSION_VERSION=v1
 MARKET_SESSION_DEFAULT_TIMEZONE=UTC
 ADVANCED_FEATURE_PACK_VERSION=v1

@@ -108,6 +108,7 @@ from app.modules.market_scans.models import (
     ScheduledScanRun,
     ScheduledScanRunItem,
 )
+from app.modules.market_memory.models import RollingMarketStateSnapshot
 from app.modules.market_sessions.models import MarketSessionContext
 from app.modules.news.models import NewsEvent, SignalNewsCorrelation
 from app.modules.market_sessions.models import MarketSessionContext
@@ -263,6 +264,7 @@ __all__ = [
     "MultiTimeframeContext",
     "MarketWatchlist",
     "MarketWatchlistItem",
+    "RollingMarketStateSnapshot",
     "MarketSessionContext",
     "MarketSessionContext",
     "NewsEvent",

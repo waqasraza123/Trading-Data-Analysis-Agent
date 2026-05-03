@@ -10,6 +10,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Intelligence capability registry metadata exists under `apps/api/app/modules/capabilities/` for backend module discovery, API/contract/artifact references, runtime availability, credential requirements, execution type, and safety level inspection.
 
+- Deterministic synthetic candle fixture generation exists under `apps/api/app/modules/synthetic_fixtures/` for backend development, QA, parser validation, demos, and future golden tests without external data, database persistence, production data mutation, analysis execution, alerts, broker actions, auto-trading, or financial advice.
+
 - A backend-only intelligence state machine registry exists under `apps/api/app/modules/state_machines/` for versioned lifecycle definitions, valid transition inspection, terminal states, optional transition validation, and validation audit records.
 
 - Internal intelligence metrics endpoints and optional database snapshots exist for backend operational/product counters.
@@ -119,6 +121,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 
 - Implemented intelligence_capabilities persistence, default capability registry, runtime availability summaries, capability APIs, and documentation.
 
+- Implemented deterministic synthetic candle fixture generator, guarded dev API, stdout-only CLI export helper, CSV/JSON import payload exports, and documentation.
+
 - Implemented intelligence state machine registry persistence, default lifecycle definitions, optional transition validation APIs, and documentation.
 
 - Implemented intelligence_metric_snapshots persistence, reusable intelligence metrics collector/repository/service/routes, missing-module warnings, operational health summary counters, and docs.
@@ -192,6 +196,8 @@ This repository is for an AI Trading Intelligence Agent backend. The planned pro
 - Intelligence catalog rows are workspace-scoped metadata pointers to source artifacts. They store bounded titles, summaries, labels, tags, searchable text, and metadata only; source artifacts remain authoritative and are not mutated by indexing.
 
 - Capability registry rows are global backend metadata records. They describe module existence, contracts, routes, artifacts, dependencies, credentials, execution type, and safety boundaries only; they do not execute modules, mutate intelligence artifacts, start workers, call providers, send alerts, run broker workflows, or provide financial advice.
+
+- Synthetic candle fixtures are generated inputs for development/testing only. They may be exported as candle dictionaries, CSV, or JSON import payloads, but they must not fetch external data, mutate production data, run analysis automatically, create alerts, execute broker workflows, or provide financial advice.
 
 - The state machine registry is additive. It preserves existing status strings and database constraints, does not force existing services to validate transitions yet, and exists for operator inspection plus future service-by-service adoption.
 

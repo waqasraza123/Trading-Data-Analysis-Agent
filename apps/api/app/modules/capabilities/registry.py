@@ -544,6 +544,29 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
     CapabilityDefinition(
+        key="synthetic_fixtures",
+        name="Deterministic Synthetic Candle Fixtures",
+        category=CapabilityCategory.OPERATIONS,
+        execution_type=CapabilityExecutionType.MANUAL_ONLY,
+        safety_level=CapabilitySafetyLevel.RESTRICTED,
+        module_path="app.modules.synthetic_fixtures",
+        status=CapabilityStatus.EXPERIMENTAL,
+        requires_database=False,
+        output_contracts=("raw_candle_payload", "csv_candle_fixture", "json_candle_import_payload"),
+        route_refs=("/synthetic-fixtures/generate",),
+        dependencies=("candle_imports", "data_quality"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=True,
+            safe_to_run_automatically=False,
+            module_setting="synthetic_fixtures_api_enabled",
+            notes=(
+                "Generates deterministic development and testing candle fixtures without "
+                "external data or persistence."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
         key="webhook_outbox",
         name="Webhook Outbox",
         category=CapabilityCategory.OPERATIONS,

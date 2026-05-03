@@ -90,6 +90,8 @@ class Settings(BaseSettings):
     walk_forward_degradation_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     walk_forward_improvement_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     capability_registry_default_version: str = "v1"
+    synthetic_fixtures_api_enabled: bool = False
+    synthetic_fixtures_default_seed: int = Field(default=12345, ge=0)
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
     market_session_version: str = "v1"
