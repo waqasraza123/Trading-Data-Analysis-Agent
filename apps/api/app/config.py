@@ -333,6 +333,16 @@ class Settings(BaseSettings):
         le=1,
     )
     signal_digest_stale_data_priority: str = "high"
+    signal_priority_version: str = "v1"
+    signal_priority_high_threshold: Decimal = Field(default=Decimal("0.75"), ge=0, le=1)
+    signal_priority_medium_threshold: Decimal = Field(default=Decimal("0.55"), ge=0, le=1)
+    signal_priority_stale_penalty: Decimal = Field(default=Decimal("0.30"), ge=0, le=1)
+    signal_priority_conflict_penalty: Decimal = Field(default=Decimal("0.25"), ge=0, le=1)
+    signal_priority_review_required_threshold: Decimal = Field(
+        default=Decimal("0.50"),
+        ge=0,
+        le=1,
+    )
     journal_review_version: str = "v1"
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
@@ -548,6 +558,7 @@ class Settings(BaseSettings):
         "market_memory_state_version",
         "setup_context_version",
         "signal_digest_version",
+        "signal_priority_version",
         "journal_review_version",
         "provider_health_version",
     )

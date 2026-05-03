@@ -15,6 +15,7 @@ import { listMarketMemorySnapshots, listSymbols, listWorkspaces } from "./market
 import { listSignalOutcomes } from "./outcomes";
 import { getLatestSignalReadiness } from "./readiness";
 import { getSignalReport } from "./reports";
+import { getSignalPriorityScore } from "./signal-priority";
 import { getAnalysisRunSignal, getSignal } from "./signals";
 import { getSignalSetupContext } from "./setup-context";
 import type {
@@ -179,13 +180,22 @@ async function enrichCandidate(
   failures: TriageFailure[],
 ): Promise<TriageCandidate> {
   const missingContexts: string[] = [];
-  const [setupContextResult, outcomesResult, readinessResult, reportResult, qualityResult, reasoningResult] = await Promise.all([
+  const [
+    setupContextResult,
+    outcomesResult,
+    readinessResult,
+    reportResult,
+    qualityResult,
+    reasoningResult,
+    priorityResult,
+  ] = await Promise.all([
     getSignalSetupContext(signal.signal.id),
     listSignalOutcomes(signal.signal.id),
     getLatestSignalReadiness(signal.signal.id),
     getSignalReport(signal.signal.id),
     getSignalQuality(signal.signal.id),
     getLatestSignalReasoning(signal.signal.id),
+    getSignalPriorityScore(signal.signal.id),
   ]);
   const setupContext = readOptionalResult("Setup context", setupContextResult, missingContexts, failures);
   const outcomes = readOptionalList("Outcomes", outcomesResult, missingContexts, failures);
@@ -193,9 +203,11 @@ async function enrichCandidate(
   const report = readOptionalResult("Intelligence report", reportResult, missingContexts, failures);
   const quality = readOptionalResult("Quality gates", qualityResult, missingContexts, failures);
   const reasoning = readOptionalResult("Reasoning", reasoningResult, missingContexts, failures);
+  const priorityScore = readOptionalPriorityResult("Priority score", priorityResult, failures);
   const input = {
     signal,
     memory,
+    priorityScore,
     setupContext,
     outcomes,
     readiness,
@@ -278,12 +290,21 @@ function sortCandidates(candidates: TriageCandidate[]): TriageCandidate[] {
     "avoid_no_directional_signal",
   ];
   return [...candidates].sort((left, right) => {
+    const priorityDelta = priorityValue(right) - priorityValue(left);
+    if (priorityDelta !== 0) {
+      return priorityDelta;
+    }
     const columnDelta = columnOrder.indexOf(left.classification.column) - columnOrder.indexOf(right.classification.column);
     if (columnDelta !== 0) {
       return columnDelta;
     }
     return latestTime(right).localeCompare(latestTime(left));
   });
+}
+
+function priorityValue(candidate: TriageCandidate): number {
+  const value = Number(candidate.priorityScore?.priority_score);
+  return Number.isFinite(value) ? value : -1;
 }
 
 function latestTime(candidate: TriageCandidate): string {
@@ -337,6 +358,20 @@ function readOptionalList<T>(
     failures.push(toFailure(label, result));
   }
   return [];
+}
+
+function readOptionalPriorityResult<T>(
+  label: string,
+  result: ApiResult<T>,
+  failures: TriageFailure[],
+): T | null {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing && result.error.status !== 0) {
+    failures.push(toFailure(label, result));
+  }
+  return null;
 }
 
 function toFailure(label: string, result: ApiFailure): TriageFailure {

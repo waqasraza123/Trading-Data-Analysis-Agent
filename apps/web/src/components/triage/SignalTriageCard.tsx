@@ -36,6 +36,9 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
       </div>
       <dl className="mt-4 grid gap-3 text-sm">
         <Detail label="Confidence" value={formatPercent(signal.confidence_score)} />
+        {candidate.priorityScore && (
+          <Detail label="Review priority" value={formatPercent(candidate.priorityScore.priority_score)} />
+        )}
         <Detail label="Latest final candle" value={formatRelativeTime(candidate.memory?.latest_final_candle_time)} />
         <Detail label="Freshness" value={humanizeLabel(candidate.memory?.freshness_label || "Missing market memory")} />
         <Detail label="Data quality" value={humanizeLabel(candidate.memory?.data_quality_label || "Unknown")} />

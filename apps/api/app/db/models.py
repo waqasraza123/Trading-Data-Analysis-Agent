@@ -128,6 +128,7 @@ from app.modules.scenario_outcomes.models import (
 )
 from app.modules.setup_context.models import SetupContext
 from app.modules.signal_digests.models import SignalDigestItem, SignalDigestRun
+from app.modules.signal_priority.models import SignalPriorityScore
 from app.modules.signals.models import (
     Signal,
     SignalConfidenceComponent,
@@ -270,6 +271,7 @@ __all__ = [
     "SetupContext",
     "SignalDigestItem",
     "SignalDigestRun",
+    "SignalPriorityScore",
     "ScheduledScanConfig",
     "ScheduledScanRun",
     "ScheduledScanRunItem",

@@ -227,6 +227,26 @@ export type SignalClassification = {
   llm_explanation: JsonRecord | null;
 };
 
+export type SignalPriorityScore = {
+  id: UUID;
+  workspace_id: UUID;
+  signal_id: UUID;
+  analysis_run_id: UUID;
+  symbol_id: UUID;
+  timeframe: string;
+  priority_version: string;
+  priority_score: string;
+  priority_label: string;
+  review_bucket: string;
+  component_scores_json: JsonRecord;
+  penalties_json: JsonRecord[];
+  boosters_json: JsonRecord[];
+  reasons_json: JsonRecord[];
+  warnings_json: JsonRecord[];
+  created_at: string;
+  updated_at: string;
+};
+
 export type SignalOutcome = {
   id: UUID;
   workspace_id: UUID;

@@ -47,6 +47,7 @@ APP_TABLES = (
     "shadow_classification_results",
     "intelligence_quality_findings",
     "intelligence_quality_runs",
+    "signal_priority_scores",
     "setup_contexts",
     "provider_health_snapshots",
     "rolling_market_state_snapshots",

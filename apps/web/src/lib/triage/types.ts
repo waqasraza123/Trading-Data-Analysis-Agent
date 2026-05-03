@@ -4,6 +4,7 @@ import type {
   IntelligenceReport,
   JsonRecord,
   MarketMemorySnapshot,
+  SignalPriorityScore,
   SetupContext,
   SignalClassification,
   SignalOutcome,
@@ -119,6 +120,7 @@ export type TriageCandidate = {
   signal: SignalClassification;
   symbol: SymbolRead | null;
   memory: MarketMemorySnapshot | null;
+  priorityScore: SignalPriorityScore | null;
   setupContext: SetupContext | null;
   outcomes: SignalOutcome[];
   readiness: DecisionReadinessAssessmentResponse | null;
@@ -148,6 +150,7 @@ export type TriageBoardData = {
 export type TriageArtifactInput = {
   signal: SignalClassification;
   memory: MarketMemorySnapshot | null;
+  priorityScore: SignalPriorityScore | null;
   setupContext: SetupContext | null;
   outcomes: SignalOutcome[];
   readiness: DecisionReadinessAssessmentResponse | null;

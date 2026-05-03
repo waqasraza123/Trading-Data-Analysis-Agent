@@ -9,6 +9,13 @@ data-quality warnings, risk notes, and backend-safe next observations. It does n
 strategy profiles, execute action items, send alerts, place orders, call brokers, auto-trade, call
 LLMs for classification, or provide financial advice.
 
+Deterministic signal review priority scoring is implemented under
+`/signals/{id}/priority-score` and `/signal-priorities`. It persists review priority scores,
+labels, buckets, component scores, penalties, boosters, reasons, and warnings from existing stored
+artifacts. It helps triage which signals deserve human review first. It is not a trading score, not
+directional advice, does not mutate signals or classifiers, does not execute broker workflows, and
+does not provide financial advice. See `docs/signal-priority.md`.
+
 Trading journal feedback is implemented under `/journal-entries`. It records user/operator
 decision notes around observed, ignored, reviewed, paper-followed, or externally handled setups and
 compares those notes with later deterministic outcomes. It does not add UI, broker execution,
