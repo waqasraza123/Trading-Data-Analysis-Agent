@@ -48,6 +48,7 @@ def test_settings_load_defaults() -> None:
     assert settings.market_scan_worker_batch_size == 10
     assert settings.market_scan_default_lookback_minutes == 60
     assert settings.market_scan_default_interval_seconds == 60
+    assert settings.scanner_preset_version == "v1"
     assert settings.provider_polling_timeout_seconds == 20
     assert settings.provider_polling_max_candles_per_request == 1000
     assert (
@@ -55,6 +56,25 @@ def test_settings_load_defaults() -> None:
         == "trading-intelligence-api-provider-polling/0.1"
     )
     assert settings.binance_public_rest_base_url == "https://api.binance.com"
+    assert settings.provider_health_version == "v1"
+    assert settings.provider_health_fresh_seconds_1m == 180
+    assert settings.provider_health_fresh_seconds_5m == 600
+    assert settings.provider_health_fresh_seconds_15m == 1800
+    assert settings.provider_health_fresh_seconds_1h == 7200
+    assert settings.provider_health_max_failures_degraded == 2
+    assert settings.provider_health_max_failures_failing == 5
+    assert settings.signal_priority_version == "v1"
+    assert str(settings.signal_priority_high_threshold) == "0.75"
+    assert str(settings.signal_priority_medium_threshold) == "0.55"
+    assert str(settings.signal_priority_stale_penalty) == "0.30"
+    assert str(settings.signal_priority_conflict_penalty) == "0.25"
+    assert str(settings.signal_priority_review_required_threshold) == "0.50"
+    assert settings.daily_workflow_version == "v1"
+    assert settings.daily_workflow_max_symbols == 100
+    assert settings.daily_workflow_max_scan_items == 500
+    assert settings.daily_workflow_enable_provider_polling is False
+    assert settings.daily_workflow_enable_notifications is False
+    assert settings.preference_profile_default_max_stale_seconds == 7200
     assert settings.chart_unsupported_rejection_enabled is True
     assert settings.audit_timeline_max_events == 200
     assert settings.audit_timeline_max_audit_events == 100

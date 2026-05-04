@@ -289,6 +289,59 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
     CapabilityDefinition(
+        key="trading_journal",
+        name="Trading Journal Feedback Loop",
+        category=CapabilityCategory.OUTCOME,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
+        module_path="app.modules.trading_journal",
+        produced_artifacts=(
+            "journal_entries",
+            "journal_entry_reviews",
+            "journal_entry_attachments",
+        ),
+        route_refs=(
+            "/journal-entries",
+            "/journal-entries/{entry_id}/review",
+            "/journal-entries/{entry_id}/attachments",
+        ),
+        dependencies=("signal_classification", "outcomes", "operator_reviews"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=False,
+            safe_to_run_automatically=False,
+            notes=(
+                "Records user decision notes and deterministic outcome comparisons only; "
+                "no broker execution, signal mutation, or financial advice."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
+        key="scenario_outcomes",
+        name="Scenario Hypothesis Outcome Tracking",
+        category=CapabilityCategory.OUTCOME,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.scenario_outcomes",
+        produced_artifacts=("scenario_hypothesis_outcomes", "scenario_outcome_summary_runs"),
+        route_refs=(
+            "/reasoning/scenarios/{scenario_hypothesis_id}/outcome",
+            "/reasoning/runs/{reasoning_run_id}/scenario-outcomes",
+            "/scenario-outcomes/summary",
+        ),
+        dependencies=("scenario_reasoning", "outcomes", "news_correlation"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            notes=(
+                "Evaluates persisted scenario hypotheses against stored signal outcomes only; "
+                "does not call LLMs or mutate source artifacts."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
         key="profile_diagnostics",
         name="Profile Diagnostics",
         category=CapabilityCategory.DIAGNOSTICS,
@@ -463,6 +516,90 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         ),
     ),
     CapabilityDefinition(
+        key="market_memory",
+        name="Rolling Market State Memory",
+        category=CapabilityCategory.REPORTING,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.market_memory",
+        produced_artifacts=("rolling_market_state_snapshots",),
+        route_refs=(
+            "/market-memory/snapshots",
+            "/market-memory/snapshots/by-symbol",
+            "/market-memory/workspaces/{workspace_id}/refresh",
+        ),
+        dependencies=(
+            "datasets",
+            "analysis_lifecycle",
+            "signal_classification",
+            "outcomes",
+            "data_quality",
+            "market_regimes",
+            "market_sessions",
+            "cross_asset_context",
+        ),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            safe_to_run_automatically=False,
+            notes=(
+                "Caches latest deterministic context from persisted artifacts only; "
+                "does not run analysis or mutate source artifacts."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
+        key="pattern_attribution",
+        name="Pattern Detector Attribution",
+        category=CapabilityCategory.DIAGNOSTICS,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.pattern_attribution",
+        produced_artifacts=("pattern_attribution_runs", "pattern_attribution_results"),
+        route_refs=(
+            "/pattern-attribution/run",
+            "/pattern-attribution/runs",
+            "/pattern-attribution/runs/{run_id}/results",
+        ),
+        dependencies=("analysis_lifecycle", "signal_classification", "outcomes"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            safe_to_run_automatically=False,
+            notes=(
+                "Attributes stored pattern candidates against final signals and stored outcomes "
+                "without candidate, detector, or signal mutation."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
+        key="cohort_drift",
+        name="Signal Cohort Drift Detection",
+        category=CapabilityCategory.DIAGNOSTICS,
+        execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
+        safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
+        module_path="app.modules.cohort_drift",
+        produced_artifacts=("cohort_drift_runs", "cohort_drift_results"),
+        route_refs=(
+            "/cohort-drift/run",
+            "/cohort-drift/runs",
+            "/cohort-drift/runs/{run_id}/results",
+            "/cohort-drift/results/recent",
+        ),
+        dependencies=("signal_classification", "outcomes", "market_sessions", "market_regimes"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=False,
+            mutates_intelligence_artifacts=True,
+            notes=(
+                "Compares recent stored signal/outcome cohort behavior against a "
+                "baseline period without source artifact mutation."
+            ),
+        ),
+    ),
+    CapabilityDefinition(
         key="candle_gap_recovery",
         name="Candle Gap Recovery Planner",
         category=CapabilityCategory.OPERATIONS,
@@ -542,6 +679,29 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         route_refs=("/intelligence-datasets/exports", "/intelligence-datasets/exports/{export_id}/jsonl"),
         dependencies=("signal_classification", "outcomes", "safety_policies"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
+    ),
+    CapabilityDefinition(
+        key="synthetic_fixtures",
+        name="Deterministic Synthetic Candle Fixtures",
+        category=CapabilityCategory.OPERATIONS,
+        execution_type=CapabilityExecutionType.MANUAL_ONLY,
+        safety_level=CapabilitySafetyLevel.RESTRICTED,
+        module_path="app.modules.synthetic_fixtures",
+        status=CapabilityStatus.EXPERIMENTAL,
+        requires_database=False,
+        output_contracts=("raw_candle_payload", "csv_candle_fixture", "json_candle_import_payload"),
+        route_refs=("/synthetic-fixtures/generate",),
+        dependencies=("candle_imports", "data_quality"),
+        metadata=metadata(
+            deterministic=True,
+            read_only=True,
+            safe_to_run_automatically=False,
+            module_setting="synthetic_fixtures_api_enabled",
+            notes=(
+                "Generates deterministic development and testing candle fixtures without "
+                "external data or persistence."
+            ),
+        ),
     ),
     CapabilityDefinition(
         key="webhook_outbox",

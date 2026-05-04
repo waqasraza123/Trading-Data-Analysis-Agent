@@ -1,197 +1,131 @@
 # AI Trading Intelligence Agent
 
 [![API CI](https://github.com/waqasraza123/Trading-Data-Analysis-Agent/actions/workflows/api-ci.yml/badge.svg)](https://github.com/waqasraza123/Trading-Data-Analysis-Agent/actions/workflows/api-ci.yml)
-![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00)
-![Pydantic](https://img.shields.io/badge/Pydantic-v2-E92063)
-![Code Style](https://img.shields.io/badge/code%20style-ruff-46A5E5)
-![Type Checked](https://img.shields.io/badge/type%20checked-mypy-2A6DB2)
-![Status](https://img.shields.io/badge/status-active%20backend%20foundation-blue)
+![Status](https://img.shields.io/badge/status-daily%20dashboard%20%2B%20intelligence%20backend-blue)
 
-Production-grade FastAPI backend for deterministic market intelligence. The system ingests historical and live OHLC candle data, validates and stores normalized market data, runs deterministic analysis engines, persists auditable artifacts, and exposes APIs for future UI and automation layers.
+AI Trading Intelligence Agent is a deterministic market-intelligence product for daily review of
+market data, signal context, data readiness, quality diagnostics, and observed outcomes.
 
-This repository is intentionally backend-first. It is not a trading bot, broker integration, copy-trading tool, or financial-advice system.
+The product is centered on a read-only Daily Trading Command Center backed by a FastAPI intelligence
+engine. It helps an operator answer practical review questions:
 
-## Tags
+- Is the market data fresh enough to review?
+- What changed since the last scan or brief?
+- Which stored signals deserve attention first?
+- Which setups need confirmation, have conflicting evidence, or should be avoided for now?
+- What happened after earlier signals, and what should be reviewed in the journal?
+- Which provider, data-quality, or diagnostic issues need cleanup before analysis is trusted?
 
-`fastapi` `python` `postgresql` `neon` `sqlalchemy` `alembic` `pydantic` `market-data` `ohlc` `candlesticks` `technical-analysis` `trading-intelligence` `deterministic-analysis` `auditability` `backend-api`
-
-## Table Of Contents
-
-- [Product Boundary](#product-boundary)
-- [Current Capabilities](#current-capabilities)
-- [Architecture](#architecture)
-- [Repository Layout](#repository-layout)
-- [Technology Stack](#technology-stack)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Database Migrations](#database-migrations)
-- [Running The API](#running-the-api)
-- [API Surface](#api-surface)
-- [Analysis Pipeline](#analysis-pipeline)
-- [Quality Gates](#quality-gates)
-- [Docker](#docker)
-- [Production Readiness](#production-readiness)
-- [Security And Compliance](#security-and-compliance)
-- [Documentation](#documentation)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+It is not a trading bot, broker terminal, copy-trading platform, external alerting product, or
+financial-advice system.
 
 ## Product Boundary
 
-The project is a market intelligence backend that turns structured market data into structured analysis.
+The product turns structured market data and persisted intelligence artifacts into an auditable
+daily review workflow.
 
 It does:
 
-- Parse CSV and JSON OHLC market data.
-- Accept live feed ingestion events through provider adapters.
-- Normalize historical and live candles through one shared validation path.
-- Store clean candle data in PostgreSQL.
-- Track final and partial candle state.
-- Run analysis lifecycle preflight checks before generating artifacts.
-- Persist deterministic feature snapshots.
-- Persist deterministic indicator snapshots for EMA, RSI, MACD, and ATR.
-- Persist deterministic news/event correlation context without causation claims.
-- Run bounded backtest experiments that summarize historical signal outcome cohorts without PnL, win-rate, broker execution, or trade advice.
-- Store audit logs for analysis runs.
-- Expose typed APIs for future UI, scanner, replay, and explanation layers.
+- Ingest historical CSV/JSON candles and live/provider-originated candle data.
+- Normalize imported, live, and provider-polled candles through one shared validation path.
+- Store final and partial candle state with freshness, gap, and quality metadata.
+- Run deterministic analysis, pattern, indicator, setup-context, signal-priority, and quality
+  workflows.
+- Persist daily briefs, signal digests, market memory, setup context, observed outcomes, journal
+  notes, notification inbox events, and audit timelines.
+- Provide a web command center for daily review, triage, scanner management, quality diagnostics,
+  outcome review, preferences, journal notes, and data onboarding.
+- Use optional grounded AI/LLM layers only to explain or reason from supplied persisted evidence.
 
 It does not:
 
-- Execute trades.
-- Connect to brokers for order placement.
-- Produce guaranteed buy or sell instructions.
-- Replace regulated financial advice.
-- Let an LLM classify market signals or override deterministic engines.
-- Provide a frontend UI in the current phase.
+- Place orders or connect to brokers for execution.
+- Auto-trade, copy-trade, or create direct order instructions.
+- Let an LLM override deterministic classification or mutate source signals.
+- Treat observed outcomes as account performance, P&L, or broker results.
+- Send external alerts by default from scan, digest, or brief generation.
+- Provide regulated financial advice.
 
 Core rule:
 
 ```txt
-Neon stores the truth. FastAPI controls the workflow. Deterministic engines calculate and classify. AI only explains supplied evidence.
+Persisted artifacts are the source of truth. Deterministic engines classify and score. AI may only explain supplied evidence.
 ```
 
-## Current Capabilities
+## Daily Workflow
 
-- FastAPI application factory with health routes, request IDs, structured error handling, and startup/shutdown logging.
-- Pydantic v2 settings with environment-based configuration.
-- Async SQLAlchemy 2.x database layer using asyncpg.
-- Alembic migrations for the backend schema.
-- Symbol and data-source configuration services.
-- Historical CSV and JSON import pipeline.
-- Shared candle normalization, validation, storage, and quality reporting.
-- Live feed ingestion foundation with provider adapters, subscription lifecycle APIs, event audit persistence, stale checks, and shared candle storage.
-- Candle query, count, latest, and quality APIs.
-- Analysis run lifecycle for historical and live-window runs.
-- Deterministic feature engineering snapshots.
-- Deterministic indicator snapshots.
-- Deterministic news/event ingestion and signal correlation APIs.
-- Scenario ensemble consensus diagnostics across grounded provider/model scenario reasoning output.
-- Pytest, Ruff, mypy, and GitHub Actions CI.
+The implemented daily product loop is:
 
-## Architecture
+1. Check data freshness in the Command Center or Data Onboarding.
+2. Run the daily workflow to refresh provider health, prepare recovery plans, run deterministic
+   scans, generate setup context, score review priority, refresh market memory, create signal
+   digests, and generate a persisted brief.
+3. Apply scanner presets when a repeatable session, watchlist, volatility, pattern, or data-repair
+   configuration is useful.
+4. Read the daily brief for workspace-level review context.
+5. Triage stored signals by quality, confirmation need, conflict, stale data, and review status.
+6. Inspect setup detail for evidence, confidence, zones, invalidation context, outcomes, reasoning,
+   historical cases, quality findings, audit timeline, and journal context.
+7. Add observational journal notes.
+8. Review observed outcomes and quality diagnostics.
+9. Review in-app intelligence notifications and return to the Command Center summary.
 
-```txt
-Client or Worker
-      |
-      v
-FastAPI Routes
-      |
-      v
-Service Layer
-      |
-      v
-Repositories
-      |
-      v
-Neon PostgreSQL
-      |
-      v
-Deterministic Analysis Engines
-      |
-      v
-Persisted Artifacts + Audit Logs
-```
+The daily workflow records completed, skipped, and failed backend steps. It does not execute broker
+actions, execute external notifications, or call external providers unless provider polling is
+explicitly enabled for that workflow.
 
-Data ingestion converges through the same candle boundary:
+## Implemented Web Surfaces
 
-```txt
-CSV / JSON imports
-Live feed messages
-Future API polling
-Manual seed data
-        |
-        v
-NormalizedCandleInput
-        |
-        v
-Candle validation
-        |
-        v
-Candle repository upsert rules
-        |
-        v
-Analysis lifecycle
-```
+The web app in `apps/web` redirects `/` to `/command-center` and includes these product routes:
 
-Final candles are the default source for analysis. Partial candles are stored and can be inspected, but analysis includes them only when explicitly requested by the calling workflow.
-
-## Repository Layout
-
-```txt
-.
-+-- AGENTS.md
-+-- README.md
-+-- apps/
-|   +-- api/
-|       +-- app/
-|       |   +-- core/
-|       |   +-- db/
-|       |   +-- modules/
-|       |   +-- routes/
-|       |   +-- tests/
-|       |   +-- config.py
-|       |   +-- dependencies.py
-|       |   +-- main.py
-|       +-- alembic/
-|       +-- docs/
-|       +-- Dockerfile
-|       +-- README.md
-|       +-- alembic.ini
-|       +-- pyproject.toml
-+-- docs/
-|   +-- backend-only-implementation-plan.md
-|   +-- backend-phase-0-architecture-plan.md
-|   +-- project-state.md
-+-- .github/
-    +-- workflows/
-        +-- api-ci.yml
-```
-
-## Technology Stack
-
-| Layer | Technology |
+| Route | Purpose |
 | --- | --- |
-| API | FastAPI |
-| Runtime | Python 3.12+ |
-| Validation | Pydantic v2 |
-| Settings | pydantic-settings |
-| Database | Neon PostgreSQL |
-| ORM | SQLAlchemy 2.x async |
-| Driver | asyncpg |
-| Migrations | Alembic |
-| Testing | pytest, pytest-asyncio, httpx |
-| Linting | Ruff |
-| Type checking | mypy strict mode |
-| CI | GitHub Actions |
-| Container | Docker |
+| `/command-center` | Default daily start page for freshness, changes, review-first setups, scanner status, notifications, quality warnings, and next actions. |
+| `/brief` | Workspace daily brief, preferring the persisted backend brief and falling back to frontend composition when optional endpoints are missing. |
+| `/triage` | Read-only signal triage board across high-quality context, needs confirmation, conflicted, avoid/no directional signal, stale/data issue, and review required. |
+| `/scanner` | Watchlist scanner controls, scanner presets, scheduled scan configs, due scans, and scan result review. |
+| `/signals/[signalId]` | Full setup detail for one stored signal, including evidence, confidence, setup context, outcomes, quality, reasoning, audit, and journal panels. |
+| `/dashboard` | Daily operator cockpit over watchlists, signal focus, digests, avoid conditions, backend state, and follow-up context. |
+| `/symbols/[symbolId]` | Symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs. |
+| `/data/onboarding` | Data-source setup, freshness checks, candle quality, provider health, gap planning, and prepare-only recovery metadata. |
+| `/quality` | Signal quality scoreboard over observed behavior, calibration, validation, drift, attribution, and data coverage. |
+| `/review/outcomes` | Outcome review queue with linked journal prompts and optional reliability diagnostics. |
+| `/journal` | Observation journal for reviewed, ignored, paper-followed, external-action-noted, or uncertain setup feedback. |
+| `/preferences/strategy` | Personal review preference profiles for filtering by market, symbol, session, timeframe, confidence, setup quality, stale-data tolerance, and confirmation requirements. |
+| `/notifications` | In-app inbox for sanitized backend intelligence events, safety state, delivery attempts, and source links. |
 
-## Quick Start
+The web client tolerates missing optional backend modules with scoped empty states and backend-state
+warnings instead of crashing the workflow.
 
-From the repository root:
+## Intelligence Capabilities
+
+Current backend capabilities include:
+
+- Workspace, user, symbol, and data-source management.
+- Historical import, live ingestion, provider polling, candle queries, candle quality, and gap
+  recovery planning.
+- Analysis lifecycle with deterministic feature, indicator, pattern, strategy-profile, signal,
+  evidence, confidence, risk-note, and explanation artifacts.
+- Setup context, market regimes, market sessions, multi-timeframe context, cross-asset context,
+  market memory, historical-case search, and decision readiness.
+- Signal priority scoring, signal digests, daily briefs, and daily workflow orchestration.
+- Watchlists, scheduled scans, scanner presets, scan runs, and bounded market scanning from stored
+  final candles.
+- Observed outcome evaluation, backtest cohorts, profile diagnostics, confidence calibration,
+  walk-forward validation, cohort drift, pattern attribution, and quality gates.
+- Trading journal entries, operator review queue, notification event inbox, backend-safe action
+  plans, audit timelines, artifact graph, capability registry, state-machine registry, and
+  reproducibility manifests.
+- Optional grounded deterministic/AI explanation, scenario reasoning, scenario ensemble, scenario
+  outcome, explanation comparison, context pack, intelligence report, and dataset export surfaces.
+- Chart screenshot candle extraction and deterministic trend-hypothesis workflows with review
+  gating for low-confidence extraction.
+- Worker runtimes for live feeds, stale checks, market scans, reasoning actions, notifications, and
+  supervisor orchestration.
+
+## Run Locally
+
+Start the API:
 
 ```sh
 cd apps/api
@@ -201,299 +135,92 @@ python3 -m venv .venv
 cp .env.example .env
 ```
 
-Set `DATABASE_URL` in `apps/api/.env` before running migrations or database-backed routes.
+Set a local or managed PostgreSQL connection in `apps/api/.env`, then apply the schema and run the
+server:
 
 ```sh
 .venv/bin/alembic upgrade head
 .venv/bin/uvicorn app.main:app --reload
 ```
 
-The API will be available at:
+The API runs at:
 
 ```txt
 http://127.0.0.1:8000
 ```
 
-Interactive OpenAPI docs:
+Start the web app:
+
+```sh
+cd apps/web
+npm install
+npm run dev
+```
+
+The default product entry point is:
 
 ```txt
-http://127.0.0.1:8000/docs
+http://127.0.0.1:3000/command-center
 ```
 
-Health check:
+Use `apps/web/.env.local` when the API is not running on the default local URL:
 
 ```sh
-curl http://127.0.0.1:8000/health
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_APP_NAME=Daily Trading Dashboard
 ```
 
-Database health check:
+## Quality Checks
 
-```sh
-curl http://127.0.0.1:8000/health/db
-```
-
-## Configuration
-
-Configuration is read from environment variables and `apps/api/.env`.
-
-| Variable | Required | Default | Description |
-| --- | --- | --- | --- |
-| `APP_ENV` | No | `development` | Runtime environment: `development`, `test`, `staging`, or `production`. |
-| `API_PREFIX` | No | empty | Optional API path prefix. Must be empty or start with `/`. |
-| `LOG_LEVEL` | No | `INFO` | Logging level. |
-| `DATABASE_URL` | For DB features | empty | PostgreSQL or Neon connection string. `postgresql://` and `postgres://` are normalized to asyncpg. |
-| `TEST_DATABASE_URL` | For DB tests/smoke | empty | Explicit disposable database target for integration tests and smoke checks. |
-| `REDIS_URL` | Future workers | empty | Reserved for background processing and cache-backed workflows. |
-| `OPENAI_API_KEY` | Future explanation layer | empty | Reserved for explanation-only AI workflows. |
-| `SCENARIO_ENSEMBLE_VERSION` | No | `v1` | Scenario ensemble consensus version recorded on each run. |
-| `SCENARIO_ENSEMBLE_DEFAULT_PROVIDER` | No | `mock` | Default provider when no ensemble provider list is supplied. |
-| `SCENARIO_ENSEMBLE_MAX_PROVIDERS` | No | `3` | Maximum provider/model requests in one ensemble run. |
-| `SCENARIO_ENSEMBLE_MIN_AGREEMENT_RATIO` | No | `0.6000` | Minimum ratio for partial scenario agreement. |
-| `CHART_OCR_ENABLED` | No | `false` | Enables Google Vision OCR for chart screenshot axis calibration. |
-| `CHART_OCR_PROVIDER` | No | `google_vision` | Chart OCR provider selector. `google_vision` uses Google ADC. |
-| `CHART_OCR_TIMEOUT_SECONDS` | No | `10` | OCR provider timeout for chart screenshot uploads. |
-| `CHART_OCR_MIN_CONFIDENCE` | No | `0.6500` | Minimum OCR confidence before analysis is allowed without review. |
-| `CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE` | No | `0.7500` | Minimum geometry extraction confidence before analysis is allowed without review. |
-| `CORS_ALLOWED_ORIGINS` | No | empty | Comma-separated allowed browser origins. Do not use `*` in production. |
-| `CORS_ALLOW_CREDENTIALS` | No | `false` | Enables credentialed CORS responses for configured origins. |
-| `AUTH_ENABLED` | No | `false` | Enables API key protection for mutating routes. |
-| `ADMIN_API_KEY` | When auth enabled | empty | API key used with `API_KEY_HEADER_NAME`; never commit a real value. |
-| `API_KEY_HEADER_NAME` | No | `x-admin-api-key` | Header read by the optional API key guard. |
-| `RATE_LIMIT_ENABLED` | No | `false` | Enables lightweight write-route rate limiting. |
-| `RATE_LIMIT_REQUESTS_PER_MINUTE` | No | `60` | Per-client, per-route write limit when enabled. |
-| `MAX_REQUEST_BODY_BYTES` | No | `1048576` | Maximum non-upload request body size. |
-| `MAX_UPLOAD_FILE_BYTES` | No | `10485760` | Maximum multipart upload size. |
-| `LIVE_FEED_PROVIDER` | For live ingestion | empty | Optional live market data provider selector. |
-| `LIVE_FEED_API_KEY` | Provider dependent | empty | Optional provider credential. Keep out of Git. |
-
-Do not commit `.env`, credentials, tokens, private keys, API keys, sample secrets, or customer market data.
-
-## Database Migrations
-
-Run migrations from `apps/api`:
-
-```sh
-.venv/bin/alembic upgrade head
-```
-
-Inspect migration history:
-
-```sh
-.venv/bin/alembic history
-```
-
-Create a new migration only after the SQLAlchemy models and schema intent are clear:
-
-```sh
-.venv/bin/alembic revision -m "describe_change"
-```
-
-## Running The API
-
-Development:
+API checks:
 
 ```sh
 cd apps/api
-.venv/bin/uvicorn app.main:app --reload
-```
-
-Production-style local run:
-
-```sh
-cd apps/api
-.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-## API Surface
-
-All routes are mounted under `API_PREFIX` when configured.
-
-| Area | Routes |
-| --- | --- |
-| Health | `GET /health`, `GET /health/db` |
-| Symbols | `POST /symbols`, `GET /symbols`, `GET /symbols/{symbol_id}`, `PATCH /symbols/{symbol_id}` |
-| Data sources | `POST /data-sources`, `GET /data-sources`, `GET /data-sources/{data_source_id}`, `PATCH /data-sources/{data_source_id}` |
-| Imports | `POST /imports/csv`, `POST /imports/json`, `GET /imports/{import_batch_id}`, `GET /imports/{import_batch_id}/errors` |
-| Live ingestion | Subscription lifecycle, stale checks, feed event ingestion, event listing |
-| Candles | `GET /candles`, `GET /candles/count`, `GET /candles/quality`, `GET /candles/latest` |
-| Analysis | Historical runs, live-window runs, run listing, run details, audit logs, features, indicators, retry |
-| Backtest experiments | `POST /backtest-experiments/run`, `GET /backtest-experiments/runs`, `GET /backtest-experiments/runs/{run_id}`, `GET /backtest-experiments/runs/{run_id}/cohorts` |
-| Scenario ensembles | `POST /signals/{signal_id}/scenario-ensemble`, `GET /signals/{signal_id}/scenario-ensembles`, `GET /scenario-ensembles/{ensemble_run_id}`, `GET /scenario-ensembles/{ensemble_run_id}/items`, `GET /scenario-ensembles/{ensemble_run_id}/consensus` |
-
-Use `/docs` or `/openapi.json` from a running server for exact request and response schemas.
-
-## Analysis Pipeline
-
-Current implemented lifecycle:
-
-```txt
-Create analysis run
-      |
-      v
-Resolve workspace, symbol, source, timeframe, and candle window
-      |
-      v
-Preflight final-candle sufficiency
-      |
-      v
-Persist audit logs
-      |
-      v
-Persist feature snapshot
-      |
-      v
-Persist indicator snapshot
-      |
-      v
-Mark run completed or insufficient_data
-```
-
-Current deterministic artifacts:
-
-- Movement metrics.
-- Candle shape metrics.
-- Range metrics.
-- Volatility metrics.
-- Trend metrics.
-- EMA 9, EMA 21, EMA 50.
-- RSI 14.
-- MACD.
-- ATR 14.
-- Readiness metadata for indicators with insufficient warmup data.
-
-Decimal market values are serialized as strings in JSON artifacts to preserve precision.
-
-## Quality Gates
-
-Run from `apps/api`:
-
-```sh
 .venv/bin/ruff check .
 .venv/bin/mypy app
 .venv/bin/pytest
 ```
 
-Repository-level whitespace check:
+Web checks:
+
+```sh
+cd apps/web
+npm run typecheck
+npm run build
+```
+
+Repository whitespace check:
 
 ```sh
 git diff --check
 ```
 
-CI runs Ruff, mypy, and pytest for API changes through `.github/workflows/api-ci.yml`.
-
-## Docker
-
-Build the API image:
-
-```sh
-cd apps/api
-docker build -t trading-intelligence-api .
-```
-
-Run the container:
-
-```sh
-docker run --rm -p 8000:8000 --env-file .env trading-intelligence-api
-```
-
-## Production Readiness
-
-Before a production deployment, verify:
-
-- `APP_ENV=production`.
-- `DATABASE_URL` points to the intended Neon database.
-- Alembic migrations are applied.
-- Secrets are injected by the deployment platform, not committed.
-- `/health` returns healthy.
-- `/health/db` returns healthy.
-- CI is passing on the deployed commit.
-- Logs are collected centrally.
-- Database backups, retention, and restore testing are configured.
-- API ingress applies TLS, rate limits, and request-size limits.
-- Provider credentials are scoped and rotated.
-- Market-data provider terms are satisfied.
-- No endpoint implies guaranteed trading outcomes or regulated financial advice.
-
-## Security And Compliance
-
-- Secrets are represented with `SecretStr` in settings and must stay out of source control.
-- The current product scope avoids trade execution and broker order placement.
-- Deterministic engines produce analysis artifacts; LLMs may only explain supplied evidence in future phases.
-- Persisted artifacts support audit and replay.
-- Request IDs are attached to API responses for traceability.
-- Financial outputs should be framed as informational analysis, not investment advice.
-
 ## Documentation
 
-Durable project documentation:
-
-- [Backend-only implementation plan](docs/backend-only-implementation-plan.md)
-- [Phase 0 backend architecture plan](docs/backend-phase-0-architecture-plan.md)
-- [Project state](docs/project-state.md)
-
-API-specific documentation:
-
+- [Web app README](apps/web/README.md)
 - [API README](apps/api/README.md)
-- [Core schema](apps/api/docs/schema/core-schema.md)
-- [Configuration services](apps/api/docs/configuration-services.md)
-- [Candle normalization](apps/api/docs/candle-normalization.md)
-- [Historical imports](apps/api/docs/historical-imports.md)
-- [Live feed ingestion](apps/api/docs/live-feed-ingestion.md)
-- [Candle query and quality](apps/api/docs/candle-query-quality.md)
-- [Analysis run lifecycle](apps/api/docs/analysis-run-lifecycle.md)
-- [Feature engineering](apps/api/docs/feature-engineering.md)
-- [Indicator engine](apps/api/docs/indicator-engine.md)
-- [Backtest experiments](apps/api/docs/backtest-experiments.md)
-- [Scenario ensembles](apps/api/docs/scenario-ensembles.md)
-
-## Roadmap
-
-Implemented:
-
-- Backend foundation.
-- Core database schema.
-- Symbol and data-source configuration.
-- Historical import pipeline.
-- Live feed ingestion foundation.
-- Candle query and quality APIs.
-- Analysis run lifecycle.
-- Feature snapshots.
-- Indicator snapshots.
-
-Planned:
-
-- Pattern candidates.
-- Core intelligence layer: deterministic strategy profiles, signal classification, evidence, confidence, risk notes, and deterministic explanations.
-- Golden dataset tests for intelligence quality.
-- Explanation layer constrained to supplied evidence.
-- Replay and versioning.
-- News and event correlation.
-- Live scanning.
-- Background workers.
-- Observability, security hardening, and performance tuning.
-- Future frontend UI.
-
-Out of scope for the current backend phase:
-
-- Broker execution.
-- Auto-trading.
-- Copy trading.
-- Social trading.
-- Guaranteed trade recommendations.
+- [Daily briefs](apps/api/docs/daily-briefs.md)
+- [Daily workflows](apps/api/docs/daily-workflows.md)
+- [Scanner presets](apps/api/docs/scanner-presets.md)
+- [Signal priority](apps/api/docs/signal-priority.md)
+- [Setup context](apps/api/docs/setup-context.md)
+- [Provider health](apps/api/docs/provider-health.md)
+- [Notifications](apps/api/docs/notifications.md)
+- [Trading journal](apps/api/docs/trading-journal.md)
+- [Intelligence quality](apps/api/docs/intelligence-quality.md)
+- [Project state](docs/project-state.md)
 
 ## Contributing
 
-Use the established backend conventions:
-
-- Keep modules small and service-oriented.
-- Use typed Pydantic schemas at API boundaries.
-- Use repositories for database access.
-- Route historical and live candle data through shared normalization.
-- Prefer deterministic engines for analysis and classification.
-- Add or update migrations with schema changes.
-- Run Ruff, mypy, pytest, and `git diff --check` before pushing.
+- Keep product copy informational, non-advisory, and clear about review-only behavior.
+- Preserve deterministic artifacts as the source of truth.
+- Keep frontend workflows tolerant of missing optional backend endpoints.
+- Keep backend modules small, typed, validated, and auditable.
+- Route candle data through shared normalization and validation.
+- Add focused tests for new product behavior and run the relevant checks before pushing.
 - Keep commit messages under 140 characters.
 
 ## License
 
-No license file is currently published for this repository. Add a license before distributing, packaging, or accepting external contributions.
+No license file is currently published for this repository. Add a license before distributing,
+packaging, or accepting external contributions.

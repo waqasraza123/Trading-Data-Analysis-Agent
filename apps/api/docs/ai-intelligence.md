@@ -68,7 +68,7 @@ place orders or manage positions
 create executable action items
 auto-tune strategy profiles
 produce alerts or notifications
-claim guaranteed behavior
+claim certain behavior
 ```
 
 Safe follow-up action names are advisory only. They do not create action items and they do not

@@ -1,6 +1,6 @@
 """market regime contexts
 
-Revision ID: 202605020900
+Revision ID: 202605020960_market_regime_contexts
 Revises: f9eb9423c4a2
 Create Date: 2026-05-02 09:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605020900"
+revision: str = "202605020960_market_regime_contexts"
 down_revision: str | tuple[str, str] | None = "f9eb9423c4a2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

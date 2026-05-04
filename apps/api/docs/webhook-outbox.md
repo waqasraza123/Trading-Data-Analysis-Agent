@@ -80,7 +80,7 @@ Signing material is represented only by `signingSecretRef` on subscriptions. The
 
 The payload builder recursively sanitizes generated payloads before persistence.
 
-It redacts secret-like keys, raw image fields, full candle-series fields, unsafe LLM output fields, and text containing direct trading instruction language such as buy, sell, entry, exit, leverage, order, position, stop-loss, or take-profit.
+It redacts secret-like keys, raw image fields, full candle-series fields, unsafe LLM output fields, and text containing direct order, position, margin, or risk-management instruction language.
 
 Redaction decisions are stored in `redaction_warnings_json` on the outbox event.
 

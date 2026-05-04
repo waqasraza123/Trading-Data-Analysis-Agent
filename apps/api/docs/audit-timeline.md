@@ -42,7 +42,7 @@ and is not persisted as a snapshot.
 
 ## Completeness Score
 
-Completeness is deterministic traceability coverage only. It is not a signal-quality, profitability,
+Completeness is deterministic traceability coverage only. It is not a signal-quality, broker-accounting,
 or recommendation metric.
 
 Labels:

@@ -21,7 +21,7 @@ Diagnostics describe historical follow-through behavior in stored final-candle o
 - average pip/tick movement where symbol metadata supports it
 - confidence alignment score
 
-The language is intentionally limited to market-intelligence terms. It avoids profit, guaranteed
+The language is intentionally limited to market-intelligence terms. It avoids account-return and certainty
 performance, trade instructions, and broker execution concepts.
 
 ## Runs

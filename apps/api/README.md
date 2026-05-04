@@ -1,5 +1,79 @@
 # Trading Intelligence API
 
+Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
+London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
+review workflows. Applying a preset creates watchlists and scheduled scan configs only; it does not
+run scans, create execution setups, send alerts, call brokers, auto-trade, or provide financial
+advice. See `docs/scanner-presets.md`.
+
+Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
+workspace or user define preferred markets, symbols, sessions, timeframes, patterns, confidence
+thresholds, setup-quality thresholds, stale-data tolerance, confirmation requirements, avoid lists,
+and notification preference categories for review workflows only. They do not mutate deterministic
+strategy profiles, change signal classification, execute broker workflows, auto-trade, copy-trade,
+or provide financial advice. See `docs/preference-profiles.md`.
+
+Actionable setup context is implemented under `/signals/{id}/setup-context` and
+`/analysis-runs/{id}/setup-context`. It persists structured non-advisory setup context from existing
+signals, evidence, confidence, risk notes, advanced features, market regime/session context,
+multi-timeframe context, cross-asset context, outcomes, data quality, and readiness artifacts. It
+uses invalidation context, observation zones, target context zones, wait conditions, avoid reasons,
+data-quality warnings, risk notes, and backend-safe next observations. It does not mutate signals or
+strategy profiles, execute action items, send alerts, place orders, call brokers, auto-trade, call
+LLMs for classification, or provide financial advice.
+
+Deterministic signal review priority scoring is implemented under
+`/signals/{id}/priority-score` and `/signal-priorities`. It persists review priority scores,
+labels, buckets, component scores, penalties, boosters, reasons, and warnings from existing stored
+artifacts. It helps triage which signals deserve human review first. It is not a trading score, not
+directional advice, does not mutate signals or classifiers, does not execute broker workflows, and
+does not provide financial advice. See `docs/signal-priority.md`.
+
+Trading journal feedback is implemented under `/journal-entries`. It records user/operator
+decision notes around observed, ignored, reviewed, paper-followed, or externally handled setups and
+compares those notes with later deterministic outcomes. It does not add UI, broker execution,
+broker imports, auto-trading, copy trading, financial advice, account-return calculations, signal mutation, or
+outcome mutation.
+
+Signal digests are implemented under `/signal-digests`. They persist deterministic daily, session,
+custom-period, and watchlist review summaries from stored signals, outcomes, market memory, quality
+gates, readiness checks, news/event correlations, and backend follow-up records. They do not run
+analysis, evaluate outcomes, call LLMs, classify or override signals, send notifications, execute
+broker actions, auto-trade, copy-trade, or provide financial advice.
+
+Daily briefs are implemented under `/daily-briefs` and
+`/workspaces/{workspace_id}/daily-brief/latest`. They persist the canonical backend daily command
+center contract from existing stored artifacts, including signal digests, market memory, signal
+priority, setup context, provider health, data quality, outcomes, backend-safe action items,
+watchlists/scans, decision readiness, market regimes/sessions, multi-timeframe context,
+cross-asset context, and journal follow-ups. They do not trigger scans, provider polling, outcome
+evaluation, LLM calls, notifications, action execution, broker workflows, auto-trading, or
+financial advice. See `docs/daily-briefs.md`.
+
+Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
+pattern candidates contributed to final signals and observed outcomes by detector type, selected
+candidate, rejected candidate, blocked candidate, horizon, profile, symbol, and timeframe. It is
+diagnostic only: it does not mutate candidates or detectors, change final signal classification,
+auto-tune profiles, call LLMs, send alerts, execute broker actions, or provide financial advice.
+
+Rolling market state memory is implemented under `/market-memory`. It stores one latest
+deterministic context snapshot per workspace, symbol, optional source, timeframe, and state version
+for faster reporting, scans, readiness checks, and future UI. It reads persisted final candles and
+deterministic artifacts only; it does not run analysis, evaluate outcomes, call LLMs, mutate
+signals, send alerts, execute broker actions, auto-trade, or provide financial advice.
+
+Signal cohort drift detection is implemented under `/cohort-drift`. It compares recent stored
+signal/outcome behavior against a baseline period by cohort and horizon, stores drift labels,
+severity, safe rate deltas, confidence alignment drift, low-sample states, and review metadata. It
+does not mutate signals or outcomes, modify strategy profiles, call LLMs, send alerts, execute
+broker actions, or provide financial advice.
+
+Scenario hypothesis outcome tracking is implemented under `/reasoning/scenarios`,
+`/reasoning/runs`, and `/scenario-outcomes`. It compares persisted scenario hypotheses with stored
+signal outcomes, writes separate support-label rows and summary runs, and does not call LLMs,
+generate new scenarios, mutate source artifacts, execute broker actions, or provide financial
+advice.
+
 Walk-forward validation is implemented under `/walk-forward-validations`. It analyzes stored
 deterministic signals and stored outcomes across chronological validation windows to summarize
 observed follow-through, reversal behavior, confidence alignment, stability, degradation, and
@@ -12,6 +86,17 @@ dependencies, runtime availability, provider credential requirements, execution 
 level. It is metadata/configuration only and does not run modules, call providers, mutate
 intelligence artifacts, send alerts, execute broker actions, auto-trade, or provide financial
 advice.
+
+Deterministic synthetic candle fixtures are implemented under `app.modules.synthetic_fixtures`
+with an optional guarded `/synthetic-fixtures/generate` endpoint and
+`python -m app.cli synthetic-fixtures generate` CLI helper. They create repeatable development and
+testing OHLC inputs only; they do not fetch external data, mutate production data, run analysis,
+send alerts, execute broker actions, auto-trade, or provide financial advice.
+
+These deterministic modules connect through persisted artifacts only: market memory summarizes the
+latest context, cohort drift and pattern attribution read stored signal outcomes, scenario outcomes
+read persisted scenario hypotheses and outcomes, and synthetic fixtures only generate exportable
+inputs for development and tests.
 
 Cross-asset context support is implemented under `/analysis-runs/{id}/cross-asset-context`,
 `/signals/{id}/cross-asset-context`, and `/cross-asset-context/runs/{id}/results`. It compares
@@ -61,9 +146,72 @@ candles in live or imported datasets, groups adjacent missing timestamps into re
 records provider-polling/manual-import planning metadata, and can create pending provider polling
 request rows without executing external provider fetches.
 
+Provider health snapshots are implemented under `/provider-health`. They aggregate persisted data
+source state, candle freshness, missing candles, provider polling successes/failures, live
+subscription state, data quality, market memory, and gap recovery plans into an operational data
+reliability workflow. They do not call external providers, mutate candles, auto-create polling
+requests outside the explicit gap recovery route, execute broker actions, send alerts, auto-trade,
+or provide financial advice.
+
+Daily workflows are implemented under `/daily-workflows`. They persist one auditable backend
+orchestration for refreshing provider health, preparing recovery plans, running deterministic
+scheduled scans, generating setup context, scoring review priority, refreshing market memory,
+generating signal digests, and generating daily brief records when that backend module is installed.
+They do not execute broker actions, execute notifications, auto-trade, call external providers
+unless provider polling is explicitly enabled, or provide financial advice. See
+`docs/daily-workflows.md`.
+
+The integrated daily product flow is data freshness -> run workflow -> scanner presets -> brief ->
+triage -> setup detail -> journal/outcome review. Notifications are in-app intelligence events for
+review state only, not external delivery by default. Quality scoreboard data is observed behavior
+and diagnostics only, not account-performance or broker-result reporting.
+
+Daily workflow integration uses these backend modules together without adding broker execution:
+
+```txt
+/provider-health
+/signal-priorities
+/preference-profiles
+/journal-entries
+/signals/{signal_id}/outcomes
+```
+
+The intended product loop is data freshness, deterministic scan, review-priority ranking, triage,
+setup inspection, journal reflection, and observed outcome review. Stored deterministic artifacts
+remain the source of truth.
+
 No UI, broker execution, auto-trading, alerts, or billing is implemented in this backend slice.
 LLM layers are optional and may only explain or reason from persisted deterministic output.
 Market regime context is deterministic metadata only and does not alter signal classification.
+
+The first read-only frontend surface now lives in `apps/web`. It consumes this API through
+`NEXT_PUBLIC_API_BASE_URL`, renders missing optional endpoints as safe empty states, and keeps
+broker execution and auto-trading outside the product boundary.
+
+The web data onboarding route at `/data/onboarding` uses existing backend contracts for
+`/data-sources`, `/symbols`, `/candles/latest`, `/candles/count`, `/candles/quality`,
+`/data-quality/candle-range/run`, `/market-memory/snapshots`, `/live/subscriptions`,
+`/provider-polling/requests`, and `/candle-gap-recovery`. It prepares recovery metadata with
+`createRequests=false` and does not execute external provider fetches. Provider credentials remain
+server-side; the UI does not accept provider API keys.
+
+The same route also reads `/provider-health` when available to show provider/source health, stale or
+missing candles, recent polling failures, prepare-only recovery planning, and deterministic-analysis
+readiness.
+
+The integrated daily workflow pages in `apps/web` prefer the backend daily brief when available.
+`/brief` and `/command-center` read `/workspaces/{workspace_id}/daily-brief/latest` first, then
+fall back to the existing frontend composition over provider health, market memory, signal
+priority, preference profiles, signals, outcomes, setup context, decision readiness, action items,
+operator reviews, signal digests, watchlists, scheduled scans, data-quality, market
+sessions/regimes, intelligence reports, audit timelines, and journal APIs. Missing optional
+endpoints should return 404 or standard API errors; the web client maps those into safe fallback
+states.
+
+The integrated dashboard surface now reads signal digests and setup context when those endpoints
+are available. Digest items may reference setup context rows, and journal entries can link to setup
+context rows for later deterministic review. Notification events remain optional, explicitly
+created, safety-filtered, and never auto-delivered by digest or setup-context generation.
 
 Capability registry endpoints:
 
@@ -73,6 +221,15 @@ GET /capabilities/{key}
 POST /capabilities/seed-default
 GET /capabilities/summary
 ```
+
+Synthetic fixture generation endpoint:
+
+```txt
+POST /synthetic-fixtures/generate
+```
+
+The endpoint is disabled unless `SYNTHETIC_FIXTURES_API_ENABLED=true` and is unavailable in
+production. The CLI helper does not require database access.
 
 ## Commands
 
@@ -106,7 +263,7 @@ SEED_DEFAULT_ADMIN_NAME="Default Admin" \
 
 The seed command is idempotent. It seeds configured workspace/admin user defaults, default
 symbols, default workspace data sources including manual news context, strategy profiles,
-and current engine versions.
+current engine versions, and default scanner presets.
 `SEED_DEFAULT_WORKSPACE_NAME`, `SEED_DEFAULT_ADMIN_EMAIL`, and `SEED_DEFAULT_ADMIN_NAME`
 are optional; data sources and the admin user are seeded only when a default workspace is
 configured.
@@ -143,6 +300,12 @@ Run the read-only backend smoke command:
 
 ```sh
 TEST_DATABASE_URL=postgresql://user:password@localhost:5432/trading_test .venv/bin/python -m app.cli smoke
+```
+
+Generate deterministic synthetic candle fixture CSV:
+
+```sh
+.venv/bin/python -m app.cli synthetic-fixtures generate --pattern bullish_breakout --output-format csv
 ```
 
 Run smoke write checks only against a disposable database:
@@ -239,10 +402,10 @@ CHART_OCR_TIMEOUT_SECONDS=10
 CHART_OCR_MIN_CONFIDENCE=0.6500
 CHART_IMAGE_MIN_EXTRACTION_CONFIDENCE=0.7500
 DATA_QUALITY_VERSION=v1
-DATA_QUALITY_STRONG_THRESHOLD=0.95
-DATA_QUALITY_ACCEPTABLE_THRESHOLD=0.85
-DATA_QUALITY_DEGRADED_THRESHOLD=0.70
-DATA_QUALITY_OUTLIER_RANGE_MULTIPLIER=4.0
+DATA_QUALITY_STRONG_THRESHOLD=0.9500
+DATA_QUALITY_ACCEPTABLE_THRESHOLD=0.8500
+DATA_QUALITY_DEGRADED_THRESHOLD=0.7000
+DATA_QUALITY_OUTLIER_RANGE_MULTIPLIER=5.0000
 DATA_QUALITY_STALE_LIVE_SECONDS=300
 CHART_UNSUPPORTED_REJECTION_ENABLED=true
 AUDIT_TIMELINE_MAX_EVENTS=200
@@ -269,6 +432,9 @@ SCENARIO_ENSEMBLE_VERSION=v1
 SCENARIO_ENSEMBLE_DEFAULT_PROVIDER=mock
 SCENARIO_ENSEMBLE_MAX_PROVIDERS=3
 SCENARIO_ENSEMBLE_MIN_AGREEMENT_RATIO=0.6000
+SCENARIO_OUTCOME_EVALUATION_VERSION=v1
+SCENARIO_OUTCOME_DEFAULT_HORIZON_MINUTES=30
+SCENARIO_OUTCOME_SUPPORT_THRESHOLD=0.6000
 EXPLANATION_COMPARISON_VERSION=v1
 EXPLANATION_COMPARISON_ALIGNMENT_THRESHOLD=0.7500
 EXPLANATION_COMPARISON_REVIEW_THRESHOLD=0.5000
@@ -281,7 +447,16 @@ WALK_FORWARD_DEFAULT_WINDOW_DAYS=30
 WALK_FORWARD_MINIMUM_SAMPLE_SIZE=20
 WALK_FORWARD_DEGRADATION_THRESHOLD=0.20
 WALK_FORWARD_IMPROVEMENT_THRESHOLD=0.20
+COHORT_DRIFT_VERSION=v1
+COHORT_DRIFT_MINIMUM_SAMPLE_SIZE=20
+COHORT_DRIFT_MILD_THRESHOLD=0.10
+COHORT_DRIFT_MODERATE_THRESHOLD=0.20
+COHORT_DRIFT_SEVERE_THRESHOLD=0.35
+COHORT_DRIFT_DEFAULT_BASELINE_DAYS=90
+COHORT_DRIFT_DEFAULT_COMPARISON_DAYS=30
 CAPABILITY_REGISTRY_DEFAULT_VERSION=v1
+SYNTHETIC_FIXTURES_API_ENABLED=false
+SYNTHETIC_FIXTURES_DEFAULT_SEED=12345
 MARKET_SESSION_VERSION=v1
 MARKET_SESSION_DEFAULT_TIMEZONE=UTC
 ADVANCED_FEATURE_PACK_VERSION=v1
@@ -302,7 +477,7 @@ EVENT_STUDY_MIN_CANDLES=5
 EVENT_STUDY_STRONG_REACTION_MULTIPLIER=2.0
 EVENT_STUDY_MODERATE_REACTION_MULTIPLIER=1.25
 CONFIDENCE_CALIBRATION_VERSION=v1
-CONFIDENCE_CALIBRATION_DEFAULT_BINS=10
+CONFIDENCE_CALIBRATION_DEFAULT_BINS=0-0.39,0.40-0.64,0.65-0.79,0.80-1.0
 CONFIDENCE_CALIBRATION_MINIMUM_SAMPLE_SIZE=20
 CONFIDENCE_CALIBRATION_OVERCONFIDENT_THRESHOLD=0.15
 CONFIDENCE_CALIBRATION_UNDERCONFIDENT_THRESHOLD=0.15
@@ -329,11 +504,21 @@ CROSS_ASSET_MAX_COMPARED_SYMBOLS=20
 CROSS_ASSET_LEAD_LAG_MAX_OFFSET=5
 CROSS_ASSET_ALIGNMENT_THRESHOLD=0.60
 CROSS_ASSET_DIVERGENCE_THRESHOLD=0.60
+MARKET_MEMORY_STATE_VERSION=v1
+MARKET_MEMORY_FRESH_SECONDS_1M=180
+MARKET_MEMORY_FRESH_SECONDS_5M=600
+MARKET_MEMORY_FRESH_SECONDS_15M=1800
+MARKET_MEMORY_FRESH_SECONDS_1H=7200
+MARKET_MEMORY_MAX_CONTEXT_WARNINGS=50
 PROFILE_DIAGNOSTICS_MINIMUM_SAMPLE_SIZE=20
 PROFILE_DIAGNOSTICS_STRONG_FOLLOW_THROUGH_RATE=0.65
 PROFILE_DIAGNOSTICS_HIGH_REVERSAL_RATE=0.35
 PROFILE_DIAGNOSTICS_HIGH_NO_FOLLOW_THROUGH_RATE=0.40
 PROFILE_DIAGNOSTICS_CONFIDENCE_MISALIGNMENT_THRESHOLD=0.45
+PATTERN_ATTRIBUTION_VERSION=v1
+PATTERN_ATTRIBUTION_MINIMUM_SAMPLE_SIZE=20
+PATTERN_ATTRIBUTION_HIGH_REJECTION_RATE=0.50
+PATTERN_ATTRIBUTION_HIGH_REVERSAL_RATE=0.35
 PROFILE_GOVERNANCE_DEFAULT_REVIEW_REQUIRED=true
 PROFILE_GOVERNANCE_COMPONENT_WEIGHT_TOLERANCE=0.0001
 HISTORICAL_CASE_VECTOR_VERSION=v1
@@ -362,6 +547,7 @@ MARKET_SCAN_WORKER_POLL_SECONDS=30
 MARKET_SCAN_WORKER_BATCH_SIZE=10
 MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
 MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
+SCANNER_PRESET_VERSION=v1
 PROVIDER_POLLING_TIMEOUT_SECONDS=20
 PROVIDER_POLLING_MAX_CANDLES_PER_REQUEST=1000
 PROVIDER_POLLING_USER_AGENT=trading-intelligence-api-provider-polling/0.1
@@ -467,6 +653,12 @@ Market watchlists and scheduled scans are documented in:
 docs/market-scans.md
 ```
 
+Signal digest summaries are documented in:
+
+```txt
+docs/signal-digests.md
+```
+
 Feature engineering snapshots are documented in:
 
 ```txt
@@ -569,6 +761,12 @@ Scenario ensemble consensus diagnostics are documented in:
 docs/scenario-ensembles.md
 ```
 
+Scenario hypothesis outcome tracking is documented in:
+
+```txt
+docs/scenario-outcomes.md
+```
+
 Explanation comparison and disagreement analysis is documented in:
 
 ```txt
@@ -598,6 +796,12 @@ Outcome-based profile diagnostics are documented in:
 
 ```txt
 docs/profile-diagnostics.md
+```
+
+Pattern detector attribution diagnostics are documented in:
+
+```txt
+docs/pattern-attribution.md
 ```
 
 Confidence calibration analytics are documented in:
@@ -909,6 +1113,18 @@ GET /scenario-ensembles/{ensemble_run_id}/items
 GET /scenario-ensembles/{ensemble_run_id}/consensus
 ```
 
+Scenario hypothesis outcome APIs evaluate persisted scenario hypotheses against later stored signal
+outcomes. They do not generate reasoning, call LLMs, inspect candles directly, mutate hypotheses,
+signals, or outcomes, advise, alert, or execute:
+
+```txt
+POST /reasoning/scenarios/{scenario_hypothesis_id}/outcome
+POST /reasoning/runs/{reasoning_run_id}/scenario-outcomes
+GET /reasoning/runs/{reasoning_run_id}/scenario-outcomes
+POST /scenario-outcomes/summary
+GET /scenario-outcomes/summary/{summary_run_id}
+```
+
 Explanation comparison APIs compare persisted deterministic explanations, LLM explanations,
 scenario reasoning, and scenario ensemble context for review intelligence only. They do not call
 LLM providers, generate explanations, mutate signals, advise, alert, or execute:
@@ -1081,8 +1297,11 @@ POST /webhook-outbox/events/{event_id}/cancel
 ```
 
 Notification APIs persist safe operator-facing outbox messages, user preferences, in-app delivery
-state, and worker dispatch state. They do not send trade instructions, create broker actions, or
-deliver external email/webhook messages yet:
+state, and worker dispatch state. Notification delivery engine APIs add sanitized backend
+intelligence events, provider-configured channels, dedupe, quiet hours, severity routing, delivery
+attempts, and an explicit webhook HTTP POST path gated by `NOTIFICATIONS_ENABLED=true`.
+Email, Telegram, and Discord adapters are safe stubs in this phase. No notification path sends
+trade instructions, creates broker actions, auto-trades, or provides financial advice:
 
 ```txt
 PUT /notifications/preferences
@@ -1090,7 +1309,28 @@ POST /notifications
 GET /notifications
 POST /notifications/dispatch-due
 GET /notifications/worker/status
+POST /notification-channels
+GET /notification-channels
+GET /notification-channels/{channel_id}
+PATCH /notification-channels/{channel_id}
+POST /notification-channels/{channel_id}/archive
+POST /notification-events
+GET /notification-events
+GET /notification-events/{event_id}
+POST /notification-events/{event_id}/read
+POST /notification-events/{event_id}/acknowledge
+POST /notification-events/{event_id}/archive
+POST /notification-events/{event_id}/deliver
+GET /notification-events/{event_id}/attempts
 ```
+
+`notification_events` also carry in-product inbox state: `unread`, `read`, `acknowledged`,
+and `archived`. These fields make sanitized backend intelligence events reviewable inside the
+web app without invoking external delivery. Supported inbox event types are signal classification,
+review recommendation, outcome evaluation, digest creation, data-quality degradation, stale market
+memory, due reasoning action, blocked readiness, opened operator review, completed scan, degraded
+provider health, and needed gap recovery. Inbox copy must stay non-advisory and must not become
+trading alerts or broker workflow language.
 
 Multi-timeframe aggregation APIs derive complete higher-timeframe candles from final lower-timeframe
 candles, store lineage, and build context without changing existing signal classifications:
@@ -1310,6 +1550,21 @@ POST /operator-reviews/{review_item_id}/resolve
 POST /operator-reviews/{review_item_id}/dismiss
 GET /operator-reviews/{review_item_id}/events
 ```
+
+Signal digest APIs persist read-only daily, session, custom-period, and watchlist summaries:
+
+```txt
+POST /signal-digests
+GET /signal-digests
+GET /signal-digests/{digest_id}
+GET /signal-digests/{digest_id}/items
+POST /signal-digests/daily
+POST /signal-digests/session
+```
+
+They use safe digest language such as bullish bias, bearish bias, no directional signal, setup
+quality, review recommended, watch condition, stale data, conflict, observed follow-through, and
+observed reversal. They do not send notifications or provide financial advice.
 ## Webhook Outbox
 
 Webhook outbox APIs persist sanitized integration payload records without sending HTTP requests:

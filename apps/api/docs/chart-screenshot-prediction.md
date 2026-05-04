@@ -279,7 +279,7 @@ The response persists:
   extraction warnings, and triggered analysis metadata when applicable.
 
 The hypothesis is an evidence artifact for the backend and must not be presented as financial
-advice or a guaranteed prediction.
+advice or a certain prediction.
 
 ## Analysis Triggering
 

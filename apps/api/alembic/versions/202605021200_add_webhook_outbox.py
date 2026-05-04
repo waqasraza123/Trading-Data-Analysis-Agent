@@ -1,6 +1,6 @@
 """add webhook outbox
 
-Revision ID: 202605021200
+Revision ID: 202605021230_webhook_outbox
 Revises: 202604301900
 Create Date: 2026-05-02 12:00:00.000000
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "202605021200"
+revision: str = "202605021230_webhook_outbox"
 down_revision: str | Sequence[str] | None = "202604301900"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

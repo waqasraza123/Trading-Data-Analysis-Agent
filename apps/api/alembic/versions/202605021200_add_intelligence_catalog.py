@@ -1,6 +1,6 @@
 """add intelligence catalog
 
-Revision ID: 202605021200
+Revision ID: 202605021210_intelligence_catalog
 Revises: f9eb9423c4a2
 Create Date: 2026-05-02 12:00:00.000000
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "202605021200"
+revision: str = "202605021210_intelligence_catalog"
 down_revision: str | tuple[str, str] | None = "f9eb9423c4a2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

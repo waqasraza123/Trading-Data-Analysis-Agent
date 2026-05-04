@@ -40,7 +40,7 @@ This does not add broker execution, auto-trading, copy trading, alerts, notifica
 
 ## Language Safety
 
-Unsafe direct phrases such as `buy now`, `sell now`, `guaranteed profit`, `risk-free`, and `cannot lose` are blocked.
+Unsafe direct order instructions, certainty claims, and impossible-risk claims are blocked.
 
 Causation phrases such as `definitely caused`, `confirmed cause`, and `caused the move` are flagged for review. Neutral market-language terms such as bullish pressure or bearish behavior are not blocked by default.
 

@@ -8,6 +8,7 @@ from app.modules.data_sources.models import DataSource
 from app.modules.data_sources.repository import DataSourceRepository
 from app.modules.data_sources.seeds import default_data_sources
 from app.modules.engine_versions.service import EngineVersionService
+from app.modules.scanner_presets.service import ScannerPresetService
 from app.modules.strategy_profiles.service import StrategyProfileService
 from app.modules.symbols.models import Symbol
 from app.modules.symbols.repository import SymbolRepository
@@ -26,6 +27,7 @@ class SeedResult:
     data_source_count: int
     strategy_profile_count: int
     engine_version_count: int
+    scanner_preset_count: int
 
 
 class SeedService:
@@ -37,6 +39,7 @@ class SeedService:
         self.data_source_repository = DataSourceRepository(session)
         self.strategy_profile_service = StrategyProfileService(session)
         self.engine_version_service = EngineVersionService(session)
+        self.scanner_preset_service = ScannerPresetService(session)
 
     async def seed(self, settings: Settings) -> SeedResult:
         workspace = await self.seed_workspace(settings.seed_default_workspace_name)
@@ -45,6 +48,7 @@ class SeedService:
         data_sources = await self.seed_data_sources(workspace)
         strategy_profiles = await self.strategy_profile_service.seed_default_profiles()
         engine_versions = await self.engine_version_service.seed_current_versions()
+        scanner_presets = await self.scanner_preset_service.seed_default_presets(commit=False)
         await self.session.commit()
         return SeedResult(
             workspace_id=workspace.id if workspace is not None else None,
@@ -53,6 +57,7 @@ class SeedService:
             data_source_count=len(data_sources),
             strategy_profile_count=len(strategy_profiles),
             engine_version_count=len(engine_versions),
+            scanner_preset_count=len(scanner_presets),
         )
 
     async def seed_workspace(self, workspace_name: str | None) -> Workspace | None:

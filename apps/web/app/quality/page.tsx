@@ -1,0 +1,45 @@
+import { AppShell } from "@/components/layout/app-shell";
+import { CohortDriftPanel } from "@/components/quality/CohortDriftPanel";
+import { ConfidenceCalibrationPanel } from "@/components/quality/ConfidenceCalibrationPanel";
+import { PatternAttributionPanel } from "@/components/quality/PatternAttributionPanel";
+import { ProfileReliabilityTable } from "@/components/quality/ProfileReliabilityTable";
+import { QualityEmptyState } from "@/components/quality/QualityEmptyState";
+import { QualityErrorState } from "@/components/quality/QualityErrorState";
+import { QualityScoreboardHeader } from "@/components/quality/QualityScoreboardHeader";
+import { QualitySummaryCards } from "@/components/quality/QualitySummaryCards";
+import { QualityWarningsPanel } from "@/components/quality/QualityWarningsPanel";
+import { SymbolTimeframeQualityGrid } from "@/components/quality/SymbolTimeframeQualityGrid";
+import { WalkForwardPanel } from "@/components/quality/WalkForwardPanel";
+import { getQualityScoreboardData } from "@/lib/api/quality";
+
+type QualityPageProps = {
+  searchParams: Promise<Record<string, string | undefined>>;
+};
+
+export default async function QualityPage({ searchParams }: QualityPageProps) {
+  const params = await searchParams;
+  const data = await getQualityScoreboardData(params);
+
+  return (
+    <AppShell appName={data.appName}>
+      <div className="space-y-6">
+        <QualityScoreboardHeader data={data} />
+        <QualityErrorState failures={data.failures} />
+        {!data.workspace || !data.hasAnyQualityData ? (
+          <QualityEmptyState />
+        ) : (
+          <>
+            <QualitySummaryCards data={data} />
+            <QualityWarningsPanel data={data} />
+            <ProfileReliabilityTable data={data} />
+            <PatternAttributionPanel data={data} />
+            <ConfidenceCalibrationPanel data={data} />
+            <WalkForwardPanel data={data} />
+            <CohortDriftPanel data={data} />
+            <SymbolTimeframeQualityGrid data={data} />
+          </>
+        )}
+      </div>
+    </AppShell>
+  );
+}

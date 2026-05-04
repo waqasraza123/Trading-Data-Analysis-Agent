@@ -2,7 +2,7 @@
 
 Signal outcome evaluation adds a historical behavior loop after deterministic signal classification. It answers what happened in final candle data after a persisted signal without changing the signal, overriding the deterministic classifier, or producing broker execution output.
 
-This is not broker PnL, a profit calculator, financial advice, or automatic trading. The API uses outcome language: continuation, follow-through, reversal, favorable movement, adverse movement, and observed historical behavior.
+This is not broker accounting, an account-return calculator, financial advice, or automatic trading. The API uses outcome language: continuation, follow-through, reversal, favorable movement, adverse movement, and observed historical behavior.
 
 ## Evaluation Flow
 
@@ -101,7 +101,7 @@ Stored outcomes can be aggregated on demand by pattern, strategy profile, or sym
 - average favorable, adverse, and net movement
 - average pip/tick movement where symbol metadata supports it
 
-The aggregation layer intentionally avoids profit, PnL, and guarantee language.
+The aggregation layer intentionally avoids broker-accounting, account-return, and certainty language.
 
 ## Verification
 

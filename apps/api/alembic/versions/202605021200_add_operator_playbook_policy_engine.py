@@ -1,7 +1,7 @@
 """add operator playbook policy engine
 
-Revision ID: 202605021200
-Revises: 202605021100
+Revision ID: 202605021220_operator_playbook_policy_engine
+Revises: 202605021100_decision_readiness_assessments, 202605021110_strategy_profile_simulations
 Create Date: 2026-05-02 12:00:00.000000
 """
 
@@ -11,8 +11,11 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "202605021200"
-down_revision: str | Sequence[str] | None = "202605021100"
+revision: str = "202605021220_operator_playbook_policy_engine"
+down_revision: str | Sequence[str] | None = (
+    "202605021100_decision_readiness_assessments",
+    "202605021110_strategy_profile_simulations",
+)
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

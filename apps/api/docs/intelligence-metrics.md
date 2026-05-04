@@ -4,8 +4,8 @@ The intelligence metrics registry exposes internal backend counters for operatio
 intelligence. These metrics describe artifact production, safety states, review queues, quality
 signals, and backend work health.
 
-They are not trading metrics. They do not claim strategy performance, broker profit and loss,
-investment quality, win rate, expected return, or financial advice.
+They are not trading metrics. They do not claim strategy performance, broker account returns,
+investment quality, expected account return, outcome-ratio claims, or financial advice.
 
 ## Purpose
 

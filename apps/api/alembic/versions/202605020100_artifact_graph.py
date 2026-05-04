@@ -1,6 +1,6 @@
 """add intelligence artifact graph
 
-Revision ID: 202605020100
+Revision ID: 202605020120_artifact_graph
 Revises: f9eb9423c4a2
 Create Date: 2026-05-02 01:00:00.000000
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "202605020100"
+revision: str = "202605020120_artifact_graph"
 down_revision: str | tuple[str, str] | None = "f9eb9423c4a2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

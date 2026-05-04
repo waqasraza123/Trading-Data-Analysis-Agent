@@ -69,6 +69,9 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    scenario_outcome_evaluation_version: str = "v1"
+    scenario_outcome_default_horizon_minutes: int = Field(default=30, gt=0)
+    scenario_outcome_support_threshold: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
     explanation_comparison_version: str = "v1"
     explanation_comparison_alignment_threshold: Decimal = Field(
         default=Decimal("0.7500"),
@@ -89,7 +92,16 @@ class Settings(BaseSettings):
     walk_forward_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     walk_forward_degradation_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     walk_forward_improvement_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    cohort_drift_version: str = "v1"
+    cohort_drift_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    cohort_drift_mild_threshold: Decimal = Field(default=Decimal("0.10"), ge=0, le=1)
+    cohort_drift_moderate_threshold: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    cohort_drift_severe_threshold: Decimal = Field(default=Decimal("0.35"), ge=0, le=1)
+    cohort_drift_default_baseline_days: int = Field(default=90, ge=1, le=3660)
+    cohort_drift_default_comparison_days: int = Field(default=30, ge=1, le=3660)
     capability_registry_default_version: str = "v1"
+    synthetic_fixtures_api_enabled: bool = False
+    synthetic_fixtures_default_seed: int = Field(default=12345, ge=0)
     ai_intelligence_enabled: bool = False
     ai_intelligence_max_output_tokens: int = Field(default=700, ge=1)
     market_session_version: str = "v1"
@@ -157,19 +169,6 @@ class Settings(BaseSettings):
     event_study_min_candles: int = Field(default=5, ge=1)
     event_study_strong_reaction_multiplier: Decimal = Field(default=Decimal("2.0"), gt=0)
     event_study_moderate_reaction_multiplier: Decimal = Field(default=Decimal("1.25"), gt=0)
-    confidence_calibration_version: str = "v1"
-    confidence_calibration_default_bins: int = Field(default=10, ge=2, le=100)
-    confidence_calibration_minimum_sample_size: int = Field(default=20, ge=1)
-    confidence_calibration_overconfident_threshold: Decimal = Field(
-        default=Decimal("0.15"),
-        ge=0,
-        le=1,
-    )
-    confidence_calibration_underconfident_threshold: Decimal = Field(
-        default=Decimal("0.15"),
-        ge=0,
-        le=1,
-    )
     webhook_outbox_payload_version: str = "v1"
     webhook_outbox_default_status: str = "held"
     webhook_outbox_max_payload_bytes: int = Field(default=32768, ge=1024)
@@ -203,34 +202,22 @@ class Settings(BaseSettings):
     provider_polling_max_candles_per_request: int = Field(default=1000, ge=1, le=5000)
     provider_polling_user_agent: str = "trading-intelligence-api-provider-polling/0.1"
     binance_public_rest_base_url: str = "https://api.binance.com"
+    provider_health_version: str = "v1"
+    provider_health_fresh_seconds_1m: int = Field(default=180, ge=1)
+    provider_health_fresh_seconds_5m: int = Field(default=600, ge=1)
+    provider_health_fresh_seconds_15m: int = Field(default=1800, ge=1)
+    provider_health_fresh_seconds_1h: int = Field(default=7200, ge=1)
+    provider_health_max_failures_degraded: int = Field(default=2, ge=1)
+    provider_health_max_failures_failing: int = Field(default=5, ge=1)
     candle_gap_recovery_version: str = "v1"
     candle_gap_recovery_max_gaps: int = Field(default=500, ge=1, le=10000)
     candle_gap_recovery_max_range_days: int = Field(default=30, ge=1, le=366)
-    data_quality_version: str = "v1"
-    data_quality_strong_threshold: Decimal = Field(default=Decimal("0.95"), ge=0, le=1)
-    data_quality_acceptable_threshold: Decimal = Field(default=Decimal("0.85"), ge=0, le=1)
-    data_quality_degraded_threshold: Decimal = Field(default=Decimal("0.70"), ge=0, le=1)
-    data_quality_outlier_range_multiplier: Decimal = Field(default=Decimal("4.0"), gt=0)
-    data_quality_stale_live_seconds: int = Field(default=300, ge=1)
     news_correlation_pre_event_minutes: int = Field(default=5, ge=0, le=1440)
     news_correlation_post_event_minutes: int = Field(default=30, ge=1, le=1440)
     news_correlation_max_events_per_signal: int = Field(default=10, ge=1, le=100)
-    event_study_version: str = "v1"
-    event_study_default_pre_event_minutes: int = Field(default=30, ge=0, le=10080)
-    event_study_default_post_event_minutes: int = Field(default=60, ge=1, le=10080)
-    event_study_min_candles: int = Field(default=5, ge=1, le=10000)
-    event_study_strong_reaction_multiplier: Decimal = Field(default=Decimal("2.0"), gt=0)
-    event_study_moderate_reaction_multiplier: Decimal = Field(default=Decimal("1.25"), gt=0)
     outcome_default_horizons_minutes: list[int] = Field(default_factory=lambda: [5, 15, 30, 60])
     outcome_min_future_candles: int = Field(default=3, ge=1, le=500)
     outcome_evaluation_version: str = "v1"
-    rule_pack_default_key: str = "core_deterministic"
-    rule_pack_default_version: str = "v1"
-    reproducibility_manifest_version: str = "v1"
-    market_regime_version: str = "v1"
-    market_regime_min_confidence: Decimal = Field(default=Decimal("0.50"), ge=0, le=1)
-    market_regime_strong_data_quality: Decimal = Field(default=Decimal("0.90"), ge=0, le=1)
-    market_regime_acceptable_data_quality: Decimal = Field(default=Decimal("0.75"), ge=0, le=1)
     profile_diagnostics_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     profile_diagnostics_strong_follow_through_rate: Decimal = Field(
         default=Decimal("0.65"),
@@ -248,6 +235,18 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    pattern_attribution_version: str = "v1"
+    pattern_attribution_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
+    pattern_attribution_high_rejection_rate: Decimal = Field(
+        default=Decimal("0.50"),
+        ge=0,
+        le=1,
+    )
+    pattern_attribution_high_reversal_rate: Decimal = Field(
+        default=Decimal("0.35"),
+        ge=0,
+        le=1,
+    )
     profile_governance_default_review_required: bool = True
     profile_governance_component_weight_tolerance: Decimal = Field(
         default=Decimal("0.0001"),
@@ -258,19 +257,15 @@ class Settings(BaseSettings):
     confidence_calibration_default_bins: str = "0-0.39,0.40-0.64,0.65-0.79,0.80-1.0"
     confidence_calibration_minimum_sample_size: int = Field(default=20, ge=1, le=10000)
     confidence_calibration_overconfident_threshold: Decimal = Field(
-        default=Decimal("0.25"),
+        default=Decimal("0.15"),
         ge=0,
         le=1,
     )
     confidence_calibration_underconfident_threshold: Decimal = Field(
-        default=Decimal("0.25"),
+        default=Decimal("0.15"),
         ge=0,
         le=1,
     )
-    historical_case_vector_version: str = "v1"
-    historical_case_default_limit: int = Field(default=20, ge=1, le=1000)
-    historical_case_max_limit: int = Field(default=100, ge=1, le=1000)
-    historical_case_min_score: Decimal = Field(default=Decimal("0.40"), ge=0, le=1)
     timeframe_aggregation_version: str = "v1"
     timeframe_aggregation_min_completeness: Decimal = Field(default=Decimal("1.0"), ge=0, le=1)
     timeframe_aggregation_allowed_targets: list[str] = Field(
@@ -283,6 +278,48 @@ class Settings(BaseSettings):
     cross_asset_lead_lag_max_offset: int = Field(default=5, ge=0, le=100)
     cross_asset_alignment_threshold: Decimal = Field(default=Decimal("0.60"), ge=0, le=1)
     cross_asset_divergence_threshold: Decimal = Field(default=Decimal("0.60"), ge=0, le=1)
+    market_memory_state_version: str = "v1"
+    market_memory_fresh_seconds_1m: int = Field(default=180, ge=1)
+    market_memory_fresh_seconds_5m: int = Field(default=600, ge=1)
+    market_memory_fresh_seconds_15m: int = Field(default=1800, ge=1)
+    market_memory_fresh_seconds_1h: int = Field(default=7200, ge=1)
+    market_memory_max_context_warnings: int = Field(default=50, ge=1, le=500)
+    setup_context_version: str = "v1"
+    setup_context_strong_threshold: Decimal = Field(default=Decimal("0.7500"), ge=0, le=1)
+    setup_context_acceptable_threshold: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
+    setup_context_review_threshold: Decimal = Field(default=Decimal("0.4500"), ge=0, le=1)
+    signal_digest_version: str = "v1"
+    signal_digest_default_timezone: str = "UTC"
+    signal_digest_max_items: int = Field(default=100, ge=1, le=500)
+    signal_digest_high_confidence_threshold: Decimal = Field(
+        default=Decimal("0.70"),
+        ge=0,
+        le=1,
+    )
+    signal_digest_stale_data_priority: str = "high"
+    daily_brief_version: str = "v1"
+    daily_brief_default_timezone: str = "UTC"
+    daily_brief_max_items: int = Field(default=150, ge=1, le=500)
+    daily_brief_review_first_limit: int = Field(default=20, ge=1, le=100)
+    daily_brief_outcome_update_limit: int = Field(default=20, ge=1, le=100)
+    daily_brief_action_item_limit: int = Field(default=30, ge=1, le=100)
+    signal_priority_version: str = "v1"
+    signal_priority_high_threshold: Decimal = Field(default=Decimal("0.75"), ge=0, le=1)
+    signal_priority_medium_threshold: Decimal = Field(default=Decimal("0.55"), ge=0, le=1)
+    signal_priority_stale_penalty: Decimal = Field(default=Decimal("0.30"), ge=0, le=1)
+    signal_priority_conflict_penalty: Decimal = Field(default=Decimal("0.25"), ge=0, le=1)
+    signal_priority_review_required_threshold: Decimal = Field(
+        default=Decimal("0.50"),
+        ge=0,
+        le=1,
+    )
+    daily_workflow_version: str = "v1"
+    daily_workflow_max_symbols: int = Field(default=100, ge=1, le=1000)
+    daily_workflow_max_scan_items: int = Field(default=500, ge=1, le=5000)
+    daily_workflow_enable_provider_polling: bool = False
+    daily_workflow_enable_notifications: bool = False
+    preference_profile_default_max_stale_seconds: int = Field(default=7200, ge=1)
+    journal_review_version: str = "v1"
     artifact_graph_version: str = "v1"
     artifact_graph_max_traversal_depth: int = Field(default=8, ge=1, le=64)
     artifact_graph_max_paths: int = Field(default=500, ge=1, le=5000)
@@ -299,11 +336,18 @@ class Settings(BaseSettings):
     notification_worker_lock_seconds: int = Field(default=120, ge=1)
     notification_worker_max_attempts: int = Field(default=3, ge=1, le=100)
     notification_worker_jitter_seconds: float = Field(default=2, ge=0)
+    notifications_enabled: bool = False
+    notification_delivery_timeout_seconds: int = Field(default=10, ge=1, le=120)
+    notification_max_payload_bytes: int = Field(default=16000, ge=1024, le=262144)
+    notification_dedupe_window_seconds: int = Field(default=3600, ge=0, le=2_592_000)
+    notification_default_quiet_hours_timezone: str = "UTC"
+    notification_webhook_user_agent: str = "trading-intelligence-notifications/0.1"
     market_scan_worker_enabled: bool = False
     market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
     market_scan_default_lookback_minutes: int = Field(default=60, ge=1, le=43200)
     market_scan_default_interval_seconds: int = Field(default=60, ge=1)
+    scanner_preset_version: str = "v1"
     worker_supervisor_components: list[WorkerSupervisorComponent] = Field(default_factory=list)
     worker_supervisor_shutdown_timeout_seconds: float = Field(default=20, gt=0)
     profile_simulation_max_signals: int = Field(default=500, ge=1, le=5000)
@@ -318,8 +362,6 @@ class Settings(BaseSettings):
     intelligence_dataset_default_limit: int = Field(default=500, ge=1, le=5000)
     intelligence_dataset_max_limit: int = Field(default=5000, ge=1, le=50000)
     intelligence_dataset_max_text_length: int = Field(default=2000, ge=100, le=20000)
-    market_session_version: str = "v1"
-    market_session_default_timezone: str = "UTC"
     operator_playbook_version: str = "v1"
     operator_playbook_seed_enabled: bool = True
     engine_execution_default_max_attempts: int = Field(default=3, ge=1, le=100)
@@ -483,9 +525,20 @@ class Settings(BaseSettings):
         "historical_case_vector_version",
         "decision_readiness_assessment_version",
         "scenario_ensemble_version",
+        "scenario_outcome_evaluation_version",
         "backtest_experiment_version",
         "walk_forward_validation_version",
+        "cohort_drift_version",
         "capability_registry_default_version",
+        "market_memory_state_version",
+        "setup_context_version",
+        "signal_digest_version",
+        "daily_brief_version",
+        "signal_priority_version",
+        "daily_workflow_version",
+        "journal_review_version",
+        "provider_health_version",
+        "scanner_preset_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:
@@ -513,6 +566,57 @@ class Settings(BaseSettings):
         except ZoneInfoNotFoundError as error:
             msg = "MARKET_SESSION_DEFAULT_TIMEZONE must be a valid IANA timezone"
             raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("signal_digest_default_timezone")
+    @classmethod
+    def validate_signal_digest_default_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "SIGNAL_DIGEST_DEFAULT_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("daily_brief_default_timezone")
+    @classmethod
+    def validate_daily_brief_default_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "DAILY_BRIEF_DEFAULT_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("signal_digest_stale_data_priority")
+    @classmethod
+    def validate_signal_digest_stale_data_priority(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"low", "normal", "high", "urgent"}:
+            msg = "SIGNAL_DIGEST_STALE_DATA_PRIORITY must be low, normal, high, or urgent"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("notification_default_quiet_hours_timezone")
+    @classmethod
+    def validate_notification_default_quiet_hours_timezone(cls, value: str) -> str:
+        normalized_value = value.strip() or "UTC"
+        try:
+            ZoneInfo(normalized_value)
+        except ZoneInfoNotFoundError as error:
+            msg = "NOTIFICATION_DEFAULT_QUIET_HOURS_TIMEZONE must be a valid IANA timezone"
+            raise ValueError(msg) from error
+        return normalized_value
+
+    @field_validator("notification_webhook_user_agent")
+    @classmethod
+    def validate_notification_webhook_user_agent(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "NOTIFICATION_WEBHOOK_USER_AGENT must not be empty"
+            raise ValueError(msg)
         return normalized_value
 
     @field_validator("advanced_feature_pack_version")
@@ -590,7 +694,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_event_study_reaction_multipliers(self) -> Self:
-        if self.event_study_strong_reaction_multiplier < self.event_study_moderate_reaction_multiplier:
+        if (
+            self.event_study_strong_reaction_multiplier
+            < self.event_study_moderate_reaction_multiplier
+        ):
             msg = (
                 "EVENT_STUDY_STRONG_REACTION_MULTIPLIER must be greater than or equal to "
                 "EVENT_STUDY_MODERATE_REACTION_MULTIPLIER"
@@ -624,6 +731,7 @@ class Settings(BaseSettings):
         "timeframe_aggregation_version",
         "multi_timeframe_context_version",
         "cross_asset_context_version",
+        "pattern_attribution_version",
     )
     @classmethod
     def validate_timeframe_aggregation_versions(cls, value: str) -> str:
@@ -700,6 +808,17 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         return self
 
+    @model_validator(mode="after")
+    def validate_setup_context_thresholds(self) -> Self:
+        if not (
+            self.setup_context_strong_threshold
+            >= self.setup_context_acceptable_threshold
+            >= self.setup_context_review_threshold
+        ):
+            msg = "SETUP_CONTEXT thresholds must be ordered strong >= acceptable >= review"
+            raise ValueError(msg)
+        return self
+
     @field_validator("backfill_plan_version")
     @classmethod
     def validate_backfill_plan_version(cls, value: str) -> str:
@@ -749,8 +868,7 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if self.market_regime_strong_data_quality < self.market_regime_acceptable_data_quality:
             msg = (
-                "MARKET_REGIME_STRONG_DATA_QUALITY must be >= "
-                "MARKET_REGIME_ACCEPTABLE_DATA_QUALITY"
+                "MARKET_REGIME_STRONG_DATA_QUALITY must be >= MARKET_REGIME_ACCEPTABLE_DATA_QUALITY"
             )
             raise ValueError(msg)
         if self.historical_case_default_limit > self.historical_case_max_limit:
@@ -758,8 +876,7 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if self.decision_readiness_ready_threshold < self.decision_readiness_review_threshold:
             msg = (
-                "DECISION_READINESS_READY_THRESHOLD must be >= "
-                "DECISION_READINESS_REVIEW_THRESHOLD"
+                "DECISION_READINESS_READY_THRESHOLD must be >= DECISION_READINESS_REVIEW_THRESHOLD"
             )
             raise ValueError(msg)
         if self.app_env == AppEnvironment.PRODUCTION and not self.audit_timeline_redaction_enabled:

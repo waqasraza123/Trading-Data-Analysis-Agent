@@ -37,5 +37,5 @@ auto-backfill vectors unless the explicit historical-case API is called.
 ## Safety
 
 Similar cases are descriptive historical context. Public payloads should use terms like observed
-outcomes, historical follow-through, and similar cases. They must not imply profit, guarantees,
+outcomes, historical follow-through, and similar cases. They must not imply broker-accounting results, certainty,
 trade readiness, or financial advice.

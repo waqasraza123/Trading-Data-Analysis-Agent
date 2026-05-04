@@ -167,6 +167,7 @@ class SmokeService:
                     "dataSourceCount": second_seed.data_source_count,
                     "strategyProfileCount": second_seed.strategy_profile_count,
                     "engineVersionCount": second_seed.engine_version_count,
+                    "scannerPresetCount": second_seed.scanner_preset_count,
                 },
             ),
             analysis_check,

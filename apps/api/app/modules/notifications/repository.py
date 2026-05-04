@@ -6,6 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.time import utc_now
 from app.modules.notifications.models import (
+    BackendNotificationEventType,
+    NotificationChannelStatus,
+    NotificationDeliveryAttempt,
+    NotificationDeliveryChannel,
+    NotificationEvent,
+    NotificationEventStatus,
+    NotificationInboxStatus,
     NotificationMessage,
     NotificationPreference,
     NotificationStatus,
@@ -228,3 +235,153 @@ class NotificationRepository:
             statement = statement.where(NotificationMessage.workspace_id == workspace_id)
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
+
+    async def create_channel(
+        self,
+        channel: NotificationDeliveryChannel,
+    ) -> NotificationDeliveryChannel:
+        self.session.add(channel)
+        await self.session.flush()
+        await self.session.refresh(channel)
+        return channel
+
+    async def get_channel(self, channel_id: UUID) -> NotificationDeliveryChannel | None:
+        return await self.session.get(NotificationDeliveryChannel, channel_id)
+
+    async def list_channels(
+        self,
+        workspace_id: UUID,
+        status: NotificationChannelStatus | None = None,
+        channel_type: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[NotificationDeliveryChannel]:
+        statement: Select[tuple[NotificationDeliveryChannel]] = (
+            select(NotificationDeliveryChannel)
+            .where(NotificationDeliveryChannel.workspace_id == workspace_id)
+            .order_by(NotificationDeliveryChannel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        if status is not None:
+            statement = statement.where(NotificationDeliveryChannel.status == status.value)
+        if channel_type is not None:
+            statement = statement.where(NotificationDeliveryChannel.channel_type == channel_type)
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_active_channels_for_event(
+        self,
+        workspace_id: UUID,
+        event_type: BackendNotificationEventType,
+    ) -> list[NotificationDeliveryChannel]:
+        statement: Select[tuple[NotificationDeliveryChannel]] = (
+            select(NotificationDeliveryChannel)
+            .where(
+                NotificationDeliveryChannel.workspace_id == workspace_id,
+                NotificationDeliveryChannel.status == NotificationChannelStatus.ACTIVE.value,
+            )
+            .order_by(NotificationDeliveryChannel.created_at.asc())
+        )
+        result = await self.session.execute(statement)
+        channels = list(result.scalars().all())
+        return [
+            channel
+            for channel in channels
+            if not channel.event_types_json or event_type.value in channel.event_types_json
+        ]
+
+    async def update_channel(
+        self,
+        channel: NotificationDeliveryChannel,
+    ) -> NotificationDeliveryChannel:
+        await self.session.flush()
+        await self.session.refresh(channel)
+        return channel
+
+    async def create_event(self, event: NotificationEvent) -> NotificationEvent:
+        self.session.add(event)
+        await self.session.flush()
+        await self.session.refresh(event)
+        return event
+
+    async def get_event(self, event_id: UUID) -> NotificationEvent | None:
+        return await self.session.get(NotificationEvent, event_id)
+
+    async def get_recent_event_by_dedupe_key(
+        self,
+        workspace_id: UUID,
+        dedupe_key: str,
+        statuses: set[NotificationEventStatus],
+        since: datetime,
+    ) -> NotificationEvent | None:
+        statement: Select[tuple[NotificationEvent]] = (
+            select(NotificationEvent)
+            .where(
+                NotificationEvent.workspace_id == workspace_id,
+                NotificationEvent.dedupe_key == dedupe_key,
+                NotificationEvent.status.in_([status.value for status in statuses]),
+                NotificationEvent.created_at >= since,
+            )
+            .order_by(NotificationEvent.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
+    async def list_events(
+        self,
+        workspace_id: UUID,
+        event_type: BackendNotificationEventType | None = None,
+        status: NotificationEventStatus | None = None,
+        severity: str | None = None,
+        source_type: str | None = None,
+        inbox_status: NotificationInboxStatus | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[NotificationEvent]:
+        statement: Select[tuple[NotificationEvent]] = (
+            select(NotificationEvent)
+            .where(NotificationEvent.workspace_id == workspace_id)
+            .order_by(NotificationEvent.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        if event_type is not None:
+            statement = statement.where(NotificationEvent.event_type == event_type.value)
+        if status is not None:
+            statement = statement.where(NotificationEvent.status == status.value)
+        if severity is not None:
+            statement = statement.where(NotificationEvent.severity == severity)
+        if source_type is not None:
+            statement = statement.where(NotificationEvent.source_type == source_type)
+        if inbox_status is not None:
+            statement = statement.where(NotificationEvent.inbox_status == inbox_status.value)
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def update_event(self, event: NotificationEvent) -> NotificationEvent:
+        await self.session.flush()
+        await self.session.refresh(event)
+        return event
+
+    async def create_delivery_attempt(
+        self,
+        attempt: NotificationDeliveryAttempt,
+    ) -> NotificationDeliveryAttempt:
+        self.session.add(attempt)
+        await self.session.flush()
+        await self.session.refresh(attempt)
+        return attempt
+
+    async def list_delivery_attempts(
+        self,
+        event_id: UUID,
+    ) -> list[NotificationDeliveryAttempt]:
+        statement: Select[tuple[NotificationDeliveryAttempt]] = (
+            select(NotificationDeliveryAttempt)
+            .where(NotificationDeliveryAttempt.notification_event_id == event_id)
+            .order_by(NotificationDeliveryAttempt.attempted_at.desc())
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())

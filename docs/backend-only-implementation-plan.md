@@ -69,7 +69,7 @@ Auto-execution
 Copy trading
 Social trading
 Financial advice
-Guaranteed trade signals
+Certainty-based market signals
 ```
 
 The backend output should always be:
@@ -81,7 +81,7 @@ analysis, evidence, confidence, explanation
 Not:
 
 ```txt
-buy now, sell now, guaranteed profit
+direct order instructions, certainty claims, account-result promises
 ```
 
 ---
@@ -2084,7 +2084,7 @@ Volatility spike may indicate unstable conditions.
 Risk notes are generated deterministically
 Risk notes are stored
 High-risk signals include visible risk notes
-No signal is presented as guaranteed
+No signal is presented as certain
 ```
 
 ---
@@ -2119,7 +2119,7 @@ fallback for LLM failure
 ```txt
 Every signal gets deterministic explanation
 No financial advice wording
-No buy/sell command
+No direct order command
 No invented facts
 Template version is stored
 ```
@@ -2165,16 +2165,14 @@ Use cautious market-analysis language.
 
 ## Safety validator
 
-After LLM output, scan for banned language:
+After LLM output, scan for unsafe language categories:
 
 ```txt
-buy now
-sell now
-guaranteed
-risk-free profit
-must enter
-cannot lose
-use leverage
+direct order instructions
+certainty claims
+account-result promises
+required-action wording
+leverage prompts
 ```
 
 If unsafe, block and use deterministic explanation.
@@ -2594,7 +2592,7 @@ parsing, and automatic analysis-run triggering remain later work.
   - deterministic patterns
   - deterministic signals
   - deterministic explanation
-- Expose an explicit `trend_forecast_confidence` output only as a hypothesis, never as guaranteed advice.
+- Expose an explicit `trend_forecast_confidence` output only as a hypothesis, never as certainty-based advice.
 
 ## Required constraints
 
