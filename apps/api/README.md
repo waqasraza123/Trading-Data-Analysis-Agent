@@ -1,5 +1,13 @@
 # Trading Intelligence API
 
+Workspace RBAC route permissions are implemented under `/permissions` and
+`app.modules.permissions`. The layer defines static permission names,
+role-to-permission mappings for `admin`, `analyst`, and `user`, reusable FastAPI
+dependencies, and structured permission-failure audit logs. `AUTH_ENABLED=false`
+continues to allow local/test development; when `AUTH_ENABLED=true`, the existing
+admin API key remains the active mutating-route guard until a real identity
+provider is introduced. See `docs/permissions.md`.
+
 Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
 London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
 review workflows. Applying a preset creates watchlists and scheduled scan configs only; it does not
@@ -585,10 +593,6 @@ NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
 MARKET_SCAN_WORKER_ENABLED=false
 MARKET_SCAN_WORKER_POLL_SECONDS=30
-RUNTIME_SUPERVISOR_VERSION=v1
-RUNTIME_WORKER_STALE_SECONDS=120
-RUNTIME_WORKER_HEARTBEAT_ENABLED=true
-RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
 MARKET_SCAN_WORKER_BATCH_SIZE=10
 MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
 MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
@@ -602,6 +606,10 @@ CANDLE_GAP_RECOVERY_MAX_GAPS=500
 CANDLE_GAP_RECOVERY_MAX_RANGE_DAYS=30
 WORKER_SUPERVISOR_COMPONENTS=
 WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
+RUNTIME_SUPERVISOR_VERSION=v1
+RUNTIME_WORKER_STALE_SECONDS=120
+RUNTIME_WORKER_HEARTBEAT_ENABLED=true
+RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
 BACKFILL_PLAN_VERSION=v1
 BACKFILL_PLAN_DEFAULT_LIMIT=1000
 BACKFILL_PLAN_MAX_LIMIT=10000

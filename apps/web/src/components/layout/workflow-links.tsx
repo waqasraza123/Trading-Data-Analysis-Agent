@@ -39,13 +39,14 @@ export const primaryWorkflowTargets: WorkflowTarget[] = [
   "commandCenter",
   "readiness",
   "brief",
-  "scanner",
   "triage",
-  "quality",
+  "scanner",
   "notifications",
   "dataOnboarding",
-  "journal",
+  "quality",
   "preferences",
+  "review",
+  "journal",
 ];
 
 const linkClassName =
