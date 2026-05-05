@@ -377,7 +377,6 @@ credential reference and can trigger a backend-safe configuration test. The UI s
 raw secrets; operators must configure `secret_ref` values server-side or through a future secure
 secret-manager flow.
 
-
 ## Watchlist Scanner Controls
 
 The scanner page controls existing backend scan endpoints:
