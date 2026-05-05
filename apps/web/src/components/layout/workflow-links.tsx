@@ -36,14 +36,13 @@ export const workflowTargets: Record<WorkflowTarget, { href: string; label: stri
 export const primaryWorkflowTargets: WorkflowTarget[] = [
   "commandCenter",
   "brief",
-  "triage",
   "scanner",
+  "triage",
+  "quality",
   "notifications",
   "dataOnboarding",
-  "quality",
-  "preferences",
-  "review",
   "journal",
+  "preferences",
 ];
 
 const linkClassName =
