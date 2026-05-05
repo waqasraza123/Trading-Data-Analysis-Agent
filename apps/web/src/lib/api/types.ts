@@ -247,6 +247,77 @@ export type SignalPriorityScore = {
   updated_at: string;
 };
 
+export type DashboardSymbolReadModel = {
+  id: UUID;
+  workspace_id: UUID;
+  symbol_id: UUID;
+  source_id: UUID | null;
+  timeframe: string;
+  read_model_version: string;
+  latest_final_candle_time: string | null;
+  freshness_label: string | null;
+  data_quality_label: string | null;
+  latest_signal_id: UUID | null;
+  latest_bias: string | null;
+  latest_pattern_type: string | null;
+  latest_confidence_label: string | null;
+  latest_priority_score: string | null;
+  latest_priority_label: string | null;
+  setup_quality_label: string | null;
+  market_regime_label: string | null;
+  market_session_label: string | null;
+  pending_action_count: number;
+  warning_count: number;
+  summary_json: JsonRecord;
+  updated_at: string;
+  created_at: string;
+};
+
+export type SignalCardReadModel = {
+  id: UUID;
+  workspace_id: UUID;
+  signal_id: UUID;
+  analysis_run_id: UUID;
+  symbol_id: UUID;
+  timeframe: string;
+  read_model_version: string;
+  classification_status: string;
+  bias: string;
+  pattern_type: string | null;
+  confidence_score: string | null;
+  confidence_label: string | null;
+  priority_score: string | null;
+  priority_label: string | null;
+  review_bucket: string | null;
+  setup_quality_label: string | null;
+  freshness_label: string | null;
+  data_quality_label: string | null;
+  readiness_label: string | null;
+  outcome_summary_json: JsonRecord;
+  evidence_summary_json: JsonRecord;
+  risk_summary_json: JsonRecord;
+  action_summary_json: JsonRecord;
+  warning_summary_json: JsonRecord;
+  searchable_text: string;
+  updated_at: string;
+  created_at: string;
+};
+
+export type CommandCenterReadModel = {
+  id: UUID;
+  workspace_id: UUID;
+  read_model_version: string;
+  period_start: string | null;
+  period_end: string | null;
+  status: string;
+  summary_json: JsonRecord;
+  sections_json: JsonRecord;
+  warning_count: number;
+  generated_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SignalOutcome = {
   id: UUID;
   workspace_id: UUID;

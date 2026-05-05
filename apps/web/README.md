@@ -43,6 +43,9 @@ The client composes data from optional backend APIs:
 - `POST /scanner-presets/{preset_id}/apply`
 - `GET /scanner-presets/applications/{application_id}`
 - `GET /market-memory/snapshots`
+- `GET /read-models/symbols`
+- `GET /read-models/signals`
+- `GET /read-models/command-center`
 - `GET /scheduled-scan-configs`
 - `GET /scheduled-scan-configs/due`
 - `POST /scheduled-scan-configs`
@@ -137,6 +140,8 @@ The client composes data from optional backend APIs:
 - `POST /candle-gap-recovery/plans/{plan_id}/prepare-provider-polling`
 
 Missing optional endpoints render empty states or backend-state warnings instead of crashing the page.
+Read model endpoints are preferred where available for triage cards, dashboard symbol state, symbol
+detail state, and command center summaries; the existing composed endpoint flow remains the fallback.
 
 ## Environment
 
@@ -187,10 +192,10 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 
 ## Routes
 
-- `/dashboard` renders the daily operator cockpit.
-- `/command-center` renders the Daily Trading Command Center start page over existing read-only backend artifacts.
+- `/dashboard` renders the daily operator cockpit, preferring dashboard symbol read models for current symbol state.
+- `/command-center` renders the Daily Trading Command Center start page over existing read-only backend artifacts and command center read models when available.
 - `/scanner` renders watchlist scanner controls for backend deterministic scan orchestration.
-- `/triage` renders the read-only signal triage board over deterministic signal artifacts.
+- `/triage` renders the read-only signal triage board, preferring signal card read models and falling back to deterministic signal artifact composition.
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
 - `/quality` renders the read-only signal quality scoreboard over stored diagnostics, observed behavior, calibration, validation, drift, attribution, and backtest cohorts.
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
@@ -198,7 +203,7 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/brief` renders the workspace daily brief, preferring the backend daily brief endpoint and falling back to web client composition from existing optional backend endpoints.
 - `/signals/[signalId]` renders a full read-only setup detail view, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
-- `/symbols/[symbolId]` renders symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs.
+- `/symbols/[symbolId]` renders symbol/timeframe state, preferring dashboard symbol read models and falling back to market memory, recent signals, outcomes, scheduled scans, and analysis runs.
 
 ## Daily Workflow Loop
 

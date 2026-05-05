@@ -57,6 +57,7 @@ from app.modules.operator_playbooks.routes import router as operator_playbooks_r
 from app.modules.operator_reviews.routes import router as operator_reviews_router
 from app.modules.outcomes.routes import router as outcomes_router
 from app.modules.pattern_attribution.routes import router as pattern_attribution_router
+from app.modules.permissions.routes import router as permissions_router
 from app.modules.preference_profiles.routes import router as preference_profiles_router
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
 from app.modules.profile_governance.routes import router as profile_governance_router
@@ -135,6 +136,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         data_sources_router,
         daily_workflows_router,
         daily_briefs_router,
+        permissions_router,
         capabilities_router,
         engine_versions_router,
         imports_router,

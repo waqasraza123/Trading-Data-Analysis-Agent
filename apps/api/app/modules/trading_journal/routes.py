@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.trading_journal.models import JournalDecisionType, JournalEntryStatus
 from app.modules.trading_journal.schemas import (
     JournalEntryAttachmentCreateRequest,
@@ -26,7 +28,12 @@ def get_trading_journal_service(
     return TradingJournalService(session)
 
 
-@router.post("", response_model=JournalEntryRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=JournalEntryRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.JOURNAL_WRITE))],
+)
 async def create_journal_entry(
     payload: JournalEntryCreateRequest,
     service: Annotated[TradingJournalService, Depends(get_trading_journal_service)],
@@ -69,7 +76,11 @@ async def get_journal_entry(
     return await service.get_journal_entry(entry_id)
 
 
-@router.patch("/{entry_id}", response_model=JournalEntryRead)
+@router.patch(
+    "/{entry_id}",
+    response_model=JournalEntryRead,
+    dependencies=[Depends(require_permission(Permission.JOURNAL_WRITE))],
+)
 async def update_journal_entry(
     entry_id: UUID,
     payload: JournalEntryUpdateRequest,
@@ -78,7 +89,11 @@ async def update_journal_entry(
     return await service.update_journal_entry(entry_id, payload)
 
 
-@router.post("/{entry_id}/archive", response_model=JournalEntryRead)
+@router.post(
+    "/{entry_id}/archive",
+    response_model=JournalEntryRead,
+    dependencies=[Depends(require_permission(Permission.JOURNAL_WRITE))],
+)
 async def archive_journal_entry(
     entry_id: UUID,
     service: Annotated[TradingJournalService, Depends(get_trading_journal_service)],
@@ -90,6 +105,7 @@ async def archive_journal_entry(
     "/{entry_id}/attachments",
     response_model=JournalEntryAttachmentRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.JOURNAL_WRITE))],
 )
 async def attach_journal_reference(
     entry_id: UUID,
@@ -103,6 +119,7 @@ async def attach_journal_reference(
     "/{entry_id}/review",
     response_model=JournalEntryReviewRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.JOURNAL_WRITE))],
 )
 async def review_journal_entry(
     entry_id: UUID,

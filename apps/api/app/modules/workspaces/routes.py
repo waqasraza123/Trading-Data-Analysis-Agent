@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.workspaces.schemas import WorkspaceCreate, WorkspaceRead, WorkspaceUpdate
 from app.modules.workspaces.service import WorkspaceService
 
@@ -18,7 +20,12 @@ def get_workspace_service(
     return WorkspaceService(session)
 
 
-@router.post("", response_model=WorkspaceRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=WorkspaceRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_ADMIN))],
+)
 async def create_workspace(
     payload: WorkspaceCreate,
     service: Annotated[WorkspaceService, Depends(get_workspace_service)],
@@ -50,7 +57,11 @@ async def get_workspace(
     return WorkspaceRead.model_validate(workspace)
 
 
-@router.patch("/{workspace_id}", response_model=WorkspaceRead)
+@router.patch(
+    "/{workspace_id}",
+    response_model=WorkspaceRead,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_WRITE))],
+)
 async def update_workspace(
     workspace_id: UUID,
     payload: WorkspaceUpdate,

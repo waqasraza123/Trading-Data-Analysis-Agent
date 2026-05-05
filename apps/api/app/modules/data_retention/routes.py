@@ -16,6 +16,8 @@ from app.modules.data_retention.schemas import (
     DataRetentionRunRead,
 )
 from app.modules.data_retention.service import DataRetentionService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/data-retention", tags=["data-retention"])
 
@@ -30,6 +32,7 @@ def get_data_retention_service(
     "/policies",
     response_model=DataRetentionPolicyRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.DATA_RETENTION_ADMIN))],
 )
 async def create_policy(
     payload: DataRetentionPolicyCreate,
@@ -43,7 +46,10 @@ async def create_policy(
 async def list_policies(
     service: Annotated[DataRetentionService, Depends(get_data_retention_service)],
     workspace_id: UUID,
-    policy_status: DataRetentionPolicyStatus | None = Query(default=None, alias="status"),
+    policy_status: Annotated[
+        DataRetentionPolicyStatus | None,
+        Query(alias="status"),
+    ] = None,
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[DataRetentionPolicyRead]:
@@ -66,7 +72,11 @@ async def get_policy(
     return DataRetentionPolicyRead.model_validate(policy)
 
 
-@router.patch("/policies/{policy_id}", response_model=DataRetentionPolicyRead)
+@router.patch(
+    "/policies/{policy_id}",
+    response_model=DataRetentionPolicyRead,
+    dependencies=[Depends(require_permission(Permission.DATA_RETENTION_ADMIN))],
+)
 async def update_policy(
     policy_id: UUID,
     payload: DataRetentionPolicyUpdate,
@@ -76,7 +86,12 @@ async def update_policy(
     return DataRetentionPolicyRead.model_validate(policy)
 
 
-@router.post("/runs/dry-run", response_model=DataRetentionRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/runs/dry-run",
+    response_model=DataRetentionRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.DATA_RETENTION_ADMIN))],
+)
 async def create_dry_run(
     payload: DataRetentionRunFilters,
     service: Annotated[DataRetentionService, Depends(get_data_retention_service)],
@@ -85,7 +100,11 @@ async def create_dry_run(
     return DataRetentionRunRead.model_validate(run)
 
 
-@router.post("/runs/{run_id}/apply", response_model=DataRetentionRunRead)
+@router.post(
+    "/runs/{run_id}/apply",
+    response_model=DataRetentionRunRead,
+    dependencies=[Depends(require_permission(Permission.DATA_RETENTION_ADMIN))],
+)
 async def apply_run(
     run_id: UUID,
     service: Annotated[DataRetentionService, Depends(get_data_retention_service)],

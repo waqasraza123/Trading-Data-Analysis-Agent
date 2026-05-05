@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.preference_profiles.models import PreferenceProfileStatus
 from app.modules.preference_profiles.schemas import (
     PreferenceProfileCreate,
@@ -25,7 +27,12 @@ def get_preference_profile_service(
     return PreferenceProfileService(session)
 
 
-@router.post("", response_model=PreferenceProfileRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=PreferenceProfileRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.PREFERENCES_WRITE))],
+)
 async def create_preference_profile(
     payload: PreferenceProfileCreate,
     service: Annotated[PreferenceProfileService, Depends(get_preference_profile_service)],
@@ -75,7 +82,11 @@ async def get_preference_profile(
     return PreferenceProfileRead.model_validate(profile)
 
 
-@router.patch("/{profile_id}", response_model=PreferenceProfileRead)
+@router.patch(
+    "/{profile_id}",
+    response_model=PreferenceProfileRead,
+    dependencies=[Depends(require_permission(Permission.PREFERENCES_WRITE))],
+)
 async def update_preference_profile(
     profile_id: UUID,
     payload: PreferenceProfileUpdate,
@@ -85,7 +96,11 @@ async def update_preference_profile(
     return PreferenceProfileRead.model_validate(profile)
 
 
-@router.post("/{profile_id}/archive", response_model=PreferenceProfileRead)
+@router.post(
+    "/{profile_id}/archive",
+    response_model=PreferenceProfileRead,
+    dependencies=[Depends(require_permission(Permission.PREFERENCES_WRITE))],
+)
 async def archive_preference_profile(
     profile_id: UUID,
     service: Annotated[PreferenceProfileService, Depends(get_preference_profile_service)],
@@ -94,7 +109,11 @@ async def archive_preference_profile(
     return PreferenceProfileRead.model_validate(profile)
 
 
-@router.post("/{profile_id}/set-default", response_model=PreferenceProfileRead)
+@router.post(
+    "/{profile_id}/set-default",
+    response_model=PreferenceProfileRead,
+    dependencies=[Depends(require_permission(Permission.PREFERENCES_WRITE))],
+)
 async def set_default_preference_profile(
     profile_id: UUID,
     service: Annotated[PreferenceProfileService, Depends(get_preference_profile_service)],
@@ -111,7 +130,11 @@ async def get_preference_profile_filter_context(
     return await service.build_filter_context(profile_id)
 
 
-@router.post("/{profile_id}/match-signal/{signal_id}", response_model=PreferenceProfileMatchRead)
+@router.post(
+    "/{profile_id}/match-signal/{signal_id}",
+    response_model=PreferenceProfileMatchRead,
+    dependencies=[Depends(require_permission(Permission.PREFERENCES_WRITE))],
+)
 async def match_preference_profile_signal(
     profile_id: UUID,
     signal_id: UUID,

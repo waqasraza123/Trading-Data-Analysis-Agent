@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
 from app.modules.candles.timeframes import Timeframe
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.provider_health.models import (
     ProviderHealthFreshnessLabel,
     ProviderHealthStatus,
@@ -35,6 +37,7 @@ def get_provider_health_service(
     "/snapshots",
     response_model=ProviderHealthSnapshotRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
 )
 async def build_provider_health_snapshot(
     payload: ProviderHealthSnapshotBuildRequest,
@@ -90,6 +93,7 @@ async def summarize_provider_health(
 @router.post(
     "/workspaces/{workspace_id}/refresh",
     response_model=ProviderHealthWorkspaceRefreshResponse,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
 )
 async def refresh_provider_health_workspace(
     workspace_id: UUID,
@@ -111,6 +115,7 @@ async def refresh_provider_health_workspace(
 @router.post(
     "/snapshots/{snapshot_id}/prepare-gap-recovery",
     response_model=ProviderHealthPrepareGapRecoveryResponse,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
 )
 async def prepare_provider_health_gap_recovery(
     snapshot_id: UUID,

@@ -56,6 +56,14 @@ cross-asset context, and journal follow-ups. They do not trigger scans, provider
 evaluation, LLM calls, notifications, action execution, broker workflows, auto-trading, or
 financial advice. See `docs/daily-briefs.md`.
 
+Dashboard read models are implemented under `/read-models`. They materialize rebuildable snapshots
+for dashboard symbol state, signal triage cards, and command center summaries from existing stored
+artifacts. They improve daily cockpit reads without changing source-of-truth signals, market
+memory, setup context, priority scores, outcomes, provider health, data quality, readiness,
+briefs, or reports. Rebuild endpoints create or update snapshot rows only; they do not run
+analysis, scans, outcome evaluation, LLM calls, notifications, broker workflows, auto-trading, or
+financial-advice flows. See `docs/read-models.md`.
+
 Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
 pattern candidates contributed to final signals and observed outcomes by detector type, selected
 candidate, rejected candidate, blocked candidate, horizon, profile, symbol, and timeframe. It is
