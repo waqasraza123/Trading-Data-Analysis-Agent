@@ -116,6 +116,7 @@ from app.modules.profile_simulations.models import (
     StrategyProfileSimulationResult,
     StrategyProfileSimulationRun,
 )
+from app.modules.provider_credentials.models import ProviderConnectionTest, ProviderCredentialRef
 from app.modules.provider_health.models import ProviderHealthSnapshot
 from app.modules.provider_polling.models import ProviderPollingError, ProviderPollingRequest
 from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
@@ -268,6 +269,8 @@ __all__ = [
     "PatternCandidate",
     "PatternOutcomeDiagnostic",
     "PersonalStrategyPreferenceProfile",
+    "ProviderConnectionTest",
+    "ProviderCredentialRef",
     "ProviderPollingError",
     "ProviderHealthSnapshot",
     "ProviderPollingRequest",

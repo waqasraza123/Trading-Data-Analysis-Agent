@@ -13,6 +13,7 @@ from app.modules.candles.schemas import CandleUpsertStatus
 from app.modules.candles.validator import validate_candle
 from app.modules.data_sources.models import DataSource, DataSourceStatus, DataSourceType
 from app.modules.data_sources.repository import DataSourceRepository
+from app.modules.provider_credentials.repository import ProviderCredentialRepository
 from app.modules.provider_polling.adapters.base import (
     ProviderPollingAdapterException,
     ProviderPollingFetchRequest,
@@ -56,6 +57,7 @@ class ProviderPollingService:
         self.candle_repository = CandleRepository(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
+        self.provider_credential_repository = ProviderCredentialRepository(session)
 
     async def create_request(
         self,
@@ -68,6 +70,8 @@ class ProviderPollingService:
             symbol_id=payload.symbol_id,
             source_id=payload.source_id,
         )
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(payload.workspace_id, payload.credential_ref_id)
         effective_limit = self.effective_limit(payload.limit)
         polling_request = await self.repository.create_request(
             ProviderPollingRequest(
@@ -77,6 +81,7 @@ class ProviderPollingService:
                 provider=payload.provider.value,
                 provider_symbol=payload.provider_symbol,
                 timeframe=payload.timeframe.value,
+                credential_ref_id=payload.credential_ref_id,
                 start_time=payload.start_time,
                 end_time=payload.end_time,
                 limit=payload.limit,
@@ -84,6 +89,7 @@ class ProviderPollingService:
                 request_metadata_json={
                     **payload.request_metadata_json,
                     "effectiveLimit": effective_limit,
+                    "credentialRefConfigured": payload.credential_ref_id is not None,
                 },
                 response_metadata_json={},
                 received_candle_count=0,
@@ -378,6 +384,23 @@ class ProviderPollingService:
             raise AppError(422, "inactive_source", "Inactive sources cannot be polled")
         if not symbol.is_active:
             raise AppError(422, "inactive_symbol", "Inactive symbols cannot be polled")
+
+    async def validate_credential_ref(self, workspace_id: UUID, credential_ref_id: UUID) -> None:
+        credential_ref = await self.provider_credential_repository.get_credential_ref(
+            credential_ref_id
+        )
+        if credential_ref is None:
+            raise AppError(
+                404,
+                "provider_credential_ref_not_found",
+                "Provider credential reference not found",
+            )
+        if credential_ref.workspace_id != workspace_id:
+            raise AppError(
+                422,
+                "provider_credential_workspace_mismatch",
+                "Provider credential reference does not belong to this workspace",
+            )
 
     def effective_limit(self, requested_limit: int | None) -> int:
         max_limit = self.settings.provider_polling_max_candles_per_request

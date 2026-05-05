@@ -35,6 +35,8 @@ from app.modules.live.schemas import (
     LiveSubscriptionUpdate,
     NormalizedLiveProviderEvent,
 )
+from app.modules.provider_credentials.redaction import find_sensitive_payload_paths
+from app.modules.provider_credentials.repository import ProviderCredentialRepository
 from app.modules.symbols.models import Symbol
 from app.modules.symbols.repository import SymbolRepository
 
@@ -48,17 +50,21 @@ class LiveService:
         self.candle_repository = CandleRepository(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
+        self.provider_credential_repository = ProviderCredentialRepository(session)
 
     async def create_subscription(
         self,
         payload: LiveSubscriptionCreate,
     ) -> LiveFeedSubscription:
         get_live_provider(payload.provider)
+        self.validate_config(payload.config_json)
         await self.validate_symbol_and_source(
             workspace_id=payload.workspace_id,
             symbol_id=payload.symbol_id,
             source_id=payload.source_id,
         )
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(payload.workspace_id, payload.credential_ref_id)
         subscription = LiveFeedSubscription(
             workspace_id=payload.workspace_id,
             source_id=payload.source_id,
@@ -66,6 +72,7 @@ class LiveService:
             timeframe=payload.timeframe.value,
             provider=payload.provider,
             status=LiveFeedSubscriptionStatus.ACTIVE,
+            credential_ref_id=payload.credential_ref_id,
             config_json=payload.config_json,
         )
         try:
@@ -115,11 +122,18 @@ class LiveService:
             get_live_provider(updates["provider"])
         source_id = updates.get("source_id", subscription.source_id)
         symbol_id = updates.get("symbol_id", subscription.symbol_id)
+        if payload.config_json is not None:
+            self.validate_config(payload.config_json)
         await self.validate_symbol_and_source(
             workspace_id=subscription.workspace_id,
             symbol_id=symbol_id,
             source_id=source_id,
         )
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(
+                subscription.workspace_id,
+                payload.credential_ref_id,
+            )
         if "timeframe" in updates:
             updates["timeframe"] = updates["timeframe"].value
         for field_name, field_value in updates.items():
@@ -427,6 +441,32 @@ class LiveService:
         if data_source.status != DataSourceStatus.ACTIVE:
             raise AppError(422, "inactive_source", "Inactive sources cannot be subscribed")
         return symbol, data_source
+
+    async def validate_credential_ref(self, workspace_id: UUID, credential_ref_id: UUID) -> None:
+        credential_ref = await self.provider_credential_repository.get_credential_ref(
+            credential_ref_id
+        )
+        if credential_ref is None:
+            raise AppError(
+                404,
+                "provider_credential_ref_not_found",
+                "Provider credential reference not found",
+            )
+        if credential_ref.workspace_id != workspace_id:
+            raise AppError(
+                422,
+                "provider_credential_workspace_mismatch",
+                "Provider credential reference does not belong to this workspace",
+            )
+
+    def validate_config(self, config_json: dict[str, object]) -> None:
+        sensitive_paths = find_sensitive_payload_paths(config_json)
+        if sensitive_paths:
+            raise AppError(
+                422,
+                "live_subscription_config_contains_secret",
+                "Live subscription config must not include inline secrets; use credential_ref_id",
+            )
 
     async def create_received_event(
         self,

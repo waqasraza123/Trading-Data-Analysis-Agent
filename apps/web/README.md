@@ -363,6 +363,11 @@ The onboarding workflow is an operator setup surface for ingestion readiness:
 - Summarize ready symbols, degraded symbols, missing data, stale live feeds, and backend next actions.
 
 Provider keys and paid provider secrets are not entered in the frontend. Source credentials must be configured in backend environment or server-side secret management. The workflow does not create trades, alerts, broker connections, or financial-advice output.
+When `/provider-credentials` is available, onboarding shows whether a source has a configured
+credential reference and can trigger a backend-safe configuration test. The UI still does not accept
+raw secrets; operators must configure `secret_ref` values server-side or through a future secure
+secret-manager flow.
+
 
 ## Watchlist Scanner Controls
 

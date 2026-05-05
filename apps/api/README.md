@@ -167,6 +167,15 @@ reliability workflow. They do not call external providers, mutate candles, auto-
 requests outside the explicit gap recovery route, execute broker actions, send alerts, auto-trade,
 or provide financial advice.
 
+Provider credential references are implemented under `/provider-credentials`. They store
+workspace-scoped `secret_ref` pointers and redacted public metadata for data providers and delivery
+channels only. Raw API keys, tokens, passwords, webhook secrets, and broker credentials are not
+stored in plaintext or returned by the API. Connection tests record safe configuration, mock,
+public-endpoint, or skipped authenticated checks without requiring real credentials at startup.
+Nullable `credential_ref_id` fields are available on data sources, live subscriptions, provider
+polling requests, notification channels, and webhook subscriptions. See
+`docs/provider-credentials.md`.
+
 Daily workflows are implemented under `/daily-workflows`. They persist one auditable backend
 orchestration for refreshing provider health, preparing recovery plans, running deterministic
 scheduled scans, generating setup context, scoring review priority, refreshing market memory,

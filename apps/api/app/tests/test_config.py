@@ -56,6 +56,10 @@ def test_settings_load_defaults() -> None:
         == "trading-intelligence-api-provider-polling/0.1"
     )
     assert settings.binance_public_rest_base_url == "https://api.binance.com"
+    assert settings.provider_credentials_version == "v1"
+    assert settings.provider_credential_test_timeout_seconds == 10
+    assert settings.provider_credential_allow_public_tests is True
+    assert settings.provider_credential_allow_auth_tests is False
     assert settings.provider_health_version == "v1"
     assert settings.provider_health_fresh_seconds_1m == 180
     assert settings.provider_health_fresh_seconds_5m == 600

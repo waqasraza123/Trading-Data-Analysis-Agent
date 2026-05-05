@@ -55,6 +55,7 @@ export type DataSource = {
   source_type: string;
   provider: string;
   status: string;
+  credential_ref_id: UUID | null;
   config_json: JsonRecord;
   created_at: string;
   updated_at: string;

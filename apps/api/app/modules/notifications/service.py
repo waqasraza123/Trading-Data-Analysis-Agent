@@ -58,6 +58,7 @@ from app.modules.notifications.schemas import (
     NotificationWorkerRunRead,
     NotificationWorkerStatusRead,
 )
+from app.modules.provider_credentials.repository import ProviderCredentialRepository
 from app.modules.safety_policies.schemas import SafetyStatus
 
 SEVERITY_RANK = {
@@ -101,6 +102,7 @@ class NotificationService:
         self.session = session
         self.settings = settings or get_settings()
         self.repository = repository or NotificationRepository(session)
+        self.provider_credential_repository = ProviderCredentialRepository(session)
         self.adapters = adapters or {
             NotificationDeliveryChannelType.WEBHOOK.value: WebhookNotificationAdapter(),
             NotificationDeliveryChannelType.EMAIL.value: EmailNotificationAdapter(),
@@ -137,12 +139,15 @@ class NotificationService:
         payload: NotificationChannelCreate,
     ) -> NotificationDeliveryChannel:
         self.validate_channel_config(payload.config_json)
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(payload.workspace_id, payload.credential_ref_id)
         channel = NotificationDeliveryChannel(
             workspace_id=payload.workspace_id,
             name=payload.name.strip(),
             channel_type=payload.channel_type.value,
             status=payload.status.value,
             config_json=payload.config_json,
+            credential_ref_id=payload.credential_ref_id,
             secret_ref=payload.secret_ref.strip() if payload.secret_ref is not None else None,
             event_types_json=[event_type.value for event_type in payload.event_types_json],
             severity_filter_json=payload.severity_filter_json,
@@ -194,6 +199,9 @@ class NotificationService:
         if payload.config_json is not None:
             self.validate_channel_config(payload.config_json)
             channel.config_json = payload.config_json
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(channel.workspace_id, payload.credential_ref_id)
+            channel.credential_ref_id = payload.credential_ref_id
         if payload.secret_ref is not None:
             channel.secret_ref = payload.secret_ref.strip()
         if payload.event_types_json is not None:
@@ -729,6 +737,23 @@ class NotificationService:
                 422,
                 "notification_channel_config_contains_secret",
                 "Notification channel config must not contain inline secrets; use secret_ref",
+            )
+
+    async def validate_credential_ref(self, workspace_id: UUID, credential_ref_id: UUID) -> None:
+        credential_ref = await self.provider_credential_repository.get_credential_ref(
+            credential_ref_id
+        )
+        if credential_ref is None:
+            raise AppError(
+                404,
+                "provider_credential_ref_not_found",
+                "Provider credential reference not found",
+            )
+        if credential_ref.workspace_id != workspace_id:
+            raise AppError(
+                422,
+                "provider_credential_workspace_mismatch",
+                "Provider credential reference does not belong to this workspace",
             )
 
     async def resolve_initial_status(

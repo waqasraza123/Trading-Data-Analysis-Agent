@@ -7,6 +7,7 @@ import {
   getProviderHealthSummary,
   listProviderHealthSnapshots,
 } from "@/lib/api/providerHealth";
+import { listProviderCredentialRefs } from "@/lib/api/providerCredentials";
 import type { ApiFailure, ApiResult } from "@/lib/api/types";
 import type { OnboardingFailure, OnboardingInitialData } from "@/lib/data-onboarding/types";
 
@@ -47,18 +48,25 @@ async function getOnboardingData(workspaceId?: string): Promise<OnboardingInitia
       memorySnapshots: [],
       providerHealthSnapshots: [],
       providerHealthSummary: null,
+      providerCredentialRefs: [],
       failures,
       lastUpdatedAt: new Date().toISOString(),
     };
   }
 
-  const [dataSourcesResult, memoryResult, providerHealthResult, providerHealthSummaryResult] =
-    await Promise.all([
-    listDataSources(workspace.id),
-    listMarketMemorySnapshots(workspace.id),
-    listProviderHealthSnapshots({ workspaceId: workspace.id }),
-    getProviderHealthSummary(workspace.id),
-  ]);
+  const [
+    dataSourcesResult,
+    memoryResult,
+    providerHealthResult,
+    providerHealthSummaryResult,
+    providerCredentialRefsResult,
+  ] = await Promise.all([
+      listDataSources(workspace.id),
+      listMarketMemorySnapshots(workspace.id),
+      listProviderHealthSnapshots({ workspaceId: workspace.id }),
+      getProviderHealthSummary(workspace.id),
+      listProviderCredentialRefs(workspace.id),
+    ]);
 
   return {
     appName: env.appName,
@@ -78,6 +86,12 @@ async function getOnboardingData(workspaceId?: string): Promise<OnboardingInitia
       "Provider health summary",
       providerHealthSummaryResult,
       null,
+      failures,
+    ),
+    providerCredentialRefs: readResult(
+      "Provider credentials",
+      providerCredentialRefsResult,
+      [],
       failures,
     ),
     failures,

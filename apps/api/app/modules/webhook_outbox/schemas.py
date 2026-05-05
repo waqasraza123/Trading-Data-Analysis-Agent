@@ -19,6 +19,7 @@ class WebhookSubscriptionCreate(ApiSchema):
     status: WebhookSubscriptionStatus = WebhookSubscriptionStatus.PAUSED
     target_url: str = Field(min_length=1, max_length=2048)
     event_types_json: list[WebhookEventType] = Field(min_length=1)
+    credential_ref_id: UUID | None = None
     signing_secret_ref: str | None = Field(default=None, min_length=1, max_length=255)
     metadata_json: dict[str, Any] = Field(default_factory=dict)
 
@@ -37,6 +38,7 @@ class WebhookSubscriptionUpdate(ApiSchema):
     status: WebhookSubscriptionStatus | None = None
     target_url: str | None = Field(default=None, min_length=1, max_length=2048)
     event_types_json: list[WebhookEventType] | None = Field(default=None, min_length=1)
+    credential_ref_id: UUID | None = None
     signing_secret_ref: str | None = Field(default=None, min_length=1, max_length=255)
     metadata_json: dict[str, Any] | None = None
 
@@ -59,6 +61,7 @@ class WebhookSubscriptionRead(ApiReadSchema):
     status: WebhookSubscriptionStatus
     target_url: str
     event_types_json: list[WebhookEventType]
+    credential_ref_id: UUID | None
     signing_secret_ref: str | None
     metadata_json: dict[str, Any]
     created_at: datetime

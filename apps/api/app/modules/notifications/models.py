@@ -372,6 +372,11 @@ class NotificationDeliveryChannel(Base):
         default=dict,
         server_default=text("'{}'::jsonb"),
     )
+    credential_ref_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("provider_credential_refs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     secret_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     event_types_json: Mapped[list[str]] = mapped_column(
         JSONB,

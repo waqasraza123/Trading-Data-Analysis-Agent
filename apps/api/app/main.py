@@ -62,6 +62,7 @@ from app.modules.preference_profiles.routes import router as preference_profiles
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
 from app.modules.profile_governance.routes import router as profile_governance_router
 from app.modules.profile_simulations.routes import router as profile_simulations_router
+from app.modules.provider_credentials.routes import router as provider_credentials_router
 from app.modules.provider_health.routes import router as provider_health_router
 from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
@@ -142,6 +143,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         imports_router,
         provider_polling_router,
         provider_health_router,
+        provider_credentials_router,
         live_router,
         candles_router,
         data_quality_router,

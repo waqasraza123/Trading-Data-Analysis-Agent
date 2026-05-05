@@ -68,6 +68,11 @@ class LiveFeedSubscription(Base):
     timeframe: Mapped[str] = mapped_column(String(16), nullable=False)
     provider: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
+    credential_ref_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("provider_credential_refs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_final_candle_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
