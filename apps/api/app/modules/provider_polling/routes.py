@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.provider_polling.models import ProviderPollingRequestStatus
 from app.modules.provider_polling.schemas import (
     ProviderPollingErrorRead,
@@ -29,6 +31,7 @@ def get_provider_polling_service(
     "/requests",
     response_model=ProviderPollingRequestRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
 )
 async def create_provider_polling_request(
     payload: ProviderPollingRequestCreate,

@@ -15,6 +15,8 @@ MARKET_SCAN_WORKER_ENABLED=true \
 ```
 
 The supervisor requires `DATABASE_URL`.
+When runtime supervisor definitions are seeded, supervised workers also record optional database
+heartbeats under `/runtime-supervisor`. Missing supervisor rows do not block worker startup.
 
 ## Components
 
@@ -50,3 +52,5 @@ If workers do not finish within the timeout, remaining tasks are cancelled.
 
 The supervisor does not change worker business behavior, database leases, safety rules, or
 deterministic analysis contracts. It only coordinates runtime lifecycle.
+It does not execute runtime supervisor run requests; those are API records that can call only
+explicit backend-safe integrations.

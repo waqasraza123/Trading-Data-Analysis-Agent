@@ -63,6 +63,10 @@ MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
 MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
 WORKER_SUPERVISOR_COMPONENTS=
 WORKER_SUPERVISOR_SHUTDOWN_TIMEOUT_SECONDS=20
+RUNTIME_SUPERVISOR_VERSION=v1
+RUNTIME_WORKER_STALE_SECONDS=120
+RUNTIME_WORKER_HEARTBEAT_ENABLED=true
+RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
 SEED_DEFAULT_WORKSPACE_NAME=
 SEED_DEFAULT_ADMIN_EMAIL=
 SEED_DEFAULT_ADMIN_NAME=
@@ -124,6 +128,7 @@ GET /health/db
 GET /health/ready
 GET /health/redis
 GET /health/workers
+GET /runtime-supervisor/health
 ```
 
 `/health` and `/health/live` report API process liveness. `/health/db` checks database
@@ -131,6 +136,8 @@ connectivity. `/health/ready` is suitable for readiness probes because it requir
 connectivity. `/health/redis` checks Redis connectivity when configured. `/health/workers` reports
 live worker, stale monitor, and Redis status when the database is available and returns a degraded
 safe status otherwise.
+`/runtime-supervisor/health` reports the database-backed runtime worker control plane when its
+tables have been migrated and worker definitions have been seeded.
 
 The API does not require the live worker to be running for readiness.
 

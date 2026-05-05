@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import Settings
 from app.modules.market_scans.scanner import MarketScanExecutor
+from app.modules.runtime_supervisor.heartbeats import RuntimeWorkerHeartbeatClient
 
 
 class MarketScanWorkerRuntime:
@@ -25,12 +26,19 @@ class MarketScanWorkerRuntime:
         self.logger = logger or logging.getLogger(__name__)
         self.sleep = sleep
         self.stopping = asyncio.Event()
+        self.heartbeat = RuntimeWorkerHeartbeatClient(
+            session_factory=session_factory,
+            settings=settings,
+            worker_definition_key="market_scan_worker",
+            worker_id=self.worker_id,
+        )
 
     async def run_forever(self) -> None:
         if not self.settings.market_scan_worker_enabled:
             self.logger.info("market_scan_worker_disabled", extra={"worker_id": self.worker_id})
             return
         self.logger.info("market_scan_worker_started", extra={"worker_id": self.worker_id})
+        await self.heartbeat.starting()
         try:
             while not self.stopping.is_set():
                 run_count = 0
@@ -43,8 +51,10 @@ class MarketScanWorkerRuntime:
                         "market_scan_worker_poll_failed",
                         extra={"worker_id": self.worker_id},
                     )
+                await self.heartbeat.running({"runCount": run_count})
                 await self.sleep(self.next_sleep_seconds(run_count))
         finally:
+            await self.heartbeat.stopped()
             self.logger.info("market_scan_worker_stopped", extra={"worker_id": self.worker_id})
 
     async def poll_once(self) -> int:

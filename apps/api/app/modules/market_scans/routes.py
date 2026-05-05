@@ -24,6 +24,8 @@ from app.modules.market_scans.schemas import (
     WatchlistUpdate,
 )
 from app.modules.market_scans.service import MarketScanService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["market-scans"])
 
@@ -44,6 +46,7 @@ def get_market_scan_executor(
     "/market-watchlists",
     response_model=WatchlistRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def create_watchlist(
     payload: WatchlistCreate,
@@ -80,7 +83,11 @@ async def get_watchlist(
     return WatchlistRead.model_validate(watchlist)
 
 
-@router.patch("/market-watchlists/{watchlist_id}", response_model=WatchlistRead)
+@router.patch(
+    "/market-watchlists/{watchlist_id}",
+    response_model=WatchlistRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def update_watchlist(
     watchlist_id: UUID,
     payload: WatchlistUpdate,
@@ -94,6 +101,7 @@ async def update_watchlist(
     "/market-watchlists/{watchlist_id}/items",
     response_model=WatchlistItemRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def add_watchlist_item(
     watchlist_id: UUID,
@@ -122,7 +130,11 @@ async def list_watchlist_items(
     return [WatchlistItemRead.model_validate(item) for item in items]
 
 
-@router.patch("/market-watchlist-items/{item_id}", response_model=WatchlistItemRead)
+@router.patch(
+    "/market-watchlist-items/{item_id}",
+    response_model=WatchlistItemRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def update_watchlist_item(
     item_id: UUID,
     payload: WatchlistItemUpdate,
@@ -132,7 +144,11 @@ async def update_watchlist_item(
     return WatchlistItemRead.model_validate(item)
 
 
-@router.delete("/market-watchlist-items/{item_id}", response_model=WatchlistItemRead)
+@router.delete(
+    "/market-watchlist-items/{item_id}",
+    response_model=WatchlistItemRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def delete_watchlist_item(
     item_id: UUID,
     service: Annotated[MarketScanService, Depends(get_market_scan_service)],
@@ -145,6 +161,7 @@ async def delete_watchlist_item(
     "/scheduled-scan-configs",
     response_model=ScheduledScanConfigRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def create_scan_config(
     payload: ScheduledScanConfigCreate,
@@ -164,7 +181,11 @@ async def list_due_scan_configs(
     return [ScheduledScanConfigRead.model_validate(config) for config in configs]
 
 
-@router.post("/scheduled-scan-configs/run-due", response_model=RunDueScansResponse)
+@router.post(
+    "/scheduled-scan-configs/run-due",
+    response_model=RunDueScansResponse,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def run_due_scan_configs(
     payload: RunDueScansRequest,
     executor: Annotated[MarketScanExecutor, Depends(get_market_scan_executor)],
@@ -206,7 +227,11 @@ async def get_scan_config(
     return ScheduledScanConfigRead.model_validate(config)
 
 
-@router.patch("/scheduled-scan-configs/{scan_config_id}", response_model=ScheduledScanConfigRead)
+@router.patch(
+    "/scheduled-scan-configs/{scan_config_id}",
+    response_model=ScheduledScanConfigRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def update_scan_config(
     scan_config_id: UUID,
     payload: ScheduledScanConfigUpdate,
@@ -219,6 +244,7 @@ async def update_scan_config(
 @router.post(
     "/scheduled-scan-configs/{scan_config_id}/pause",
     response_model=ScheduledScanConfigRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def pause_scan_config(
     scan_config_id: UUID,
@@ -231,6 +257,7 @@ async def pause_scan_config(
 @router.post(
     "/scheduled-scan-configs/{scan_config_id}/resume",
     response_model=ScheduledScanConfigRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def resume_scan_config(
     scan_config_id: UUID,
@@ -243,6 +270,7 @@ async def resume_scan_config(
 @router.post(
     "/scheduled-scan-configs/{scan_config_id}/archive",
     response_model=ScheduledScanConfigRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def archive_scan_config(
     scan_config_id: UUID,
@@ -252,7 +280,11 @@ async def archive_scan_config(
     return ScheduledScanConfigRead.model_validate(config)
 
 
-@router.post("/scheduled-scan-configs/{scan_config_id}/run", response_model=ScheduledScanRunRead)
+@router.post(
+    "/scheduled-scan-configs/{scan_config_id}/run",
+    response_model=ScheduledScanRunRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def run_scan_config(
     scan_config_id: UUID,
     executor: Annotated[MarketScanExecutor, Depends(get_market_scan_executor)],

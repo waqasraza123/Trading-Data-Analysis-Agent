@@ -66,6 +66,7 @@ class WorkerSupervisorRuntime:
             stale_runtime = LiveStaleSupervisor(
                 session_factory=self.session_factory,
                 settings=self.settings,
+                worker_id=worker_id,
                 logger=self.logger,
             )
             return SupervisedWorker(

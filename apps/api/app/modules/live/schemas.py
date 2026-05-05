@@ -20,6 +20,7 @@ class LiveSubscriptionCreate(ApiSchema):
     symbol_id: UUID
     timeframe: Timeframe
     provider: str = Field(min_length=1, max_length=64)
+    credential_ref_id: UUID | None = None
     config_json: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("provider")
@@ -34,6 +35,7 @@ class LiveSubscriptionUpdate(ApiSchema):
     timeframe: Timeframe | None = None
     provider: str | None = Field(default=None, min_length=1, max_length=64)
     status: LiveFeedSubscriptionStatus | None = None
+    credential_ref_id: UUID | None = None
     config_json: dict[str, Any] | None = None
 
     @field_validator("provider")
@@ -52,6 +54,7 @@ class LiveSubscriptionRead(ApiReadSchema):
     timeframe: str
     provider: str
     status: LiveFeedSubscriptionStatus
+    credential_ref_id: UUID | None
     last_message_at: datetime | None
     last_final_candle_at: datetime | None
     last_error: str | None

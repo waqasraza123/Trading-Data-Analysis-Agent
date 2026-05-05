@@ -2,6 +2,7 @@ import type { JournalEntry, UUID, Workspace } from "@/lib/api/types";
 import type { DailyWorkflowFailure, DailyWorkflowRun, DailyWorkflowStep } from "@/lib/daily-workflows/types";
 import type { PreferenceProfile } from "@/lib/preferences/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
+import type { RuntimeSupervisorHealth } from "@/lib/api/runtimeSupervisor";
 
 export type CommandCenterTone = "neutral" | "good" | "warning" | "danger" | "info";
 
@@ -29,6 +30,8 @@ export type CommandCenterSummary = {
   dataReadyCount: number;
   unreadNotificationCount: number;
   qualityWarningCount: number;
+  runtimeStaleWorkerCount: number;
+  runtimePendingRunRequestCount: number;
   reviewFirstCount: number;
   confirmationCount: number;
   avoidCount: number;
@@ -158,6 +161,7 @@ export type CommandCenterData = {
   notificationUnreadCount: number;
   notificationReviewCount: number;
   qualityWarnings: CommandCenterQualityWarning[];
+  runtimeSupervisorHealth: RuntimeSupervisorHealth | null;
   summary: CommandCenterSummary;
   whatChanged: CommandCenterChangedItem[];
   dataReadiness: CommandCenterDataReadinessItem[];
@@ -177,6 +181,7 @@ export type CommandCenterData = {
     avoidItems: CommandCenterSectionStatus;
     outcomeReview: CommandCenterSectionStatus;
     scannerStatus: CommandCenterSectionStatus;
+    runtimeWorkers: CommandCenterSectionStatus;
     journalPrompts: CommandCenterSectionStatus;
     nextActions: CommandCenterSectionStatus;
     navigationItems: CommandCenterSectionStatus;

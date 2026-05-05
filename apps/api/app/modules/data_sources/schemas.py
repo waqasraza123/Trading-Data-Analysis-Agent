@@ -14,6 +14,7 @@ class DataSourceBase(ApiSchema):
     source_type: DataSourceType
     provider: str = Field(min_length=1, max_length=64)
     status: DataSourceStatus = DataSourceStatus.ACTIVE
+    credential_ref_id: UUID | None = None
     config_json: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("name", "provider")
@@ -31,6 +32,7 @@ class DataSourceUpdate(ApiSchema):
     source_type: DataSourceType | None = None
     provider: str | None = Field(default=None, min_length=1, max_length=64)
     status: DataSourceStatus | None = None
+    credential_ref_id: UUID | None = None
     config_json: dict[str, Any] | None = None
 
     @field_validator("name", "provider")
@@ -48,6 +50,7 @@ class DataSourceRead(ApiReadSchema):
     source_type: DataSourceType
     provider: str
     status: DataSourceStatus
+    credential_ref_id: UUID | None
     config_json: dict[str, Any]
     created_at: datetime
     updated_at: datetime

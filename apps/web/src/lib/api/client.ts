@@ -116,6 +116,10 @@ async function parseResponse(response: Response): Promise<unknown> {
 }
 
 function extractErrorCode(payload: unknown, status: number): string {
+  const apiError = extractApiError(payload);
+  if (apiError && typeof apiError.code === "string") {
+    return apiError.code;
+  }
   if (isRecord(payload) && typeof payload.code === "string") {
     return payload.code;
   }
@@ -126,6 +130,10 @@ function extractErrorCode(payload: unknown, status: number): string {
 }
 
 function extractErrorMessage(payload: unknown, fallback: string): string {
+  const apiError = extractApiError(payload);
+  if (apiError && typeof apiError.message === "string") {
+    return apiError.message;
+  }
   if (isRecord(payload) && typeof payload.message === "string") {
     return payload.message;
   }
@@ -133,6 +141,14 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
     return payload.detail;
   }
   return fallback || "Request failed";
+}
+
+function extractApiError(payload: unknown): Record<string, unknown> | null {
+  if (!isRecord(payload)) {
+    return null;
+  }
+  const error = payload.error;
+  return isRecord(error) ? error : null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

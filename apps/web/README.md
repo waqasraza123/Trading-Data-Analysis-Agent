@@ -16,11 +16,13 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Workspace daily brief composition for "what should I review now?"
 - Daily command center start page for a tight morning-to-review workflow.
 - API health, worker status, failed fetch states, and last refreshed timestamp.
+- Runtime supervisor worker health, stale worker counts, and pending backend run request counts.
 - Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
 - Scanner preset gallery for creating watchlists and scheduled scan configs from backend templates without running scans on apply.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
+- Product readiness checklist for explicit daily-use validation across API, database, seed data, workspace setup, data freshness, scanner setup, workers, optional notifications, and journal readiness.
 - One-click daily workflow control for provider health refresh, recovery planning, deterministic scans, setup context generation, review-priority scoring, digest generation, and brief navigation.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
@@ -31,6 +33,11 @@ The client composes data from optional backend APIs:
 
 - `GET /health`
 - `GET /health/workers`
+- `GET /runtime-supervisor/health`
+- `POST /product-readiness/run`
+- `GET /product-readiness/latest`
+- `GET /product-readiness/runs`
+- `GET /product-readiness/runs/{run_id}`
 - `GET /workspaces`
 - `GET /symbols`
 - `GET /symbols/{symbol_id}`
@@ -41,6 +48,9 @@ The client composes data from optional backend APIs:
 - `POST /scanner-presets/{preset_id}/apply`
 - `GET /scanner-presets/applications/{application_id}`
 - `GET /market-memory/snapshots`
+- `GET /read-models/symbols`
+- `GET /read-models/signals`
+- `GET /read-models/command-center`
 - `GET /scheduled-scan-configs`
 - `GET /scheduled-scan-configs/due`
 - `POST /scheduled-scan-configs`
@@ -135,6 +145,8 @@ The client composes data from optional backend APIs:
 - `POST /candle-gap-recovery/plans/{plan_id}/prepare-provider-polling`
 
 Missing optional endpoints render empty states or backend-state warnings instead of crashing the page.
+Read model endpoints are preferred where available for triage cards, dashboard symbol state, symbol
+detail state, and command center summaries; the existing composed endpoint flow remains the fallback.
 
 ## Environment
 
@@ -160,6 +172,7 @@ Open:
 
 ```txt
 http://127.0.0.1:3000/command-center
+http://127.0.0.1:3000/readiness
 http://127.0.0.1:3000/dashboard
 http://127.0.0.1:3000/brief
 http://127.0.0.1:3000/scanner
@@ -174,6 +187,7 @@ http://127.0.0.1:3000/data/onboarding
 
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
 Use `/command-center?workspaceId=<workspace-id>` as the default start page for the daily workflow.
+Use `/readiness?workspaceId=<workspace-id>` to run and review the product readiness checklist. The run button is an explicit validation action only; it does not run scans, send alerts, call providers, or execute setup mutations.
 Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.
 Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`, and a daily workflow run can be opened with `?workflowRunId=<workflow-run-id>`.
 Use `/triage?workspaceId=<workspace-id>` to review deterministic signals by triage column. Filters support workspace, symbol, timeframe, bias, confidence, triage column, data freshness, profile key, preference profile, only fresh, and only review required.
@@ -185,10 +199,11 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 
 ## Routes
 
-- `/dashboard` renders the daily operator cockpit.
-- `/command-center` renders the Daily Trading Command Center start page over existing read-only backend artifacts.
+- `/dashboard` renders the daily operator cockpit, preferring dashboard symbol read models for current symbol state.
+- `/command-center` renders the Daily Trading Command Center start page over existing read-only backend artifacts and command center read models when available.
+- `/readiness` renders the Product Readiness Checklist and Guided Setup page.
 - `/scanner` renders watchlist scanner controls for backend deterministic scan orchestration.
-- `/triage` renders the read-only signal triage board over deterministic signal artifacts.
+- `/triage` renders the read-only signal triage board, preferring signal card read models and falling back to deterministic signal artifact composition.
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
 - `/quality` renders the read-only signal quality scoreboard over stored diagnostics, observed behavior, calibration, validation, drift, attribution, and backtest cohorts.
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
@@ -196,26 +211,27 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/brief` renders the workspace daily brief, preferring the backend daily brief endpoint and falling back to web client composition from existing optional backend endpoints.
 - `/signals/[signalId]` renders a full read-only setup detail view, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
-- `/symbols/[symbolId]` renders symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs.
+- `/symbols/[symbolId]` renders symbol/timeframe state, preferring dashboard symbol read models and falling back to market memory, recent signals, outcomes, scheduled scans, and analysis runs.
 
 ## Daily Workflow Loop
 
 The integrated web surface is arranged for a deterministic daily review loop:
 
 1. Verify data freshness in `/data/onboarding` or the command center freshness panel.
-2. Use “Run daily scan” in `/command-center` or `/scanner` to refresh status, prepare recovery plans, run deterministic scans, generate setup context, score review priority, and generate digest/brief context.
-3. Use scanner presets in `/scanner` when a repeatable session, watchlist, or data-repair scan configuration is useful.
-4. Read `/brief` for the persisted backend daily brief, with frontend composition as fallback.
-5. Triage stored signals in `/triage`, optionally scoped by a preference profile.
-6. Inspect setup context in `/signals/[signalId]`.
-7. Add or update observational journal notes in `/journal`.
-8. Review observed outcomes in `/review/outcomes`.
-9. Review in-app notification events in `/notifications` and diagnostic warnings in `/quality`.
-10. Revisit summaries in `/command-center`, `/dashboard`, `/brief`, or symbol detail.
+2. Use `/readiness` when you need an explicit setup and daily-use readiness check before starting review.
+3. Use “Run daily scan” in `/command-center` or `/scanner` to refresh status, prepare recovery plans, run deterministic scans, generate setup context, score review priority, and generate digest/brief context.
+4. Use scanner presets in `/scanner` when a repeatable session, watchlist, or data-repair scan configuration is useful.
+5. Read `/brief` for the persisted backend daily brief, with frontend composition as fallback.
+6. Triage stored signals in `/triage`, optionally scoped by a preference profile.
+7. Inspect setup context in `/signals/[signalId]`.
+8. Add or update observational journal notes in `/journal`.
+9. Review observed outcomes in `/review/outcomes`.
+10. Review in-app notification events in `/notifications` and diagnostic warnings in `/quality`.
+11. Revisit summaries in `/command-center`, `/dashboard`, `/brief`, or symbol detail.
 
 The “Run daily scan” control does not execute notifications, broker actions, or external provider polling by default. It shows completed, skipped, and failed workflow steps and links to produced brief, scan run, and signal records.
 
-The shared navigation links Command Center, Brief, Scanner, Triage, Quality, Notifications, Data, Journal, and Preferences. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to notification events and the quality scoreboard.
+The shared navigation links Command Center, Readiness, Brief, Scanner, Triage, Quality, Notifications, Data, Journal, and Preferences. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; readiness blockers link to their owning setup surfaces; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to notification events and the quality scoreboard.
 
 ## Notification Inbox
 
@@ -356,6 +372,11 @@ The onboarding workflow is an operator setup surface for ingestion readiness:
 - Summarize ready symbols, degraded symbols, missing data, stale live feeds, and backend next actions.
 
 Provider keys and paid provider secrets are not entered in the frontend. Source credentials must be configured in backend environment or server-side secret management. The workflow does not create trades, alerts, broker connections, or financial-advice output.
+When `/provider-credentials` is available, onboarding shows whether a source has a configured
+credential reference and can trigger a backend-safe configuration test. The UI still does not accept
+raw secrets; operators must configure `secret_ref` values server-side or through a future secure
+secret-manager flow.
+
 
 ## Watchlist Scanner Controls
 

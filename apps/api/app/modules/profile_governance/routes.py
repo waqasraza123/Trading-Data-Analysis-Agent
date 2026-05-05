@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.profile_governance.models import StrategyProfileDraftStatus
 from app.modules.profile_governance.schemas import (
     StrategyProfileDraftCreate,
@@ -25,7 +27,12 @@ def get_strategy_profile_governance_service(
     return StrategyProfileGovernanceService(session)
 
 
-@router.post("", response_model=StrategyProfileDraftRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=StrategyProfileDraftRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def create_strategy_profile_draft(
     payload: StrategyProfileDraftCreate,
     service: Annotated[
@@ -73,7 +80,11 @@ async def get_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.patch("/{draft_id}", response_model=StrategyProfileDraftRead)
+@router.patch(
+    "/{draft_id}",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def update_strategy_profile_draft(
     draft_id: UUID,
     payload: StrategyProfileDraftUpdate,
@@ -86,7 +97,11 @@ async def update_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.post("/{draft_id}/validate", response_model=StrategyProfileDraftRead)
+@router.post(
+    "/{draft_id}/validate",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def validate_strategy_profile_draft(
     draft_id: UUID,
     service: Annotated[
@@ -98,7 +113,11 @@ async def validate_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.post("/{draft_id}/submit", response_model=StrategyProfileDraftRead)
+@router.post(
+    "/{draft_id}/submit",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def submit_strategy_profile_draft(
     draft_id: UUID,
     service: Annotated[
@@ -110,7 +129,11 @@ async def submit_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.post("/{draft_id}/approve", response_model=StrategyProfileDraftRead)
+@router.post(
+    "/{draft_id}/approve",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def approve_strategy_profile_draft(
     draft_id: UUID,
     payload: StrategyProfileDraftWorkflowRequest,
@@ -123,7 +146,11 @@ async def approve_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.post("/{draft_id}/reject", response_model=StrategyProfileDraftRead)
+@router.post(
+    "/{draft_id}/reject",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def reject_strategy_profile_draft(
     draft_id: UUID,
     payload: StrategyProfileDraftWorkflowRequest,
@@ -136,7 +163,11 @@ async def reject_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.post("/{draft_id}/promote", response_model=StrategyProfileDraftRead)
+@router.post(
+    "/{draft_id}/promote",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def promote_strategy_profile_draft(
     draft_id: UUID,
     payload: StrategyProfileDraftPromotionRequest,
@@ -149,7 +180,11 @@ async def promote_strategy_profile_draft(
     return StrategyProfileDraftRead.model_validate(draft)
 
 
-@router.post("/{draft_id}/archive", response_model=StrategyProfileDraftRead)
+@router.post(
+    "/{draft_id}/archive",
+    response_model=StrategyProfileDraftRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def archive_strategy_profile_draft(
     draft_id: UUID,
     service: Annotated[

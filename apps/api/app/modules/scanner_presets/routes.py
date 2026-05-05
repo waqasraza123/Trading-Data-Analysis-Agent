@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.scanner_presets.models import ScannerPresetCategory
 from app.modules.scanner_presets.schemas import (
     ScannerPresetApplicationRead,
@@ -47,6 +49,7 @@ async def get_scanner_preset(
     "/seed-default",
     response_model=ScannerPresetSeedRead,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def seed_default_scanner_presets(
     service: Annotated[ScannerPresetService, Depends(get_scanner_preset_service)],
@@ -62,6 +65,7 @@ async def seed_default_scanner_presets(
     "/{preset_id}/apply",
     response_model=ScannerPresetApplicationRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
 )
 async def apply_scanner_preset(
     preset_id: UUID,

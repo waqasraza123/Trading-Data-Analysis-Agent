@@ -9,6 +9,8 @@ from app.dependencies import database_session
 from app.modules.data_sources.models import DataSourceStatus, DataSourceType
 from app.modules.data_sources.schemas import DataSourceCreate, DataSourceRead, DataSourceUpdate
 from app.modules.data_sources.service import DataSourceService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/data-sources", tags=["data-sources"])
 
@@ -19,7 +21,12 @@ def get_data_source_service(
     return DataSourceService(session)
 
 
-@router.post("", response_model=DataSourceRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=DataSourceRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def create_data_source(
     payload: DataSourceCreate,
     service: Annotated[DataSourceService, Depends(get_data_source_service)],
@@ -57,7 +64,11 @@ async def get_data_source(
     return DataSourceRead.model_validate(data_source)
 
 
-@router.patch("/{data_source_id}", response_model=DataSourceRead)
+@router.patch(
+    "/{data_source_id}",
+    response_model=DataSourceRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def update_data_source(
     data_source_id: UUID,
     payload: DataSourceUpdate,

@@ -6,6 +6,20 @@ review workflows. Applying a preset creates watchlists and scheduled scan config
 run scans, create execution setups, send alerts, call brokers, auto-trade, or provide financial
 advice. See `docs/scanner-presets.md`.
 
+Product readiness is implemented under `/product-readiness`. It persists an operator-facing
+checklist run for API reachability, database/migration detectability, seed/workspace/user setup,
+symbols, data sources, provider credentials, provider health, candle freshness, watchlists, scan
+configs, daily workflow availability, worker status, optional notifications, journal readiness, web
+API reachability, and critical stale/missing data indicators. It validates readiness only; it does
+not seed data, run scans, run daily workflows, start workers, call providers, send notifications,
+execute broker actions, auto-trade, or provide financial advice. See `docs/product-readiness.md`.
+
+Runtime supervisor APIs are implemented under `/runtime-supervisor`. They seed worker definitions,
+record optional worker heartbeats, mark stale workers, summarize runtime health, and record safe
+operator run requests for existing backend workers. They do not start OS processes, execute shell
+commands, call brokers, auto-trade, mutate signals outside existing backend-safe workflows, or
+provide financial advice. See `docs/runtime-supervisor.md`.
+
 Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
 workspace or user define preferred markets, symbols, sessions, timeframes, patterns, confidence
 thresholds, setup-quality thresholds, stale-data tolerance, confirmation requirements, avoid lists,
@@ -49,6 +63,14 @@ watchlists/scans, decision readiness, market regimes/sessions, multi-timeframe c
 cross-asset context, and journal follow-ups. They do not trigger scans, provider polling, outcome
 evaluation, LLM calls, notifications, action execution, broker workflows, auto-trading, or
 financial advice. See `docs/daily-briefs.md`.
+
+Dashboard read models are implemented under `/read-models`. They materialize rebuildable snapshots
+for dashboard symbol state, signal triage cards, and command center summaries from existing stored
+artifacts. They improve daily cockpit reads without changing source-of-truth signals, market
+memory, setup context, priority scores, outcomes, provider health, data quality, readiness,
+briefs, or reports. Rebuild endpoints create or update snapshot rows only; they do not run
+analysis, scans, outcome evaluation, LLM calls, notifications, broker workflows, auto-trading, or
+financial-advice flows. See `docs/read-models.md`.
 
 Pattern detector attribution is implemented under `/pattern-attribution`. It evaluates how stored
 pattern candidates contributed to final signals and observed outcomes by detector type, selected
@@ -153,6 +175,15 @@ reliability workflow. They do not call external providers, mutate candles, auto-
 requests outside the explicit gap recovery route, execute broker actions, send alerts, auto-trade,
 or provide financial advice.
 
+Provider credential references are implemented under `/provider-credentials`. They store
+workspace-scoped `secret_ref` pointers and redacted public metadata for data providers and delivery
+channels only. Raw API keys, tokens, passwords, webhook secrets, and broker credentials are not
+stored in plaintext or returned by the API. Connection tests record safe configuration, mock,
+public-endpoint, or skipped authenticated checks without requiring real credentials at startup.
+Nullable `credential_ref_id` fields are available on data sources, live subscriptions, provider
+polling requests, notification channels, and webhook subscriptions. See
+`docs/provider-credentials.md`.
+
 Daily workflows are implemented under `/daily-workflows`. They persist one auditable backend
 orchestration for refreshing provider health, preparing recovery plans, running deterministic
 scheduled scans, generating setup context, scoring review priority, refreshing market memory,
@@ -252,6 +283,13 @@ Run migrations:
 .venv/bin/alembic upgrade head
 ```
 
+Run product readiness:
+
+```sh
+curl -X POST "http://127.0.0.1:8000/product-readiness/run?workspaceId=<workspace-id>"
+curl "http://127.0.0.1:8000/product-readiness/latest?workspaceId=<workspace-id>"
+```
+
 Seed deterministic backend defaults:
 
 ```sh
@@ -336,12 +374,15 @@ GET /health/live
 GET /health/db
 GET /health/ready
 GET /health/workers
+GET /runtime-supervisor/health
 ```
 
 `/health` and `/health/live` only prove the API process is alive. `/health/db` checks
 database connectivity. `/health/ready` requires database connectivity and valid critical
 configuration. `/health/workers` reports live worker and stale monitor state when a database is
 configured, and returns a safe degraded status otherwise.
+`/runtime-supervisor/health` reports seeded runtime worker definitions, worker heartbeats, stale
+instances, and runtime run request counters after migrations are applied.
 
 Run the live feed worker:
 
@@ -544,6 +585,10 @@ NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
 MARKET_SCAN_WORKER_ENABLED=false
 MARKET_SCAN_WORKER_POLL_SECONDS=30
+RUNTIME_SUPERVISOR_VERSION=v1
+RUNTIME_WORKER_STALE_SECONDS=120
+RUNTIME_WORKER_HEARTBEAT_ENABLED=true
+RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
 MARKET_SCAN_WORKER_BATCH_SIZE=10
 MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
 MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60

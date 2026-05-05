@@ -144,6 +144,7 @@ class NotificationChannelCreate(ApiSchema):
     channel_type: NotificationDeliveryChannelType
     status: NotificationChannelStatus = NotificationChannelStatus.ACTIVE
     config_json: dict[str, Any] = Field(default_factory=dict)
+    credential_ref_id: UUID | None = None
     secret_ref: str | None = Field(default=None, min_length=1, max_length=255)
     event_types_json: list[BackendNotificationEventType] = Field(default_factory=list)
     severity_filter_json: dict[str, Any] = Field(default_factory=dict)
@@ -155,6 +156,7 @@ class NotificationChannelUpdate(ApiSchema):
     name: str | None = Field(default=None, min_length=1, max_length=160)
     status: NotificationChannelStatus | None = None
     config_json: dict[str, Any] | None = None
+    credential_ref_id: UUID | None = None
     secret_ref: str | None = Field(default=None, min_length=1, max_length=255)
     event_types_json: list[BackendNotificationEventType] | None = None
     severity_filter_json: dict[str, Any] | None = None
@@ -169,6 +171,7 @@ class NotificationChannelRead(ApiReadSchema):
     channel_type: NotificationDeliveryChannelType
     status: NotificationChannelStatus
     config_json: dict[str, Any]
+    credential_ref_id: UUID | None
     secret_ref: str | None
     event_types_json: list[str]
     severity_filter_json: dict[str, Any]

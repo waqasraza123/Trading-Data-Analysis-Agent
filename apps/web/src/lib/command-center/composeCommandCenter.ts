@@ -52,6 +52,8 @@ type ComposeCommandCenterInput = {
   notificationFailures: CommandCenterFailure[];
   qualityWarnings: CommandCenterData["qualityWarnings"];
   qualityFailures: CommandCenterFailure[];
+  runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
+  runtimeSupervisorFailures: CommandCenterFailure[];
 };
 
 const reviewColumns: TriageColumnKey[] = ["high_quality_context"];
@@ -68,6 +70,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     input.providerHealthFailures,
     input.notificationFailures,
     input.qualityFailures,
+    input.runtimeSupervisorFailures,
   );
   const dailyWorkflowFailures = input.scanner.dailyWorkflowFailures;
   const whatChanged = buildWhatChanged(input.brief, input.triage, workspaceId);
@@ -109,6 +112,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     notificationUnreadCount: input.notificationUnreadCount,
     notificationReviewCount: input.notificationReviewCount,
     qualityWarnings: input.qualityWarnings,
+    runtimeSupervisorHealth: input.runtimeSupervisorHealth,
     summary: {
       changedItemCount: whatChanged.length,
       freshSymbolCount: input.providerHealthSummary?.fresh_count ?? input.brief.summary.freshSymbols,
@@ -118,6 +122,8 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
       dataReadyCount: input.providerHealthSummary?.ready_for_deterministic_analysis_count ?? 0,
       unreadNotificationCount: input.notificationUnreadCount,
       qualityWarningCount: input.qualityWarnings.length,
+      runtimeStaleWorkerCount: input.runtimeSupervisorHealth?.stale_instance_count ?? 0,
+      runtimePendingRunRequestCount: input.runtimeSupervisorHealth?.pending_run_request_count ?? 0,
       reviewFirstCount: reviewFirst.length,
       confirmationCount: needsConfirmation.length,
       avoidCount: avoidItems.length,
@@ -144,6 +150,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
       avoidItems: sectionStatus("Avoid conditions", avoidItems.length, failures, ["Market memory", "Setup context"]),
       outcomeReview: sectionStatus("Outcome review", outcomeReview.length, failures, ["Signal outcomes"]),
       scannerStatus: sectionStatus("Scanner status", scannerStatus.length, failures, ["Scheduled scan configs"]),
+      runtimeWorkers: runtimeWorkerSectionStatus(input.runtimeSupervisorHealth, failures),
       journalPrompts: sectionStatus("Journal prompt", journalPrompts.length, failures, ["Journal entries"]),
       nextActions: sectionStatus("Next backend-safe actions", nextActions.length, failures, ["Backend action items", "Scheduled scans"]),
       navigationItems: sectionStatus("Daily workflow links", navigationItems.length, failures, []),
@@ -529,6 +536,32 @@ function sectionStatus(
     state: "empty",
     label: `${label} clear`,
     message: "No items available for this section.",
+  };
+}
+
+function runtimeWorkerSectionStatus(
+  health: CommandCenterData["runtimeSupervisorHealth"],
+  failures: CommandCenterFailure[],
+): CommandCenterSectionStatus {
+  const unavailable = failures.some((failure) => failure.label.includes("Runtime supervisor") && !failure.missing);
+  if (unavailable) {
+    return {
+      state: "unavailable",
+      label: "Worker runtime unavailable",
+      message: "Runtime supervisor status is unavailable.",
+    };
+  }
+  if (!health || health.worker_count === 0) {
+    return {
+      state: "empty",
+      label: "Workers not seeded",
+      message: "Runtime worker definitions are not available.",
+    };
+  }
+  return {
+    state: health.status === "healthy" ? "ready" : "unavailable",
+    label: `Runtime ${commandCenterLabel(health.status)}`,
+    message: `${health.running_instance_count} running workers, ${health.stale_instance_count} stale workers.`,
   };
 }
 

@@ -202,6 +202,10 @@ class Settings(BaseSettings):
     provider_polling_max_candles_per_request: int = Field(default=1000, ge=1, le=5000)
     provider_polling_user_agent: str = "trading-intelligence-api-provider-polling/0.1"
     binance_public_rest_base_url: str = "https://api.binance.com"
+    provider_credentials_version: str = "v1"
+    provider_credential_test_timeout_seconds: int = Field(default=10, ge=1, le=120)
+    provider_credential_allow_public_tests: bool = True
+    provider_credential_allow_auth_tests: bool = False
     provider_health_version: str = "v1"
     provider_health_fresh_seconds_1m: int = Field(default=180, ge=1)
     provider_health_fresh_seconds_5m: int = Field(default=600, ge=1)
@@ -345,6 +349,10 @@ class Settings(BaseSettings):
     market_scan_worker_enabled: bool = False
     market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
+    runtime_supervisor_version: str = "v1"
+    runtime_worker_stale_seconds: int = Field(default=120, ge=1)
+    runtime_worker_heartbeat_enabled: bool = True
+    runtime_supervisor_run_requests_enabled: bool = True
     market_scan_default_lookback_minutes: int = Field(default=60, ge=1, le=43200)
     market_scan_default_interval_seconds: int = Field(default=60, ge=1)
     scanner_preset_version: str = "v1"
@@ -368,6 +376,7 @@ class Settings(BaseSettings):
     engine_execution_lock_seconds: int = Field(default=120, ge=1)
     engine_execution_default_priority: str = "normal"
     backfill_plan_version: str = "v1"
+    product_readiness_version: str = "v1"
     backfill_plan_default_limit: int = Field(default=1000, ge=1)
     backfill_plan_max_limit: int = Field(default=10000, ge=1)
     service_name: str = "trading-intelligence-api"
@@ -535,10 +544,13 @@ class Settings(BaseSettings):
         "signal_digest_version",
         "daily_brief_version",
         "signal_priority_version",
+        "runtime_supervisor_version",
         "daily_workflow_version",
         "journal_review_version",
         "provider_health_version",
+        "provider_credentials_version",
         "scanner_preset_version",
+        "product_readiness_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

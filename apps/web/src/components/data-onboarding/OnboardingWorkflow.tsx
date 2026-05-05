@@ -12,6 +12,11 @@ import {
 } from "@/lib/api/gapRecovery";
 import { listLiveSubscriptions } from "@/lib/api/liveFeeds";
 import { listMarketMemorySnapshots } from "@/lib/api/market";
+import {
+  listProviderCredentialRefs,
+  testProviderConfiguration,
+  testProviderCredentialRef,
+} from "@/lib/api/providerCredentials";
 import { listProviderPollingRequests } from "@/lib/api/providerPolling";
 import type { ApiError, MarketMemorySnapshot, SymbolRead, UUID } from "@/lib/api/types";
 import { composeDataHealth } from "@/lib/data-onboarding/composeDataHealth";
@@ -22,6 +27,8 @@ import type {
   OnboardingInitialData,
   OnboardingSelection,
   OnboardingStepKey,
+  ProviderConnectionTest,
+  ProviderCredentialRef,
   RecoveryPreparationRow,
 } from "@/lib/data-onboarding/types";
 import { onboardingTimeframes } from "@/lib/data-onboarding/types";
@@ -70,6 +77,11 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
     initialSelection(initialData),
   );
   const [dataSources, setDataSources] = useState<DataSource[]>(initialData.dataSources);
+  const [providerCredentialRefs, setProviderCredentialRefs] = useState<ProviderCredentialRef[]>(
+    initialData.providerCredentialRefs,
+  );
+  const [credentialTests, setCredentialTests] = useState<Record<string, ProviderConnectionTest>>({});
+  const [credentialTestState, setCredentialTestState] = useState<Record<string, LoadState>>({});
   const [memorySnapshots, setMemorySnapshots] = useState<MarketMemorySnapshot[]>(
     initialData.memorySnapshots,
   );
@@ -108,6 +120,7 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
     if (!selection.workspaceId) {
       setDataSources([]);
       setMemorySnapshots([]);
+      setProviderCredentialRefs([]);
       return;
     }
     let cancelled = false;
@@ -115,7 +128,8 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
     Promise.all([
       listDataSources(selection.workspaceId),
       listMarketMemorySnapshots(selection.workspaceId),
-    ]).then(([sourcesResult, memoryResult]) => {
+      listProviderCredentialRefs(selection.workspaceId),
+    ]).then(([sourcesResult, memoryResult, credentialsResult]) => {
       if (cancelled) {
         return;
       }
@@ -132,7 +146,12 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
       if (memoryResult.ok) {
         setMemorySnapshots(memoryResult.data);
       }
-      setSourceLoadState(sourcesResult.ok && memoryResult.ok ? "success" : "error");
+      if (credentialsResult.ok) {
+        setProviderCredentialRefs(credentialsResult.data);
+      }
+      setSourceLoadState(
+        sourcesResult.ok && memoryResult.ok && credentialsResult.ok ? "success" : "error",
+      );
     });
     return () => {
       cancelled = true;
@@ -171,6 +190,36 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
     }
     setDataSources((current) => [result.data, ...current]);
     setSelection((current) => ({ ...current, sourceId: result.data.id }));
+  }
+
+  async function handleTestSourceCredential(source: DataSource) {
+    if (!selection.workspaceId) {
+      setWorkflowError("Select a workspace before testing provider configuration.");
+      return;
+    }
+    setWorkflowError(null);
+    setCredentialTestState((current) => ({ ...current, [source.id]: "loading" }));
+    const credentialRef = credentialRefForSource(source, providerCredentialRefs);
+    const result = credentialRef
+      ? await testProviderCredentialRef(credentialRef.id)
+      : await testProviderConfiguration({
+          workspace_id: selection.workspaceId,
+          provider: credentialProviderForSource(source),
+          credential_type: "none_required",
+          test_type: "configuration_only",
+          request_metadata_json: {
+            sourceId: source.id,
+            sourceProvider: source.provider,
+            sourceType: source.source_type,
+          },
+        });
+    if (!result.ok) {
+      setCredentialTestState((current) => ({ ...current, [source.id]: "error" }));
+      setWorkflowError(result.error.message);
+      return;
+    }
+    setCredentialTests((current) => ({ ...current, [source.id]: result.data }));
+    setCredentialTestState((current) => ({ ...current, [source.id]: "success" }));
   }
 
   async function handleRunFreshnessCheck() {
@@ -338,10 +387,14 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
           {activeStep === "data_source" && (
             <DataSourceStep
               dataSources={dataSources}
+              providerCredentialRefs={providerCredentialRefs}
+              credentialTests={credentialTests}
+              credentialTestState={credentialTestState}
               selectedSourceId={selection.sourceId}
               loadState={sourceLoadState}
               onSourceChange={(sourceId) => setSelection((current) => ({ ...current, sourceId }))}
               onCreateSource={handleCreateSource}
+              onTestSourceCredential={handleTestSourceCredential}
             />
           )}
           {activeStep === "symbols" && (
@@ -414,6 +467,37 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
       </div>
     </div>
   );
+}
+
+function credentialRefForSource(
+  source: DataSource,
+  credentials: ProviderCredentialRef[],
+): ProviderCredentialRef | null {
+  if (source.credential_ref_id) {
+    return credentials.find((credential) => credential.id === source.credential_ref_id) || null;
+  }
+  const provider = credentialProviderForSource(source);
+  return (
+    credentials.find(
+      (credential) =>
+        credential.provider === provider &&
+        credential.workspace_id === source.workspace_id &&
+        credential.status !== "revoked",
+    ) || null
+  );
+}
+
+function credentialProviderForSource(source: DataSource): string {
+  if (source.provider === "binance_public_rest") {
+    return "binance";
+  }
+  if (source.provider === "generic_ohlc_http") {
+    return "generic_http";
+  }
+  if (source.provider === "mock_polling" || source.provider === "mock_live") {
+    return "mock";
+  }
+  return source.provider;
 }
 
 async function loadHealthRow(params: {

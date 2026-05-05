@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.modules.provider_credentials.repository import ProviderCredentialRepository
 from app.modules.webhook_outbox.models import (
     WebhookEventType,
     WebhookOutboxEvent,
@@ -28,17 +29,21 @@ class WebhookOutboxService:
         self.session = session
         self.repository = repository or WebhookOutboxRepository(session)
         self.payload_builder = WebhookPayloadBuilder(self.repository)
+        self.provider_credential_repository = ProviderCredentialRepository(session)
 
     async def create_subscription(
         self,
         payload: WebhookSubscriptionCreate,
     ) -> WebhookSubscription:
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(payload.workspace_id, payload.credential_ref_id)
         subscription = WebhookSubscription(
             workspace_id=payload.workspace_id,
             name=payload.name.strip(),
             status=payload.status.value,
             target_url=payload.target_url,
             event_types_json=[event_type.value for event_type in payload.event_types_json],
+            credential_ref_id=payload.credential_ref_id,
             signing_secret_ref=payload.signing_secret_ref.strip()
             if payload.signing_secret_ref is not None
             else None,
@@ -90,6 +95,9 @@ class WebhookOutboxService:
             subscription.event_types_json = [
                 event_type.value for event_type in payload.event_types_json
             ]
+        if payload.credential_ref_id is not None:
+            await self.validate_credential_ref(subscription.workspace_id, payload.credential_ref_id)
+            subscription.credential_ref_id = payload.credential_ref_id
         if payload.signing_secret_ref is not None:
             subscription.signing_secret_ref = payload.signing_secret_ref.strip()
         if payload.metadata_json is not None:
@@ -97,6 +105,23 @@ class WebhookOutboxService:
         subscription = await self.repository.update_subscription(subscription)
         await self.session.commit()
         return subscription
+
+    async def validate_credential_ref(self, workspace_id: UUID, credential_ref_id: UUID) -> None:
+        credential_ref = await self.provider_credential_repository.get_credential_ref(
+            credential_ref_id
+        )
+        if credential_ref is None:
+            raise AppError(
+                404,
+                "provider_credential_ref_not_found",
+                "Provider credential reference not found",
+            )
+        if credential_ref.workspace_id != workspace_id:
+            raise AppError(
+                422,
+                "provider_credential_workspace_mismatch",
+                "Provider credential reference does not belong to this workspace",
+            )
 
     async def archive_subscription(self, subscription_id: UUID) -> WebhookSubscription:
         subscription = await self.get_subscription(subscription_id)

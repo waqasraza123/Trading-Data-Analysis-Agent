@@ -15,6 +15,8 @@ from app.modules.imports.schemas import (
     JsonCandleImportRequest,
 )
 from app.modules.imports.service import ImportService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/imports", tags=["imports"])
 
@@ -29,6 +31,7 @@ def get_import_service(
     "/candles/json",
     response_model=ImportBatchRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.IMPORTS_WRITE))],
 )
 async def import_json_candles(
     payload: JsonCandleImportRequest,
@@ -42,6 +45,7 @@ async def import_json_candles(
     "/candles/csv",
     response_model=ImportBatchRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.IMPORTS_WRITE))],
 )
 async def import_csv_candles(
     request: Request,

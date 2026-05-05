@@ -69,6 +69,11 @@ class ProviderPollingRequest(Base):
     provider: Mapped[str] = mapped_column(String(64), nullable=False)
     provider_symbol: Mapped[str] = mapped_column(String(80), nullable=False)
     timeframe: Mapped[str] = mapped_column(String(16), nullable=False)
+    credential_ref_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("provider_credential_refs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     limit: Mapped[int | None] = mapped_column(nullable=True)

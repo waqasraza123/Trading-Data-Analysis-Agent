@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.users.schemas import UserCreate, UserRead, UserUpdate
 from app.modules.users.service import UserService
 
@@ -18,7 +20,12 @@ def get_user_service(
     return UserService(session)
 
 
-@router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.USERS_ADMIN))],
+)
 async def create_user(
     payload: UserCreate,
     service: Annotated[UserService, Depends(get_user_service)],
@@ -52,7 +59,11 @@ async def get_user(
     return UserRead.model_validate(user)
 
 
-@router.patch("/{user_id}", response_model=UserRead)
+@router.patch(
+    "/{user_id}",
+    response_model=UserRead,
+    dependencies=[Depends(require_permission(Permission.USERS_ADMIN))],
+)
 async def update_user(
     user_id: UUID,
     payload: UserUpdate,

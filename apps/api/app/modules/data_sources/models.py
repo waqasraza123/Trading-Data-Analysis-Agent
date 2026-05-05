@@ -49,6 +49,11 @@ class DataSource(Base):
     source_type: Mapped[str] = mapped_column(String(32), nullable=False)
     provider: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
+    credential_ref_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("provider_credential_refs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     config_json: Mapped[dict[str, object]] = mapped_column(
         JSONB,
         nullable=False,

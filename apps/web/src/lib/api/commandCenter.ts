@@ -3,6 +3,7 @@ import { getWorkspaceBrief } from "./brief";
 import { listNotificationEvents } from "./notifications";
 import { getProviderHealthSummary, listProviderHealthSnapshots } from "./providerHealth";
 import { getQualityScoreboardData } from "./quality";
+import { getRuntimeSupervisorHealth } from "./runtimeSupervisor";
 import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
 import { listJournalEntries } from "./journal";
@@ -23,7 +24,7 @@ export async function getCommandCenterData(params: {
     getScannerData(params),
   ]);
   const workspace = triage.workspace || scanner.workspace || null;
-  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures } = workspace
+  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures } = workspace
     ? await fetchCommandCenterWorkspaceContext(workspace.id, triage.allCandidates.slice(0, 10).map((candidate) => candidate.signal.signal.id))
     : {
         recentJournalEntries: [],
@@ -37,6 +38,8 @@ export async function getCommandCenterData(params: {
         notificationFailures: [],
         qualityWarnings: [],
         qualityFailures: [],
+        runtimeSupervisorHealth: null,
+        runtimeSupervisorFailures: [],
       };
 
   return composeCommandCenter({
@@ -60,6 +63,8 @@ export async function getCommandCenterData(params: {
     notificationFailures,
     qualityWarnings,
     qualityFailures,
+    runtimeSupervisorHealth,
+    runtimeSupervisorFailures,
   });
 }
 
@@ -78,18 +83,22 @@ async function fetchCommandCenterWorkspaceContext(
   notificationFailures: CommandCenterFailure[];
   qualityWarnings: CommandCenterData["qualityWarnings"];
   qualityFailures: CommandCenterFailure[];
+  runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
+  runtimeSupervisorFailures: CommandCenterFailure[];
 }> {
-  const [journalContext, providerHealthContext, notificationContext, qualityContext] = await Promise.all([
+  const [journalContext, providerHealthContext, notificationContext, qualityContext, runtimeSupervisorContext] = await Promise.all([
     fetchJournalContext(workspaceId, signalIds),
     fetchProviderHealthContext(workspaceId),
     fetchNotificationContext(workspaceId),
     fetchQualityContext(workspaceId),
+    fetchRuntimeSupervisorContext(workspaceId),
   ]);
   return {
     ...journalContext,
     ...providerHealthContext,
     ...notificationContext,
     ...qualityContext,
+    ...runtimeSupervisorContext,
   };
 }
 
@@ -179,6 +188,21 @@ async function fetchQualityContext(
       message: failure.message,
       missing: failure.missing,
     })),
+  };
+}
+
+async function fetchRuntimeSupervisorContext(
+  workspaceId: UUID,
+): Promise<{
+  runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
+  runtimeSupervisorFailures: CommandCenterFailure[];
+}> {
+  const failures: CommandCenterFailure[] = [];
+  const result = await getRuntimeSupervisorHealth(workspaceId);
+  const runtimeSupervisorHealth = readOptionalResult("Runtime supervisor", result, failures);
+  return {
+    runtimeSupervisorHealth,
+    runtimeSupervisorFailures: failures,
   };
 }
 

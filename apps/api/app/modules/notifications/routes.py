@@ -32,6 +32,8 @@ from app.modules.notifications.schemas import (
     NotificationWorkerStatusRead,
 )
 from app.modules.notifications.service import NotificationService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["notifications"])
 
@@ -42,7 +44,11 @@ def get_notification_service(
     return NotificationService(session)
 
 
-@router.put("/notifications/preferences", response_model=NotificationPreferenceRead)
+@router.put(
+    "/notifications/preferences",
+    response_model=NotificationPreferenceRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def upsert_notification_preference(
     payload: NotificationPreferenceUpsert,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -61,7 +67,11 @@ async def list_notification_preferences(
     return [NotificationPreferenceRead.model_validate(preference) for preference in preferences]
 
 
-@router.post("/notification-channels", response_model=NotificationChannelRead)
+@router.post(
+    "/notification-channels",
+    response_model=NotificationChannelRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def create_notification_channel(
     payload: NotificationChannelCreate,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -98,7 +108,11 @@ async def get_notification_channel(
     return NotificationChannelRead.model_validate(channel)
 
 
-@router.patch("/notification-channels/{channel_id}", response_model=NotificationChannelRead)
+@router.patch(
+    "/notification-channels/{channel_id}",
+    response_model=NotificationChannelRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def update_notification_channel(
     channel_id: UUID,
     payload: NotificationChannelUpdate,
@@ -108,7 +122,11 @@ async def update_notification_channel(
     return NotificationChannelRead.model_validate(channel)
 
 
-@router.post("/notification-channels/{channel_id}/archive", response_model=NotificationChannelRead)
+@router.post(
+    "/notification-channels/{channel_id}/archive",
+    response_model=NotificationChannelRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def archive_notification_channel(
     channel_id: UUID,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -117,7 +135,11 @@ async def archive_notification_channel(
     return NotificationChannelRead.model_validate(channel)
 
 
-@router.post("/notification-events", response_model=NotificationEventRead)
+@router.post(
+    "/notification-events",
+    response_model=NotificationEventRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def create_notification_event(
     payload: NotificationEventCreate,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -160,7 +182,11 @@ async def get_notification_event(
     return NotificationEventRead.model_validate(event)
 
 
-@router.post("/notification-events/{event_id}/read", response_model=NotificationEventRead)
+@router.post(
+    "/notification-events/{event_id}/read",
+    response_model=NotificationEventRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def mark_notification_event_read(
     event_id: UUID,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -169,7 +195,11 @@ async def mark_notification_event_read(
     return NotificationEventRead.model_validate(event)
 
 
-@router.post("/notification-events/{event_id}/acknowledge", response_model=NotificationEventRead)
+@router.post(
+    "/notification-events/{event_id}/acknowledge",
+    response_model=NotificationEventRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def acknowledge_notification_event(
     event_id: UUID,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -182,7 +212,11 @@ async def acknowledge_notification_event(
     return NotificationEventRead.model_validate(event)
 
 
-@router.post("/notification-events/{event_id}/archive", response_model=NotificationEventRead)
+@router.post(
+    "/notification-events/{event_id}/archive",
+    response_model=NotificationEventRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def archive_notification_event(
     event_id: UUID,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -191,7 +225,11 @@ async def archive_notification_event(
     return NotificationEventRead.model_validate(event)
 
 
-@router.post("/notification-events/{event_id}/deliver", response_model=NotificationDeliveryResponse)
+@router.post(
+    "/notification-events/{event_id}/deliver",
+    response_model=NotificationDeliveryResponse,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def deliver_notification_event(
     event_id: UUID,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -211,7 +249,11 @@ async def list_notification_delivery_attempts(
     return [NotificationDeliveryAttemptRead.model_validate(attempt) for attempt in attempts]
 
 
-@router.post("/notifications", response_model=NotificationRead)
+@router.post(
+    "/notifications",
+    response_model=NotificationRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def queue_notification(
     payload: NotificationCreateRequest,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -239,7 +281,11 @@ async def list_notifications(
     return [NotificationRead.model_validate(notification) for notification in notifications]
 
 
-@router.post("/notifications/dispatch-due", response_model=NotificationDispatchResponse)
+@router.post(
+    "/notifications/dispatch-due",
+    response_model=NotificationDispatchResponse,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def dispatch_due_notifications(
     payload: NotificationDispatchRequest,
     service: Annotated[NotificationService, Depends(get_notification_service)],
@@ -267,7 +313,11 @@ async def get_notification(
     return NotificationRead.model_validate(notification)
 
 
-@router.post("/notifications/{notification_id}/read", response_model=NotificationRead)
+@router.post(
+    "/notifications/{notification_id}/read",
+    response_model=NotificationRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def mark_notification_read(
     notification_id: UUID,
     service: Annotated[NotificationService, Depends(get_notification_service)],

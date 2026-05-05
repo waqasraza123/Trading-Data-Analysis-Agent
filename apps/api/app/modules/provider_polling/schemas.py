@@ -24,6 +24,7 @@ class ProviderPollingRequestCreate(ApiSchema):
     provider: ProviderPollingProvider
     provider_symbol: str = Field(min_length=1, max_length=80)
     timeframe: Timeframe
+    credential_ref_id: UUID | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
     limit: int | None = Field(default=None, ge=1)
@@ -105,6 +106,7 @@ class ProviderPollingRequestRead(ApiReadSchema):
     provider: ProviderPollingProvider
     provider_symbol: str
     timeframe: str
+    credential_ref_id: UUID | None
     start_time: datetime | None
     end_time: datetime | None
     limit: int | None

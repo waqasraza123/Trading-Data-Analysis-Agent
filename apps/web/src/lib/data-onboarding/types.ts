@@ -49,6 +49,7 @@ export type OnboardingInitialData = {
   memorySnapshots: MarketMemorySnapshot[];
   providerHealthSnapshots: ProviderHealthSnapshot[];
   providerHealthSummary: ProviderHealthSummary | null;
+  providerCredentialRefs: ProviderCredentialRef[];
   failures: OnboardingFailure[];
   lastUpdatedAt: string;
 };
@@ -116,6 +117,7 @@ export type DataSource = {
   source_type: string;
   provider: string;
   status: string;
+  credential_ref_id: UUID | null;
   config_json: JsonRecord;
   created_at: string;
   updated_at: string;
@@ -127,7 +129,47 @@ export type DataSourceCreate = {
   source_type: string;
   provider: string;
   status: string;
+  credential_ref_id?: UUID | null;
   config_json: JsonRecord;
+};
+
+export type ProviderCredentialRef = {
+  id: UUID;
+  workspace_id: UUID;
+  name: string;
+  provider: string;
+  credential_type: string;
+  status: string;
+  secret_ref_configured: boolean;
+  secret_ref_summary: JsonRecord | null;
+  public_metadata_json: JsonRecord;
+  last_test_status: string | null;
+  last_tested_at: string | null;
+  last_error_message: string | null;
+  rotated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProviderConnectionTest = {
+  id: UUID;
+  workspace_id: UUID;
+  credential_ref_id: UUID | null;
+  provider: string;
+  test_type: string;
+  status: string;
+  request_metadata_json: JsonRecord;
+  response_metadata_json: JsonRecord;
+  error_message: string | null;
+  created_at: string;
+};
+
+export type ProviderConfigurationTestCreate = {
+  workspace_id: UUID;
+  provider: string;
+  credential_type: string;
+  test_type: string;
+  request_metadata_json?: JsonRecord;
 };
 
 export type CandleRead = {

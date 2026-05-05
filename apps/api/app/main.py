@@ -57,14 +57,18 @@ from app.modules.operator_playbooks.routes import router as operator_playbooks_r
 from app.modules.operator_reviews.routes import router as operator_reviews_router
 from app.modules.outcomes.routes import router as outcomes_router
 from app.modules.pattern_attribution.routes import router as pattern_attribution_router
+from app.modules.permissions.routes import router as permissions_router
 from app.modules.preference_profiles.routes import router as preference_profiles_router
+from app.modules.product_readiness.routes import router as product_readiness_router
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
 from app.modules.profile_governance.routes import router as profile_governance_router
 from app.modules.profile_simulations.routes import router as profile_simulations_router
+from app.modules.provider_credentials.routes import router as provider_credentials_router
 from app.modules.provider_health.routes import router as provider_health_router
 from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.rule_packs.routes import router as rule_packs_router
+from app.modules.runtime_supervisor.routes import router as runtime_supervisor_router
 from app.modules.scanner_presets.routes import router as scanner_presets_router
 from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
 from app.modules.scenario_outcomes.routes import router as scenario_outcomes_router
@@ -134,11 +138,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         data_sources_router,
         daily_workflows_router,
         daily_briefs_router,
+        permissions_router,
         capabilities_router,
         engine_versions_router,
         imports_router,
         provider_polling_router,
         provider_health_router,
+        provider_credentials_router,
         live_router,
         candles_router,
         data_quality_router,
@@ -176,6 +182,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         news_router,
         event_studies_router,
         rule_packs_router,
+        runtime_supervisor_router,
         intelligence_reports_router,
         intelligence_metrics_router,
         intelligence_catalog_router,
@@ -189,6 +196,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         operator_playbooks_router,
         profile_governance_router,
         profile_simulations_router,
+        product_readiness_router,
         market_scans_router,
         scanner_presets_router,
         synthetic_fixtures_router,

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 export type WorkflowTarget =
   | "commandCenter"
+  | "readiness"
   | "dashboard"
   | "brief"
   | "triage"
@@ -21,6 +22,7 @@ type WorkflowLinksProps = {
 
 export const workflowTargets: Record<WorkflowTarget, { href: string; label: string }> = {
   commandCenter: { href: "/command-center", label: "Command Center" },
+  readiness: { href: "/readiness", label: "Readiness" },
   dashboard: { href: "/dashboard", label: "Dashboard" },
   brief: { href: "/brief", label: "Brief" },
   triage: { href: "/triage", label: "Triage" },
@@ -35,15 +37,15 @@ export const workflowTargets: Record<WorkflowTarget, { href: string; label: stri
 
 export const primaryWorkflowTargets: WorkflowTarget[] = [
   "commandCenter",
+  "readiness",
   "brief",
-  "triage",
   "scanner",
+  "triage",
+  "quality",
   "notifications",
   "dataOnboarding",
-  "quality",
-  "preferences",
-  "review",
   "journal",
+  "preferences",
 ];
 
 const linkClassName =
