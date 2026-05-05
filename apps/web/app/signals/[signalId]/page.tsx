@@ -13,9 +13,14 @@ export default async function SignalPage({ params }: SignalPageProps) {
   const { signalId } = await params;
   const env = getPublicEnv();
   const setupReview = await getSetupReview(signalId);
+  const workspaceId =
+    setupReview.signal?.signal.workspace_id ||
+    setupReview.report?.workspace_id ||
+    setupReview.setupContext?.workspace_id ||
+    null;
 
   return (
-    <AppShell appName={env.appName}>
+    <AppShell appName={env.appName} workspaceId={workspaceId}>
       <SetupReviewView data={setupReview} />
     </AppShell>
   );

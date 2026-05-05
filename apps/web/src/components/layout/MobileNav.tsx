@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
-import { isActiveNavigationPath, primaryNavigationTargets, navigationItems } from "@/lib/ui/navigation";
+import { isActiveNavigationPath, navigationHref, primaryNavigationTargets, navigationItems } from "@/lib/ui/navigation";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
 
 type MobileNavProps = {
@@ -23,7 +23,7 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
   return (
     <header className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-4 py-3 shadow-soft backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
-        <Link href="/command-center" className="min-w-0">
+        <Link href={navigationHref("commandCenter", workspaceId)} className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Market intelligence</p>
           <h1 className="truncate text-base font-semibold text-[var(--strong)]">{appName}</h1>
         </Link>
@@ -43,7 +43,7 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
                 "shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition",
                 active ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "bg-[var(--surface-muted)] text-[var(--text-muted)]",
               )}
-              href={item.href}
+              href={navigationHref(item.key, workspaceId)}
             >
               {item.shortLabel || item.label}
             </Link>

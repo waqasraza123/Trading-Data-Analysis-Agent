@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
-import { isActiveNavigationPath, navigationItems, navigationSections } from "@/lib/ui/navigation";
+import { isActiveNavigationPath, navigationHref, navigationItems, navigationSections } from "@/lib/ui/navigation";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type SidebarProps = {
@@ -18,7 +18,7 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
 
   return (
     <aside className="flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] p-4 shadow-panel backdrop-blur-xl">
-      <Link href="/command-center" className="group flex items-center gap-3 rounded-2xl p-2 transition hover:bg-[var(--surface-muted)]">
+      <Link href={navigationHref("commandCenter", workspaceId)} className="group flex items-center gap-3 rounded-2xl p-2 transition hover:bg-[var(--surface-muted)]">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--accent)_0%,var(--info)_100%)] text-sm font-black text-white shadow-glow">
           TI
         </span>
@@ -49,7 +49,7 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
                             ? "bg-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
                             : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--strong)]",
                         )}
-                        href={item.href}
+                        href={navigationHref(item.key, workspaceId)}
                       >
                         <span className="min-w-0 truncate">{item.label}</span>
                         {active && <Badge value="Active" tone="good" className="px-2 py-0.5" />}

@@ -32,7 +32,7 @@ The shell lives under `src/components/layout/`:
 - `WorkspaceSwitcher.tsx`: current workspace display.
 - `PageContainer.tsx`: shared route content bounds.
 
-`src/lib/ui/navigation.ts` is the route registry. Add routes there first, then use `navigationHref` or `WorkflowLinks` so workspace-aware URLs stay consistent.
+`src/lib/ui/navigation.ts` is the route registry. Add routes there first, then use `navigationHref` or `WorkflowLinks` so workspace-aware URLs stay consistent. The current product map includes Command Center, Dashboard, Brief, Data, Scanner, Triage, Quality, Notifications, Journal, Review Outcomes, Preferences, Setup, and Readiness.
 
 ## Status Badges
 
@@ -69,3 +69,11 @@ Avoid direct order instructions, account-result claims, certainty claims, and ad
 - Use status-specific badges for domain labels instead of ad hoc badge tone logic.
 - Use collapsible `details` blocks for long evidence, scenario, risk, or audit sections.
 - Keep feature-specific primitives small and local when a page needs a denser narrative layout, as with command center, brief, setup review, and outcome review.
+
+## Integration Rules
+
+- `AppShell` is the canonical app frame for product routes.
+- Shared UI belongs in `src/components/ui`; domain badge semantics belong in `src/components/status`.
+- Domain API composition belongs in `src/lib/api` and should use `apiGet`/`apiPost` for consistent timeout, error, and optional-endpoint handling.
+- Product pages should preserve `workspaceId` in links and avoid local navigation registries.
+- New product copy must stay neutral: intelligence events, setup context, review priority, observation zones, invalidation context, target context zones, and outcome review.

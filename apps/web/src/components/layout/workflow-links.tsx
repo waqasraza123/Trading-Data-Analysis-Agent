@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { cn } from "@/lib/ui/cn";
 import { navigationHref, navigationItems, type NavigationTarget } from "@/lib/ui/navigation";
 
-export type WorkflowTarget = NavigationTarget | "readiness" | "dashboard";
+export type WorkflowTarget = NavigationTarget;
 
 type WorkflowLinksProps = {
   workspaceId?: string | null;
@@ -11,8 +12,6 @@ type WorkflowLinksProps = {
 
 export const workflowTargets: Record<WorkflowTarget, { href: string; label: string }> = {
   ...(Object.fromEntries(navigationItems.map((item) => [item.key, { href: item.href, label: item.label }])) as Record<NavigationTarget, { href: string; label: string }>),
-  readiness: { href: "/readiness", label: "Readiness" },
-  dashboard: { href: "/dashboard", label: "Dashboard" },
 };
 
 export const primaryWorkflowTargets: WorkflowTarget[] = [
@@ -37,7 +36,7 @@ export function WorkflowLinks({
   className = "",
 }: WorkflowLinksProps) {
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`}>
+    <div className={cn("flex flex-wrap gap-2", className)}>
       {targets.map((target) => {
         const item = workflowTargets[target];
         return (
@@ -51,12 +50,5 @@ export function WorkflowLinks({
 }
 
 export function workflowHref(target: WorkflowTarget, workspaceId?: string | null): string {
-  if (target !== "readiness" && target !== "dashboard") {
-    return navigationHref(target, workspaceId);
-  }
-  const item = workflowTargets[target];
-  if (!workspaceId) {
-    return item.href;
-  }
-  return `${item.href}?workspaceId=${workspaceId}`;
+  return navigationHref(target, workspaceId);
 }

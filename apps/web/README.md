@@ -216,6 +216,21 @@ Use `/journal?workspaceId=<workspace-id>` to create and review reflection notes.
 Use `/preferences/strategy?workspaceId=<workspace-id>` to create and maintain review preference profiles. A profile can be selected with `?profileId=<profile-id>`.
 Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding workflow. The page persists selected workspace, source, symbols, and timeframes in the URL and browser storage.
 
+## Modern UI Shell
+
+The integrated product UI uses one Tailwind-native shell from `src/components/layout/AppShell.tsx`.
+Desktop navigation is grouped by workflow area, mobile navigation exposes the primary product map,
+and all shell links preserve `workspaceId` when a workspace is selected.
+
+Shared primitives live under `src/components/ui`, status-specific badges live under
+`src/components/status`, and safe labels/formatters/navigation helpers live under `src/lib/ui`.
+Feature-specific composition stays local to the page domain, such as command center, brief,
+scanner, onboarding, triage, setup review, journal, outcome review, quality, and notifications.
+
+The app should continue to compose backend artifacts through `src/lib/api/client.ts` and typed
+domain clients. Optional or not-yet-installed backend endpoints should render loading, empty,
+or backend-state warnings instead of breaking routes.
+
 ## Scanner Workflow
 
 `/scanner` is a Tailwind-native orchestration surface for deterministic backend scans:

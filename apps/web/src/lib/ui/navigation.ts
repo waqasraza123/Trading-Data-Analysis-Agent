@@ -40,6 +40,7 @@ export const navigationItems: NavigationItem[] = [
 
 export const primaryNavigationTargets: NavigationTarget[] = [
   "commandCenter",
+  "dashboard",
   "brief",
   "dataOnboarding",
   "scanner",
@@ -47,10 +48,11 @@ export const primaryNavigationTargets: NavigationTarget[] = [
   "quality",
   "notifications",
   "journal",
+  "review",
   "preferences",
 ];
 
-export const secondaryNavigationTargets: NavigationTarget[] = ["dashboard", "review", "setup", "readiness"];
+export const secondaryNavigationTargets: NavigationTarget[] = ["setup", "readiness"];
 
 export const navigationSections = Array.from(new Set(navigationItems.map((item) => item.section)));
 
