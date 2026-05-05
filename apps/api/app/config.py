@@ -345,6 +345,10 @@ class Settings(BaseSettings):
     market_scan_worker_enabled: bool = False
     market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
+    runtime_supervisor_version: str = "v1"
+    runtime_worker_stale_seconds: int = Field(default=120, ge=1)
+    runtime_worker_heartbeat_enabled: bool = True
+    runtime_supervisor_run_requests_enabled: bool = True
     market_scan_default_lookback_minutes: int = Field(default=60, ge=1, le=43200)
     market_scan_default_interval_seconds: int = Field(default=60, ge=1)
     scanner_preset_version: str = "v1"
@@ -535,6 +539,7 @@ class Settings(BaseSettings):
         "signal_digest_version",
         "daily_brief_version",
         "signal_priority_version",
+        "runtime_supervisor_version",
         "daily_workflow_version",
         "journal_review_version",
         "provider_health_version",

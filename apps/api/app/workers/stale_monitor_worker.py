@@ -21,6 +21,7 @@ async def run() -> None:
     supervisor = LiveStaleSupervisor(
         session_factory=session_factory,
         settings=settings,
+        worker_id=worker_id,
         logger=logger,
     )
     await run_until_stopped(

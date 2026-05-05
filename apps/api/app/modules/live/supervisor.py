@@ -39,6 +39,7 @@ class LiveStaleSupervisor:
         self,
         session_factory: async_sessionmaker[AsyncSession],
         settings: Settings,
+        worker_id: str | None = None,
         logger: logging.Logger | None = None,
         sleep: Callable[[float], Awaitable[None]] | None = None,
     ) -> None:
@@ -48,6 +49,7 @@ class LiveStaleSupervisor:
         self.monitor = LiveStaleMonitor(
             session_factory=session_factory,
             settings=settings,
+            worker_id=worker_id,
             logger=logger,
             **kwargs,
         )

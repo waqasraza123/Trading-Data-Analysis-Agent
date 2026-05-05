@@ -15,6 +15,7 @@ from app.modules.live.providers.registry import get_live_provider
 from app.modules.live.repository import LiveRepository
 from app.modules.live.schemas import LiveProviderMessage
 from app.modules.live.service import LiveService
+from app.modules.runtime_supervisor.heartbeats import RuntimeWorkerHeartbeatClient
 from app.modules.symbols.models import Symbol
 
 
@@ -54,6 +55,12 @@ class LiveFeedRuntime:
         self.sleep = sleep
         self.subscription_tasks: dict[UUID, asyncio.Task[int]] = {}
         self.stopping = asyncio.Event()
+        self.heartbeat = RuntimeWorkerHeartbeatClient(
+            session_factory=session_factory,
+            settings=settings,
+            worker_definition_key="live_feed_worker",
+            worker_id=self.worker_id,
+        )
 
     @property
     def reconnect_policy(self) -> ReconnectPolicy:
@@ -69,10 +76,14 @@ class LiveFeedRuntime:
 
     async def run_forever(self) -> None:
         self.logger.info("live_worker_started", extra={"worker_id": self.worker_id})
+        await self.heartbeat.starting({"activeSubscriptionTasks": len(self.subscription_tasks)})
         try:
             while not self.stopping.is_set():
                 try:
                     await self.poll_once()
+                    await self.heartbeat.running(
+                        {"activeSubscriptionTasks": len(self.subscription_tasks)}
+                    )
                 except asyncio.CancelledError:
                     raise
                 except Exception:
@@ -83,6 +94,7 @@ class LiveFeedRuntime:
                 await self.sleep(self.settings.live_feed_worker_poll_seconds)
         finally:
             await self.stop()
+            await self.heartbeat.stopped({"activeSubscriptionTasks": 0})
             self.logger.info("live_worker_stopped", extra={"worker_id": self.worker_id})
 
     async def stop(self) -> None:
@@ -298,14 +310,22 @@ class LiveStaleMonitor:
         self,
         session_factory: async_sessionmaker[AsyncSession],
         settings: Settings,
+        worker_id: str | None = None,
         logger: logging.Logger | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         self.session_factory = session_factory
         self.settings = settings
+        self.worker_id = worker_id or f"stale-monitor-{uuid4()}"
         self.logger = logger or logging.getLogger(__name__)
         self.sleep = sleep
         self.stopping = asyncio.Event()
+        self.heartbeat = RuntimeWorkerHeartbeatClient(
+            session_factory=session_factory,
+            settings=settings,
+            worker_definition_key="live_stale_monitor",
+            worker_id=self.worker_id,
+        )
 
     @property
     def stale_policy(self) -> LiveStalePolicy:
@@ -315,18 +335,22 @@ class LiveStaleMonitor:
         )
 
     async def run_forever(self) -> None:
-        self.logger.info("stale_monitor_started")
+        self.logger.info("stale_monitor_started", extra={"worker_id": self.worker_id})
+        await self.heartbeat.starting()
         try:
             while not self.stopping.is_set():
-                await self.run_once()
+                stale_count = await self.run_once()
+                await self.heartbeat.running({"staleCount": stale_count})
                 await self.sleep(self.settings.live_feed_worker_poll_seconds)
         except asyncio.CancelledError:
             raise
         except Exception:
+            await self.heartbeat.failed()
             self.logger.exception("stale_monitor_failed")
             raise
         finally:
-            self.logger.info("stale_monitor_stopped")
+            await self.heartbeat.stopped()
+            self.logger.info("stale_monitor_stopped", extra={"worker_id": self.worker_id})
 
     async def run_once(self) -> int:
         async with self.session_factory() as session:

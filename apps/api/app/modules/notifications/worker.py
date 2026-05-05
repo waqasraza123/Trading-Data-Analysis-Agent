@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import Settings
 from app.modules.notifications.service import NotificationService
+from app.modules.runtime_supervisor.heartbeats import RuntimeWorkerHeartbeatClient
 
 
 class NotificationWorkerRuntime:
@@ -25,12 +26,19 @@ class NotificationWorkerRuntime:
         self.logger = logger or logging.getLogger(__name__)
         self.sleep = sleep
         self.stopping = asyncio.Event()
+        self.heartbeat = RuntimeWorkerHeartbeatClient(
+            session_factory=session_factory,
+            settings=settings,
+            worker_definition_key="notification_delivery_worker",
+            worker_id=self.worker_id,
+        )
 
     async def run_forever(self) -> None:
         if not self.settings.notification_worker_enabled:
             self.logger.info("notification_worker_disabled", extra={"worker_id": self.worker_id})
             return
         self.logger.info("notification_worker_started", extra={"worker_id": self.worker_id})
+        await self.heartbeat.starting()
         try:
             while not self.stopping.is_set():
                 claimed_count = 0
@@ -43,8 +51,10 @@ class NotificationWorkerRuntime:
                         "notification_worker_poll_failed",
                         extra={"worker_id": self.worker_id},
                     )
+                await self.heartbeat.running({"claimedCount": claimed_count})
                 await self.sleep(self.next_sleep_seconds(claimed_count))
         finally:
+            await self.heartbeat.stopped()
             self.logger.info("notification_worker_stopped", extra={"worker_id": self.worker_id})
 
     async def poll_once(self) -> int:

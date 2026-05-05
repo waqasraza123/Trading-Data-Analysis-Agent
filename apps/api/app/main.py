@@ -65,6 +65,7 @@ from app.modules.provider_health.routes import router as provider_health_router
 from app.modules.provider_polling.routes import router as provider_polling_router
 from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.rule_packs.routes import router as rule_packs_router
+from app.modules.runtime_supervisor.routes import router as runtime_supervisor_router
 from app.modules.scanner_presets.routes import router as scanner_presets_router
 from app.modules.scenario_ensembles.routes import router as scenario_ensembles_router
 from app.modules.scenario_outcomes.routes import router as scenario_outcomes_router
@@ -176,6 +177,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         news_router,
         event_studies_router,
         rule_packs_router,
+        runtime_supervisor_router,
         intelligence_reports_router,
         intelligence_metrics_router,
         intelligence_catalog_router,

@@ -96,6 +96,10 @@ def test_settings_load_defaults() -> None:
     assert settings.decision_readiness_assessment_version == "decision_readiness_v1"
     assert str(settings.decision_readiness_ready_threshold) == "0.8500"
     assert str(settings.decision_readiness_review_threshold) == "0.6500"
+    assert settings.runtime_supervisor_version == "v1"
+    assert settings.runtime_worker_stale_seconds == 120
+    assert settings.runtime_worker_heartbeat_enabled is True
+    assert settings.runtime_supervisor_run_requests_enabled is True
     assert settings.worker_supervisor_components == []
     assert settings.worker_supervisor_shutdown_timeout_seconds == 20
 

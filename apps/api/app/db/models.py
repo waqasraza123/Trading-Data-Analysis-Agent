@@ -120,6 +120,11 @@ from app.modules.provider_health.models import ProviderHealthSnapshot
 from app.modules.provider_polling.models import ProviderPollingError, ProviderPollingRequest
 from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
 from app.modules.rule_packs.models import AnalysisReproducibilityManifest, RulePack
+from app.modules.runtime_supervisor.models import (
+    RuntimeWorkerDefinition,
+    RuntimeWorkerInstance,
+    RuntimeWorkerRunRequest,
+)
 from app.modules.scanner_presets.models import ScannerPreset, ScannerPresetApplication
 from app.modules.scenario_ensembles.models import (
     ScenarioConsensusResult,
@@ -271,6 +276,9 @@ __all__ = [
     "ReasoningActionWorkerRun",
     "RollingMarketStateSnapshot",
     "RulePack",
+    "RuntimeWorkerDefinition",
+    "RuntimeWorkerInstance",
+    "RuntimeWorkerRunRequest",
     "ScannerPreset",
     "ScannerPresetApplication",
     "ScenarioConsensusResult",

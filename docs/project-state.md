@@ -7,6 +7,12 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 ## Current Architecture
 
 - Workspace intelligence catalog metadata indexing and search endpoints exist for cross-artifact discovery without external search infrastructure or raw payload storage.
+- Production runtime supervisor exists under `apps/api/app/modules/runtime_supervisor/` and
+  `/runtime-supervisor` for worker definitions, optional worker heartbeats, stale instance marking,
+  runtime health summaries, and safe run request records. It does not start OS processes, execute
+  shell commands, call brokers, auto-trade, mutate signals outside existing backend-safe workflows,
+  or provide financial advice.
+
 
 - The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.
 
@@ -216,6 +222,9 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 - Implemented backend security and observability hardening: settings validation, CORS configuration, optional API key guard, request/upload limits, rate-limit foundation, request duration logs, safe error responses with request IDs, health/readiness/worker health endpoints, live worker/stale monitor process hardening, operational docs, and env examples.
 - Implemented production Redis-backed rate limiting with local/test in-memory fallback, staging/production Redis configuration validation, Redis health checks, operational docs, and unit coverage.
 - Implemented production worker supervisor orchestration for live feed, stale monitor, reasoning action, and notification runtimes with component selection, graceful shutdown, fail-fast child monitoring, docs, and unit tests.
+- Implemented production runtime supervisor control plane with worker definition/instance/run-request
+  tables, default worker seeding, heartbeat hooks for existing workers, stale marking, health API,
+  safe unsupported/run-request handling, command-center worker health panel, docs, and focused tests.
 - Implemented data contract schema registry and validation tracking for important backend JSONB artifacts with default v1 contracts, strict/loose validation, source-payload validation support, API routes, migration, docs, and focused validator tests.
 - Implemented intelligence backfill plan and item persistence, bounded dry-run planner contracts, missing outcome/context/stale/module plan APIs, safety metadata, docs, and migration.
 - Implemented intelligence artifact dependency graph and invalidation infrastructure for artifact registration, dependency paths, stale marking, invalidation events/items, recomputation candidate listing, API routes, docs, and database schema.

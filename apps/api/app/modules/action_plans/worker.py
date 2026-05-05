@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import Settings
 from app.modules.action_plans.runner import ReasoningActionRunner
+from app.modules.runtime_supervisor.heartbeats import RuntimeWorkerHeartbeatClient
 
 
 class ReasoningActionWorkerRuntime:
@@ -25,6 +26,12 @@ class ReasoningActionWorkerRuntime:
         self.logger = logger or logging.getLogger(__name__)
         self.sleep = sleep
         self.stopping = asyncio.Event()
+        self.heartbeat = RuntimeWorkerHeartbeatClient(
+            session_factory=session_factory,
+            settings=settings,
+            worker_definition_key="reasoning_actions_worker",
+            worker_id=self.worker_id,
+        )
 
     async def run_forever(self) -> None:
         if not self.settings.reasoning_action_worker_enabled:
@@ -37,6 +44,7 @@ class ReasoningActionWorkerRuntime:
             "reasoning_action_worker_started",
             extra={"worker_id": self.worker_id},
         )
+        await self.heartbeat.starting()
         try:
             while not self.stopping.is_set():
                 claimed_count = 0
@@ -49,8 +57,10 @@ class ReasoningActionWorkerRuntime:
                         "reasoning_action_worker_poll_failed",
                         extra={"worker_id": self.worker_id},
                     )
+                await self.heartbeat.running({"claimedCount": claimed_count})
                 await self.sleep(self.next_sleep_seconds(claimed_count))
         finally:
+            await self.heartbeat.stopped()
             self.logger.info(
                 "reasoning_action_worker_stopped",
                 extra={"worker_id": self.worker_id},

@@ -10,6 +10,7 @@ import { CommandCenterNavigationGrid } from "@/components/command-center/Command
 import { CommandCenterNextActions } from "@/components/command-center/CommandCenterNextActions";
 import { CommandCenterOutcomeReview } from "@/components/command-center/CommandCenterOutcomeReview";
 import { CommandCenterPrioritySetups } from "@/components/command-center/CommandCenterPrioritySetups";
+import { CommandCenterRuntimeWorkers } from "@/components/command-center/CommandCenterRuntimeWorkers";
 import { CommandCenterScanStatus } from "@/components/command-center/CommandCenterScanStatus";
 import { DailyWorkflowPanel } from "@/components/daily-workflows/DailyWorkflowPanel";
 import { AppShell } from "@/components/layout/app-shell";
@@ -52,6 +53,7 @@ export default async function CommandCenterPage({ searchParams }: CommandCenterP
           </div>
           <div className="space-y-6">
             <CommandCenterFreshnessPanel data={data} />
+            <CommandCenterRuntimeWorkers data={data} />
             <CommandCenterAvoidPanel data={data} />
             <CommandCenterScanStatus data={data} />
             <CommandCenterJournalPrompt data={data} />

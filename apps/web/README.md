@@ -16,6 +16,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Workspace daily brief composition for "what should I review now?"
 - Daily command center start page for a tight morning-to-review workflow.
 - API health, worker status, failed fetch states, and last refreshed timestamp.
+- Runtime supervisor worker health, stale worker counts, and pending backend run request counts.
 - Live data onboarding for source selection, symbol/timeframe readiness, freshness checks, gap planning, and prepare-only recovery metadata.
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
@@ -31,6 +32,7 @@ The client composes data from optional backend APIs:
 
 - `GET /health`
 - `GET /health/workers`
+- `GET /runtime-supervisor/health`
 - `GET /workspaces`
 - `GET /symbols`
 - `GET /symbols/{symbol_id}`

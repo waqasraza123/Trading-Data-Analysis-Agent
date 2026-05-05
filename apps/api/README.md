@@ -6,6 +6,12 @@ review workflows. Applying a preset creates watchlists and scheduled scan config
 run scans, create execution setups, send alerts, call brokers, auto-trade, or provide financial
 advice. See `docs/scanner-presets.md`.
 
+Runtime supervisor APIs are implemented under `/runtime-supervisor`. They seed worker definitions,
+record optional worker heartbeats, mark stale workers, summarize runtime health, and record safe
+operator run requests for existing backend workers. They do not start OS processes, execute shell
+commands, call brokers, auto-trade, mutate signals outside existing backend-safe workflows, or
+provide financial advice. See `docs/runtime-supervisor.md`.
+
 Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
 workspace or user define preferred markets, symbols, sessions, timeframes, patterns, confidence
 thresholds, setup-quality thresholds, stale-data tolerance, confirmation requirements, avoid lists,
@@ -336,12 +342,15 @@ GET /health/live
 GET /health/db
 GET /health/ready
 GET /health/workers
+GET /runtime-supervisor/health
 ```
 
 `/health` and `/health/live` only prove the API process is alive. `/health/db` checks
 database connectivity. `/health/ready` requires database connectivity and valid critical
 configuration. `/health/workers` reports live worker and stale monitor state when a database is
 configured, and returns a safe degraded status otherwise.
+`/runtime-supervisor/health` reports seeded runtime worker definitions, worker heartbeats, stale
+instances, and runtime run request counters after migrations are applied.
 
 Run the live feed worker:
 
@@ -544,6 +553,10 @@ NOTIFICATION_WORKER_MAX_ATTEMPTS=3
 NOTIFICATION_WORKER_JITTER_SECONDS=2
 MARKET_SCAN_WORKER_ENABLED=false
 MARKET_SCAN_WORKER_POLL_SECONDS=30
+RUNTIME_SUPERVISOR_VERSION=v1
+RUNTIME_WORKER_STALE_SECONDS=120
+RUNTIME_WORKER_HEARTBEAT_ENABLED=true
+RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
 MARKET_SCAN_WORKER_BATCH_SIZE=10
 MARKET_SCAN_DEFAULT_LOOKBACK_MINUTES=60
 MARKET_SCAN_DEFAULT_INTERVAL_SECONDS=60
