@@ -325,6 +325,9 @@ class Settings(BaseSettings):
     daily_workflow_max_scan_items: int = Field(default=500, ge=1, le=5000)
     daily_workflow_enable_provider_polling: bool = False
     daily_workflow_enable_notifications: bool = False
+    daily_routine_version: str = "v1"
+    daily_routine_max_steps: int = Field(default=20, ge=1, le=100)
+    daily_routine_enable_notifications: bool = False
     preference_profile_default_max_stale_seconds: int = Field(default=7200, ge=1)
     journal_review_version: str = "v1"
     artifact_graph_version: str = "v1"
@@ -549,6 +552,7 @@ class Settings(BaseSettings):
         "signal_priority_version",
         "read_model_version",
         "daily_workflow_version",
+        "daily_routine_version",
         "runtime_supervisor_version",
         "journal_review_version",
         "provider_health_version",

@@ -28,6 +28,13 @@ operator run requests for existing backend workers. They do not start OS process
 commands, call brokers, auto-trade, mutate signals outside existing backend-safe workflows, or
 provide financial advice. See `docs/runtime-supervisor.md`.
 
+Daily routine templates are implemented under `/daily-routines`. They seed named operator
+routines such as pre-market scan, London/New York open review, crypto 24h review, close-of-day
+review, stale-data repair, outcome review, quality review, and journal follow-up. Routine runs
+compose explicit bounded backend-safe steps only; they do not place orders, call brokers,
+auto-trade, suggest buy/sell actions, deliver external notifications by default, or provide
+financial advice. See `docs/daily-routines.md`.
+
 Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
 workspace or user define preferred markets, symbols, sessions, timeframes, patterns, confidence
 thresholds, setup-quality thresholds, stale-data tolerance, confirmation requirements, avoid lists,

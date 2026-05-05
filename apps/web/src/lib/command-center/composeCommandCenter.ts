@@ -54,6 +54,11 @@ type ComposeCommandCenterInput = {
   qualityFailures: CommandCenterFailure[];
   runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
   runtimeSupervisorFailures: CommandCenterFailure[];
+  dailyRoutineTemplates: CommandCenterData["dailyRoutineTemplates"];
+  dailyRoutineRuns: CommandCenterData["dailyRoutineRuns"];
+  selectedDailyRoutineRun: CommandCenterData["selectedDailyRoutineRun"];
+  selectedDailyRoutineRunSteps: CommandCenterData["selectedDailyRoutineRunSteps"];
+  dailyRoutineFailures: CommandCenterData["dailyRoutineFailures"];
 };
 
 const reviewColumns: TriageColumnKey[] = ["high_quality_context"];
@@ -71,8 +76,10 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     input.notificationFailures,
     input.qualityFailures,
     input.runtimeSupervisorFailures,
+    input.dailyRoutineFailures,
   );
   const dailyWorkflowFailures = input.scanner.dailyWorkflowFailures;
+  const dailyRoutineFailures = input.dailyRoutineFailures;
   const whatChanged = buildWhatChanged(input.brief, input.triage, workspaceId);
   const dataReadiness = buildDataReadiness(input.brief, input.providerHealthSnapshots, workspaceId);
   const reviewFirst = buildReviewFirst(input.triage, workspaceId);
@@ -109,6 +116,10 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     selectedDailyWorkflowRun: input.scanner.selectedDailyWorkflowRun,
     selectedDailyWorkflowSteps: input.scanner.selectedDailyWorkflowSteps,
     dailyWorkflowDefaultWatchlistId: input.scanner.watchlists[0]?.watchlist.id || null,
+    dailyRoutineTemplates: input.dailyRoutineTemplates,
+    dailyRoutineRuns: input.dailyRoutineRuns,
+    selectedDailyRoutineRun: input.selectedDailyRoutineRun,
+    selectedDailyRoutineRunSteps: input.selectedDailyRoutineRunSteps,
     notificationUnreadCount: input.notificationUnreadCount,
     notificationReviewCount: input.notificationReviewCount,
     qualityWarnings: input.qualityWarnings,
@@ -157,6 +168,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     },
     failures,
     dailyWorkflowFailures,
+    dailyRoutineFailures,
   };
 }
 

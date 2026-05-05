@@ -8,6 +8,13 @@ import { getRuntimeSupervisorHealth } from "./runtimeSupervisor";
 import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
 import { listJournalEntries } from "./journal";
+import {
+  dailyRoutineFailure,
+  getDailyRoutineRun,
+  listDailyRoutineRuns,
+  listDailyRoutineRunSteps,
+  listDailyRoutineTemplates,
+} from "./dailyRoutines";
 import { composeCommandCenter } from "@/lib/command-center/composeCommandCenter";
 import type { CommandCenterData, CommandCenterFailure } from "@/lib/command-center/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
@@ -17,6 +24,7 @@ export async function getCommandCenterData(params: {
   workspaceId?: string;
   preferenceProfileId?: string;
   workflowRunId?: string;
+  routineRunId?: string;
 }): Promise<CommandCenterData> {
   const env = getPublicEnv();
   const [brief, triage, scanner] = await Promise.all([
@@ -26,11 +34,12 @@ export async function getCommandCenterData(params: {
   ]);
   const workspace = triage.workspace || scanner.workspace || null;
   const readModelResult = workspace ? await getCommandCenterReadModel(workspace.id) : null;
-  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures } = workspace
+  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures, dailyRoutineTemplates, dailyRoutineRuns, selectedDailyRoutineRun, selectedDailyRoutineRunSteps, dailyRoutineFailures } = workspace
     ? await fetchCommandCenterWorkspaceContext(
         workspace.id,
         triage.allCandidates.slice(0, 10).map((candidate) => candidate.signal.signal.id),
         readModelResult?.ok ? readModelResult.data : null,
+        params.routineRunId || null,
       )
     : {
         recentJournalEntries: [],
@@ -46,6 +55,11 @@ export async function getCommandCenterData(params: {
         qualityFailures: [],
         runtimeSupervisorHealth: null,
         runtimeSupervisorFailures: [],
+        dailyRoutineTemplates: [],
+        dailyRoutineRuns: [],
+        selectedDailyRoutineRun: null,
+        selectedDailyRoutineRunSteps: [],
+        dailyRoutineFailures: [],
       };
 
   return composeCommandCenter({
@@ -71,6 +85,11 @@ export async function getCommandCenterData(params: {
     qualityFailures,
     runtimeSupervisorHealth,
     runtimeSupervisorFailures,
+    dailyRoutineTemplates,
+    dailyRoutineRuns,
+    selectedDailyRoutineRun,
+    selectedDailyRoutineRunSteps,
+    dailyRoutineFailures,
   });
 }
 
@@ -78,6 +97,7 @@ async function fetchCommandCenterWorkspaceContext(
   workspaceId: UUID,
   signalIds: UUID[],
   readModel: CommandCenterReadModel | null,
+  selectedRoutineRunId: UUID | null,
 ): Promise<{
   recentJournalEntries: JournalEntry[];
   journalEntriesBySignalId: Map<UUID, JournalEntry[]>;
@@ -92,13 +112,19 @@ async function fetchCommandCenterWorkspaceContext(
   qualityFailures: CommandCenterFailure[];
   runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
   runtimeSupervisorFailures: CommandCenterFailure[];
+  dailyRoutineTemplates: CommandCenterData["dailyRoutineTemplates"];
+  dailyRoutineRuns: CommandCenterData["dailyRoutineRuns"];
+  selectedDailyRoutineRun: CommandCenterData["selectedDailyRoutineRun"];
+  selectedDailyRoutineRunSteps: CommandCenterData["selectedDailyRoutineRunSteps"];
+  dailyRoutineFailures: CommandCenterData["dailyRoutineFailures"];
 }> {
-  const [journalContext, providerHealthContext, notificationContext, qualityContext, runtimeSupervisorContext] = await Promise.all([
+  const [journalContext, providerHealthContext, notificationContext, qualityContext, runtimeSupervisorContext, dailyRoutineContext] = await Promise.all([
     fetchJournalContext(workspaceId, signalIds),
     fetchProviderHealthContext(workspaceId),
     fetchNotificationContext(workspaceId),
     readModel ? Promise.resolve(qualityContextFromReadModel(readModel)) : fetchQualityContext(workspaceId),
     fetchRuntimeSupervisorContext(workspaceId),
+    fetchDailyRoutineContext(workspaceId, selectedRoutineRunId),
   ]);
   return {
     ...journalContext,
@@ -106,6 +132,43 @@ async function fetchCommandCenterWorkspaceContext(
     ...notificationContext,
     ...qualityContext,
     ...runtimeSupervisorContext,
+    ...dailyRoutineContext,
+  };
+}
+
+async function fetchDailyRoutineContext(
+  workspaceId: UUID,
+  selectedRoutineRunId: UUID | null,
+): Promise<{
+  dailyRoutineTemplates: CommandCenterData["dailyRoutineTemplates"];
+  dailyRoutineRuns: CommandCenterData["dailyRoutineRuns"];
+  selectedDailyRoutineRun: CommandCenterData["selectedDailyRoutineRun"];
+  selectedDailyRoutineRunSteps: CommandCenterData["selectedDailyRoutineRunSteps"];
+  dailyRoutineFailures: CommandCenterData["dailyRoutineFailures"];
+}> {
+  const failures: CommandCenterData["dailyRoutineFailures"] = [];
+  const [templatesResult, runsResult, selectedRunResult] = await Promise.all([
+    listDailyRoutineTemplates({ workspaceId }),
+    listDailyRoutineRuns({ workspaceId, limit: 10 }),
+    selectedRoutineRunId ? getDailyRoutineRun(selectedRoutineRunId) : Promise.resolve(null),
+  ]);
+  const dailyRoutineTemplates = readDailyRoutineList("Routine templates", templatesResult, failures);
+  const dailyRoutineRuns = readDailyRoutineList("Routine runs", runsResult, failures);
+  const selectedDailyRoutineRun = selectedRunResult
+    ? readDailyRoutineNullable("Selected routine run", selectedRunResult, failures)
+    : dailyRoutineRuns[0] || null;
+  const stepsResult = selectedDailyRoutineRun
+    ? await listDailyRoutineRunSteps(selectedDailyRoutineRun.id)
+    : null;
+  const selectedDailyRoutineRunSteps = stepsResult
+    ? readDailyRoutineList("Routine run steps", stepsResult, failures)
+    : [];
+  return {
+    dailyRoutineTemplates,
+    dailyRoutineRuns,
+    selectedDailyRoutineRun,
+    selectedDailyRoutineRunSteps,
+    dailyRoutineFailures: failures,
   };
 }
 
@@ -273,6 +336,34 @@ function readOptionalList<T>(
     failures.push(toFailure(label, result));
   }
   return [];
+}
+
+function readDailyRoutineList<T>(
+  label: string,
+  result: ApiResult<T[]>,
+  failures: CommandCenterData["dailyRoutineFailures"],
+): T[] {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing) {
+    failures.push(dailyRoutineFailure(label, result));
+  }
+  return [];
+}
+
+function readDailyRoutineNullable<T>(
+  label: string,
+  result: ApiResult<T>,
+  failures: CommandCenterData["dailyRoutineFailures"],
+): T | null {
+  if (result.ok) {
+    return result.data;
+  }
+  if (!result.error.missing) {
+    failures.push(dailyRoutineFailure(label, result));
+  }
+  return null;
 }
 
 function readRecord(value: unknown): Record<string, unknown> {

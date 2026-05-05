@@ -14,6 +14,7 @@ import { CommandCenterRuntimeWorkers } from "@/components/command-center/Command
 import { CommandCenterScanStatus } from "@/components/command-center/CommandCenterScanStatus";
 import { DailyWorkflowPanel } from "@/components/daily-workflows/DailyWorkflowPanel";
 import { AppShell } from "@/components/layout/app-shell";
+import { RoutineTemplateList } from "@/components/routines/RoutineTemplateList";
 import { getCommandCenterData } from "@/lib/api/commandCenter";
 
 type CommandCenterPageProps = {
@@ -21,6 +22,7 @@ type CommandCenterPageProps = {
     workspaceId?: string;
     preferenceProfileId?: string;
     workflowRunId?: string;
+    routineRunId?: string;
   }>;
 };
 
@@ -42,6 +44,16 @@ export default async function CommandCenterPage({ searchParams }: CommandCenterP
           selectedRun={data.selectedDailyWorkflowRun}
           selectedSteps={data.selectedDailyWorkflowSteps}
           basePath="/command-center"
+        />
+        <RoutineTemplateList
+          workspaceId={data.workspace?.id || null}
+          watchlistId={data.dailyWorkflowDefaultWatchlistId}
+          preferenceProfileId={data.selectedPreferenceProfile?.id || null}
+          templates={data.dailyRoutineTemplates}
+          runs={data.dailyRoutineRuns}
+          latestRun={data.selectedDailyRoutineRun}
+          latestRunSteps={data.selectedDailyRoutineRunSteps}
+          failures={data.dailyRoutineFailures}
         />
         <CommandCenterMorningBrief data={data} />
         <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_390px]">

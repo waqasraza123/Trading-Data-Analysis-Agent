@@ -24,6 +24,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
 - Product readiness checklist for explicit daily-use validation across API, database, seed data, workspace setup, data freshness, scanner setup, workers, optional notifications, and journal readiness.
 - One-click daily workflow control for provider health refresh, recovery planning, deterministic scans, setup context generation, review-priority scoring, digest generation, and brief navigation.
+- Daily routine template controls on the command center for named bounded routines such as pre-market scan, session-open reviews, close-of-day review, stale-data repair, quality review, and journal follow-up.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
 
@@ -139,6 +140,11 @@ The client composes data from optional backend APIs:
 - `GET /daily-workflows/runs/{run_id}`
 - `GET /daily-workflows/runs/{run_id}/steps`
 - `POST /daily-workflows/runs/{run_id}/cancel`
+- `GET /daily-routines/templates`
+- `POST /daily-routines/templates/{template_id}/run`
+- `GET /daily-routines/runs`
+- `GET /daily-routines/runs/{run_id}`
+- `GET /daily-routines/runs/{run_id}/steps`
 - `POST /data-quality/candle-range/run`
 - `POST /candle-gap-recovery/plans`
 - `GET /candle-gap-recovery/plans/{plan_id}/items`

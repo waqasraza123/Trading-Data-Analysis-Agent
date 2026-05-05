@@ -39,6 +39,11 @@ from app.modules.cross_asset_context.models import (
     CrossAssetContextRun,
 )
 from app.modules.daily_briefs.models import DailyBriefItem, DailyBriefRun
+from app.modules.daily_routines.models import (
+    DailyRoutineRun,
+    DailyRoutineRunStep,
+    DailyRoutineTemplate,
+)
 from app.modules.daily_workflows.models import DailyWorkflowRun, DailyWorkflowStep
 from app.modules.data_contracts.models import DataContract, DataContractValidation
 from app.modules.data_quality.models import DataQualityFinding, DataQualityRun
@@ -219,6 +224,9 @@ __all__ = [
     "DashboardSymbolReadModel",
     "DailyBriefItem",
     "DailyBriefRun",
+    "DailyRoutineRun",
+    "DailyRoutineRunStep",
+    "DailyRoutineTemplate",
     "DailyWorkflowRun",
     "DailyWorkflowStep",
     "DecisionReadinessAssessment",

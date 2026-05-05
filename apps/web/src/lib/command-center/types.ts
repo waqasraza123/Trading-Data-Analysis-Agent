@@ -1,5 +1,6 @@
 import type { JournalEntry, UUID, Workspace } from "@/lib/api/types";
 import type { DailyWorkflowFailure, DailyWorkflowRun, DailyWorkflowStep } from "@/lib/daily-workflows/types";
+import type { DailyRoutineFailure, DailyRoutineRun, DailyRoutineRunStep, DailyRoutineTemplate } from "@/lib/routines/types";
 import type { PreferenceProfile } from "@/lib/preferences/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
 import type { RuntimeSupervisorHealth } from "@/lib/api/runtimeSupervisor";
@@ -158,6 +159,10 @@ export type CommandCenterData = {
   selectedDailyWorkflowRun: DailyWorkflowRun | null;
   selectedDailyWorkflowSteps: DailyWorkflowStep[];
   dailyWorkflowDefaultWatchlistId: UUID | null;
+  dailyRoutineTemplates: DailyRoutineTemplate[];
+  dailyRoutineRuns: DailyRoutineRun[];
+  selectedDailyRoutineRun: DailyRoutineRun | null;
+  selectedDailyRoutineRunSteps: DailyRoutineRunStep[];
   notificationUnreadCount: number;
   notificationReviewCount: number;
   qualityWarnings: CommandCenterQualityWarning[];
@@ -188,4 +193,5 @@ export type CommandCenterData = {
   };
   failures: CommandCenterFailure[];
   dailyWorkflowFailures: DailyWorkflowFailure[];
+  dailyRoutineFailures: DailyRoutineFailure[];
 };
