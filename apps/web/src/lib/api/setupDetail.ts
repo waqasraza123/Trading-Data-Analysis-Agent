@@ -5,6 +5,7 @@ import { listSignalOutcomes } from "@/lib/api/outcomes";
 import { getLatestSignalReadiness } from "@/lib/api/readiness";
 import { getSignalAuditTimeline, getSignalReport } from "@/lib/api/reports";
 import { getSignal, getSignalMarketRegime, getSignalMarketSession } from "@/lib/api/signals";
+import { getSetupChartContext } from "@/lib/api/setupChart";
 import { getSignalSetupContext } from "@/lib/api/setup-context";
 import type {
   ApiFailure,
@@ -68,6 +69,12 @@ export async function getSetupDetail(signalId: UUID): Promise<SetupDetailData> {
     workspaceId ? listJournalEntries({ workspaceId, signalId }) : null,
     crossAssetContext ? listCrossAssetContextResults(crossAssetContext.id) : null,
   ]);
+  const setupChart = await getSetupChartContext({
+    signalId,
+    signal,
+    setupContext,
+    outcomes,
+  });
 
   return {
     appName: env.appName,
@@ -94,6 +101,7 @@ export async function getSetupDetail(signalId: UUID): Promise<SetupDetailData> {
     journalEntries: journalEntriesResult
       ? readResult("Journal entries", journalEntriesResult, [], failures)
       : [],
+    setupChart,
     failures,
     lastUpdatedAt: new Date().toISOString(),
   };

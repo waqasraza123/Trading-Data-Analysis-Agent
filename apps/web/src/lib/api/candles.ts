@@ -9,6 +9,8 @@ type CandleWindowParams = {
   sourceId?: UUID | null;
   startTime: string;
   endTime: string;
+  limit?: number;
+  offset?: number;
 };
 
 type LatestCandleParams = {
@@ -27,6 +29,23 @@ export function getLatestCandle(params: LatestCandleParams): Promise<ApiResult<C
       source_id: params.sourceId || undefined,
       timeframe: params.timeframe,
       is_final: params.isFinal ?? true,
+    },
+    optional: true,
+  });
+}
+
+export function listCandles(params: CandleWindowParams): Promise<ApiResult<CandleRead[]>> {
+  return apiGet<CandleRead[]>("/candles", {
+    query: {
+      workspace_id: params.workspaceId,
+      symbol_id: params.symbolId,
+      source_id: params.sourceId || undefined,
+      timeframe: params.timeframe,
+      start_time: params.startTime,
+      end_time: params.endTime,
+      is_final: true,
+      limit: params.limit ?? 200,
+      offset: params.offset ?? 0,
     },
     optional: true,
   });

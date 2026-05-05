@@ -19,6 +19,7 @@ import type {
   SignalRiskNote,
   UUID,
 } from "@/lib/api/types";
+import type { SetupChartContext } from "@/lib/api/setupChart";
 
 export type SetupDetailFailure = {
   label: string;
@@ -46,6 +47,7 @@ export type SetupDetailData = {
   crossAssetContext: CrossAssetContextRun | null;
   crossAssetResults: CrossAssetContextResult[];
   journalEntries: JournalEntry[];
+  setupChart: SetupChartContext;
   failures: SetupDetailFailure[];
   lastUpdatedAt: string;
 };
@@ -98,6 +100,7 @@ export type SetupDetailViewModel = {
   crossAssetContext: CrossAssetContextRun | null;
   crossAssetResults: CrossAssetContextResult[];
   journalEntries: JournalEntry[];
+  setupChart: SetupChartContext;
   actionPlanSection: JsonRecord | null;
   humanReviewSection: JsonRecord | null;
   reportMissingSections: string[];

@@ -13,6 +13,7 @@ import { SetupOutcomeHistoryPanel } from "@/components/setup-detail/SetupOutcome
 import { SetupQualityPanel } from "@/components/setup-detail/SetupQualityPanel";
 import { SetupReasoningPanel } from "@/components/setup-detail/SetupReasoningPanel";
 import { SetupWaitAvoidPanel } from "@/components/setup-detail/SetupWaitAvoidPanel";
+import { SetupVisualPanel } from "@/components/setup-detail/SetupVisualPanel";
 import { SetupZonesPanel } from "@/components/setup-detail/SetupZonesPanel";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { composeSetupDetail } from "@/lib/setup-detail/composeSetupDetail";
@@ -41,6 +42,7 @@ export function SetupDetailView({ data }: SetupDetailViewProps) {
       <SetupDetailHeader header={model.header} />
       <WorkflowLinks workspaceId={workspaceId} targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review", "journal"]} />
       <SetupErrorSection failures={model.failures.filter((failure) => !failure.missing)} />
+      <SetupVisualPanel model={model} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <main className="space-y-6">
           <SetupBiasSummary model={model} />
