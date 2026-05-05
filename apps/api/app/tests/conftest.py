@@ -38,6 +38,8 @@ TEST_DATABASE_SKIP_REASON = "DB integration tests require TEST_DATABASE_URL"
 APP_TABLES = (
     "provider_connection_tests",
     "provider_credential_refs",
+    "workspace_setup_step_results",
+    "workspace_setup_runs",
     "notification_delivery_attempts",
     "notification_events",
     "notification_channels",

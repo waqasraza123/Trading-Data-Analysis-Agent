@@ -383,6 +383,10 @@ class Settings(BaseSettings):
     engine_execution_default_priority: str = "normal"
     backfill_plan_version: str = "v1"
     product_readiness_version: str = "v1"
+    workspace_setup_version: str = "v1"
+    workspace_setup_demo_data_enabled: bool = True
+    workspace_setup_default_market: str = "crypto"
+    workspace_setup_default_timeframes: str = "1m,5m,15m"
     backfill_plan_default_limit: int = Field(default=1000, ge=1)
     backfill_plan_max_limit: int = Field(default=10000, ge=1)
     service_name: str = "trading-intelligence-api"
@@ -559,6 +563,7 @@ class Settings(BaseSettings):
         "provider_credentials_version",
         "scanner_preset_version",
         "product_readiness_version",
+        "workspace_setup_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

@@ -22,6 +22,13 @@ API reachability, and critical stale/missing data indicators. It validates readi
 not seed data, run scans, run daily workflows, start workers, call providers, send notifications,
 execute broker actions, auto-trade, or provide financial advice. See `docs/product-readiness.md`.
 
+Guided workspace setup is implemented under `/workspace-setup`. It persists auditable setup runs
+and step results for workspace, operator, symbols, source, credential reference, watchlist, scanner
+preset, preference profile, optional synthetic demo candles, readiness validation, and an optional
+explicit first deterministic scan. It does not store raw secrets, connect to brokers for orders,
+place trades, auto-trade, send trading alerts, run hidden scans, or provide financial advice. See
+`docs/workspace-setup.md`.
+
 Runtime supervisor APIs are implemented under `/runtime-supervisor`. They seed worker definitions,
 record optional worker heartbeats, mark stale workers, summarize runtime health, and record safe
 operator run requests for existing backend workers. They do not start OS processes, execute shell
@@ -303,6 +310,15 @@ Run product readiness:
 ```sh
 curl -X POST "http://127.0.0.1:8000/product-readiness/run?workspaceId=<workspace-id>"
 curl "http://127.0.0.1:8000/product-readiness/latest?workspaceId=<workspace-id>"
+```
+
+Start guided workspace setup:
+
+```sh
+curl -X POST "http://127.0.0.1:8000/workspace-setup/start" \
+  -H "content-type: application/json" \
+  -d '{"metadata":{"source":"local"}}'
+curl "http://127.0.0.1:8000/workspace-setup/runs/<setup-run-id>"
 ```
 
 Seed deterministic backend defaults:

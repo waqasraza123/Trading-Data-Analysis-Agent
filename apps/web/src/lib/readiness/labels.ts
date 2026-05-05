@@ -75,6 +75,7 @@ export function remediationHref(check: ProductReadinessCheck, workspaceId?: stri
 export function remediationLabel(check: ProductReadinessCheck): string {
   const route = check.related_route || routeForCheckKey(check.key);
   const labels: Record<string, string> = {
+    "/setup": "Setup wizard",
     "/data/onboarding": "Data onboarding",
     "/scanner": "Scanner",
     "/preferences/strategy": "Preferences",
@@ -90,9 +91,18 @@ export function remediationLabel(check: ProductReadinessCheck): string {
 
 function routeForCheckKey(key: string): string {
   if (
-    key.includes("data") ||
-    key.includes("source") ||
+    key.includes("workspace") ||
+    key.includes("user") ||
+    key.includes("seed") ||
     key.includes("symbol") ||
+    key.includes("source") ||
+    key.includes("watchlist") ||
+    key.includes("scan")
+  ) {
+    return "/setup";
+  }
+  if (
+    key.includes("data") ||
     key.includes("fresh") ||
     key.includes("provider") ||
     key.includes("stale")

@@ -183,6 +183,7 @@ from app.modules.webhook_outbox.models import (
     WebhookOutboxEvent,
     WebhookSubscription,
 )
+from app.modules.workspace_setup.models import WorkspaceSetupRun, WorkspaceSetupStepResult
 from app.modules.workspaces.models import Workspace
 
 metadata = Base.metadata
@@ -340,5 +341,7 @@ __all__ = [
     "WebhookOutboxEvent",
     "WebhookSubscription",
     "Workspace",
+    "WorkspaceSetupRun",
+    "WorkspaceSetupStepResult",
     "metadata",
 ]
