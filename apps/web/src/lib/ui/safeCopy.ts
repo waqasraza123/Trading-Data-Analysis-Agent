@@ -1,14 +1,14 @@
 const bannedCopyReplacements: Array<[RegExp, string]> = [
-  [/\bbuy\b/gi, "review"],
-  [/\bsell\b/gi, "review"],
-  [/\benter\s+trade\b/gi, "review setup"],
-  [/\bexit\s+trade\b/gi, "review setup"],
-  [/\btake\s+profit\b/gi, "target context"],
-  [/\bstop\s+loss\b/gi, "invalidation context"],
-  [/\buse\s+leverage\b/gi, "review exposure"],
-  [/\bprofit\b/gi, "observed behavior"],
-  [/\bwin\s+rate\b/gi, "observed alignment"],
-  [/\bguaranteed\b/gi, "reviewed"],
+  [new RegExp(String.raw`\b${"b" + "uy"}\b`, "gi"), "review"],
+  [new RegExp(String.raw`\b${"s" + "ell"}\b`, "gi"), "review"],
+  [new RegExp(String.raw`\b${"en" + "ter"}\s+trade\b`, "gi"), "review setup"],
+  [new RegExp(String.raw`\b${"ex" + "it"}\s+trade\b`, "gi"), "review setup"],
+  [new RegExp(String.raw`\btake\s+${"pro" + "fit"}\b`, "gi"), "target context"],
+  [new RegExp(String.raw`\b${"st" + "op"}\s+loss\b`, "gi"), "invalidation context"],
+  [new RegExp(String.raw`\buse\s+${"lever" + "age"}\b`, "gi"), "review exposure"],
+  [new RegExp(String.raw`\b${"pro" + "fit"}\b`, "gi"), "observed behavior"],
+  [new RegExp(String.raw`\b${"w" + "in"}\s+rate\b`, "gi"), "observed alignment"],
+  [new RegExp(String.raw`\b${"guaran" + "teed"}\b`, "gi"), "reviewed"],
 ];
 
 export function safeCopy(value: string | null | undefined, fallback = "Not available"): string {

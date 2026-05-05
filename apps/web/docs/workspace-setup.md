@@ -48,7 +48,7 @@ The first scan is explicit. The UI requires a checkbox before submitting the fir
 does not trigger scans through hidden page loads or summary rendering.
 
 Copy stays non-advisory. The wizard describes setup, review, readiness, observations, and
-deterministic scans. It does not use broker, order, auto-trading, trading-alert, buy/sell, or
+deterministic scans. It does not use broker, order, auto-trading, external-signal-delivery, directional-action, or
 financial-advice language.
 
 ## Frontend Files

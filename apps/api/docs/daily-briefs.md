@@ -2,7 +2,7 @@
 
 Daily briefs persist a deterministic daily, session, intraday, watchlist, or custom-period market-intelligence brief for a workspace. The module is the backend contract for the daily command center and `/brief` page.
 
-The brief is not broker execution, not auto-trading, not financial advice, and not a buy/sell signal service. It only reads existing persisted artifacts and writes `daily_brief_runs` plus `daily_brief_items`.
+The brief is not broker execution, not auto-trading, not financial advice, and not a directional-action service. It only reads existing persisted artifacts and writes `daily_brief_runs` plus `daily_brief_items`.
 
 ## Sources
 

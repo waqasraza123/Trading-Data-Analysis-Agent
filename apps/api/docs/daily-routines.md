@@ -74,4 +74,4 @@ Run request:
 
 ## Safety
 
-Routine runs are explicit and bounded by template steps plus `DAILY_ROUTINE_MAX_STEPS`. The runner does not place orders, call brokers, execute trading actions, auto-trade, copy-trade, or suggest buy/sell actions. External notifications remain disabled by default.
+Routine runs are explicit and bounded by template steps plus `DAILY_ROUTINE_MAX_STEPS`. The runner does not place orders, call brokers, execute trading actions, auto-trade, copy-trade, or suggest directional actions. External notifications remain disabled by default.

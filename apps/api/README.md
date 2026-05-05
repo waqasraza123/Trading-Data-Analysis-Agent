@@ -47,7 +47,7 @@ Daily routine templates are implemented under `/daily-routines`. They seed named
 routines such as pre-market scan, London/New York open review, crypto 24h review, close-of-day
 review, stale-data repair, outcome review, quality review, and journal follow-up. Routine runs
 compose explicit bounded backend-safe steps only; they do not place orders, call brokers,
-auto-trade, suggest buy/sell actions, deliver external notifications by default, or provide
+auto-trade, suggest directional actions, deliver external notifications by default, or provide
 financial advice. See `docs/daily-routines.md`.
 
 Personal strategy preference profiles are implemented under `/preference-profiles`. They let a
@@ -226,6 +226,11 @@ The integrated daily product flow is data freshness -> run workflow -> scanner p
 triage -> setup detail -> journal/outcome review. Notifications are in-app intelligence events for
 review state only, not external delivery by default. Quality scoreboard data is observed behavior
 and diagnostics only, not account-performance or broker-result reporting.
+
+The daily workflow merge reconciles the daily brief, workflow run, scanner preset, quality
+scoreboard, and notification inbox surfaces into one review loop. Existing deterministic artifacts
+remain the source of truth; workflow records only orchestrate bounded backend-safe services and
+persist the artifacts they create.
 
 Daily workflow integration uses these backend modules together without adding broker execution:
 

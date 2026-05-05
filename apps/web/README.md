@@ -250,6 +250,8 @@ The “Run daily scan” control does not execute notifications, broker actions,
 
 The shared navigation links Command Center, Readiness, Brief, Scanner, Triage, Quality, Notifications, Data, Journal, and Preferences. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; readiness blockers link to their owning setup surfaces; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to notification events and the quality scoreboard.
 
+The merged workflow contract is documented in `docs/daily-use-workflow.md`.
+
 ## Notification Inbox
 
 The notification inbox at `/notifications` is an in-app review surface over sanitized
