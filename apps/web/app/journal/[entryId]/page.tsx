@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { JournalEntryDetail } from "@/components/journal/JournalEntryDetail";
 import { getJournalData } from "@/lib/api/journal";
@@ -14,7 +14,7 @@ export default async function JournalEntryPage({ params, searchParams }: Journal
   const data = await getJournalData({ ...queryParams, entryId: routeParams.entryId });
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <div className="space-y-6">
         {data.selectedEntry ? (
           <JournalEntryDetail data={data} selectedEntry={data.selectedEntry} />

@@ -4,7 +4,7 @@ import { PreferenceProfileForm } from "@/components/preferences/PreferenceProfil
 import { PreferenceProfileList } from "@/components/preferences/PreferenceProfileList";
 import { PreferenceProfileSummary } from "@/components/preferences/PreferenceProfileSummary";
 import { Badge } from "@/components/status/badge";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Section } from "@/components/ui/Section";
 import { getPreferenceProfilesPageData } from "@/lib/api/preferenceProfiles";
@@ -24,7 +24,7 @@ export default async function StrategyPreferencesPage({
   const data = await getPreferenceProfilesPageData(params);
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <div className="space-y-6">
         <PageHeader
           eyebrow="Personal review preferences"

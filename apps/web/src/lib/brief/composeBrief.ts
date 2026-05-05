@@ -98,6 +98,11 @@ export function composeBrief(input: ComposeBriefInput): WorkspaceBrief {
     workspace: input.workspace ? { id: input.workspace.id, name: input.workspace.name } : null,
     requestedWorkspaceId: input.requestedWorkspaceId,
     generatedAt: input.generatedAt,
+    periodStart: null,
+    periodEnd: null,
+    timezone: null,
+    watchlistId: input.watchlists[0]?.watchlist.id || null,
+    sourceLabel: "Frontend fallback composition",
     backendUnavailable: input.backendUnavailable,
     summary: {
       totalSymbolsReviewed: marketFocus.length,

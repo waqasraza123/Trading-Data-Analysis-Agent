@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { SetupWizardLayout } from "@/components/setup-wizard/SetupWizardLayout";
 import { getSetupWizardInitialData } from "@/lib/api/workspaceSetup";
 
@@ -11,9 +11,10 @@ type SetupPageProps = {
 export default async function SetupPage({ searchParams }: SetupPageProps) {
   const params = await searchParams;
   const data = await getSetupWizardInitialData(params);
+  const selectedWorkspace = data.workspaces.find((workspace) => workspace.id === data.selectedWorkspaceId) || null;
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={selectedWorkspace?.id} workspaceName={selectedWorkspace?.name}>
       <SetupWizardLayout initialData={data} />
     </AppShell>
   );

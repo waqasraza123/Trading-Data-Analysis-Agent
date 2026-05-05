@@ -1,5 +1,5 @@
 import { EmptyState } from "@/components/empty-states/empty-state";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { Panel } from "@/components/layout/panel";
 import { ReadinessBlockers } from "@/components/readiness/ReadinessBlockers";
 import { ReadinessChecklist } from "@/components/readiness/ReadinessChecklist";
@@ -30,7 +30,7 @@ export default async function ReadinessPage({ searchParams }: ReadinessPageProps
   const data = await getReadinessPageData(params);
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <div className="space-y-6">
         <ReadinessHeader data={data} />
         {!data.workspace && (

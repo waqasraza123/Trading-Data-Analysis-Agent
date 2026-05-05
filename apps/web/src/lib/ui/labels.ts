@@ -1,4 +1,5 @@
 import { humanizeLabel } from "@/lib/formatting/labels";
+import { safeCopy } from "./safeCopy";
 
 const safeLabelOverrides: Record<string, string> = {
   ["b" + "uy"]: "Review",
@@ -23,7 +24,7 @@ export function uiLabel(value: string | null | undefined): string {
     return "Not available";
   }
   const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
-  return safeLabelOverrides[normalized] || humanizeLabel(value);
+  return safeCopy(safeLabelOverrides[normalized] || humanizeLabel(value));
 }
 
 export function workspaceLabel(value: string | null | undefined): string {

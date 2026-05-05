@@ -11,7 +11,7 @@ export function CommandCenterPrioritySetups({ data }: { data: CommandCenterData 
       ) : (
         <div className="grid gap-3 xl:grid-cols-2">
           {data.reviewFirst.map((item) => (
-            <Link key={item.signalId} href={item.href} className="rounded-lg border border-[var(--line)] p-4 hover:bg-slate-50 dark:hover:bg-slate-900">
+            <Link key={item.signalId} href={item.href} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:-translate-y-0.5 hover:shadow-soft">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <p className="text-base font-semibold text-[var(--strong)]">{item.symbol}</p>

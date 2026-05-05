@@ -1,11 +1,19 @@
 export type StatusTone = "neutral" | "good" | "warning" | "danger" | "info";
 
 export const statusToneClassName: Record<StatusTone, string> = {
-  neutral: "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200",
-  good: "border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-800 dark:bg-teal-950 dark:text-teal-100",
-  warning: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100",
-  danger: "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-100",
-  info: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100",
+  neutral: "border-slate-300/70 bg-slate-100/80 text-slate-700 dark:border-slate-600/70 dark:bg-slate-800/70 dark:text-slate-200",
+  good: "border-teal-200/80 bg-teal-50/90 text-teal-800 dark:border-teal-700/70 dark:bg-teal-950/70 dark:text-teal-100",
+  warning: "border-amber-200/80 bg-amber-50/90 text-amber-800 dark:border-amber-700/70 dark:bg-amber-950/70 dark:text-amber-100",
+  danger: "border-rose-200/80 bg-rose-50/90 text-rose-800 dark:border-rose-800/70 dark:bg-rose-950/70 dark:text-rose-100",
+  info: "border-blue-200/80 bg-blue-50/90 text-blue-800 dark:border-blue-800/70 dark:bg-blue-950/70 dark:text-blue-100",
+};
+
+export const statusDotClassName: Record<StatusTone, string> = {
+  neutral: "bg-slate-400",
+  good: "bg-teal-500",
+  warning: "bg-amber-500",
+  danger: "bg-rose-500",
+  info: "bg-blue-500",
 };
 
 export function toneForBias(value: string | null | undefined): StatusTone {
@@ -71,6 +79,10 @@ export function toneForDataQuality(value: string | null | undefined): StatusTone
     return "danger";
   }
   return "neutral";
+}
+
+export function toneForSetupQuality(value: string | null | undefined): StatusTone {
+  return toneForDataQuality(value);
 }
 
 export function toneForPriority(value: string | null | undefined): StatusTone {

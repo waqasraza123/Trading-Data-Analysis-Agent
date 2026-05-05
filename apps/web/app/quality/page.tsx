@@ -1,10 +1,11 @@
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { CohortDriftPanel } from "@/components/quality/CohortDriftPanel";
 import { ConfidenceCalibrationPanel } from "@/components/quality/ConfidenceCalibrationPanel";
 import { PatternAttributionPanel } from "@/components/quality/PatternAttributionPanel";
 import { ProfileReliabilityTable } from "@/components/quality/ProfileReliabilityTable";
 import { QualityEmptyState } from "@/components/quality/QualityEmptyState";
 import { QualityErrorState } from "@/components/quality/QualityErrorState";
+import { QualityReviewFocusPanel } from "@/components/quality/QualityReviewFocusPanel";
 import { QualityScoreboardHeader } from "@/components/quality/QualityScoreboardHeader";
 import { QualitySummaryCards } from "@/components/quality/QualitySummaryCards";
 import { QualityWarningsPanel } from "@/components/quality/QualityWarningsPanel";
@@ -21,7 +22,7 @@ export default async function QualityPage({ searchParams }: QualityPageProps) {
   const data = await getQualityScoreboardData(params);
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <div className="space-y-6">
         <QualityScoreboardHeader data={data} />
         <QualityErrorState failures={data.failures} />
@@ -30,6 +31,7 @@ export default async function QualityPage({ searchParams }: QualityPageProps) {
         ) : (
           <>
             <QualitySummaryCards data={data} />
+            <QualityReviewFocusPanel data={data} />
             <QualityWarningsPanel data={data} />
             <ProfileReliabilityTable data={data} />
             <PatternAttributionPanel data={data} />

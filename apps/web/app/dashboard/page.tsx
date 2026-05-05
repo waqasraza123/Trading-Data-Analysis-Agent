@@ -7,7 +7,7 @@ import { SignalDigestPanel } from "@/components/dashboard/signal-digest-panel";
 import { TopSummaryRail } from "@/components/dashboard/top-summary-rail";
 import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
 import { EmptyState } from "@/components/empty-states/empty-state";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -25,7 +25,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const data = await getDashboardData(params);
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <div className="space-y-6">
         <PageHeader
           eyebrow="Operator cockpit"

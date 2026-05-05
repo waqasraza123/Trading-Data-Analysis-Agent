@@ -1,14 +1,36 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/ui/cn";
 
 type CardProps = {
   children: ReactNode;
   className?: string;
+  interactive?: boolean;
 };
 
-export function Card({ children, className = "" }: CardProps) {
-  return <div className={`surface rounded-lg p-5 ${className}`}>{children}</div>;
+export function Card({ children, className, interactive = false }: CardProps) {
+  return (
+    <div
+      className={cn(
+        "surface rounded-2xl p-5 transition duration-200",
+        interactive && "hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--border))] hover:shadow-glow",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
-export function MutedCard({ children, className = "" }: CardProps) {
-  return <div className={`muted-surface rounded-lg p-4 ${className}`}>{children}</div>;
+export function MutedCard({ children, className, interactive = false }: CardProps) {
+  return (
+    <div
+      className={cn(
+        "muted-surface rounded-2xl p-4 transition duration-200",
+        interactive && "hover:border-[color-mix(in_srgb,var(--accent)_30%,var(--border))] hover:bg-[var(--surface-elevated)]",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }

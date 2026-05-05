@@ -1,6 +1,8 @@
 export type NavigationTarget =
   | "commandCenter"
+  | "dashboard"
   | "setup"
+  | "readiness"
   | "brief"
   | "dataOnboarding"
   | "scanner"
@@ -16,25 +18,28 @@ export type NavigationItem = {
   href: string;
   label: string;
   section: string;
+  shortLabel?: string;
+  description: string;
 };
 
 export const navigationItems: NavigationItem[] = [
-  { key: "commandCenter", href: "/command-center", label: "Command Center", section: "Daily" },
-  { key: "setup", href: "/setup", label: "Setup", section: "Readiness" },
-  { key: "brief", href: "/brief", label: "Brief", section: "Daily" },
-  { key: "dataOnboarding", href: "/data/onboarding", label: "Data", section: "Readiness" },
-  { key: "scanner", href: "/scanner", label: "Scanner", section: "Review" },
-  { key: "triage", href: "/triage", label: "Triage", section: "Review" },
-  { key: "quality", href: "/quality", label: "Quality", section: "Review" },
-  { key: "notifications", href: "/notifications", label: "Notifications", section: "Inbox" },
-  { key: "journal", href: "/journal", label: "Journal", section: "Learning" },
-  { key: "review", href: "/review/outcomes", label: "Review Outcomes", section: "Learning" },
-  { key: "preferences", href: "/preferences/strategy", label: "Preferences", section: "Settings" },
+  { key: "commandCenter", href: "/command-center", label: "Command Center", shortLabel: "Command", section: "Command Center", description: "Daily cockpit and workflow overview" },
+  { key: "dashboard", href: "/dashboard", label: "Dashboard", section: "Command Center", description: "Read-only market intelligence summary" },
+  { key: "brief", href: "/brief", label: "Brief", section: "Brief", description: "Workspace daily brief and review focus" },
+  { key: "dataOnboarding", href: "/data/onboarding", label: "Data", section: "Data", description: "Freshness, source, and gap readiness" },
+  { key: "scanner", href: "/scanner", label: "Scanner", section: "Scanner", description: "Watchlists and deterministic scan configs" },
+  { key: "triage", href: "/triage", label: "Triage", section: "Triage", description: "Prioritized deterministic signal review" },
+  { key: "quality", href: "/quality", label: "Quality", section: "Quality", description: "Observed behavior and reliability diagnostics" },
+  { key: "notifications", href: "/notifications", label: "Notifications", shortLabel: "Inbox", section: "Notifications", description: "In-app intelligence event review" },
+  { key: "journal", href: "/journal", label: "Journal", section: "Journal", description: "Observation notes and outcome reflection" },
+  { key: "review", href: "/review/outcomes", label: "Review Outcomes", shortLabel: "Outcomes", section: "Journal", description: "Observed outcome review queue" },
+  { key: "setup", href: "/setup", label: "Setup", section: "Preferences", description: "Workspace setup wizard" },
+  { key: "readiness", href: "/readiness", label: "Readiness", section: "Preferences", description: "Daily-use readiness checklist" },
+  { key: "preferences", href: "/preferences/strategy", label: "Preferences", section: "Preferences", description: "Review filter profiles" },
 ];
 
 export const primaryNavigationTargets: NavigationTarget[] = [
   "commandCenter",
-  "setup",
   "brief",
   "dataOnboarding",
   "scanner",
@@ -42,9 +47,12 @@ export const primaryNavigationTargets: NavigationTarget[] = [
   "quality",
   "notifications",
   "journal",
-  "review",
   "preferences",
 ];
+
+export const secondaryNavigationTargets: NavigationTarget[] = ["dashboard", "review", "setup", "readiness"];
+
+export const navigationSections = Array.from(new Set(navigationItems.map((item) => item.section)));
 
 export function navigationHref(target: NavigationTarget, workspaceId?: string | null): string {
   const item = navigationItems.find((candidate) => candidate.key === target);

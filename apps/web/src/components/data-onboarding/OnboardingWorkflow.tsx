@@ -32,6 +32,8 @@ import type {
   RecoveryPreparationRow,
 } from "@/lib/data-onboarding/types";
 import { onboardingTimeframes } from "@/lib/data-onboarding/types";
+import { CredentialConfigStep } from "./CredentialConfigStep";
+import { DataOnboardingHero } from "./DataOnboardingHero";
 import { DataOnboardingHeader } from "./DataOnboardingHeader";
 import { DataSourceStep } from "./DataSourceStep";
 import { FreshnessCheckStep } from "./FreshnessCheckStep";
@@ -62,13 +64,13 @@ const timeframeDurationsMs: Record<string, number> = {
 };
 
 const steps: Array<{ key: OnboardingStepKey; label: string }> = [
-  { key: "data_source", label: "Data source" },
-  { key: "symbols", label: "Symbols" },
-  { key: "timeframes", label: "Timeframes" },
+  { key: "data_source", label: "Source" },
+  { key: "credentials", label: "Credentials/config" },
+  { key: "symbols_timeframes", label: "Symbols/timeframes" },
   { key: "freshness", label: "Freshness" },
-  { key: "gaps", label: "Gaps" },
-  { key: "recovery", label: "Recovery" },
-  { key: "summary", label: "Summary" },
+  { key: "gaps", label: "Gap detection" },
+  { key: "recovery", label: "Recovery plan" },
+  { key: "summary", label: "Ready summary" },
 ];
 
 export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
@@ -321,6 +323,7 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
 
   return (
     <div className="space-y-6">
+      <DataOnboardingHero initialData={initialData} selection={selection} />
       <DataOnboardingHeader
         apiBaseUrl={initialData.apiBaseUrl}
         workspace={selectedWorkspace}
@@ -397,19 +400,29 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
               onTestSourceCredential={handleTestSourceCredential}
             />
           )}
-          {activeStep === "symbols" && (
-            <SymbolSelectionStep
-              symbols={initialData.symbols}
-              selectedSymbolIds={selection.symbolIds}
-              onChange={(symbolIds) => setSelection((current) => ({ ...current, symbolIds }))}
+          {activeStep === "credentials" && (
+            <CredentialConfigStep
+              dataSources={dataSources}
+              providerCredentialRefs={providerCredentialRefs}
+              credentialTests={credentialTests}
+              credentialTestState={credentialTestState}
+              selectedSourceId={selection.sourceId}
+              onTestSourceCredential={handleTestSourceCredential}
             />
           )}
-          {activeStep === "timeframes" && (
-            <TimeframeSelectionStep
-              timeframes={[...onboardingTimeframes]}
-              selectedTimeframes={selection.timeframes}
-              onChange={(timeframes) => setSelection((current) => ({ ...current, timeframes }))}
-            />
+          {activeStep === "symbols_timeframes" && (
+            <div className="grid gap-6">
+              <SymbolSelectionStep
+                symbols={initialData.symbols}
+                selectedSymbolIds={selection.symbolIds}
+                onChange={(symbolIds) => setSelection((current) => ({ ...current, symbolIds }))}
+              />
+              <TimeframeSelectionStep
+                timeframes={[...onboardingTimeframes]}
+                selectedTimeframes={selection.timeframes}
+                onChange={(timeframes) => setSelection((current) => ({ ...current, timeframes }))}
+              />
+            </div>
           )}
           {activeStep === "freshness" && (
             <FreshnessCheckStep

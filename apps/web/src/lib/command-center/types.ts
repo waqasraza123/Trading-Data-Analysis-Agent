@@ -1,9 +1,11 @@
 import type { JournalEntry, UUID, Workspace } from "@/lib/api/types";
 import type { DailyWorkflowFailure, DailyWorkflowRun, DailyWorkflowStep } from "@/lib/daily-workflows/types";
 import type { DailyRoutineFailure, DailyRoutineRun, DailyRoutineRunStep, DailyRoutineTemplate } from "@/lib/routines/types";
+import type { ProductReadinessRun } from "@/lib/readiness/types";
 import type { PreferenceProfile } from "@/lib/preferences/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
 import type { RuntimeSupervisorHealth } from "@/lib/api/runtimeSupervisor";
+import type { ProviderPollingRequest } from "@/lib/data-onboarding/types";
 
 export type CommandCenterTone = "neutral" | "good" | "warning" | "danger" | "info";
 
@@ -69,6 +71,7 @@ export type CommandCenterSetupItem = {
   confidenceLabel: string;
   setupQualityLabel: string;
   reviewPriorityLabel: string | null;
+  freshnessLabel: string;
   mainReason: string;
   detail: string;
   href: string;
@@ -165,6 +168,8 @@ export type CommandCenterData = {
   selectedDailyRoutineRunSteps: DailyRoutineRunStep[];
   notificationUnreadCount: number;
   notificationReviewCount: number;
+  providerPollingRequests: ProviderPollingRequest[];
+  latestProductReadiness: ProductReadinessRun | null;
   qualityWarnings: CommandCenterQualityWarning[];
   runtimeSupervisorHealth: RuntimeSupervisorHealth | null;
   summary: CommandCenterSummary;

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Metric } from "@/components/ui/Metric";
+import { MetricCard as UiMetricCard } from "@/components/ui/MetricCard";
 import { Section } from "@/components/ui/Section";
 
 type PanelProps = {
@@ -21,5 +21,5 @@ type MetricCardProps = {
 };
 
 export function MetricCard({ label, value, detail }: MetricCardProps) {
-  return <Metric label={label} value={value} detail={detail} />;
+  return <UiMetricCard label={label} value={value} detail={detail} />;
 }

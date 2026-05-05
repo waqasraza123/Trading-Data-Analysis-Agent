@@ -19,7 +19,7 @@ export function SymbolSelectionStep({ symbols, selectedSymbolIds, onChange }: Sy
   return (
     <section className="surface rounded-lg p-5">
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase text-slate-500">Step 2</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Symbols/timeframes</p>
         <h3 className="mt-1 text-lg font-semibold text-[var(--strong)]">Symbol selection</h3>
         <p className="mt-2 text-sm leading-6 text-slate-500">Choose one or more active symbols to validate.</p>
       </div>

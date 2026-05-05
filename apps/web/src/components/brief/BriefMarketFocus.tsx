@@ -17,7 +17,7 @@ export function BriefMarketFocus({ brief }: { brief: WorkspaceBrief }) {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {brief.marketFocus.map((item) => (
-            <article key={item.id} className="muted-surface rounded-lg p-4">
+            <article key={item.id} className="muted-surface rounded-2xl p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <Link
@@ -45,7 +45,7 @@ export function BriefMarketFocus({ brief }: { brief: WorkspaceBrief }) {
               <div className="mt-4 flex flex-wrap gap-2">
                 {item.signalId && (
                   <Link
-                    className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-white dark:hover:bg-slate-900"
+                    className="premium-control rounded-xl px-3 py-2 text-sm font-semibold"
                     href={`/signals/${item.signalId}`}
                   >
                     Open signal

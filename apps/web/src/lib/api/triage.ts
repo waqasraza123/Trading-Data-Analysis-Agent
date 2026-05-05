@@ -131,8 +131,8 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
         ...resolvedFilters,
         preferenceProfileId: selectedPreferenceProfile?.id || filters.preferenceProfileId,
       },
-      candidates: sortCandidates(candidates),
-      allCandidates: sortCandidates(preferenceScopedCandidates),
+      candidates: sortCandidates(candidates, resolvedFilters.sort),
+      allCandidates: sortCandidates(preferenceScopedCandidates, resolvedFilters.sort),
       unfilteredCandidateCount: readModelCandidates.length,
       failures,
       lastLoadedAt: new Date().toISOString(),
@@ -191,8 +191,8 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
       ...resolvedFilters,
       preferenceProfileId: selectedPreferenceProfile?.id || filters.preferenceProfileId,
     },
-    candidates: sortCandidates(candidates),
-    allCandidates: sortCandidates(preferenceScopedCandidates),
+    candidates: sortCandidates(candidates, resolvedFilters.sort),
+    allCandidates: sortCandidates(preferenceScopedCandidates, resolvedFilters.sort),
     unfilteredCandidateCount: allCandidates.length,
     failures,
     lastLoadedAt: new Date().toISOString(),
@@ -400,6 +400,7 @@ function readJsonArray(value: unknown): Array<Record<string, string | number | b
 function parseTriageFilters(params: Record<string, string | undefined>): TriageFilterState {
   return {
     workspaceId: params.workspaceId,
+    symbolSearch: normalizeSearch(params.symbolSearch || params.search),
     symbolId: params.symbolId,
     timeframe: params.timeframe,
     bias: params.bias,
@@ -408,6 +409,7 @@ function parseTriageFilters(params: Record<string, string | undefined>): TriageF
     freshness: params.freshness,
     profileKey: params.profileKey,
     preferenceProfileId: params.preferenceProfileId,
+    sort: parseSort(params.sort),
     onlyFresh: parseBoolean(params.onlyFresh),
     onlyReviewRequired: parseBoolean(params.onlyReviewRequired),
   };
@@ -427,6 +429,16 @@ function parseColumn(value: string | undefined): TriageFilterState["column"] {
 
 function parseBoolean(value: string | undefined): boolean {
   return value === "1" || value === "true" || value === "on";
+}
+
+function parseSort(value: string | undefined): TriageFilterState["sort"] {
+  const sorts: Array<NonNullable<TriageFilterState["sort"]>> = ["priority", "freshness", "confidence", "created"];
+  return sorts.find((sort) => sort === value) || "priority";
+}
+
+function normalizeSearch(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
 }
 
 async function resolveSignalRefs(
@@ -556,6 +568,7 @@ function listDueActionItemsForTriage(workspaceId: UUID): Promise<ApiResult<Triag
 
 function matchesFilters(candidate: TriageCandidate, filters: TriageFilterState): boolean {
   return (
+    matchesSymbolSearch(candidate, filters.symbolSearch) &&
     matches(candidate.signal.signal.symbol_id, filters.symbolId) &&
     matches(candidate.signal.signal.timeframe, filters.timeframe) &&
     matches(candidate.signal.signal.bias, filters.bias) &&
@@ -566,6 +579,18 @@ function matchesFilters(candidate: TriageCandidate, filters: TriageFilterState):
     (!filters.onlyFresh || candidate.memory?.freshness_label === "fresh") &&
     (!filters.onlyReviewRequired || candidate.classification.column === "review_required")
   );
+}
+
+function matchesSymbolSearch(candidate: TriageCandidate, search: string | undefined): boolean {
+  if (!search) {
+    return true;
+  }
+  const needle = search.toLowerCase();
+  return [
+    candidate.symbol?.symbol,
+    candidate.symbol?.display_name,
+    candidate.signal.signal.symbol_id,
+  ].some((value) => value?.toLowerCase().includes(needle));
 }
 
 async function applyPreferenceProfileFilter(
@@ -603,7 +628,7 @@ async function applyPreferenceProfileFilter(
   return scopedCandidates;
 }
 
-function sortCandidates(candidates: TriageCandidate[]): TriageCandidate[] {
+function sortCandidates(candidates: TriageCandidate[], sort: TriageFilterState["sort"] = "priority"): TriageCandidate[] {
   const columnOrder = [
     "review_required",
     "stale_data_issue",
@@ -613,6 +638,24 @@ function sortCandidates(candidates: TriageCandidate[]): TriageCandidate[] {
     "avoid_no_directional_signal",
   ];
   return [...candidates].sort((left, right) => {
+    if (sort === "freshness") {
+      const freshnessDelta = latestTime(right).localeCompare(latestTime(left));
+      if (freshnessDelta !== 0) {
+        return freshnessDelta;
+      }
+    }
+    if (sort === "confidence") {
+      const confidenceDelta = confidenceValue(right) - confidenceValue(left);
+      if (confidenceDelta !== 0) {
+        return confidenceDelta;
+      }
+    }
+    if (sort === "created") {
+      const createdDelta = right.signal.signal.created_at.localeCompare(left.signal.signal.created_at);
+      if (createdDelta !== 0) {
+        return createdDelta;
+      }
+    }
     const priorityDelta = priorityValue(right) - priorityValue(left);
     if (priorityDelta !== 0) {
       return priorityDelta;
@@ -627,6 +670,11 @@ function sortCandidates(candidates: TriageCandidate[]): TriageCandidate[] {
 
 function priorityValue(candidate: TriageCandidate): number {
   const value = Number(candidate.priorityScore?.priority_score);
+  return Number.isFinite(value) ? value : -1;
+}
+
+function confidenceValue(candidate: TriageCandidate): number {
+  const value = Number(candidate.signal.signal.confidence_score);
   return Number.isFinite(value) ? value : -1;
 }
 

@@ -29,7 +29,7 @@ export function classifyTriage(input: TriageArtifactInput): TriageClassification
     return result("needs_confirmation", reason("Needs confirmation"), reasons);
   }
   if (hasHighQualityContext(input)) {
-    return result("high_quality_context", reason("High quality context"), reasons);
+    return result("high_quality_context", reason("Review first"), reasons);
   }
   return result("review_required", reason("Review required"), reasons);
 }

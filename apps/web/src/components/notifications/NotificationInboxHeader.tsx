@@ -1,13 +1,13 @@
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ReviewSurfaceHero } from "@/components/review-surfaces/ReviewSurface";
 import type { NotificationInboxData } from "@/lib/notifications/types";
 
 export function NotificationInboxHeader({ data }: { data: NotificationInboxData }) {
   return (
-    <PageHeader
-      eyebrow="Intelligence notification inbox"
-      title="Notifications"
+    <ReviewSurfaceHero
+      eyebrow="Notification inbox"
+      title="Review events"
       description="Review backend-safe intelligence events, source context, delivery attempts, and redaction status inside the product."
       actions={
         <>

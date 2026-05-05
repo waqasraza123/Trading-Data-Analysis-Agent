@@ -14,7 +14,7 @@ export function CommandCenterMorningBrief({ data }: { data: CommandCenterData })
             <Link
               key={item.id}
               href={item.href}
-              className="block rounded-lg border border-[var(--line)] p-4 hover:bg-slate-50 dark:hover:bg-slate-900"
+              className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:-translate-y-0.5 hover:shadow-soft"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

@@ -17,8 +17,8 @@ export type OnboardingTimeframe = (typeof onboardingTimeframes)[number];
 
 export type OnboardingStepKey =
   | "data_source"
-  | "symbols"
-  | "timeframes"
+  | "credentials"
+  | "symbols_timeframes"
   | "freshness"
   | "gaps"
   | "recovery"

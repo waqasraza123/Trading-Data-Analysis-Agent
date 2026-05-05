@@ -18,8 +18,8 @@ const safeReplacements: Array<[RegExp, string]> = [
   [/\bbullish\b/gi, "bullish bias"],
   [/\bbearish\b/gi, "bearish bias"],
   [/\bno signal\b/gi, "no directional signal"],
-  [/\bfollow through\b/gi, "observed follow-through"],
-  [/\bfollow-through\b/gi, "observed follow-through"],
+  [/\bfollow through\b/gi, "observed continuation"],
+  [/\bfollow-through\b/gi, "observed continuation"],
   [/\breversal\b/gi, "observed reversal"],
   [/\binvalidat(e|ion)\b/gi, "invalidation context"],
   [/\bwatch\b/gi, "review"],
@@ -87,7 +87,7 @@ export function outcomeObservationLabel(directionFollowed: boolean | null, rever
     return "Observed reversal";
   }
   if (directionFollowed === true) {
-    return "Observed follow-through";
+    return "Observed continuation";
   }
   if (directionFollowed === false) {
     return "No follow-through observed";

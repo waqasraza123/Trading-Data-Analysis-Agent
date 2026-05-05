@@ -139,6 +139,11 @@ export type WorkspaceBrief = {
   } | null;
   requestedWorkspaceId: UUID | null;
   generatedAt: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  timezone: string | null;
+  watchlistId: UUID | null;
+  sourceLabel: string;
   backendUnavailable: boolean;
   summary: BriefSummary;
   marketFocus: BriefMarketFocusItem[];

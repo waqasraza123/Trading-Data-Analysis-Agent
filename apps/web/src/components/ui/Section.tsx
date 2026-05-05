@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/ui/cn";
 import { Card } from "./Card";
+import { SectionHeader } from "./SectionHeader";
 
 type SectionProps = {
   title?: string;
@@ -7,20 +9,13 @@ type SectionProps = {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  description?: string;
 };
 
-export function Section({ title, eyebrow, action, children, className = "" }: SectionProps) {
+export function Section({ title, eyebrow, action, children, className, description }: SectionProps) {
   return (
-    <Card className={className}>
-      {(title || eyebrow || action) && (
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            {eyebrow && <p className="text-xs font-semibold uppercase text-slate-500">{eyebrow}</p>}
-            {title && <h2 className="mt-1 text-lg font-semibold text-[var(--strong)]">{title}</h2>}
-          </div>
-          {action}
-        </div>
-      )}
+    <Card className={cn("p-5", className)}>
+      <SectionHeader title={title} eyebrow={eyebrow} description={description} action={action} />
       {children}
     </Card>
   );

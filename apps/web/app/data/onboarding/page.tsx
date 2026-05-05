@@ -1,5 +1,5 @@
 import { OnboardingWorkflow } from "@/components/data-onboarding/OnboardingWorkflow";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { getPublicEnv } from "@/config/env";
 import { listDataSources } from "@/lib/api/dataSources";
 import { listMarketMemorySnapshots, listSymbols, listWorkspaces } from "@/lib/api/market";
@@ -22,7 +22,7 @@ export default async function DataOnboardingPage({ searchParams }: DataOnboardin
   const data = await getOnboardingData(params.workspaceId);
 
   return (
-    <AppShell appName={data.appName}>
+    <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <OnboardingWorkflow initialData={data} />
     </AppShell>
   );

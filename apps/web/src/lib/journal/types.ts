@@ -1,4 +1,4 @@
-import type { ApiError, JournalEntry, JsonRecord, SignalOutcome, UUID, Workspace } from "@/lib/api/types";
+import type { ApiError, AnalysisRun, JournalEntry, JsonRecord, SignalOutcome, SymbolRead, UUID, Workspace } from "@/lib/api/types";
 
 export const journalDecisionTypes = [
   "observed",
@@ -31,6 +31,8 @@ export type JournalFilters = {
   analysisRunId?: string;
   setupContextId?: string;
   outcomeId?: string;
+  symbolId?: string;
+  timeframe?: string;
   decisionType?: JournalDecisionType;
   status?: JournalStatus;
 };
@@ -83,12 +85,23 @@ export type JournalData = {
   requestedWorkspaceId: string | null;
   workspace: Workspace | null;
   workspaces: Workspace[];
+  symbols: SymbolRead[];
+  analysisRuns: AnalysisRun[];
+  entryContexts: Record<string, JournalEntryContext>;
   filters: JournalFilters;
   entries: JournalEntry[];
+  unfilteredEntryCount: number;
   selectedEntry: JournalEntryWithReviews | null;
   outcomes: SignalOutcome[];
   failures: JournalFailure[];
   lastLoadedAt: string;
+};
+
+export type JournalEntryContext = {
+  symbolId: UUID | null;
+  symbol: string | null;
+  timeframe: string | null;
+  analysisRunId: UUID | null;
 };
 
 export function journalFailure(label: string, error: ApiError): JournalFailure {

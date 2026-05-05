@@ -7,6 +7,12 @@ import type { SignalOutcome } from "@/lib/api/types";
 import type { JournalEntryReview } from "@/lib/journal/types";
 import { outcomeTone, reviewLabel } from "@/lib/review/labels";
 import { Badge } from "@/components/status/badge";
+import { Button } from "@/components/ui/Button";
+import {
+  ReviewField,
+  ReviewSurfacePanel,
+  reviewInputClassName,
+} from "@/components/review-surfaces/ReviewSurface";
 import { JournalReflectionBadge } from "./JournalReflectionBadge";
 
 type JournalReviewPanelProps = {
@@ -36,17 +42,16 @@ export function JournalReviewPanel({ entryId, reviews, outcomes, defaultOutcomeI
   }
 
   return (
-    <section className="surface rounded-lg p-5">
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase text-slate-500">Outcome reflection</p>
-        <h2 className="mt-1 text-lg font-semibold text-[var(--strong)]">Review against observed outcome</h2>
-      </div>
+    <ReviewSurfacePanel
+      eyebrow="Outcome reflection"
+      title="Review against observed outcome"
+      description="Compare the note with deterministic outcome data when a linked outcome is available."
+    >
       {outcomes.length > 0 ? (
         <div className="flex flex-wrap items-end gap-3">
-          <label className="grid min-w-72 gap-1 text-sm">
-            <span className="text-xs font-semibold uppercase text-slate-500">Outcome</span>
+          <ReviewField label="Outcome">
             <select
-              className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+              className={reviewInputClassName("min-w-72")}
               value={outcomeId}
               onChange={(event) => setOutcomeId(event.target.value)}
             >
@@ -56,15 +61,15 @@ export function JournalReviewPanel({ entryId, reviews, outcomes, defaultOutcomeI
                 </option>
               ))}
             </select>
-          </label>
-          <button
-            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          </ReviewField>
+          <Button
+            variant="primary"
             type="button"
-            disabled={pending}
+            loading={pending}
             onClick={submitReview}
           >
-            {pending ? "Reviewing" : "Review note"}
-          </button>
+            Review note
+          </Button>
         </div>
       ) : (
         <p className="text-sm leading-6 text-slate-500">No linked outcomes are available for this journal entry yet.</p>
@@ -99,6 +104,6 @@ export function JournalReviewPanel({ entryId, reviews, outcomes, defaultOutcomeI
           ))
         )}
       </div>
-    </section>
+    </ReviewSurfacePanel>
   );
 }

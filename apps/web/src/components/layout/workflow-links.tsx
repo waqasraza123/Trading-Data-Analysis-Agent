@@ -29,7 +29,7 @@ export const primaryWorkflowTargets: WorkflowTarget[] = [
 ];
 
 const linkClassName =
-  "rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900";
+  "premium-control rounded-xl px-3 py-2 text-sm font-semibold";
 
 export function WorkflowLinks({
   workspaceId,

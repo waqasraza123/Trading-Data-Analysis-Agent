@@ -12,6 +12,19 @@ type ScannerPresetGalleryProps = {
   data: ScannerData;
 };
 
+const fallbackPresetCards = [
+  "London open",
+  "New York open",
+  "Crypto 24h",
+  "High volatility",
+  "Trend continuation",
+  "Reversal risk",
+  "Range/no directional",
+  "Needs confirmation",
+  "Stale data repair",
+  "Close-of-day review",
+];
+
 export function ScannerPresetGallery({ data }: ScannerPresetGalleryProps) {
   const router = useRouter();
   const [selectedPreset, setSelectedPreset] = useState<ScannerPreset | null>(null);
@@ -113,8 +126,21 @@ export function ScannerPresetGallery({ data }: ScannerPresetGalleryProps) {
         </p>
       )}
       {data.presets.length === 0 ? (
-        <div className="muted-surface rounded-lg p-5 text-sm text-slate-500">
-          No scanner presets returned. Seed defaults when the backend endpoint is available.
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {fallbackPresetCards.map((preset) => (
+              <article key={preset} className="rounded-lg border border-dashed border-[var(--line)] bg-[var(--panel-muted)] p-4">
+                <p className="text-sm font-semibold text-[var(--strong)]">{preset}</p>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Default template awaits the scanner preset endpoint.
+                </p>
+              </article>
+            ))}
+          </div>
+          <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4 text-sm text-slate-500">
+            No scanner presets returned. Seed defaults when the backend endpoint is available, then
+            apply a preset to create watchlist and scan config records without running a scan.
+          </div>
         </div>
       ) : (
         <div className="space-y-5">

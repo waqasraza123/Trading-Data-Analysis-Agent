@@ -30,8 +30,8 @@ export function ScannerStatusPanel({ data }: { data: ScannerData }) {
 
 function StatusLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="muted-surface flex items-center justify-between gap-3 rounded-lg p-4">
-      <span className="text-sm font-medium text-slate-500">{label}</span>
+    <div className="muted-surface flex items-center justify-between gap-3 rounded-2xl p-4">
+      <span className="text-sm font-semibold text-[var(--text-muted)]">{label}</span>
       <Badge value={value} tone={statusTone(value)} />
     </div>
   );

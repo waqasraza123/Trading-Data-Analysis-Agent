@@ -1,17 +1,21 @@
 import { Badge } from "@/components/status/badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { FilterBar } from "@/components/ui/FilterBar";
-import { PageHeader } from "@/components/ui/PageHeader";
+import {
+  ReviewField,
+  ReviewFilterShell,
+  ReviewSurfaceHero,
+  reviewInputClassName,
+} from "@/components/review-surfaces/ReviewSurface";
 import type { QualityScoreboardData } from "@/lib/quality/types";
 
 export function QualityScoreboardHeader({ data }: { data: QualityScoreboardData }) {
   const workspaceId = data.workspace?.id || "";
   return (
     <div className="space-y-5">
-      <PageHeader
-        eyebrow="Signal quality scoreboard"
-        title="Observed signal quality"
-        description="Read-only analytics for deterministic signal quality, historical behavior, calibration, validation, and drift."
+      <ReviewSurfaceHero
+        eyebrow="Daily quality review"
+        title="Quality dashboard"
+        description="Read-only diagnostics for confidence alignment, drift, walk-forward stability, pattern attribution, profile reliability, and sample coverage."
         actions={
           <>
           {data.workspace && <Badge value={data.workspace.name} tone="info" />}
@@ -21,9 +25,8 @@ export function QualityScoreboardHeader({ data }: { data: QualityScoreboardData 
         }
       />
       <form action="/quality">
-        <FilterBar
-          title="Quality scope"
-          actions={
+        <ReviewFilterShell
+          action={
             <>
               <Button variant="primary" type="submit">Apply filters</Button>
               <ButtonLink href={workspaceId ? `/quality?workspaceId=${workspaceId}` : "/quality"}>Reset</ButtonLink>
@@ -38,7 +41,7 @@ export function QualityScoreboardHeader({ data }: { data: QualityScoreboardData 
         <SelectField label="Horizon" name="horizonMinutes" value={data.filters.horizonMinutes ? String(data.filters.horizonMinutes) : ""} options={data.filterOptions.horizons} />
         <InputField label="Start date" name="startDate" value={dateValue(data.filters.startTime)} />
         <InputField label="End date" name="endDate" value={dateValue(data.filters.endTime)} />
-        </FilterBar>
+        </ReviewFilterShell>
       </form>
     </div>
   );
@@ -56,10 +59,9 @@ function SelectField({
   options: Array<{ value: string; label: string }>;
 }) {
   return (
-    <label className="block">
-      <span className="text-xs font-semibold uppercase text-slate-500">{label}</span>
+    <ReviewField label={label}>
       <select
-        className="mt-1 w-full rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--strong)]"
+        className={reviewInputClassName()}
         name={name}
         defaultValue={value}
       >
@@ -70,21 +72,20 @@ function SelectField({
           </option>
         ))}
       </select>
-    </label>
+    </ReviewField>
   );
 }
 
 function InputField({ label, name, value }: { label: string; name: string; value: string }) {
   return (
-    <label className="block">
-      <span className="text-xs font-semibold uppercase text-slate-500">{label}</span>
+    <ReviewField label={label}>
       <input
-        className="mt-1 w-full rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--strong)]"
+        className={reviewInputClassName()}
         name={name}
         type="date"
         defaultValue={value}
       />
-    </label>
+    </ReviewField>
   );
 }
 

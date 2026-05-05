@@ -17,6 +17,7 @@ export function ErrorState({ title, message, status, action }: ErrorStateProps) 
       action={status ? <Badge value={String(status)} tone="warning" /> : action}
     >
       {message && <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{message}</p>}
+      {!message && <p className="text-sm leading-6 text-[var(--text-muted)]">The requested backend surface did not return usable data.</p>}
       {status && action && <div className="mt-4">{action}</div>}
     </Section>
   );

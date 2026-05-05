@@ -14,12 +14,12 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
   const freshnessLabels = uniqueOptions(data.allCandidates.map((candidate) => candidate.memory?.freshness_label));
   const profileKeys = uniqueOptions(data.allCandidates.map((candidate) => candidate.signal.signal.strategy_profile_key));
   const refreshHref = buildRefreshHref(filters);
-  const activeFilters = Object.entries(filters).filter(([, value]) => Boolean(value));
+  const activeFilters = Object.entries(filters).filter(([key, value]) => Boolean(value) && !(key === "sort" && value === "priority"));
 
   return (
-    <form action="/triage">
+    <form action="/triage" className="sticky top-24 z-10">
       <FilterBar
-        title="Signal triage scope"
+        title="Review board filters"
         actions={
           <>
             <Button variant="primary" type="submit">Apply filters</Button>
@@ -27,6 +27,7 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
           </>
         }
       >
+        <SearchInput name="symbolSearch" label="Search symbol" value={filters.symbolSearch} />
         <Select name="workspaceId" label="Workspace" value={filters.workspaceId} options={data.workspaces.map((workspace) => ({ value: workspace.id, label: workspace.name }))} />
         <Select
           name="symbolId"
@@ -52,6 +53,17 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
             label: profile.is_default ? `${profile.name} (default)` : profile.name,
           }))}
         />
+        <Select
+          name="sort"
+          label="Sort"
+          value={filters.sort || "priority"}
+          options={[
+            { value: "priority", label: "Priority score" },
+            { value: "freshness", label: "Freshness" },
+            { value: "confidence", label: "Confidence" },
+            { value: "created", label: "Created time" },
+          ]}
+        />
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300 md:col-span-2 xl:col-span-4">
         <label className="inline-flex items-center gap-2">
           <input className="h-4 w-4" defaultChecked={filters.onlyFresh} name="onlyFresh" type="checkbox" value="1" />
@@ -71,6 +83,20 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
       )}
       </FilterBar>
     </form>
+  );
+}
+
+function SearchInput({ label, name, value }: { label: string; name: string; value: string | undefined }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase text-slate-500">{label}</span>
+      <input
+        className="mt-1 h-10 w-full rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 text-sm text-[var(--strong)]"
+        defaultValue={value || ""}
+        name={name}
+        placeholder="BTC, ETH, SPY"
+      />
+    </label>
   );
 }
 

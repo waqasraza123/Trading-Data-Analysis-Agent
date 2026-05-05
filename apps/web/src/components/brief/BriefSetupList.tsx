@@ -17,7 +17,7 @@ export function BriefSetupList({ brief }: { brief: WorkspaceBrief }) {
       ) : (
         <div className="space-y-3">
           {brief.activeSetups.map((setup) => (
-            <article key={setup.signalId} className="muted-surface rounded-lg p-4">
+            <article key={setup.signalId} className="muted-surface rounded-2xl p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-[var(--strong)]">
@@ -45,7 +45,7 @@ export function BriefSetupList({ brief }: { brief: WorkspaceBrief }) {
                 <Detail label="Wait condition" value={setup.waitCondition || "Not available"} />
               </dl>
               <Link
-                className="mt-4 inline-flex rounded-md border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-white dark:hover:bg-slate-900"
+                className="premium-control mt-4 inline-flex rounded-xl px-3 py-2 text-sm font-semibold"
                 href={setup.reviewLink}
               >
                 Review signal

@@ -7,13 +7,13 @@ export const triageColumns: Array<{
 }> = [
   {
     key: "high_quality_context",
-    title: "High Quality Context",
-    description: "Fresh directional signals with strong deterministic context.",
+    title: "Review First",
+    description: "High-priority setups with fresh context and stronger evidence alignment.",
   },
   {
     key: "needs_confirmation",
     title: "Needs Confirmation",
-    description: "Signals waiting for additional final candles or follow-up context.",
+    description: "Setups waiting for final-candle, outcome, or context confirmation.",
   },
   {
     key: "conflicted",
@@ -22,8 +22,8 @@ export const triageColumns: Array<{
   },
   {
     key: "avoid_no_directional_signal",
-    title: "Avoid / No Directional Signal",
-    description: "Neutral, unclear, range, or below-threshold deterministic context.",
+    title: "Avoid / No Directional",
+    description: "Neutral, unclear, range, or avoid-condition context.",
   },
   {
     key: "stale_data_issue",
@@ -50,7 +50,7 @@ const unsafePatterns: Array<[RegExp, string]> = [
 ];
 
 const reasonToneByLabel: Record<string, TriageReason["tone"]> = {
-  "High quality context": "good",
+  "Review first": "good",
   "Needs confirmation": "warning",
   Conflicted: "warning",
   "Avoid condition": "info",

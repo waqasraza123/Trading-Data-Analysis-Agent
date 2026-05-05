@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { TriageSkeleton } from "@/components/triage/TriageSkeleton";
 import { getPublicEnv } from "@/config/env";
 

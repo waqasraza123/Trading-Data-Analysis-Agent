@@ -4,6 +4,7 @@ import { BiasBadge } from "@/components/status/BiasBadge";
 import { ConfidenceBadge } from "@/components/status/ConfidenceBadge";
 import { FreshnessBadge } from "@/components/status/FreshnessBadge";
 import { DataQualityBadge } from "@/components/status/DataQualityBadge";
+import { OutcomeLabelBadge } from "@/components/status/OutcomeLabelBadge";
 import { SetupQualityBadge } from "@/components/status/SetupQualityBadge";
 import { ButtonLink } from "@/components/ui/Button";
 import { workflowHref } from "@/components/layout/workflow-links";
@@ -17,6 +18,11 @@ import { TriageReasonBadges } from "./TriageReasonBadges";
 export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) {
   const signal = candidate.signal.signal;
   const symbolLabel = candidate.symbol?.symbol || shortIdentifier(signal.symbol_id);
+  const evidenceCount = candidate.signal.evidence.length;
+  const conflictingEvidenceCount = candidate.signal.evidence.filter((item) =>
+    ["conflict", "opposes", "opposing", "mixed"].includes(item.direction),
+  ).length;
+  const latestOutcome = candidate.outcomes[0] || null;
   const topEvidence = candidate.signal.evidence[0]?.message || candidate.signal.signal.summary;
   const topRisk = candidate.signal.risk_notes[0]?.message || candidate.setupContext?.risk_notes_json[0]?.message;
   const setupQuality = candidate.setupContext?.setup_quality_label || "Context unavailable";
@@ -25,32 +31,39 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
   const dataOnboardingHref = `${dataOnboardingBaseHref}${dataOnboardingBaseHref.includes("?") ? "&" : "?"}symbolIds=${signal.symbol_id}&timeframes=${encodeURIComponent(signal.timeframe)}`;
 
   return (
-    <article className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4">
+    <article className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-soft">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-[var(--strong)]">{symbolLabel}</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            {signal.timeframe} · {humanizeLabel(signal.pattern_type || "No pattern")}
+          <h3 className="truncate text-lg font-semibold text-[var(--strong)]">{symbolLabel}</h3>
+          <p className="mt-1 text-xs font-medium uppercase text-slate-500">
+            {signal.timeframe} / {humanizeLabel(signal.pattern_type || "No pattern")}
           </p>
         </div>
         <Badge value={candidate.classification.mainReason.label} tone={candidate.classification.mainReason.tone} />
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <BiasBadge value={signal.bias} />
         <ConfidenceBadge value={signal.confidence_label} />
         <SetupQualityBadge value={setupQuality} />
+        {latestOutcome && <OutcomeLabelBadge value={latestOutcome.outcome_label} />}
       </div>
-      <dl className="mt-4 grid gap-3 text-sm">
-        <Detail label="Confidence" value={formatPercent(signal.confidence_score)} />
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
+        <Detail label="Confidence" value={formatPercent(signal.confidence_score)} featured />
         {candidate.priorityScore && (
-          <Detail label="Review priority" value={formatPercent(candidate.priorityScore.priority_score)} />
+          <Detail label="Priority score" value={formatPercent(candidate.priorityScore.priority_score)} featured />
         )}
-        <Detail label="Latest final candle" value={formatRelativeTime(candidate.memory?.latest_final_candle_time)} />
+        <Detail label="Setup quality" value={formatPercent(candidate.setupContext?.setup_quality_score)} />
+        <Detail label="Freshness" value={formatRelativeTime(candidate.memory?.latest_final_candle_time)} />
         <DetailBadge label="Freshness"><FreshnessBadge value={candidate.memory?.freshness_label || "Missing market memory"} /></DetailBadge>
         <DetailBadge label="Data quality"><DataQualityBadge value={candidate.memory?.data_quality_label || "Unknown"} /></DetailBadge>
       </dl>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <MiniStat label="Evidence" value={String(evidenceCount)} />
+        <MiniStat label="Conflicts" value={String(conflictingEvidenceCount)} />
+        <MiniStat label="Outcomes" value={String(candidate.outcomes.length)} />
+      </div>
       <div className="mt-4 space-y-3">
-        <TextBlock label="Top evidence" value={topEvidence} fallback="No evidence summary returned." />
+        <TextBlock label="Top reason" value={topEvidence} fallback="No evidence summary returned." />
         <TextBlock label="Top risk note" value={topRisk} fallback="No risk note returned." />
       </div>
       <div className="mt-4">
@@ -64,8 +77,8 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
         </div>
       )}
       <div className="mt-4 flex flex-wrap gap-2 text-sm font-medium">
-        <ButtonLink href={`/signals/${signal.id}`}>
-          Signal detail
+        <ButtonLink href={`/signals/${signal.id}`} className="w-full justify-center">
+          Review setup
         </ButtonLink>
         {candidate.setupContext && (
           <ButtonLink href={`/signals/${signal.id}#setup-context`}>
@@ -78,25 +91,34 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
           </ButtonLink>
         )}
       </div>
-      <p className="mt-3 text-xs text-slate-500">Signal created {formatDateTime(signal.created_at)}</p>
+      <p className="mt-3 text-xs text-slate-500">Stored {formatDateTime(signal.created_at)}</p>
     </article>
   );
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ label, value, featured = false }: { label: string; value: string; featured?: boolean }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2 last:border-b-0 last:pb-0">
+    <div className={`rounded-lg border border-[var(--line)] bg-[var(--panel-muted)] p-3 ${featured ? "col-span-1" : ""}`}>
       <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
-      <dd className="text-right text-sm font-medium text-[var(--strong)]">{value}</dd>
+      <dd className="mt-1 truncate text-sm font-semibold text-[var(--strong)]">{value}</dd>
     </div>
   );
 }
 
 function DetailBadge({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2 last:border-b-0 last:pb-0">
+    <div className="rounded-lg border border-[var(--line)] bg-[var(--panel-muted)] p-3">
       <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
-      <dd className="flex justify-end">{children}</dd>
+      <dd className="mt-1 flex">{children}</dd>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[var(--line)] px-2 py-2 text-center">
+      <p className="text-sm font-semibold text-[var(--strong)]">{value}</p>
+      <p className="mt-0.5 truncate text-[10px] font-semibold uppercase text-slate-500">{label}</p>
     </div>
   );
 }

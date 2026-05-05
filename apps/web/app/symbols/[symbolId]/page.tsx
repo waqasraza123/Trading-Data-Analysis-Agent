@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell } from "@/components/layout/AppShell";
 import { SymbolDetailView } from "@/components/market/symbol-detail-view";
 import { getPublicEnv } from "@/config/env";
 import { listAnalysisRuns, listMarketMemorySnapshots, listWorkspaces, getSymbol } from "@/lib/api/market";
@@ -45,7 +45,7 @@ export default async function SymbolPage({ params, searchParams }: SymbolPagePro
   );
 
   return (
-    <AppShell appName={env.appName}>
+    <AppShell appName={env.appName} workspaceId={workspace?.id} workspaceName={workspace?.name}>
       <SymbolDetailView
         symbol={symbolResult.ok ? symbolResult.data : null}
         workspace={workspace}

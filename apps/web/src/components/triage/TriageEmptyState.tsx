@@ -3,8 +3,8 @@ import { EmptyState } from "@/components/empty-states/empty-state";
 export function TriageEmptyState() {
   return (
     <EmptyState
-      title="No triage candidates"
-      message="No deterministic signals matched the current workspace and filter set."
+      title="No setups match this review scope"
+      message="No stored deterministic setup context matched the current workspace and filters."
     />
   );
 }

@@ -3,41 +3,77 @@
 :root {
   color-scheme: light;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --background: #f7f8fb;
-  --foreground: #111827;
-  --panel: #ffffff;
-  --panel-muted: #f1f5f9;
-  --line: #d9e2ec;
-  --muted: #64748b;
-  --strong: #0f172a;
-  --accent: #0f766e;
-  --accent-soft: #ccfbf1;
-  --warn: #b45309;
-  --warn-soft: #fef3c7;
-  --danger: #b91c1c;
+  --background: #f5f7fb;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #f3f6fb;
+  --surface-elevated: #ffffff;
+  --panel: var(--surface);
+  --panel-muted: var(--surface-muted);
+  --border: #d8e0ec;
+  --line: var(--border);
+  --text-muted: #64748b;
+  --muted: var(--text-muted);
+  --strong: #08111f;
+  --accent: #0d9488;
+  --accent-strong: #0f766e;
+  --accent-soft: #d8faf5;
+  --success: #0f9f6e;
+  --success-soft: #dcfce7;
+  --warning: #b7791f;
+  --warn: var(--warning);
+  --warning-soft: #fef3c7;
+  --warn-soft: var(--warning-soft);
+  --danger: #dc2626;
   --danger-soft: #fee2e2;
-  --info: #1d4ed8;
+  --info: #2563eb;
   --info-soft: #dbeafe;
+  --ring: rgba(13, 148, 136, 0.28);
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --shadow-panel: 0 18px 54px rgba(15, 23, 42, 0.09);
+  --shadow-glow: 0 22px 70px rgba(20, 184, 166, 0.18);
+  --app-gradient:
+    radial-gradient(circle at top left, rgba(13, 148, 136, 0.16), transparent 30rem),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 28rem),
+    linear-gradient(180deg, #f8fbff 0%, #eef4fb 48%, #f7f8fb 100%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --background: #0b1120;
-    --foreground: #e5e7eb;
-    --panel: #111827;
-    --panel-muted: #172033;
-    --line: #263244;
-    --muted: #9ca3af;
+    --background: #070b13;
+    --foreground: #e5edf7;
+    --surface: #0f1724;
+    --surface-muted: #111c2d;
+    --surface-elevated: #152033;
+    --panel: var(--surface);
+    --panel-muted: var(--surface-muted);
+    --border: #243247;
+    --line: var(--border);
+    --text-muted: #94a3b8;
+    --muted: var(--text-muted);
     --strong: #f8fafc;
     --accent: #2dd4bf;
+    --accent-strong: #5eead4;
     --accent-soft: #134e4a;
-    --warn: #fbbf24;
-    --warn-soft: #422006;
-    --danger: #f87171;
-    --danger-soft: #450a0a;
+    --success: #34d399;
+    --success-soft: #063d31;
+    --warning: #fbbf24;
+    --warn: var(--warning);
+    --warning-soft: #422006;
+    --warn-soft: var(--warning-soft);
+    --danger: #fb7185;
+    --danger-soft: #4c0519;
     --info: #93c5fd;
     --info-soft: #172554;
+    --ring: rgba(45, 212, 191, 0.36);
+    --shadow-soft: 0 14px 38px rgba(0, 0, 0, 0.28);
+    --shadow-panel: 0 22px 64px rgba(0, 0, 0, 0.32);
+    --shadow-glow: 0 24px 80px rgba(45, 212, 191, 0.12);
+    --app-gradient:
+      radial-gradient(circle at top left, rgba(20, 184, 166, 0.14), transparent 30rem),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 28rem),
+      linear-gradient(180deg, #08111f 0%, #0b1220 44%, #070b13 100%);
   }
 }
 
@@ -48,9 +84,10 @@
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--background);
+  background: var(--app-gradient);
   color: var(--foreground);
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -60,17 +97,54 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: var(--ring);
+}
+
 .surface {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.06);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(18px);
 }
 
 .muted-surface {
-  background: var(--panel-muted);
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-muted) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+}
+
+.premium-control {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--strong);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.premium-control:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+}
+
+.premium-control:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--strong);
 }

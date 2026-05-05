@@ -4,6 +4,7 @@ import {
   journalFailure,
   type JournalData,
   type JournalDecisionType,
+  type JournalEntryContext,
   type JournalEntryReview,
   type JournalEntryUpdateRequest,
   type JournalFailure,
@@ -11,7 +12,7 @@ import {
   type JournalReviewCreateRequest,
   type JournalStatus,
 } from "@/lib/journal/types";
-import { listWorkspaces } from "./market";
+import { listAnalysisRuns, listSymbols, listWorkspaces } from "./market";
 import { listSignalOutcomes } from "./outcomes";
 import type { ApiResult, JournalEntry, JournalEntryCreateRequest, SignalOutcome, UUID } from "./types";
 
@@ -72,8 +73,9 @@ export async function getJournalData(params: Record<string, string | undefined>)
   const env = getPublicEnv();
   const filters = parseJournalFilters(params);
   const failures: JournalFailure[] = [];
-  const workspacesResult = await listWorkspaces();
+  const [workspacesResult, symbolsResult] = await Promise.all([listWorkspaces(), listSymbols()]);
   const workspaces = readResult("Workspaces", workspacesResult, [], failures);
+  const symbols = readResult("Symbols", symbolsResult, [], failures);
   const workspace = workspaces.find((candidate) => candidate.id === filters.workspaceId) || workspaces[0] || null;
 
   if (!workspace) {
@@ -83,8 +85,12 @@ export async function getJournalData(params: Record<string, string | undefined>)
       requestedWorkspaceId: filters.workspaceId || null,
       workspace: null,
       workspaces,
+      symbols,
+      analysisRuns: [],
+      entryContexts: {},
       filters,
       entries: [],
+      unfilteredEntryCount: 0,
       selectedEntry: null,
       outcomes: [],
       failures,
@@ -93,7 +99,7 @@ export async function getJournalData(params: Record<string, string | undefined>)
   }
 
   const resolvedFilters = { ...filters, workspaceId: workspace.id };
-  const [entriesResult, linkedOutcomesResult] = await Promise.all([
+  const [entriesResult, linkedOutcomesResult, analysisRunsResult] = await Promise.all([
     listJournalEntries({
       workspaceId: workspace.id,
       signalId: resolvedFilters.signalId,
@@ -103,9 +109,13 @@ export async function getJournalData(params: Record<string, string | undefined>)
       limit: 200,
     }),
     resolvedFilters.signalId ? listSignalOutcomes(resolvedFilters.signalId) : Promise.resolve(null),
+    listAnalysisRuns(workspace.id, resolvedFilters.symbolId),
   ]);
-  const entries = readResult("Journal entries", entriesResult, [], failures);
+  const unfilteredEntries = readResult("Journal entries", entriesResult, [], failures);
   const outcomes = linkedOutcomesResult ? readResult("Linked signal outcomes", linkedOutcomesResult, [], failures) : [];
+  const analysisRuns = readResult("Analysis runs", analysisRunsResult, [], failures);
+  const entryContexts = buildEntryContexts(unfilteredEntries, analysisRuns, symbols);
+  const entries = filterEntriesByContext(unfilteredEntries, entryContexts, resolvedFilters);
   const selectedEntry = await loadSelectedEntry(params.entryId, entries, outcomes, failures);
 
   return {
@@ -114,8 +124,12 @@ export async function getJournalData(params: Record<string, string | undefined>)
     requestedWorkspaceId: filters.workspaceId || null,
     workspace,
     workspaces,
+    symbols,
+    analysisRuns,
+    entryContexts,
     filters: resolvedFilters,
     entries,
+    unfilteredEntryCount: unfilteredEntries.length,
     selectedEntry,
     outcomes,
     failures,
@@ -158,9 +172,53 @@ function parseJournalFilters(params: Record<string, string | undefined>): Journa
     analysisRunId: params.analysisRunId,
     setupContextId: params.setupContextId,
     outcomeId: params.outcomeId,
+    symbolId: params.symbolId,
+    timeframe: normalizeTextFilter(params.timeframe),
     decisionType: parseDecisionType(params.decisionType),
     status: parseStatus(params.status),
   };
+}
+
+function buildEntryContexts(
+  entries: JournalEntry[],
+  analysisRuns: JournalData["analysisRuns"],
+  symbols: JournalData["symbols"],
+): Record<string, JournalEntryContext> {
+  const runsById = new Map(analysisRuns.map((run) => [run.id, run]));
+  const symbolsById = new Map(symbols.map((symbol) => [symbol.id, symbol]));
+  return Object.fromEntries(
+    entries.map((entry) => {
+      const run = entry.analysis_run_id ? runsById.get(entry.analysis_run_id) || null : null;
+      const symbol = run ? symbolsById.get(run.symbol_id) || null : null;
+      return [
+        entry.id,
+        {
+          symbolId: run?.symbol_id || null,
+          symbol: symbol?.symbol || null,
+          timeframe: run?.timeframe || null,
+          analysisRunId: run?.id || entry.analysis_run_id || null,
+        },
+      ];
+    }),
+  );
+}
+
+function filterEntriesByContext(
+  entries: JournalEntry[],
+  contexts: Record<string, JournalEntryContext>,
+  filters: JournalFilters,
+): JournalEntry[] {
+  return entries.filter((entry) => {
+    const context = contexts[entry.id];
+    const symbolMatches = !filters.symbolId || context?.symbolId === filters.symbolId;
+    const timeframeMatches = !filters.timeframe || context?.timeframe === filters.timeframe;
+    return symbolMatches && timeframeMatches;
+  });
+}
+
+function normalizeTextFilter(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized || undefined;
 }
 
 function parseDecisionType(value: string | undefined): JournalDecisionType | undefined {

@@ -2,6 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import {
+  ReviewField,
+  ReviewSurfacePanel,
+  reviewInputClassName,
+} from "@/components/review-surfaces/ReviewSurface";
 import { createJournalEntry, updateJournalEntry } from "@/lib/api/journal";
 import type { JournalEntry } from "@/lib/api/types";
 import { journalDecisionTypes, journalUserBiases, type JournalData, type JournalDecisionType, type JournalUserBias } from "@/lib/journal/types";
@@ -71,27 +77,25 @@ export function JournalEntryForm({ data, entry }: JournalEntryFormProps) {
   }
 
   return (
-    <form className="surface rounded-lg p-5" onSubmit={submitEntry}>
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase text-slate-500">{entry ? "Edit note" : "Create journal entry"}</p>
-        <h2 className="mt-1 text-lg font-semibold text-[var(--strong)]">Reflection note</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-500">Capture observations, bias, and follow-up context. Account metrics, order fields, margin fields, and sizing are intentionally excluded.</p>
-      </div>
+    <form onSubmit={submitEntry}>
+      <ReviewSurfacePanel
+        eyebrow={entry ? "Edit note" : "Create note"}
+        title="Journal reflection"
+        description="Capture observation context, bias, and follow-up notes. Account-result, order, margin, and sizing fields are intentionally excluded."
+      >
       {message && <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">{message}</p>}
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs font-semibold uppercase text-slate-500">Title</span>
+        <ReviewField label="Title">
           <input
-            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+            className={reviewInputClassName()}
             maxLength={240}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
           />
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs font-semibold uppercase text-slate-500">Decision type</span>
+        </ReviewField>
+        <ReviewField label="Decision type">
           <select
-            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+            className={reviewInputClassName()}
             value={decisionType}
             onChange={(event) => setDecisionType(event.target.value as JournalDecisionType)}
           >
@@ -99,11 +103,10 @@ export function JournalEntryForm({ data, entry }: JournalEntryFormProps) {
               <option key={value} value={value}>{reviewLabel(value)}</option>
             ))}
           </select>
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs font-semibold uppercase text-slate-500">User bias</span>
+        </ReviewField>
+        <ReviewField label="Observed bias">
           <select
-            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+            className={reviewInputClassName()}
             value={userBias}
             onChange={(event) => setUserBias(event.target.value as JournalUserBias | "")}
           >
@@ -112,51 +115,50 @@ export function JournalEntryForm({ data, entry }: JournalEntryFormProps) {
               <option key={value} value={value}>{reviewLabel(value)}</option>
             ))}
           </select>
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs font-semibold uppercase text-slate-500">Signal link</span>
+        </ReviewField>
+        <ReviewField label="Signal link">
           <input
-            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+            className={reviewInputClassName()}
             value={signalId}
             onChange={(event) => setSignalId(event.target.value)}
             placeholder="Optional signal ID"
           />
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs font-semibold uppercase text-slate-500">Setup context link</span>
+        </ReviewField>
+        <ReviewField label="Setup context link">
           <input
-            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+            className={reviewInputClassName()}
             value={setupContextId}
             onChange={(event) => setSetupContextId(event.target.value)}
             placeholder="Optional setup context ID"
           />
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs font-semibold uppercase text-slate-500">Tags</span>
+        </ReviewField>
+        <ReviewField label="Tags">
           <input
-            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+            className={reviewInputClassName()}
             value={tagsText}
             onChange={(event) => setTagsText(event.target.value)}
             placeholder="review, follow-up"
           />
-        </label>
+        </ReviewField>
       </div>
-      <label className="mt-3 grid gap-1 text-sm">
-        <span className="text-xs font-semibold uppercase text-slate-500">Notes</span>
+      <ReviewField label="Notes">
         <textarea
-          className="min-h-36 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-[var(--strong)]"
+          className={reviewInputClassName("mt-1 min-h-36 resize-y")}
           maxLength={8000}
           value={userNotes}
           onChange={(event) => setUserNotes(event.target.value)}
         />
-      </label>
-      <button
-        className="mt-4 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+      </ReviewField>
+      <Button
+        className="mt-4"
+        variant="primary"
         type="submit"
+        loading={pending}
         disabled={!canSubmit}
       >
-        {pending ? "Saving" : entry ? "Update note" : "Save note"}
-      </button>
+        {entry ? "Update note" : "Save note"}
+      </Button>
+      </ReviewSurfacePanel>
     </form>
   );
 }

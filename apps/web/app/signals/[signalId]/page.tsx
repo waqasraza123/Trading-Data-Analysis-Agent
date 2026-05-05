@@ -1,7 +1,7 @@
-import { AppShell } from "@/components/layout/app-shell";
-import { SetupDetailView } from "@/components/setup-detail/SetupDetailView";
+import { AppShell } from "@/components/layout/AppShell";
+import { SetupReviewView } from "@/components/setup-review/SetupReviewView";
 import { getPublicEnv } from "@/config/env";
-import { getSetupDetail } from "@/lib/api/setupDetail";
+import { getSetupReview } from "@/lib/api/setupReview";
 
 type SignalPageProps = {
   params: Promise<{
@@ -12,11 +12,11 @@ type SignalPageProps = {
 export default async function SignalPage({ params }: SignalPageProps) {
   const { signalId } = await params;
   const env = getPublicEnv();
-  const setupDetail = await getSetupDetail(signalId);
+  const setupReview = await getSetupReview(signalId);
 
   return (
     <AppShell appName={env.appName}>
-      <SetupDetailView data={setupDetail} />
+      <SetupReviewView data={setupReview} />
     </AppShell>
   );
 }

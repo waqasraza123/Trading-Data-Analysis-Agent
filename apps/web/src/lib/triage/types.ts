@@ -24,6 +24,7 @@ export type TriageColumnKey =
 
 export type TriageFilterState = {
   workspaceId?: UUID;
+  symbolSearch?: string;
   symbolId?: UUID;
   timeframe?: string;
   bias?: string;
@@ -32,6 +33,7 @@ export type TriageFilterState = {
   freshness?: string;
   profileKey?: string;
   preferenceProfileId?: UUID;
+  sort?: "priority" | "freshness" | "confidence" | "created";
   onlyFresh: boolean;
   onlyReviewRequired: boolean;
 };

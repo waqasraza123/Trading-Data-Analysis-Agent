@@ -14,9 +14,9 @@ export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Deterministic signal review"
-        title="Signal triage board"
-        description="Prioritize stored deterministic signals by context quality, confirmation needs, conflicts, data freshness, and review state."
+        eyebrow="Premium review workflow"
+        title="Setup triage"
+        description="Review stored deterministic setups by priority, freshness, evidence quality, unresolved context, and observed behavior."
         actions={
           <>
           <Metric label="Workspace" value={data.workspace?.name || "Not selected"} />
@@ -37,7 +37,8 @@ export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
           {data.candidates.length === 0 ? (
             <TriageEmptyState />
           ) : (
-            <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-6">
+            <div className="overflow-x-auto pb-3">
+              <div className="grid min-w-[1920px] grid-cols-6 gap-4">
               {triageColumns.map((column) => (
                 <SignalTriageColumn
                   key={column.key}
@@ -45,6 +46,7 @@ export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
                   candidates={data.candidates.filter((candidate) => candidate.classification.column === column.key)}
                 />
               ))}
+              </div>
             </div>
           )}
         </>

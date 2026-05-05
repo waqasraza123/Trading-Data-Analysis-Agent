@@ -39,6 +39,7 @@ type ComposeCommandCenterInput = {
   selectedPreferenceProfile: PreferenceProfile | null;
   providerHealthSummary: ProviderHealthSummary | null;
   providerHealthSnapshots: ProviderHealthSnapshot[];
+  providerPollingRequests: CommandCenterData["providerPollingRequests"];
   generatedAt: string;
   brief: WorkspaceBrief;
   triage: TriageBoardData;
@@ -50,6 +51,8 @@ type ComposeCommandCenterInput = {
   notificationUnreadCount: number;
   notificationReviewCount: number;
   notificationFailures: CommandCenterFailure[];
+  latestProductReadiness: CommandCenterData["latestProductReadiness"];
+  readinessFailures: CommandCenterFailure[];
   qualityWarnings: CommandCenterData["qualityWarnings"];
   qualityFailures: CommandCenterFailure[];
   runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
@@ -74,6 +77,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     input.journalFailures,
     input.providerHealthFailures,
     input.notificationFailures,
+    input.readinessFailures,
     input.qualityFailures,
     input.runtimeSupervisorFailures,
     input.dailyRoutineFailures,
@@ -110,6 +114,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     selectedPreferenceProfile: input.selectedPreferenceProfile,
     providerHealthSummary: input.providerHealthSummary,
     providerHealthSnapshots: input.providerHealthSnapshots,
+    providerPollingRequests: input.providerPollingRequests,
     generatedAt: input.generatedAt,
     backendUnavailable,
     dailyWorkflowRuns: input.scanner.dailyWorkflowRuns,
@@ -122,6 +127,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     selectedDailyRoutineRunSteps: input.selectedDailyRoutineRunSteps,
     notificationUnreadCount: input.notificationUnreadCount,
     notificationReviewCount: input.notificationReviewCount,
+    latestProductReadiness: input.latestProductReadiness,
     qualityWarnings: input.qualityWarnings,
     runtimeSupervisorHealth: input.runtimeSupervisorHealth,
     summary: {
@@ -451,6 +457,7 @@ function setupItem(candidate: TriageCandidate, workspaceId: UUID | null): Comman
     confidenceLabel: commandCenterLabel(signal.confidence_label),
     setupQualityLabel: commandCenterLabel(candidate.setupContext?.setup_quality_label || "Not available"),
     reviewPriorityLabel: reviewPriorityLabel(candidate),
+    freshnessLabel: commandCenterLabel(candidate.memory?.freshness_label || "Not available"),
     mainReason: commandCenterText(candidate.classification.mainReason.label, "Review first"),
     detail: commandCenterText(signal.summary || candidate.setupContext?.summary, "Setup context available"),
     href: `/signals/${signal.id}${workspaceId ? `?workspaceId=${workspaceId}` : ""}`,

@@ -2,12 +2,14 @@ import { getPublicEnv } from "@/config/env";
 import { getWorkspaceBrief } from "./brief";
 import { listNotificationEvents } from "./notifications";
 import { getProviderHealthSummary, listProviderHealthSnapshots } from "./providerHealth";
+import { listProviderPollingRequests } from "./providerPolling";
 import { getQualityScoreboardData } from "./quality";
 import { getCommandCenterReadModel } from "./readModels";
 import { getRuntimeSupervisorHealth } from "./runtimeSupervisor";
 import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
 import { listJournalEntries } from "./journal";
+import { getLatestProductReadiness } from "./productReadiness";
 import {
   dailyRoutineFailure,
   getDailyRoutineRun,
@@ -34,7 +36,7 @@ export async function getCommandCenterData(params: {
   ]);
   const workspace = triage.workspace || scanner.workspace || null;
   const readModelResult = workspace ? await getCommandCenterReadModel(workspace.id) : null;
-  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures, dailyRoutineTemplates, dailyRoutineRuns, selectedDailyRoutineRun, selectedDailyRoutineRunSteps, dailyRoutineFailures } = workspace
+  const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerPollingRequests, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, latestProductReadiness, readinessFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures, dailyRoutineTemplates, dailyRoutineRuns, selectedDailyRoutineRun, selectedDailyRoutineRunSteps, dailyRoutineFailures } = workspace
     ? await fetchCommandCenterWorkspaceContext(
         workspace.id,
         triage.allCandidates.slice(0, 10).map((candidate) => candidate.signal.signal.id),
@@ -47,10 +49,13 @@ export async function getCommandCenterData(params: {
         journalFailures: [],
         providerHealthSummary: null,
         providerHealthSnapshots: [],
+        providerPollingRequests: [],
         providerHealthFailures: [],
         notificationUnreadCount: 0,
         notificationReviewCount: 0,
         notificationFailures: [],
+        latestProductReadiness: null,
+        readinessFailures: [],
         qualityWarnings: [],
         qualityFailures: [],
         runtimeSupervisorHealth: null,
@@ -70,6 +75,7 @@ export async function getCommandCenterData(params: {
     selectedPreferenceProfile: triage.selectedPreferenceProfile,
     providerHealthSummary,
     providerHealthSnapshots,
+    providerPollingRequests,
     generatedAt: new Date().toISOString(),
     brief,
     triage,
@@ -81,6 +87,8 @@ export async function getCommandCenterData(params: {
     notificationUnreadCount,
     notificationReviewCount,
     notificationFailures,
+    latestProductReadiness,
+    readinessFailures,
     qualityWarnings,
     qualityFailures,
     runtimeSupervisorHealth,
@@ -104,10 +112,13 @@ async function fetchCommandCenterWorkspaceContext(
   journalFailures: CommandCenterFailure[];
   providerHealthSummary: ProviderHealthSummary | null;
   providerHealthSnapshots: ProviderHealthSnapshot[];
+  providerPollingRequests: CommandCenterData["providerPollingRequests"];
   providerHealthFailures: CommandCenterFailure[];
   notificationUnreadCount: number;
   notificationReviewCount: number;
   notificationFailures: CommandCenterFailure[];
+  latestProductReadiness: CommandCenterData["latestProductReadiness"];
+  readinessFailures: CommandCenterFailure[];
   qualityWarnings: CommandCenterData["qualityWarnings"];
   qualityFailures: CommandCenterFailure[];
   runtimeSupervisorHealth: CommandCenterData["runtimeSupervisorHealth"];
@@ -118,10 +129,11 @@ async function fetchCommandCenterWorkspaceContext(
   selectedDailyRoutineRunSteps: CommandCenterData["selectedDailyRoutineRunSteps"];
   dailyRoutineFailures: CommandCenterData["dailyRoutineFailures"];
 }> {
-  const [journalContext, providerHealthContext, notificationContext, qualityContext, runtimeSupervisorContext, dailyRoutineContext] = await Promise.all([
+  const [journalContext, providerHealthContext, notificationContext, readinessContext, qualityContext, runtimeSupervisorContext, dailyRoutineContext] = await Promise.all([
     fetchJournalContext(workspaceId, signalIds),
     fetchProviderHealthContext(workspaceId),
     fetchNotificationContext(workspaceId),
+    fetchReadinessContext(workspaceId),
     readModel ? Promise.resolve(qualityContextFromReadModel(readModel)) : fetchQualityContext(workspaceId),
     fetchRuntimeSupervisorContext(workspaceId),
     fetchDailyRoutineContext(workspaceId, selectedRoutineRunId),
@@ -130,6 +142,7 @@ async function fetchCommandCenterWorkspaceContext(
     ...journalContext,
     ...providerHealthContext,
     ...notificationContext,
+    ...readinessContext,
     ...qualityContext,
     ...runtimeSupervisorContext,
     ...dailyRoutineContext,
@@ -228,18 +241,22 @@ async function fetchProviderHealthContext(
 ): Promise<{
   providerHealthSummary: ProviderHealthSummary | null;
   providerHealthSnapshots: ProviderHealthSnapshot[];
+  providerPollingRequests: CommandCenterData["providerPollingRequests"];
   providerHealthFailures: CommandCenterFailure[];
 }> {
   const failures: CommandCenterFailure[] = [];
-  const [summaryResult, snapshotsResult] = await Promise.all([
+  const [summaryResult, snapshotsResult, pollingResult] = await Promise.all([
     getProviderHealthSummary(workspaceId),
     listProviderHealthSnapshots({ workspaceId }),
+    listProviderPollingRequests({ workspaceId }),
   ]);
   const providerHealthSummary = readOptionalResult("Provider health summary", summaryResult, failures);
   const providerHealthSnapshots = readOptionalList("Provider health snapshots", snapshotsResult, failures);
+  const providerPollingRequests = readOptionalList("Provider polling requests", pollingResult, failures);
   return {
     providerHealthSummary,
     providerHealthSnapshots,
+    providerPollingRequests,
     providerHealthFailures: failures,
   };
 }
@@ -262,6 +279,21 @@ async function fetchNotificationContext(
     notificationUnreadCount: unreadEvents.length,
     notificationReviewCount: reviewEvents.length,
     notificationFailures: failures,
+  };
+}
+
+async function fetchReadinessContext(
+  workspaceId: UUID,
+): Promise<{
+  latestProductReadiness: CommandCenterData["latestProductReadiness"];
+  readinessFailures: CommandCenterFailure[];
+}> {
+  const failures: CommandCenterFailure[] = [];
+  const result = await getLatestProductReadiness(workspaceId);
+  const latestProductReadiness = readOptionalResult("Product readiness", result, failures);
+  return {
+    latestProductReadiness,
+    readinessFailures: failures,
   };
 }
 

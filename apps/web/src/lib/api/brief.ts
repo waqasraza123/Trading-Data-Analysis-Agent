@@ -294,6 +294,10 @@ function composeWorkspaceBriefFromBackend(input: {
   generatedAt: string;
   brief: {
     id: UUID;
+    period_start: string;
+    period_end: string;
+    timezone: string;
+    watchlist_id: UUID | null;
     summary_json: JsonRecord;
     sections_json: JsonRecord;
     warnings_json: JsonRecord[];
@@ -323,6 +327,11 @@ function composeWorkspaceBriefFromBackend(input: {
     workspace: { id: input.workspace.id, name: input.workspace.name },
     requestedWorkspaceId: input.requestedWorkspaceId,
     generatedAt: input.generatedAt,
+    periodStart: input.brief.period_start,
+    periodEnd: input.brief.period_end,
+    timezone: input.brief.timezone,
+    watchlistId: input.brief.watchlist_id,
+    sourceLabel: "Backend daily brief",
     backendUnavailable: input.backendUnavailable,
     summary: {
       totalSymbolsReviewed: readNumber(counts.total_symbols_reviewed),

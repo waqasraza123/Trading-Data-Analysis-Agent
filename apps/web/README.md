@@ -21,6 +21,8 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
 - Scanner preset gallery for creating watchlists and scheduled scan configs from backend templates without running scans on apply.
+- Guided scanner workflow with hero health metrics, preset gallery, watchlist manager, scan config builder, explicit run-now confirmation, scan history, and generated signal review.
+- Guided data onboarding workflow with source, credentials/config, symbols/timeframes, freshness check, gap detection, recovery plan, and ready summary steps.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
 - Product readiness checklist for explicit daily-use validation across API, database, seed data, workspace setup, data freshness, scanner setup, workers, optional notifications, and journal readiness.
 - Guided setup wizard for creating or selecting a workspace, operator, symbols, data source, credential reference, watchlist, scanner preset, preference profile, optional synthetic demo candles, readiness check, and optional explicit first deterministic scan.
@@ -28,6 +30,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Daily routine template controls on the command center for named bounded routines such as pre-market scan, session-open reviews, close-of-day review, stale-data repair, quality review, and journal follow-up.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
+- Polished daily review surfaces for `/journal`, `/review/outcomes`, `/quality`, and `/notifications` with shared filters, tables, empty states, source links, and safe non-advisory labels.
 - Demo mode page at `/demo` for running the backend synthetic product smoke flow and opening the generated command center, brief, triage, scanner, signal detail, and journal artifacts.
 - Visual setup chart panels for compact final-candle, zone, signal-window, and observed-outcome context on signal detail pages.
 
@@ -213,6 +216,33 @@ Use `/journal?workspaceId=<workspace-id>` to create and review reflection notes.
 Use `/preferences/strategy?workspaceId=<workspace-id>` to create and maintain review preference profiles. A profile can be selected with `?profileId=<profile-id>`.
 Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding workflow. The page persists selected workspace, source, symbols, and timeframes in the URL and browser storage.
 
+## Scanner Workflow
+
+`/scanner` is a Tailwind-native orchestration surface for deterministic backend scans:
+
+- The hero summarizes configured watchlists, active scan configs, latest selected scan run, failed/skipped counts, source coverage, API status, and worker status.
+- Presets cover London open, New York open, crypto 24h, high volatility, trend continuation, reversal risk, range/no directional, needs confirmation, stale data repair, and close-of-day review when backend preset records are available. Applying a preset creates watchlist and/or scan config records only.
+- The watchlist manager creates watchlists and active symbol/timeframe items, and can pause, resume, archive, or deactivate records through backend scan APIs.
+- The scan config builder supports watchlist and single-symbol scans, lookback, interval, final-candle defaults, and optional news/reasoning/action-plan record toggles when the backend supports them.
+- The run-now panel requires an explicit selected config or due-config action and opens the returned scan run for review.
+- Scan history and scan run detail show completed, skipped, failed, analysis-run, and signal links when the backend returns them.
+
+The scanner does not connect brokers, place orders, send external messages, or provide financial advice.
+
+## Data Onboarding Workflow
+
+`/data/onboarding` guides source readiness before deterministic analysis:
+
+- Source selection lists configured data sources and supports creating minimal source metadata when the backend permits it.
+- Credentials/config review shows configured or missing provider credential references, redacted test status, and server-side configuration guidance. Raw secrets are never shown.
+- Symbols/timeframes select final-candle targets for readiness checks.
+- Freshness checks read latest final candles, candle counts, candle quality, data quality runs, market memory, live subscriptions, and provider polling status.
+- Gap detection creates candle gap recovery plans for selected windows.
+- Recovery preparation prepares provider polling metadata with `create_requests=false` from the browser path.
+- The ready summary classifies rows as ready for deterministic analysis, degraded, blocked by missing candles, or stale.
+
+The onboarding workflow does not run hidden external calls, execute broker workflows, send alerts, or provide financial advice.
+
 ## Routes
 
 - `/dashboard` renders the daily operator cockpit, preferring dashboard symbol read models for current symbol state.
@@ -252,6 +282,10 @@ The shared navigation links Command Center, Readiness, Brief, Scanner, Triage, Q
 
 The merged workflow contract is documented in `docs/daily-use-workflow.md`.
 
+## Polished Review Surfaces
+
+The daily review pages share a compact Tailwind review-surface system for consistent headers, metrics, filters, tables, cards, and empty states. These pages are optimized for fast operator review over stored backend artifacts; they do not create broker workflows, account-result records, external delivery triggers, or financial advice.
+
 ## Notification Inbox
 
 The notification inbox at `/notifications` is an in-app review surface over sanitized
@@ -264,29 +298,33 @@ Supported event types are signal classification, review recommendation, outcome 
 digest creation, data-quality degradation, stale market memory, due reasoning action, blocked
 readiness, opened operator review, completed scan, degraded provider health, and needed gap
 recovery. The UI uses safe language such as Review needed, Data stale, Scan completed, Outcome
-ready, Setup context available, Provider degraded, and Gap recovery needed. It is not an external
-delivery surface, broker workflow, or trading-alert page, and it does not trigger realtime
-notifications.
+ready, Setup context available, Provider degraded, and Gap recovery needed. It is an in-app review
+surface only and does not trigger realtime notifications.
 
 ## Daily Trading Command Center
 
-The command center is a frontend composition layer in `apps/web/src/lib/api/commandCenter.ts` and `apps/web/src/lib/command-center/composeCommandCenter.ts`. It uses the backend daily brief through the shared brief client when a persisted brief is available, then falls back to the existing provider health, signal priority, preference profile, triage, scanner, journal, market memory, digest, outcome, readiness, review, action item, and health clients.
+The command center is the default premium daily cockpit at `/command-center`. It is a frontend composition layer in `apps/web/src/lib/api/commandCenter.ts` and `apps/web/src/lib/command-center/composeCommandCenter.ts`. It uses the backend daily brief through the shared brief client when a persisted brief is available, then falls back to the existing provider health, signal priority, preference profile, triage, scanner, journal, market memory, digest, outcome, readiness, review, action item, product readiness, provider polling, and health clients.
 
 Sections:
 
-- What changed: latest digest items, new signal context, outcome-ready items, stale data changes, and review-required items.
-- Data readiness: data fresh, data stale, missing candles, provider degraded, polling failed, recovery plan needed, and a link to `/data/onboarding`.
-- Review first: high quality, fresh, or high review-priority signals linking to `/signals/[signalId]`.
-- Needs confirmation: medium confidence, mixed context, stale-but-recoverable data, pending outcomes, and triage links.
-- Avoid / no directional signal: no directional signal, low data quality, conflicting evidence, range/chop/fakeout context, and unresolved review conditions.
-- Outcome review: observed continuation, observed reversal, and no-follow-through outcomes linked back to setup detail.
-- Scanner status: due scan configs, selected scan runs, failed/skipped run counts, and `/scanner` links.
-- Notification status: unread in-app intelligence event count and `/notifications` review link when events are available.
-- Quality warnings: diagnostics, calibration, drift, or data-coverage warnings linked to `/quality`.
-- Journal prompt: reviewed signals without journal notes when detectable, plus recent journal entries.
-- Next backend-safe actions: open scanner presets, run deterministic scan, inspect setup context, review notification events, review quality warnings, review data freshness, prepare gap recovery, evaluate outcome after horizon, review journal, and inspect audit timeline.
+- Hero/status band: workspace, session time, data readiness, last refresh, backend health, and quick links for refresh, scanner, triage, data onboarding, and an explicit deterministic daily scan.
+- Review First: dense setup table with bias, symbol/timeframe, confidence, priority label, setup quality, freshness, main reason, and setup detail links.
+- Needs Confirmation: compact strip for mixed context, pending final-candle or outcome context, pending data recovery, and medium-confidence review states.
+- Avoid Conditions: stale data, no directional signal, conflicting evidence, low quality, range/chop/fakeout context, and unresolved review conditions.
+- Data Reliability: fresh/stale counts, provider health, gap recovery needs, provider polling status, and data onboarding links.
+- Outcome Review: observed continuation, observed reversal, and no-follow-through outcomes linked back to setup detail.
+- Workflow Progress: latest daily workflow run, completed/skipped/failed steps, and links to brief, scanner, and triage.
+- Notifications / Review Items: unread inbox count, review-required items, blocked readiness, pending backend-safe actions, and readiness/inbox links.
 
 The command center keeps all copy non-advisory. It is not a broker terminal, not an auto-trading page, and not financial advice. It does not call broker APIs, create broker instructions, send external notifications, or execute action items.
+
+## Daily Brief
+
+`/brief` is the structured narrative summary for the daily cockpit. It prefers `GET /workspaces/{workspace_id}/daily-brief/latest` for persisted backend briefs and falls back to frontend composition when that endpoint is missing or has no usable brief. The fallback reads existing optional endpoints for market memory, signal digests, setup context, outcomes, readiness, operator reviews, action items, scheduled scans, watchlists, API health, and workers.
+
+The brief header shows the period, generated time, workspace/watchlist context, source path, and summary stats. Sections cover what changed, fresh symbols, review-first setups, needs confirmation, avoid conditions, outcomes ready, watch next, pending backend-safe actions, and data quality/recovery context. Empty states distinguish no workspace, no brief generated, no fresh data, no setups, and backend unavailable.
+
+The brief uses safe market-intelligence wording only. It is not a trading execution surface and does not provide financial advice.
 
 ## Outcome Review Loop
 
@@ -294,7 +332,7 @@ The outcome review page is a frontend composition layer in `apps/web/src/lib/api
 
 The page shows:
 
-- Recent observed outcomes by signal, horizon, outcome label, pattern, bias, and linked setup context when available.
+- A polished queue table of recent observed outcomes by signal, horizon, outcome label, pattern, bias, linked setup context, and reflection status.
 - Outcome labels using safe review language: observed continuation, observed reversal, no follow-through observed, insufficient outcome data, and not directional.
 - Linked signal detail and linked journal note when a note exists.
 - Journal prompts when an observed outcome has no linked note.
@@ -305,6 +343,8 @@ The review loop is a learning workflow only. It does not execute trades, connect
 ## Signal Quality Scoreboard
 
 The quality page is a frontend composition layer in `apps/web/src/lib/api/quality.ts` and `apps/web/src/lib/quality/composeQualityScoreboard.ts`. It does not add a backend endpoint. It composes existing read-only backend endpoints into one analytics dashboard for deterministic signal quality and historical behavior.
+
+The page adds a “what to review” section above the diagnostics so sample-size warnings, drift findings, calibration warnings, and profile review recommendations are visible before deeper tables.
 
 Backend inputs:
 
@@ -321,7 +361,7 @@ Safe metrics include continuation rate, reversal rate, no follow-through rate, c
 
 ## Journal Workflow
 
-The journal page uses the existing `journal-entries` backend API for notes, edits, archival, and deterministic review against stored outcomes.
+The journal page uses the existing `journal-entries` backend API for notes, edits, archival, and deterministic review against stored outcomes. It now adds workspace, decision type, status, symbol, timeframe, and signal filters. Symbol/timeframe filters apply when journal entries have analysis-run context available.
 
 The journal captures:
 
@@ -336,15 +376,20 @@ The form intentionally excludes account-result fields, order fields, margin fiel
 
 The setup detail page is for reviewing deterministic setup context around one signal. It is not an execution workflow and does not provide financial advice.
 
+The redesigned `/signals/[signalId]` route uses feature-local setup review components under
+`src/components/setup-review/` and presentation helpers under `src/lib/setup-review/`. It keeps the
+existing `setupDetail` composition contract behind `src/lib/api/setupReview.ts` so optional backend
+modules can remain independently deployable.
+
 The view shows:
 
-- Header context: symbol, timeframe, directional bias, pattern, confidence, setup quality, latest final candle context when available, and data freshness warnings.
+- Sticky setup header: symbol, timeframe, directional bias, confidence, review priority context, setup quality, data freshness, evidence counts, and links to audit, report/reasoning, and journal sections.
 - Visual setup chart: recent final candles, latest final candle marker, signal window, observation zones, invalidation context, target context zones, support/resistance context when available, review marker, setup quality/freshness/data-quality badges, warnings, and observed outcome markers.
 - Setup context: invalidation context, observation zones, target context zones, wait conditions, avoid reasons, timeframe agreement, data-quality warnings, and next observations.
 - Evidence and confidence: supporting and conflicting evidence grouped by type, plus confidence components.
-- Risk and quality: risk notes, readiness blockers, quality findings, multi-timeframe warnings, and cross-asset context conflicts.
-- Outcome history: observed follow-through, observed reversal, no-follow-through, and insufficient-data labels by horizon.
-- Historical similar cases: deterministic similarity results with outcome summaries and similarity reasons when available.
+- Risk and quality: risk notes, readiness blockers, quality findings, multi-timeframe context, and cross-asset context conflicts.
+- Wait / avoid: wait conditions, avoid reasons, unresolved observations, stale-data warnings, and degraded-data context.
+- Historical context: deterministic similar cases, recent observed outcomes by horizon, and profile/pattern behavior when backend summaries are available.
 - Scenario reasoning and action plan: persisted grounded hypotheses and backend-safe follow-up work, shown read-only.
 - Audit and journal: audit timeline summary plus a small journal note form for operator feedback.
 
@@ -379,15 +424,16 @@ The triage board is a frontend composition layer. There is no dedicated backend 
 
 Columns:
 
-- High Quality Context: directional signal, high confidence, acceptable or strong setup context, fresh data, no severe risk, usable readiness, and no critical quality finding.
+- Review First: directional setup, higher confidence, acceptable or strong setup context, fresh data, stronger review-priority score, usable readiness, and no critical quality finding.
 - Needs Confirmation: medium confidence, wait condition, no outcome context yet, mixed or unknown timeframe agreement, or pending backend follow-up such as outcome evaluation after a horizon.
 - Conflicted: quality findings, shadow disagreement, conflicting evidence, cross-asset conflict, reasoning grounding issue, or report-level evidence disagreement.
-- Avoid / No Directional Signal: no directional signal, neutral or unclear bias, range/chop context, fakeout risk, below-minimum confidence, or setup-context avoid reasons.
+- Avoid / No Directional: no directional signal, neutral or unclear bias, range/chop context, fakeout risk, below-minimum confidence, or setup-context avoid reasons.
 - Stale / Data Issue: stale market memory, missing candle or gap warning, degraded data quality, gap recovery need, stale live subscription, or setup-context data-quality warnings.
 - Review Required: blocked readiness, open operator review, low-confidence screenshot review context, blocked reasoning output, or critical quality finding.
 
-The board is read-only and has no drag/drop state. Refresh reloads the current filtered URL. Missing optional enrichment is shown as card-level missing-context badges rather than blocking the card.
+The board is read-only and has no drag/drop state. Sticky filters support workspace, preference profile, symbol search, symbol, timeframe, bias, confidence, bucket, freshness, profile key, only-fresh, review-required, and sort mode. Refresh reloads the current filtered URL. Missing optional enrichment is shown as card-level missing-context badges rather than blocking the card.
 When deterministic priority scores are available, cards sort by review priority score first and then fall back to the existing triage column and recency ordering. Missing priority scores do not block the board.
+Cards show symbol/timeframe, bias, confidence, priority score, setup quality, freshness, data quality, top reason, top risk note, evidence/conflict/outcome counts, and an outcome badge when available. Card links open `/signals/[signalId]` for setup review only.
 
 ## Data Onboarding Workflow
 
@@ -428,18 +474,27 @@ The UI uses market-intelligence wording such as high quality context, needs conf
 
 Shared interface primitives live under `src/components/ui`:
 
-- `PageShell`, `PageHeader`, `Section`, `Card`, and `Metric` define the daily cockpit frame, spacing, page headings, section cards, and summary metrics.
-- `Badge`, `StatusPill`, and status wrappers under `src/components/status` normalize bias, confidence, freshness, data quality, setup quality, outcome, readiness, priority, and worker labels.
-- `EmptyState`, `ErrorState`, and `LoadingSkeleton` keep missing endpoint, failed endpoint, and loading surfaces visually consistent.
-- `Button`, `Tabs`, `FilterBar`, and `Timeline` cover common interactions used by filters, refresh links, workflow steps, and traceability views.
+- `Surface`, `Card`, `Section`, `SectionHeader`, `PageHeader`, and `PageContainer` define the daily cockpit frame, spacing, route headings, and panel rhythm.
+- `MetricCard`, `StatGrid`, `Badge`, `StatusPill`, and status wrappers under `src/components/status` normalize dense dashboard metrics and bias, confidence, freshness, data quality, setup quality, outcome, readiness, priority, and worker labels.
+- `EmptyState`, `ErrorState`, `LoadingState`, and `Skeleton` keep missing endpoint, failed endpoint, and loading surfaces visually consistent.
+- `Button`, `Tabs`, `FilterBar`, `ActionBar`, `Timeline`, `Tooltip`, and `Divider` cover common interactions used by filters, refresh links, workflow steps, and traceability views.
+
+The app shell lives under `src/components/layout`:
+
+- `AppShell` wraps route content in the responsive cockpit frame.
+- `Sidebar` renders grouped desktop navigation with active route state.
+- `Topbar` renders workspace context and a safe `/health` API status indicator.
+- `MobileNav` renders compact mobile navigation from the same registry.
+- `WorkspaceSwitcher` and `PageContainer` provide shared context and content bounds.
 
 Shared UI helpers live under `src/lib/ui`:
 
 - `navigation.ts` is the source of truth for daily cockpit navigation.
-- `labels.ts` and `safeCopy.ts` centralize safe display labels and replacement wording.
+- `labels.ts`, `safeLabels.ts`, and `safeCopy.ts` centralize safe display labels and replacement wording.
 - `statusStyles.ts` maps backend status values into the shared badge tones.
+- `cn.ts` and `formatters.ts` provide local class composition and formatting re-exports.
 
-The top navigation uses the same route registry as workflow links and highlights the active section. Page headers should describe read-only review context, show workspace and last-updated metadata when available, and avoid advisory language.
+The shell and workflow links use the same route registry and highlight the active section. Page headers should describe read-only review context, show workspace and last-updated metadata when available, and avoid advisory language. More detailed guidance is in `docs/design-system.md`.
 
 ## Fallback Behavior
 
