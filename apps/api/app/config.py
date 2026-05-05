@@ -376,6 +376,7 @@ class Settings(BaseSettings):
     engine_execution_lock_seconds: int = Field(default=120, ge=1)
     engine_execution_default_priority: str = "normal"
     backfill_plan_version: str = "v1"
+    product_readiness_version: str = "v1"
     backfill_plan_default_limit: int = Field(default=1000, ge=1)
     backfill_plan_max_limit: int = Field(default=10000, ge=1)
     service_name: str = "trading-intelligence-api"
@@ -549,6 +550,7 @@ class Settings(BaseSettings):
         "provider_health_version",
         "provider_credentials_version",
         "scanner_preset_version",
+        "product_readiness_version",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

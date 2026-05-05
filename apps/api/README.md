@@ -6,6 +6,14 @@ review workflows. Applying a preset creates watchlists and scheduled scan config
 run scans, create execution setups, send alerts, call brokers, auto-trade, or provide financial
 advice. See `docs/scanner-presets.md`.
 
+Product readiness is implemented under `/product-readiness`. It persists an operator-facing
+checklist run for API reachability, database/migration detectability, seed/workspace/user setup,
+symbols, data sources, provider credentials, provider health, candle freshness, watchlists, scan
+configs, daily workflow availability, worker status, optional notifications, journal readiness, web
+API reachability, and critical stale/missing data indicators. It validates readiness only; it does
+not seed data, run scans, run daily workflows, start workers, call providers, send notifications,
+execute broker actions, auto-trade, or provide financial advice. See `docs/product-readiness.md`.
+
 Runtime supervisor APIs are implemented under `/runtime-supervisor`. They seed worker definitions,
 record optional worker heartbeats, mark stale workers, summarize runtime health, and record safe
 operator run requests for existing backend workers. They do not start OS processes, execute shell
@@ -273,6 +281,13 @@ Run migrations:
 
 ```sh
 .venv/bin/alembic upgrade head
+```
+
+Run product readiness:
+
+```sh
+curl -X POST "http://127.0.0.1:8000/product-readiness/run?workspaceId=<workspace-id>"
+curl "http://127.0.0.1:8000/product-readiness/latest?workspaceId=<workspace-id>"
 ```
 
 Seed deterministic backend defaults:

@@ -102,6 +102,7 @@ from app.modules.pattern_attribution.models import (
 )
 from app.modules.patterns.models import PatternCandidate
 from app.modules.preference_profiles.models import PersonalStrategyPreferenceProfile
+from app.modules.product_readiness.models import ProductReadinessRun
 from app.modules.profile_diagnostics.models import (
     CalibrationRecommendation,
     PatternOutcomeDiagnostic,
@@ -269,6 +270,7 @@ __all__ = [
     "PatternCandidate",
     "PatternOutcomeDiagnostic",
     "PersonalStrategyPreferenceProfile",
+    "ProductReadinessRun",
     "ProviderConnectionTest",
     "ProviderCredentialRef",
     "ProviderPollingError",

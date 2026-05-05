@@ -59,6 +59,7 @@ from app.modules.outcomes.routes import router as outcomes_router
 from app.modules.pattern_attribution.routes import router as pattern_attribution_router
 from app.modules.permissions.routes import router as permissions_router
 from app.modules.preference_profiles.routes import router as preference_profiles_router
+from app.modules.product_readiness.routes import router as product_readiness_router
 from app.modules.profile_diagnostics.routes import router as profile_diagnostics_router
 from app.modules.profile_governance.routes import router as profile_governance_router
 from app.modules.profile_simulations.routes import router as profile_simulations_router
@@ -195,6 +196,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         operator_playbooks_router,
         profile_governance_router,
         profile_simulations_router,
+        product_readiness_router,
         market_scans_router,
         scanner_presets_router,
         synthetic_fixtures_router,
