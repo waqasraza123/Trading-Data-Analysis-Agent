@@ -2,6 +2,7 @@ import { getPublicEnv } from "@/config/env";
 import { listAnalysisRuns, listMarketMemorySnapshots, listSymbols, listWorkspaces } from "./market";
 import { listSignalOutcomes } from "./outcomes";
 import { getLatestSignalReadiness } from "./readiness";
+import { listDashboardSymbolReadModels } from "./readModels";
 import { listSignalDigestItems, listSignalDigests } from "./signal-digests";
 import { getAnalysisRunSignal, getSignal } from "./signals";
 import { getSignalSetupContext } from "./setup-context";
@@ -17,6 +18,7 @@ import type {
   AnalysisRun,
   ApiFailure,
   ApiResult,
+  DashboardSymbolReadModel,
   DecisionReadinessAssessmentResponse,
   HealthResponse,
   MarketMemorySnapshot,
@@ -120,6 +122,7 @@ export async function getDashboardData(params: {
   const [
     watchlistsResult,
     memoryResult,
+    symbolReadModelsResult,
     scheduledScansResult,
     dueScansResult,
     analysisRunsResult,
@@ -128,6 +131,7 @@ export async function getDashboardData(params: {
   ] = await Promise.all([
     listWatchlists(workspace.id),
     listMarketMemorySnapshots(workspace.id),
+    listDashboardSymbolReadModels({ workspaceId: workspace.id, limit: 500 }),
     listScheduledScanConfigs(workspace.id),
     listDueScheduledScanConfigs(workspace.id),
     listAnalysisRuns(workspace.id),
@@ -136,7 +140,12 @@ export async function getDashboardData(params: {
   ]);
 
   const rawWatchlists = readResult("Watchlists", watchlistsResult, [], failures);
-  const memorySnapshots = readResult("Market memory", memoryResult, [], failures);
+  const memorySnapshots = symbolReadModelsResult.ok && symbolReadModelsResult.data.length > 0
+    ? symbolReadModelsResult.data.map(memoryFromSymbolReadModel)
+    : readResult("Market memory", memoryResult, [], failures);
+  if (!symbolReadModelsResult.ok && !symbolReadModelsResult.error.missing) {
+    failures.push(toFailure("Dashboard symbol read models", symbolReadModelsResult));
+  }
   const scheduledScans = readResult("Scheduled scans", scheduledScansResult, [], failures);
   const dueScans = readResult("Due scan configs", dueScansResult, [], failures);
   const analysisRuns = readResult("Analysis runs", analysisRunsResult, [], failures);
@@ -207,6 +216,45 @@ export async function getDashboardData(params: {
     failures,
     lastUpdatedAt: new Date().toISOString(),
   };
+}
+
+function memoryFromSymbolReadModel(model: DashboardSymbolReadModel): MarketMemorySnapshot {
+  return {
+    id: model.id,
+    workspace_id: model.workspace_id,
+    symbol_id: model.symbol_id,
+    source_id: model.source_id,
+    timeframe: model.timeframe,
+    state_version: model.read_model_version,
+    latest_final_candle_time: model.latest_final_candle_time,
+    latest_analysis_run_id: null,
+    latest_signal_id: model.latest_signal_id,
+    latest_outcome_id: null,
+    data_quality_label: model.data_quality_label || "unknown",
+    freshness_label: model.freshness_label || "unknown",
+    trend_state: null,
+    volatility_state: null,
+    range_state: null,
+    market_regime_label: model.market_regime_label,
+    market_session_label: model.market_session_label,
+    multi_timeframe_label: null,
+    cross_asset_label: null,
+    latest_signal_bias: model.latest_bias,
+    latest_signal_pattern_type: model.latest_pattern_type,
+    latest_signal_confidence_label: model.latest_confidence_label,
+    context_json: model.summary_json,
+    warnings_json: readJsonArray(model.summary_json.warnings),
+    created_at: model.created_at,
+    updated_at: model.updated_at,
+  };
+}
+
+function readJsonArray(value: unknown): Array<Record<string, string | number | boolean | null>> {
+  return Array.isArray(value)
+    ? value.filter((item): item is Record<string, string | number | boolean | null> =>
+        Boolean(item) && typeof item === "object" && !Array.isArray(item),
+      )
+    : [];
 }
 
 async function resolveSelectedSignal(

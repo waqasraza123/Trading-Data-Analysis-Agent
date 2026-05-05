@@ -3,6 +3,7 @@ import { getWorkspaceBrief } from "./brief";
 import { listNotificationEvents } from "./notifications";
 import { getProviderHealthSummary, listProviderHealthSnapshots } from "./providerHealth";
 import { getQualityScoreboardData } from "./quality";
+import { getCommandCenterReadModel } from "./readModels";
 import { getRuntimeSupervisorHealth } from "./runtimeSupervisor";
 import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
@@ -10,7 +11,7 @@ import { listJournalEntries } from "./journal";
 import { composeCommandCenter } from "@/lib/command-center/composeCommandCenter";
 import type { CommandCenterData, CommandCenterFailure } from "@/lib/command-center/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
-import type { ApiFailure, ApiResult, JournalEntry, UUID } from "./types";
+import type { ApiFailure, ApiResult, CommandCenterReadModel, JournalEntry, UUID } from "./types";
 
 export async function getCommandCenterData(params: {
   workspaceId?: string;
@@ -24,8 +25,13 @@ export async function getCommandCenterData(params: {
     getScannerData(params),
   ]);
   const workspace = triage.workspace || scanner.workspace || null;
+  const readModelResult = workspace ? await getCommandCenterReadModel(workspace.id) : null;
   const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures } = workspace
-    ? await fetchCommandCenterWorkspaceContext(workspace.id, triage.allCandidates.slice(0, 10).map((candidate) => candidate.signal.signal.id))
+    ? await fetchCommandCenterWorkspaceContext(
+        workspace.id,
+        triage.allCandidates.slice(0, 10).map((candidate) => candidate.signal.signal.id),
+        readModelResult?.ok ? readModelResult.data : null,
+      )
     : {
         recentJournalEntries: [],
         journalEntriesBySignalId: new Map<UUID, JournalEntry[]>(),
@@ -71,6 +77,7 @@ export async function getCommandCenterData(params: {
 async function fetchCommandCenterWorkspaceContext(
   workspaceId: UUID,
   signalIds: UUID[],
+  readModel: CommandCenterReadModel | null,
 ): Promise<{
   recentJournalEntries: JournalEntry[];
   journalEntriesBySignalId: Map<UUID, JournalEntry[]>;
@@ -90,7 +97,7 @@ async function fetchCommandCenterWorkspaceContext(
     fetchJournalContext(workspaceId, signalIds),
     fetchProviderHealthContext(workspaceId),
     fetchNotificationContext(workspaceId),
-    fetchQualityContext(workspaceId),
+    readModel ? Promise.resolve(qualityContextFromReadModel(readModel)) : fetchQualityContext(workspaceId),
     fetchRuntimeSupervisorContext(workspaceId),
   ]);
   return {
@@ -99,6 +106,28 @@ async function fetchCommandCenterWorkspaceContext(
     ...notificationContext,
     ...qualityContext,
     ...runtimeSupervisorContext,
+  };
+}
+
+function qualityContextFromReadModel(readModel: CommandCenterReadModel): {
+  qualityWarnings: CommandCenterData["qualityWarnings"];
+  qualityFailures: CommandCenterFailure[];
+} {
+  const dataQuality = readRecord(readModel.sections_json.dataQuality);
+  const staleOrDelayed = readArray(dataQuality.staleOrDelayed);
+  return {
+    qualityWarnings: staleOrDelayed.slice(0, 4).map((item, index) => {
+      const record = readRecord(item);
+      return {
+        id: `read-model-data-quality-${index}`,
+        title: "Data quality review",
+        detail:
+          [record.freshnessLabel, record.dataQualityLabel, record.timeframe].filter(Boolean).join(" / ") ||
+          "Read model data quality status needs review.",
+        severity: "warning",
+      };
+    }),
+    qualityFailures: [],
   };
 }
 
@@ -244,6 +273,14 @@ function readOptionalList<T>(
     failures.push(toFailure(label, result));
   }
   return [];
+}
+
+function readRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function readArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
 }
 
 function toFailure(label: string, result: ApiFailure): CommandCenterFailure {

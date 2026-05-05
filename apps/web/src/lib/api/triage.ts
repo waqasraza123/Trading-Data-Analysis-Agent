@@ -20,6 +20,7 @@ import {
   matchPreferenceProfileSignal,
 } from "./preferenceProfiles";
 import { getLatestSignalReadiness } from "./readiness";
+import { listSignalCardReadModels } from "./readModels";
 import { getSignalReport } from "./reports";
 import { getSignalPriorityScore } from "./signal-priority";
 import { getAnalysisRunSignal, getSignal } from "./signals";
@@ -29,7 +30,9 @@ import type {
   ApiFailure,
   ApiResult,
   MarketMemorySnapshot,
+  SignalCardReadModel,
   SignalClassification,
+  SignalPriorityScore,
   UUID,
 } from "./types";
 import type { PreferenceProfile } from "@/lib/preferences/types";
@@ -92,6 +95,52 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
     selectedPreferenceProfileResult,
     failures,
   );
+  const readModelResult = await listSignalCardReadModels({
+    workspaceId: workspace.id,
+    symbolId: filters.symbolId,
+    timeframe: filters.timeframe,
+    bias: filters.bias,
+    freshnessLabel: filters.freshness,
+    limit: signalCandidateLimit,
+    offset: 0,
+  });
+  const readModelCards = readModelResult.ok ? readModelResult.data : [];
+  if (readModelCards.length > 0) {
+    const symbolMap = new Map(symbols.map((symbol) => [symbol.id, symbol]));
+    const readModelCandidates = readModelCards.map((card) =>
+      candidateFromReadModel(card, symbolMap.get(card.symbol_id) || null),
+    );
+    const preferenceScopedCandidates = await applyPreferenceProfileFilter(
+      readModelCandidates,
+      selectedPreferenceProfile,
+      failures,
+    );
+    const candidates = preferenceScopedCandidates.filter((candidate) =>
+      matchesFilters(candidate, resolvedFilters),
+    );
+    return {
+      appName: env.appName,
+      apiBaseUrl: env.apiBaseUrl,
+      requestedWorkspaceId: filters.workspaceId || null,
+      workspace,
+      workspaces,
+      symbols,
+      preferenceProfiles,
+      selectedPreferenceProfile,
+      filters: {
+        ...resolvedFilters,
+        preferenceProfileId: selectedPreferenceProfile?.id || filters.preferenceProfileId,
+      },
+      candidates: sortCandidates(candidates),
+      allCandidates: sortCandidates(preferenceScopedCandidates),
+      unfilteredCandidateCount: readModelCandidates.length,
+      failures,
+      lastLoadedAt: new Date().toISOString(),
+    };
+  }
+  if (!readModelResult.ok && !readModelResult.error.missing) {
+    failures.push(toFailure("Signal card read models", readModelResult));
+  }
   const signalRefs = await resolveSignalRefs(memorySnapshots, analysisRuns, failures);
   const symbolMap = new Map(symbols.map((symbol) => [symbol.id, symbol]));
   const memoryBySignalId = new Map<UUID, MarketMemorySnapshot>();
@@ -148,6 +197,204 @@ export async function getSignalTriageBoard(params: Record<string, string | undef
     failures,
     lastLoadedAt: new Date().toISOString(),
   };
+}
+
+function candidateFromReadModel(
+  card: SignalCardReadModel,
+  symbol: TriageCandidate["symbol"],
+): TriageCandidate {
+  const signal = signalFromReadModel(card);
+  const memory = memoryFromReadModel(card);
+  const priorityScore = priorityFromReadModel(card);
+  const setupContext = setupContextFromReadModel(card);
+  const readiness = card.readiness_label
+    ? {
+        assessment: {
+          readiness_score: 0,
+          readiness_label: card.readiness_label,
+          summary: card.readiness_label,
+        },
+        blockers: [],
+        warnings: [],
+        next_steps: [],
+      }
+    : null;
+  const actionItems = actionItemsFromReadModel(card);
+  const missingContexts: string[] = [];
+  const input = {
+    signal,
+    memory,
+    priorityScore,
+    setupContext,
+    outcomes: [],
+    readiness,
+    report: null,
+    quality: null,
+    reasoning: null,
+    reviews: [],
+    actionItems,
+    missingContexts,
+  };
+  return {
+    id: card.signal_id,
+    symbol,
+    classification: classifyTriage(input),
+    ...input,
+  };
+}
+
+function signalFromReadModel(card: SignalCardReadModel): SignalClassification {
+  return {
+    analysis_run_id: card.analysis_run_id,
+    signal: {
+      id: card.signal_id,
+      analysis_run_id: card.analysis_run_id,
+      workspace_id: card.workspace_id,
+      symbol_id: card.symbol_id,
+      timeframe: card.timeframe,
+      strategy_profile_id: null,
+      strategy_profile_key: null,
+      strategy_profile_version: null,
+      strategy_profile_snapshot_json: null,
+      bias: card.bias,
+      pattern_type: card.pattern_type,
+      classification_status: card.classification_status,
+      confidence_score: card.confidence_score || "0",
+      confidence_label: card.confidence_label || "low",
+      candidate_strength: null,
+      selected_pattern_candidate_id: null,
+      pips_moved: null,
+      tick_moved: null,
+      movement_direction: null,
+      movement_quality: null,
+      volatility_state: null,
+      trend_state: null,
+      range_state: null,
+      summary: card.searchable_text,
+      no_signal_reason: null,
+      created_at: card.created_at,
+    },
+    confidence_components: [],
+    evidence: [],
+    risk_notes: [],
+    deterministic_explanation: null,
+    news_correlations: [],
+    llm_explanation: null,
+  };
+}
+
+function memoryFromReadModel(card: SignalCardReadModel): MarketMemorySnapshot | null {
+  if (!card.freshness_label && !card.data_quality_label) {
+    return null;
+  }
+  return {
+    id: card.id,
+    workspace_id: card.workspace_id,
+    symbol_id: card.symbol_id,
+    source_id: null,
+    timeframe: card.timeframe,
+    state_version: card.read_model_version,
+    latest_final_candle_time: null,
+    latest_analysis_run_id: card.analysis_run_id,
+    latest_signal_id: card.signal_id,
+    latest_outcome_id: null,
+    data_quality_label: card.data_quality_label || "unknown",
+    freshness_label: card.freshness_label || "unknown",
+    trend_state: null,
+    volatility_state: null,
+    range_state: null,
+    market_regime_label: null,
+    market_session_label: null,
+    multi_timeframe_label: null,
+    cross_asset_label: null,
+    latest_signal_bias: card.bias,
+    latest_signal_pattern_type: card.pattern_type,
+    latest_signal_confidence_label: card.confidence_label,
+    context_json: {},
+    warnings_json: readJsonArray(card.warning_summary_json.items),
+    created_at: card.created_at,
+    updated_at: card.updated_at,
+  };
+}
+
+function priorityFromReadModel(card: SignalCardReadModel): SignalPriorityScore | null {
+  if (!card.priority_label && !card.review_bucket && !card.priority_score) {
+    return null;
+  }
+  return {
+    id: card.id,
+    workspace_id: card.workspace_id,
+    signal_id: card.signal_id,
+    analysis_run_id: card.analysis_run_id,
+    symbol_id: card.symbol_id,
+    timeframe: card.timeframe,
+    priority_version: card.read_model_version,
+    priority_score: card.priority_score || "0",
+    priority_label: card.priority_label || "low",
+    review_bucket: card.review_bucket || "review_required",
+    component_scores_json: {},
+    penalties_json: [],
+    boosters_json: [],
+    reasons_json: [],
+    warnings_json: readJsonArray(card.warning_summary_json.items),
+    created_at: card.created_at,
+    updated_at: card.updated_at,
+  };
+}
+
+function setupContextFromReadModel(card: SignalCardReadModel): TriageCandidate["setupContext"] {
+  if (!card.setup_quality_label) {
+    return null;
+  }
+  return {
+    id: card.id,
+    workspace_id: card.workspace_id,
+    signal_id: card.signal_id,
+    analysis_run_id: card.analysis_run_id,
+    symbol_id: card.symbol_id,
+    timeframe: card.timeframe,
+    context_version: card.read_model_version,
+    status: "completed",
+    directional_bias: card.bias,
+    setup_quality_label: card.setup_quality_label,
+    setup_quality_score: "0",
+    invalidation_context_json: [],
+    observation_zones_json: [],
+    target_context_zones_json: [],
+    wait_conditions_json: [],
+    avoid_reasons_json: [],
+    timeframe_agreement_json: {},
+    data_quality_warnings_json: readJsonArray(card.warning_summary_json.items),
+    risk_notes_json: readJsonArray(card.risk_summary_json.items),
+    next_observations_json: [],
+    summary: card.searchable_text,
+    metadata_json: {},
+    created_at: card.created_at,
+    updated_at: card.updated_at,
+  };
+}
+
+function actionItemsFromReadModel(card: SignalCardReadModel): TriageActionItem[] {
+  const items = readJsonArray(card.action_summary_json.items);
+  return items.map((item, index) => ({
+    id: typeof item.id === "string" ? item.id : `${card.signal_id}-${index}`,
+    workspace_id: card.workspace_id,
+    signal_id: card.signal_id,
+    analysis_run_id: card.analysis_run_id,
+    reasoning_run_id: null,
+    action_type: typeof item.actionType === "string" ? item.actionType : "request_human_review",
+    status: typeof item.status === "string" ? item.status : "pending",
+    priority: typeof item.priority === "string" ? item.priority : "normal",
+    due_at: typeof item.dueAt === "string" ? item.dueAt : null,
+  }));
+}
+
+function readJsonArray(value: unknown): Array<Record<string, string | number | boolean | null>> {
+  return Array.isArray(value)
+    ? value.filter((item): item is Record<string, string | number | boolean | null> =>
+        Boolean(item) && typeof item === "object" && !Array.isArray(item),
+      )
+    : [];
 }
 
 function parseTriageFilters(params: Record<string, string | undefined>): TriageFilterState {
