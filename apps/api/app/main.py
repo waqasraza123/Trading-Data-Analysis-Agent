@@ -66,6 +66,7 @@ from app.modules.profile_simulations.routes import router as profile_simulations
 from app.modules.provider_credentials.routes import router as provider_credentials_router
 from app.modules.provider_health.routes import router as provider_health_router
 from app.modules.provider_polling.routes import router as provider_polling_router
+from app.modules.read_models.routes import router as read_models_router
 from app.modules.reasoning.routes import router as reasoning_router
 from app.modules.rule_packs.routes import router as rule_packs_router
 from app.modules.runtime_supervisor.routes import router as runtime_supervisor_router
@@ -171,6 +172,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         backtest_experiments_router,
         walk_forward_validation_router,
         reasoning_router,
+        read_models_router,
         scenario_ensembles_router,
         scenario_outcomes_router,
         action_plans_router,

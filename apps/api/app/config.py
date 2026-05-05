@@ -317,6 +317,9 @@ class Settings(BaseSettings):
         ge=0,
         le=1,
     )
+    read_model_version: str = "v1"
+    read_model_default_limit: int = Field(default=200, ge=1, le=1000)
+    read_model_max_limit: int = Field(default=1000, ge=1, le=10000)
     daily_workflow_version: str = "v1"
     daily_workflow_max_symbols: int = Field(default=100, ge=1, le=1000)
     daily_workflow_max_scan_items: int = Field(default=500, ge=1, le=5000)
@@ -544,6 +547,7 @@ class Settings(BaseSettings):
         "signal_digest_version",
         "daily_brief_version",
         "signal_priority_version",
+        "read_model_version",
         "runtime_supervisor_version",
         "daily_workflow_version",
         "journal_review_version",
