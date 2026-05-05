@@ -1,5 +1,7 @@
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
+import { Metric } from "@/components/ui/Metric";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { triageColumns } from "@/lib/triage/labels";
 import type { TriageBoardData } from "@/lib/triage/types";
 import { SignalTriageColumn } from "./SignalTriageColumn";
@@ -11,21 +13,17 @@ import { TriageSummary } from "./TriageSummary";
 export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">Deterministic signal review</p>
-          <h2 className="mt-1 text-3xl font-semibold text-[var(--strong)]">Signal triage board</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-            Prioritize stored deterministic signals by context quality, confirmation needs, conflicts, data freshness, and review state.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
-            Workspace {data.workspace?.name || "not selected"}
-          </div>
+      <PageHeader
+        eyebrow="Deterministic signal review"
+        title="Signal triage board"
+        description="Prioritize stored deterministic signals by context quality, confirmation needs, conflicts, data freshness, and review state."
+        actions={
+          <>
+          <Metric label="Workspace" value={data.workspace?.name || "Not selected"} />
           <WorkflowLinks workspaceId={data.workspace?.id} targets={["commandCenter", "brief", "scanner", "dataOnboarding", "preferences", "review"]} />
-        </div>
-      </section>
+        </>
+        }
+      />
       {!data.workspace ? (
         <EmptyState
           title="No workspace available"

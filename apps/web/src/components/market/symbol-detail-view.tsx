@@ -3,7 +3,12 @@ import { EmptyState } from "@/components/empty-states/empty-state";
 import { Panel } from "@/components/layout/panel";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { OutcomeList } from "@/components/outcomes/outcome-list";
-import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
+import { Badge, toneForQuality } from "@/components/status/badge";
+import { BiasBadge } from "@/components/status/BiasBadge";
+import { ConfidenceBadge } from "@/components/status/ConfidenceBadge";
+import { DataQualityBadge } from "@/components/status/DataQualityBadge";
+import { FreshnessBadge } from "@/components/status/FreshnessBadge";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type {
   AnalysisRun,
   MarketMemorySnapshot,
@@ -41,21 +46,18 @@ export function SymbolDetailView({
 
   return (
     <div className="space-y-6">
-      <Panel title={symbol.symbol} eyebrow="Symbol state">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-lg font-semibold text-[var(--strong)]">{symbol.display_name}</p>
-            <p className="mt-2 text-sm text-slate-500">
-              {humanizeLabel(symbol.market_type)} {symbol.base_asset && symbol.quote_asset ? `${symbol.base_asset}/${symbol.quote_asset}` : ""}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+      <PageHeader
+        eyebrow="Symbol state"
+        title={symbol.symbol}
+        description={`${symbol.display_name} · ${humanizeLabel(symbol.market_type)} ${symbol.base_asset && symbol.quote_asset ? `${symbol.base_asset}/${symbol.quote_asset}` : ""}`.trim()}
+        meta={
+          <>
             <Badge value={symbol.is_active ? "Active" : "Inactive"} tone={symbol.is_active ? "good" : "warning"} />
             <Badge value={workspace?.name || "No workspace"} tone="info" />
-          </div>
-        </div>
-        <WorkflowLinks workspaceId={workspace?.id} targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review"]} className="mt-5" />
-      </Panel>
+          </>
+        }
+        actions={<WorkflowLinks workspaceId={workspace?.id} targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review"]} />}
+      />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
           <Panel title="Timeframe States" eyebrow="Market memory">
@@ -70,9 +72,9 @@ export function SymbolDetailView({
                       <span className="text-sm text-slate-500">{formatRelativeTime(snapshot.latest_final_candle_time)}</span>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Badge value={snapshot.freshness_label} tone={toneForQuality(snapshot.freshness_label)} />
-                      <Badge value={snapshot.data_quality_label} tone={toneForQuality(snapshot.data_quality_label)} />
-                      <Badge value={snapshot.latest_signal_bias || "No directional signal"} tone={toneForBias(snapshot.latest_signal_bias)} />
+                      <FreshnessBadge value={snapshot.freshness_label} />
+                      <DataQualityBadge value={snapshot.data_quality_label} />
+                      <BiasBadge value={snapshot.latest_signal_bias || "No directional signal"} />
                     </div>
                     <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                       <Detail label="Pattern" value={humanizeLabel(snapshot.latest_signal_pattern_type)} />
@@ -103,7 +105,7 @@ export function SymbolDetailView({
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Badge value={classification.signal.timeframe} tone="info" />
-                        <Badge value={classification.signal.confidence_label} tone={toneForQuality(classification.signal.confidence_label)} />
+                        <ConfidenceBadge value={classification.signal.confidence_label} />
                       </div>
                     </div>
                   </Link>

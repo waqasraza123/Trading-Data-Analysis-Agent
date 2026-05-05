@@ -478,3 +478,10 @@ Durable decisions:
 - Added `/journal` and `/journal/[entryId]` for reflection note creation, editing, archival, and backend-supported review against observed outcomes.
 - The workflow is for review and learning only. It excludes broker execution, auto-trading, broker imports, account-result fields, order fields, margin fields, sizing fields, and financial advice.
 - No backend changes were required; missing optional endpoints render unavailable, hidden, or empty states.
+
+## Frontend Design System Polish
+
+- Added a shared web UI layer under `apps/web/src/components/ui`, status badge wrappers under `apps/web/src/components/status`, and safe UI helpers under `apps/web/src/lib/ui`.
+- Daily cockpit navigation is centralized in `apps/web/src/lib/ui/navigation.ts` and rendered through the app shell with active route highlighting.
+- The command center, brief, dashboard, data onboarding, scanner, triage, signal detail, symbol detail, quality, notifications, journal, outcome review, and strategy preferences now share page/header/state/badge conventions without adding backend execution logic.
+- The frontend remains a read-only market-intelligence cockpit: no broker execution, auto-trading, external trading alerts, account-result language, or financial-advice output.

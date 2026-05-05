@@ -1,4 +1,6 @@
-import Link from "next/link";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { Badge } from "@/components/ui/Badge";
 import { triageColumns } from "@/lib/triage/labels";
 import type { TriageBoardData } from "@/lib/triage/types";
 import { humanizeLabel } from "@/lib/formatting/labels";
@@ -12,24 +14,19 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
   const freshnessLabels = uniqueOptions(data.allCandidates.map((candidate) => candidate.memory?.freshness_label));
   const profileKeys = uniqueOptions(data.allCandidates.map((candidate) => candidate.signal.signal.strategy_profile_key));
   const refreshHref = buildRefreshHref(filters);
+  const activeFilters = Object.entries(filters).filter(([, value]) => Boolean(value));
 
   return (
-    <form action="/triage" className="surface rounded-lg p-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase text-slate-500">Filters</p>
-          <h2 className="mt-1 text-lg font-semibold text-[var(--strong)]">Signal triage scope</h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900" type="submit">
-            Apply filters
-          </button>
-          <Link className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900" href={refreshHref}>
-            Refresh
-          </Link>
-        </div>
-      </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <form action="/triage">
+      <FilterBar
+        title="Signal triage scope"
+        actions={
+          <>
+            <Button variant="primary" type="submit">Apply filters</Button>
+            <ButtonLink href={refreshHref}>Refresh</ButtonLink>
+          </>
+        }
+      >
         <Select name="workspaceId" label="Workspace" value={filters.workspaceId} options={data.workspaces.map((workspace) => ({ value: workspace.id, label: workspace.name }))} />
         <Select
           name="symbolId"
@@ -55,8 +52,7 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
             label: profile.is_default ? `${profile.name} (default)` : profile.name,
           }))}
         />
-      </div>
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300">
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300 md:col-span-2 xl:col-span-4">
         <label className="inline-flex items-center gap-2">
           <input className="h-4 w-4" defaultChecked={filters.onlyFresh} name="onlyFresh" type="checkbox" value="1" />
           Only fresh
@@ -66,6 +62,14 @@ export function TriageFilters({ data }: { data: TriageBoardData }) {
           Only review required
         </label>
       </div>
+      {activeFilters.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2 md:col-span-2 xl:col-span-4">
+          {activeFilters.slice(0, 8).map(([key, value]) => (
+            <Badge key={key} value={`${humanizeLabel(key)}: ${value === true ? "Yes" : String(value)}`} tone="info" />
+          ))}
+        </div>
+      )}
+      </FilterBar>
     </form>
   );
 }

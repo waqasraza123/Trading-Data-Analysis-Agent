@@ -23,14 +23,17 @@ export function SetupAuditPanel({ model }: SetupAuditPanelProps) {
             <Badge value={`Completeness ${formatPercent(timeline.completeness_score)}`} tone="info" />
             <Badge value={`${timeline.events.length} events`} tone="neutral" />
           </div>
-          <div className="space-y-3">
-            {timeline.events.slice(0, 8).map((event, index) => (
-              <div key={`timeline-${index}`} className="muted-surface rounded-lg p-4">
-                <p className="text-sm font-medium text-[var(--strong)]">{setupRecordText(event)}</p>
-                <p className="mt-2 text-xs text-slate-500">{formatDateTime(String(event.occurred_at || event.created_at || ""))}</p>
-              </div>
-            ))}
-          </div>
+          <details open>
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--strong)]">Recent trace events</summary>
+            <div className="mt-3 space-y-3">
+              {timeline.events.slice(0, 8).map((event, index) => (
+                <div key={`timeline-${index}`} className="muted-surface rounded-lg p-4">
+                  <p className="text-sm font-medium text-[var(--strong)]">{setupRecordText(event)}</p>
+                  <p className="mt-2 text-xs text-slate-500">{formatDateTime(String(event.occurred_at || event.created_at || ""))}</p>
+                </div>
+              ))}
+            </div>
+          </details>
           {timeline.missing_sections.length > 0 && (
             <p className="text-xs text-slate-500">Missing sections: {timeline.missing_sections.join(", ")}</p>
           )}

@@ -1,8 +1,9 @@
 import { Panel } from "@/components/layout/panel";
-import { Badge } from "@/components/status/badge";
+import { WorkerStatusBadge } from "@/components/status/WorkerStatusBadge";
+import { Metric } from "@/components/ui/Metric";
 import { formatRelativeTime } from "@/lib/formatting/dates";
 import { humanizeLabel } from "@/lib/formatting/labels";
-import type { CommandCenterData, CommandCenterTone } from "@/lib/command-center/types";
+import type { CommandCenterData } from "@/lib/command-center/types";
 import type { RuntimeHealthWorkerSummary } from "@/lib/api/runtimeSupervisor";
 
 export function CommandCenterRuntimeWorkers({ data }: { data: CommandCenterData }) {
@@ -31,12 +32,7 @@ export function CommandCenterRuntimeWorkers({ data }: { data: CommandCenterData 
 }
 
 function RuntimeMetric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="muted-surface rounded-lg p-3">
-      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-[var(--strong)]">{value}</p>
-    </div>
-  );
+  return <Metric label={label} value={value} />;
 }
 
 function WorkerRow({ worker }: { worker: RuntimeHealthWorkerSummary }) {
@@ -47,7 +43,7 @@ function WorkerRow({ worker }: { worker: RuntimeHealthWorkerSummary }) {
           <p className="text-sm font-semibold text-[var(--strong)]">{worker.name}</p>
           <p className="mt-1 text-xs text-slate-500">{humanizeLabel(worker.worker_type)}</p>
         </div>
-        <Badge value={worker.definition_status} tone={workerTone(worker)} />
+        <WorkerStatusBadge value={worker.definition_status} />
       </div>
       <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
         {worker.running_instances} running, {worker.stale_instances} stale. Last check-in{" "}
@@ -60,20 +56,4 @@ function WorkerRow({ worker }: { worker: RuntimeHealthWorkerSummary }) {
       )}
     </div>
   );
-}
-
-function workerTone(worker: RuntimeHealthWorkerSummary): CommandCenterTone {
-  if (worker.definition_status === "unavailable" || worker.failed_run_requests > 0) {
-    return "danger";
-  }
-  if (worker.stale_instances > 0 || worker.pending_run_requests > 0) {
-    return "warning";
-  }
-  if (worker.definition_status === "available" && worker.running_instances > 0) {
-    return "good";
-  }
-  if (worker.definition_status === "disabled") {
-    return "neutral";
-  }
-  return "info";
 }

@@ -18,16 +18,18 @@ export function SetupEvidencePanel({ model }: SetupEvidencePanelProps) {
       ) : (
         <div className="space-y-5">
           {model.evidenceGroups.map((group) => (
-            <div key={group.type} className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
+            <details key={group.type} className="space-y-3 rounded-lg border border-[var(--line)] p-4" open>
+              <summary className="flex cursor-pointer flex-wrap items-center gap-2">
                 <h3 className="text-sm font-semibold text-[var(--strong)]">{setupLabel(group.type)}</h3>
                 <Badge value={`${group.supporting.length} supporting`} tone="good" />
                 <Badge value={`${group.conflicting.length} conflicting`} tone="warning" />
+              </summary>
+              <div className="mt-4 space-y-3">
+                <EvidenceColumn title="Supporting evidence" evidence={group.supporting} />
+                <EvidenceColumn title="Conflicting evidence" evidence={group.conflicting} />
+                <EvidenceColumn title="Neutral evidence" evidence={group.neutral} />
               </div>
-              <EvidenceColumn title="Supporting evidence" evidence={group.supporting} />
-              <EvidenceColumn title="Conflicting evidence" evidence={group.conflicting} />
-              <EvidenceColumn title="Neutral evidence" evidence={group.neutral} />
-            </div>
+            </details>
           ))}
         </div>
       )}

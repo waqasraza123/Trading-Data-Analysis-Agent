@@ -23,16 +23,21 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Scanner preset gallery for creating watchlists and scheduled scan configs from backend templates without running scans on apply.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
 - Product readiness checklist for explicit daily-use validation across API, database, seed data, workspace setup, data freshness, scanner setup, workers, optional notifications, and journal readiness.
+- Guided setup wizard for creating or selecting a workspace, operator, symbols, data source, credential reference, watchlist, scanner preset, preference profile, optional synthetic demo candles, readiness check, and optional explicit first deterministic scan.
 - One-click daily workflow control for provider health refresh, recovery planning, deterministic scans, setup context generation, review-priority scoring, digest generation, and brief navigation.
 - Daily routine template controls on the command center for named bounded routines such as pre-market scan, session-open reviews, close-of-day review, stale-data repair, quality review, and journal follow-up.
 - Personal strategy preference profiles for workspace review filters across markets, symbols, sessions, timeframes, patterns, confidence, setup quality, stale-data tolerance, and confirmation requirements.
 - Outcome review and journal loop for turning observed outcomes into daily reflection notes and reliability review.
+- Demo mode page at `/demo` for running the backend synthetic product smoke flow and opening the generated command center, brief, triage, scanner, signal detail, and journal artifacts.
+- Visual setup chart panels for compact final-candle, zone, signal-window, and observed-outcome context on signal detail pages.
 
 ## Backend Endpoints Used
 
 The client composes data from optional backend APIs:
 
 - `GET /health`
+- `GET /demo-mode/status`
+- `POST /demo-mode/run-full-flow`
 - `GET /health/workers`
 - `GET /runtime-supervisor/health`
 - `POST /product-readiness/run`
@@ -69,11 +74,13 @@ The client composes data from optional backend APIs:
 - `PATCH /market-watchlist-items/{item_id}`
 - `DELETE /market-watchlist-items/{item_id}`
 - `GET /analysis-runs`
+- `GET /analysis-runs/{analysis_run_id}`
 - `GET /analysis-runs/{analysis_run_id}/signal`
 - `GET /signals/{signal_id}`
 - `GET /signals/{signal_id}/priority-score`
 - `GET /signals/{signal_id}/outcomes`
 - `GET /signals/{signal_id}/setup-context`
+- `GET /signals/{signal_id}/advanced-features`
 - `GET /signals/{signal_id}/multi-timeframe-context`
 - `GET /signals/{signal_id}/cross-asset-context`
 - `GET /cross-asset-context/runs/{run_id}/results`
@@ -121,6 +128,7 @@ The client composes data from optional backend APIs:
 - `GET /data-sources`
 - `POST /data-sources`
 - `GET /candles/latest`
+- `GET /candles`
 - `GET /candles/count`
 - `GET /candles/quality`
 - `GET /live/subscriptions`
@@ -178,6 +186,7 @@ Open:
 
 ```txt
 http://127.0.0.1:3000/command-center
+http://127.0.0.1:3000/setup
 http://127.0.0.1:3000/readiness
 http://127.0.0.1:3000/dashboard
 http://127.0.0.1:3000/brief
@@ -193,6 +202,7 @@ http://127.0.0.1:3000/data/onboarding
 
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
 Use `/command-center?workspaceId=<workspace-id>` as the default start page for the daily workflow.
+Use `/setup` to create or select a workspace, configure the first review workflow, optionally seed synthetic demo candles, and then open the command center.
 Use `/readiness?workspaceId=<workspace-id>` to run and review the product readiness checklist. The run button is an explicit validation action only; it does not run scans, send alerts, call providers, or execute setup mutations.
 Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.
 Use `/scanner?workspaceId=<workspace-id>` to manage watchlists and scheduled scan configs. A returned scan run can be opened with `?runId=<scan-run-id>`, and a daily workflow run can be opened with `?workflowRunId=<workflow-run-id>`.
@@ -207,7 +217,8 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 
 - `/dashboard` renders the daily operator cockpit, preferring dashboard symbol read models for current symbol state.
 - `/command-center` renders the Daily Trading Command Center start page over existing read-only backend artifacts and command center read models when available.
-- `/readiness` renders the Product Readiness Checklist and Guided Setup page.
+- `/setup` renders the Guided Workspace Setup Wizard and demo workspace flow.
+- `/readiness` renders the Product Readiness Checklist.
 - `/scanner` renders watchlist scanner controls for backend deterministic scan orchestration.
 - `/triage` renders the read-only signal triage board, preferring signal card read models and falling back to deterministic signal artifact composition.
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
@@ -216,7 +227,7 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 - `/preferences/strategy` renders personal strategy preference profiles for review filtering only.
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/brief` renders the workspace daily brief, preferring the backend daily brief endpoint and falling back to web client composition from existing optional backend endpoints.
-- `/signals/[signalId]` renders a full read-only setup detail view, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
+- `/signals/[signalId]` renders a full read-only setup detail view with a visual setup chart panel, preferring the intelligence report and falling back to individual signal, setup, evidence, confidence, outcome, readiness, context, reasoning, historical-case, quality, audit, and journal APIs when report data is unavailable.
 - `/symbols/[symbolId]` renders symbol/timeframe state, preferring dashboard symbol read models and falling back to market memory, recent signals, outcomes, scheduled scans, and analysis runs.
 
 ## Daily Workflow Loop
@@ -224,7 +235,7 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 The integrated web surface is arranged for a deterministic daily review loop:
 
 1. Verify data freshness in `/data/onboarding` or the command center freshness panel.
-2. Use `/readiness` when you need an explicit setup and daily-use readiness check before starting review.
+2. Use `/setup` when you need to create or configure the first workspace workflow, then use `/readiness` for explicit daily-use validation.
 3. Use “Run daily scan” in `/command-center` or `/scanner` to refresh status, prepare recovery plans, run deterministic scans, generate setup context, score review priority, and generate digest/brief context.
 4. Use scanner presets in `/scanner` when a repeatable session, watchlist, or data-repair scan configuration is useful.
 5. Read `/brief` for the persisted backend daily brief, with frontend composition as fallback.
@@ -326,6 +337,7 @@ The setup detail page is for reviewing deterministic setup context around one si
 The view shows:
 
 - Header context: symbol, timeframe, directional bias, pattern, confidence, setup quality, latest final candle context when available, and data freshness warnings.
+- Visual setup chart: recent final candles, latest final candle marker, signal window, observation zones, invalidation context, target context zones, support/resistance context when available, review marker, setup quality/freshness/data-quality badges, warnings, and observed outcome markers.
 - Setup context: invalidation context, observation zones, target context zones, wait conditions, avoid reasons, timeframe agreement, data-quality warnings, and next observations.
 - Evidence and confidence: supporting and conflicting evidence grouped by type, plus confidence components.
 - Risk and quality: risk notes, readiness blockers, quality findings, multi-timeframe warnings, and cross-asset context conflicts.
@@ -341,6 +353,16 @@ Safe language mapping:
 - Use `target context zone` for possible next support, resistance, or range context.
 - Use `observed follow-through` and `observed reversal` for outcome labels.
 - Use `journal note`, `reviewed`, `observed`, `ignored`, `paper followed`, `external action noted`, `no action noted`, and `uncertain` for feedback.
+
+Visual setup chart behavior:
+
+- The chart uses reusable SVG components under `apps/web/src/components/charts/` and utility functions under `apps/web/src/lib/charts/`.
+- It uses final candles from `GET /candles`; partial candles are not requested.
+- It uses the analysis run window when available and pads that window to provide nearby context.
+- It inserts bounded visual gaps when final-candle timestamps indicate missing expected intervals.
+- It uses existing setup-context zones and optional advanced-feature support/resistance context.
+- It renders empty and warning states when candles, zones, or optional backend modules are unavailable.
+- Additional detail is documented in `apps/web/docs/visual-setup-charts.md`.
 
 Journal feedback behavior:
 
@@ -400,6 +422,23 @@ Preset apply creates watchlists and scan configs only. It does not run scans; ru
 
 The UI uses market-intelligence wording such as high quality context, needs confirmation, conflicted, avoid condition, no directional signal, data stale, review required, scheduled scan, watchlist scan, run scan, deterministic analysis, skipped due to insufficient candles, evidence conflict, observed follow-through, observed reversal, setup context, invalidation context, observation zone, journal note, aligned with observed outcome, conflicted with observed outcome, and wait condition. It avoids direct order instructions, certainty claims, broker execution prompts, account-outcome language, financial advice, external notification language for scans, and broker execution.
 
+## Frontend Design System
+
+Shared interface primitives live under `src/components/ui`:
+
+- `PageShell`, `PageHeader`, `Section`, `Card`, and `Metric` define the daily cockpit frame, spacing, page headings, section cards, and summary metrics.
+- `Badge`, `StatusPill`, and status wrappers under `src/components/status` normalize bias, confidence, freshness, data quality, setup quality, outcome, readiness, priority, and worker labels.
+- `EmptyState`, `ErrorState`, and `LoadingSkeleton` keep missing endpoint, failed endpoint, and loading surfaces visually consistent.
+- `Button`, `Tabs`, `FilterBar`, and `Timeline` cover common interactions used by filters, refresh links, workflow steps, and traceability views.
+
+Shared UI helpers live under `src/lib/ui`:
+
+- `navigation.ts` is the source of truth for daily cockpit navigation.
+- `labels.ts` and `safeCopy.ts` centralize safe display labels and replacement wording.
+- `statusStyles.ts` maps backend status values into the shared badge tones.
+
+The top navigation uses the same route registry as workflow links and highlights the active section. Page headers should describe read-only review context, show workspace and last-updated metadata when available, and avoid advisory language.
+
 ## Fallback Behavior
 
 The dashboard expects backend modules to be deployed incrementally:
@@ -408,6 +447,7 @@ The dashboard expects backend modules to be deployed incrementally:
 - If reports are unavailable, signal pages use signal, evidence, confidence, outcomes, readiness, context, and audit endpoints individually.
 - If readiness is unavailable, readiness panels hide behind safe empty states.
 - If setup context is unavailable, setup panels show unavailable context without blocking signals.
+- If chart candle data is unavailable, the setup detail page shows the rest of the setup context and a scoped visual chart warning.
 - If multi-timeframe, cross-asset, quality, reasoning, historical-case, audit, or journal APIs are unavailable, the setup detail page renders scoped empty states and still shows the available setup context.
 - If the intelligence report is unavailable, the setup detail page composes from individual optional endpoints.
 - If triage enrichment APIs are unavailable, cards remain classified from the signal and market-memory artifacts that did load.

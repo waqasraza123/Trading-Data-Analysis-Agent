@@ -1,4 +1,9 @@
-import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
+import { Badge } from "@/components/status/badge";
+import { BiasBadge } from "@/components/status/BiasBadge";
+import { ConfidenceBadge } from "@/components/status/ConfidenceBadge";
+import { FreshnessBadge } from "@/components/status/FreshnessBadge";
+import { SetupQualityBadge } from "@/components/status/SetupQualityBadge";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { formatDateTime } from "@/lib/formatting/dates";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { setupLabel } from "@/lib/setup-detail/labels";
@@ -11,27 +16,32 @@ type SetupDetailHeaderProps = {
 export function SetupDetailHeader({ header }: SetupDetailHeaderProps) {
   return (
     <section className="surface rounded-lg p-6">
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div className="max-w-4xl">
-          <p className="text-xs font-semibold uppercase text-slate-500">Full setup detail</p>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold text-[var(--strong)]">{header.symbol}</h1>
+      <PageHeader
+        eyebrow="Full setup detail"
+        title={header.symbol}
+        description={header.summary}
+        meta={
+          <>
             <Badge value={header.timeframe} tone="info" />
-            <Badge value={header.bias} tone={toneForBias(header.bias)} />
-          </div>
-          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{header.summary}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+            <BiasBadge value={header.bias} />
+          </>
+        }
+        actions={
+          <>
           <Badge value={header.pattern} tone="info" />
-          <Badge value={header.confidenceLabel} tone={toneForQuality(header.confidenceLabel)} />
-          <Badge value={header.setupQualityLabel} tone={toneForQuality(header.setupQualityLabel)} />
-        </div>
-      </div>
+          <ConfidenceBadge value={header.confidenceLabel} />
+          <SetupQualityBadge value={header.setupQualityLabel} />
+        </>
+        }
+      />
       <dl className="mt-6 grid gap-4 text-sm md:grid-cols-5">
         <Detail label="Confidence" value={formatPercent(header.confidenceScore)} />
         <Detail label="Setup quality" value={formatPercent(header.setupQualityScore)} />
         <Detail label="Latest final candle" value={formatDateTime(header.latestFinalCandleTime)} />
-        <Detail label="Data freshness" value={setupLabel(header.dataFreshness)} />
+        <div>
+          <dt className="text-xs font-medium uppercase text-slate-500">Data freshness</dt>
+          <dd className="mt-1"><FreshnessBadge value={setupLabel(header.dataFreshness)} /></dd>
+        </div>
         <Detail label="Product boundary" value="Review context only" />
       </dl>
     </section>

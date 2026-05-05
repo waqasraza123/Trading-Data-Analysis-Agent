@@ -1,5 +1,11 @@
-import Link from "next/link";
-import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
+import type { ReactNode } from "react";
+import { Badge } from "@/components/status/badge";
+import { BiasBadge } from "@/components/status/BiasBadge";
+import { ConfidenceBadge } from "@/components/status/ConfidenceBadge";
+import { FreshnessBadge } from "@/components/status/FreshnessBadge";
+import { DataQualityBadge } from "@/components/status/DataQualityBadge";
+import { SetupQualityBadge } from "@/components/status/SetupQualityBadge";
+import { ButtonLink } from "@/components/ui/Button";
 import { workflowHref } from "@/components/layout/workflow-links";
 import { formatDateTime, formatRelativeTime } from "@/lib/formatting/dates";
 import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
@@ -30,9 +36,9 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
         <Badge value={candidate.classification.mainReason.label} tone={candidate.classification.mainReason.tone} />
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Badge value={signal.bias} tone={toneForBias(signal.bias)} />
-        <Badge value={signal.confidence_label} tone={toneForQuality(signal.confidence_label)} />
-        <Badge value={setupQuality} tone={toneForQuality(candidate.setupContext?.setup_quality_label)} />
+        <BiasBadge value={signal.bias} />
+        <ConfidenceBadge value={signal.confidence_label} />
+        <SetupQualityBadge value={setupQuality} />
       </div>
       <dl className="mt-4 grid gap-3 text-sm">
         <Detail label="Confidence" value={formatPercent(signal.confidence_score)} />
@@ -40,8 +46,8 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
           <Detail label="Review priority" value={formatPercent(candidate.priorityScore.priority_score)} />
         )}
         <Detail label="Latest final candle" value={formatRelativeTime(candidate.memory?.latest_final_candle_time)} />
-        <Detail label="Freshness" value={humanizeLabel(candidate.memory?.freshness_label || "Missing market memory")} />
-        <Detail label="Data quality" value={humanizeLabel(candidate.memory?.data_quality_label || "Unknown")} />
+        <DetailBadge label="Freshness"><FreshnessBadge value={candidate.memory?.freshness_label || "Missing market memory"} /></DetailBadge>
+        <DetailBadge label="Data quality"><DataQualityBadge value={candidate.memory?.data_quality_label || "Unknown"} /></DetailBadge>
       </dl>
       <div className="mt-4 space-y-3">
         <TextBlock label="Top evidence" value={topEvidence} fallback="No evidence summary returned." />
@@ -58,18 +64,18 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
         </div>
       )}
       <div className="mt-4 flex flex-wrap gap-2 text-sm font-medium">
-        <Link className="rounded-md border border-[var(--line)] px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900" href={`/signals/${signal.id}`}>
+        <ButtonLink href={`/signals/${signal.id}`}>
           Signal detail
-        </Link>
+        </ButtonLink>
         {candidate.setupContext && (
-          <Link className="rounded-md border border-[var(--line)] px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900" href={`/signals/${signal.id}#setup-context`}>
+          <ButtonLink href={`/signals/${signal.id}#setup-context`}>
             Setup context
-          </Link>
+          </ButtonLink>
         )}
         {candidate.classification.column === "stale_data_issue" && (
-          <Link className="rounded-md border border-[var(--line)] px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900" href={dataOnboardingHref}>
+          <ButtonLink href={dataOnboardingHref}>
             Data onboarding
-          </Link>
+          </ButtonLink>
         )}
       </div>
       <p className="mt-3 text-xs text-slate-500">Signal created {formatDateTime(signal.created_at)}</p>
@@ -82,6 +88,15 @@ function Detail({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2 last:border-b-0 last:pb-0">
       <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
       <dd className="text-right text-sm font-medium text-[var(--strong)]">{value}</dd>
+    </div>
+  );
+}
+
+function DetailBadge({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2 last:border-b-0 last:pb-0">
+      <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
+      <dd className="flex justify-end">{children}</dd>
     </div>
   );
 }

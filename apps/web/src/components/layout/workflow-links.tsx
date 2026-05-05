@@ -1,18 +1,7 @@
 import Link from "next/link";
+import { navigationHref, navigationItems, type NavigationTarget } from "@/lib/ui/navigation";
 
-export type WorkflowTarget =
-  | "commandCenter"
-  | "readiness"
-  | "dashboard"
-  | "brief"
-  | "triage"
-  | "scanner"
-  | "notifications"
-  | "dataOnboarding"
-  | "quality"
-  | "preferences"
-  | "review"
-  | "journal";
+export type WorkflowTarget = NavigationTarget | "readiness" | "dashboard";
 
 type WorkflowLinksProps = {
   workspaceId?: string | null;
@@ -21,32 +10,22 @@ type WorkflowLinksProps = {
 };
 
 export const workflowTargets: Record<WorkflowTarget, { href: string; label: string }> = {
-  commandCenter: { href: "/command-center", label: "Command Center" },
+  ...(Object.fromEntries(navigationItems.map((item) => [item.key, { href: item.href, label: item.label }])) as Record<NavigationTarget, { href: string; label: string }>),
   readiness: { href: "/readiness", label: "Readiness" },
   dashboard: { href: "/dashboard", label: "Dashboard" },
-  brief: { href: "/brief", label: "Brief" },
-  triage: { href: "/triage", label: "Triage" },
-  scanner: { href: "/scanner", label: "Scanner" },
-  notifications: { href: "/notifications", label: "Notifications" },
-  dataOnboarding: { href: "/data/onboarding", label: "Data" },
-  quality: { href: "/quality", label: "Quality" },
-  preferences: { href: "/preferences/strategy", label: "Preferences" },
-  review: { href: "/review/outcomes", label: "Review" },
-  journal: { href: "/journal", label: "Journal" },
 };
 
 export const primaryWorkflowTargets: WorkflowTarget[] = [
   "commandCenter",
-  "readiness",
   "brief",
-  "triage",
-  "scanner",
-  "notifications",
   "dataOnboarding",
+  "scanner",
+  "triage",
   "quality",
-  "preferences",
+  "notifications",
   "review",
   "journal",
+  "preferences",
 ];
 
 const linkClassName =
@@ -72,6 +51,9 @@ export function WorkflowLinks({
 }
 
 export function workflowHref(target: WorkflowTarget, workspaceId?: string | null): string {
+  if (target !== "readiness" && target !== "dashboard") {
+    return navigationHref(target, workspaceId);
+  }
   const item = workflowTargets[target];
   if (!workspaceId) {
     return item.href;

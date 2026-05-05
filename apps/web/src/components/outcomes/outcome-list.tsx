@@ -1,5 +1,6 @@
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { Badge, toneForQuality } from "@/components/status/badge";
+import { OutcomeLabelBadge } from "@/components/status/OutcomeLabelBadge";
 import type { SignalOutcome } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/formatting/dates";
 
@@ -20,7 +21,7 @@ export function OutcomeList({ outcomes }: { outcomes: SignalOutcome[] }) {
         <div key={outcome.id} className="grid grid-cols-4 gap-3 border-t border-[var(--line)] px-4 py-3 text-sm">
           <span className="font-medium">{outcome.horizon_minutes}m</span>
           <Badge value={outcome.evaluation_status} tone={toneForQuality(outcome.evaluation_status)} />
-          <Badge value={outcome.outcome_label} tone={toneForQuality(outcome.outcome_label)} />
+          <OutcomeLabelBadge value={outcome.outcome_label} />
           <span className="text-slate-500">{formatDateTime(outcome.future_window_end)}</span>
         </div>
       ))}

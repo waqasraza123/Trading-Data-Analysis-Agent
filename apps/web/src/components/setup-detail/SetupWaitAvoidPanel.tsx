@@ -28,8 +28,8 @@ export function SetupWaitAvoidPanel({ model }: SetupWaitAvoidPanelProps) {
 
 function ContextList({ title, items, empty }: { title: string; items: JsonRecord[]; empty: string }) {
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-[var(--strong)]">{title}</h3>
+    <details className="space-y-3" open>
+      <summary className="cursor-pointer text-sm font-semibold text-[var(--strong)]">{title}</summary>
       {items.length === 0 ? (
         <SetupEmptySection title={title} message={empty} />
       ) : (
@@ -40,6 +40,6 @@ function ContextList({ title, items, empty }: { title: string; items: JsonRecord
           </div>
         ))
       )}
-    </div>
+    </details>
   );
 }

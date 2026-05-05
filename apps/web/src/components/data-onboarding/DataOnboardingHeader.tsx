@@ -1,4 +1,6 @@
 import { WorkflowLinks } from "@/components/layout/workflow-links";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Tabs } from "@/components/ui/Tabs";
 import type { Workspace } from "@/lib/api/types";
 import type { OnboardingSelection, OnboardingStepKey } from "@/lib/data-onboarding/types";
 
@@ -25,15 +27,12 @@ export function DataOnboardingHeader({
 }: DataOnboardingHeaderProps) {
   return (
     <section className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">Data onboarding</p>
-          <h2 className="mt-1 text-3xl font-semibold text-[var(--strong)]">Live data readiness</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-            Configure source coverage and verify current final-candle readiness before deterministic analysis.
-          </p>
-        </div>
-        <div className="grid gap-3">
+      <PageHeader
+        eyebrow="Data onboarding"
+        title="Live data readiness"
+        description="Configure source coverage and verify current final-candle readiness before deterministic analysis."
+        actions={
+          <div className="grid gap-3">
           <div className="grid gap-2">
             <label className="text-xs font-semibold uppercase text-slate-500" htmlFor="workspace-select">
               Workspace
@@ -53,29 +52,22 @@ export function DataOnboardingHeader({
           </div>
           <WorkflowLinks workspaceId={selection.workspaceId} targets={["commandCenter", "brief", "triage", "scanner", "preferences", "review"]} />
         </div>
-      </div>
+        }
+      />
       <div className="surface rounded-lg p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div>
             <p className="font-medium text-[var(--strong)]">{workspace?.name || "Workspace not selected"}</p>
             <p className="mt-1 text-slate-500">{apiBaseUrl}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {steps.map((step, index) => (
-              <button
-                key={step.key}
-                type="button"
-                onClick={() => onStepChange(step.key)}
-                className={`rounded-md border px-3 py-2 text-xs font-semibold ${
-                  step.key === activeStep
-                    ? "border-teal-300 bg-teal-50 text-teal-800 dark:border-teal-800 dark:bg-teal-950 dark:text-teal-100"
-                    : "border-[var(--line)] bg-[var(--panel)] text-slate-600 dark:text-slate-300"
-                }`}
-              >
-                {index + 1}. {step.label}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            onSelect={(key) => onStepChange(key as OnboardingStepKey)}
+            items={steps.map((step, index) => ({
+              key: step.key,
+              label: `${index + 1}. ${step.label}`,
+              active: step.key === activeStep,
+            }))}
+          />
         </div>
       </div>
     </section>

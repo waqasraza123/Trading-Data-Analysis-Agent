@@ -5,6 +5,8 @@ import { PreferenceProfileList } from "@/components/preferences/PreferenceProfil
 import { PreferenceProfileSummary } from "@/components/preferences/PreferenceProfileSummary";
 import { Badge } from "@/components/status/badge";
 import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Section } from "@/components/ui/Section";
 import { getPreferenceProfilesPageData } from "@/lib/api/preferenceProfiles";
 import { formatDateTime } from "@/lib/formatting/dates";
 
@@ -24,25 +26,18 @@ export default async function StrategyPreferencesPage({
   return (
     <AppShell appName={data.appName}>
       <div className="space-y-6">
-        <section className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-slate-500">Personal review preferences</p>
-            <h2 className="mt-1 text-3xl font-semibold text-[var(--strong)]">
-              Strategy preference profiles
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              Define the markets, sessions, symbols, patterns, confidence thresholds, and data
-              freshness requirements that should shape review workflows.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+        <PageHeader
+          eyebrow="Personal review preferences"
+          title="Strategy preference profiles"
+          description="Define the markets, sessions, symbols, patterns, confidence thresholds, and data freshness requirements that should shape review workflows."
+          meta={
+            <>
               <Badge value={data.workspace?.name || "No workspace"} tone="info" />
               <Badge value={`Updated ${formatDateTime(data.lastUpdatedAt)}`} />
-            </div>
-          </div>
-          <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-slate-500">
-            Filters only. No execution workflow.
-          </div>
-        </section>
+            </>
+          }
+          actions={<Badge value="Filters only" tone="info" />}
+        />
         {!data.workspace ? (
           <PreferenceProfileEmptyState
             title="No workspace available"
@@ -57,7 +52,7 @@ export default async function StrategyPreferencesPage({
               <PreferenceProfileForm data={data} />
             </div>
             {data.filterContext && (
-              <section className="surface rounded-lg p-5">
+              <Section>
                 <p className="text-xs font-semibold uppercase text-slate-500">
                   Safety boundaries
                 </p>
@@ -66,10 +61,10 @@ export default async function StrategyPreferencesPage({
                     <Badge key={boundary} value={boundary} tone="info" />
                   ))}
                 </div>
-              </section>
+              </Section>
             )}
             {data.failures.length > 0 && (
-              <section className="surface rounded-lg p-5">
+              <Section>
                 <p className="text-xs font-semibold uppercase text-slate-500">API status</p>
                 <div className="mt-3 space-y-2">
                   {data.failures.map((failure) => (
@@ -78,7 +73,7 @@ export default async function StrategyPreferencesPage({
                     </p>
                   ))}
                 </div>
-              </section>
+              </Section>
             )}
           </>
         )}

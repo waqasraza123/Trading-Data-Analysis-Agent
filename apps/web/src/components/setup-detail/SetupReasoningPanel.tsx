@@ -25,12 +25,14 @@ export function SetupReasoningPanel({ model }: SetupReasoningPanelProps) {
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(reasoning.summary)}</p>
           <div className="space-y-3">
             {reasoning.scenarios.map((scenario) => (
-              <div key={`${scenario.scenario_type}-${scenario.scenario_label}`} className="muted-surface rounded-lg p-4">
-                <div className="flex flex-wrap gap-2">
+              <details key={`${scenario.scenario_type}-${scenario.scenario_label}`} className="muted-surface rounded-lg p-4">
+                <summary className="cursor-pointer">
+                  <span className="inline-flex flex-wrap gap-2">
                   <Badge value={scenario.scenario_type} tone="info" />
                   <Badge value={scenario.possibility_label} tone={toneForQuality(scenario.possibility_label)} />
-                </div>
-                <h3 className="mt-3 text-sm font-semibold text-[var(--strong)]">{sanitizeSetupText(scenario.scenario_label)}</h3>
+                  </span>
+                  <h3 className="mt-3 text-sm font-semibold text-[var(--strong)]">{sanitizeSetupText(scenario.scenario_label)}</h3>
+                </summary>
                 {scenario.supporting_evidence.length > 0 && (
                   <p className="mt-2 text-xs text-slate-500">
                     Supporting: {scenario.supporting_evidence.map(sanitizeSetupText).join("; ")}
@@ -46,7 +48,7 @@ export function SetupReasoningPanel({ model }: SetupReasoningPanelProps) {
                     Backend-safe actions: {scenario.suggested_backend_actions.map(setupLabel).join(", ")}
                   </p>
                 )}
-              </div>
+              </details>
             ))}
           </div>
         </div>
