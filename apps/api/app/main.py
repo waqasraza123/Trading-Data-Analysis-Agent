@@ -34,6 +34,7 @@ from app.modules.data_quality.routes import router as data_quality_router
 from app.modules.data_retention.routes import router as data_retention_router
 from app.modules.data_sources.routes import router as data_sources_router
 from app.modules.decision_readiness.routes import router as decision_readiness_router
+from app.modules.demo_mode.routes import router as demo_mode_router
 from app.modules.engine_executions.routes import router as engine_executions_router
 from app.modules.engine_versions.routes import router as engine_versions_router
 from app.modules.event_studies.routes import router as event_studies_router
@@ -143,6 +144,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         daily_routines_router,
         daily_workflows_router,
         daily_briefs_router,
+        demo_mode_router,
         capabilities_router,
         permissions_router,
         engine_versions_router,

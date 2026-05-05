@@ -1,5 +1,13 @@
 # Trading Intelligence API
 
+Demo mode is implemented under `/demo-mode`. It can create a labeled demo workspace, seed demo
+symbols and a synthetic JSON import source, import deterministic fixture candles, run deterministic
+analysis, create signals, build setup context, score review priority, evaluate observed outcomes,
+create scanner artifacts, persist a daily brief, and optionally create a journal note. It is for
+local/staging product validation only: no external providers, broker execution, auto-trading, or
+financial advice. Enable it with `DEMO_MODE_ENABLED=true` outside development. See
+`docs/demo-mode.md`.
+
 Workspace RBAC route permissions are implemented under `/permissions` and
 `app.modules.permissions`. The layer defines static permission names,
 role-to-permission mappings for `admin`, `analyst`, and `user`, reusable FastAPI
@@ -634,6 +642,10 @@ RUNTIME_WORKER_STALE_SECONDS=120
 RUNTIME_WORKER_HEARTBEAT_ENABLED=true
 RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
 BACKFILL_PLAN_VERSION=v1
+DEMO_MODE_ENABLED=false
+DEMO_MODE_DEFAULT_WORKSPACE_NAME="Demo Workspace"
+DEMO_MODE_DEFAULT_SYMBOLS=BTCUSDT,ETHUSDT,EURUSD
+DEMO_MODE_DEFAULT_TIMEFRAMES=1m,5m
 BACKFILL_PLAN_DEFAULT_LIMIT=1000
 BACKFILL_PLAN_MAX_LIMIT=10000
 ```

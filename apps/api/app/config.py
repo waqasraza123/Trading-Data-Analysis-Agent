@@ -383,6 +383,10 @@ class Settings(BaseSettings):
     engine_execution_default_priority: str = "normal"
     backfill_plan_version: str = "v1"
     product_readiness_version: str = "v1"
+    demo_mode_enabled: bool = False
+    demo_mode_default_workspace_name: str = "Demo Workspace"
+    demo_mode_default_symbols: str = "BTCUSDT,ETHUSDT,EURUSD"
+    demo_mode_default_timeframes: str = "1m,5m"
     workspace_setup_version: str = "v1"
     workspace_setup_demo_data_enabled: bool = True
     workspace_setup_default_market: str = "crypto"
@@ -850,6 +854,19 @@ class Settings(BaseSettings):
         normalized_value = value.strip()
         if not normalized_value:
             msg = "BACKFILL_PLAN_VERSION must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator(
+        "demo_mode_default_workspace_name",
+        "demo_mode_default_symbols",
+        "demo_mode_default_timeframes",
+    )
+    @classmethod
+    def validate_demo_mode_defaults(cls, value: str) -> str:
+        normalized_value = value.strip()
+        if not normalized_value:
+            msg = "Demo mode defaults must not be empty"
             raise ValueError(msg)
         return normalized_value
 

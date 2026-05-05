@@ -9,6 +9,8 @@ from app.config import get_settings
 from app.core.database_safety import validate_smoke_database_target
 from app.core.logging import configure_logging
 from app.db.session import get_async_session_factory
+from app.modules.demo_mode.schemas import DemoModeRunRequest
+from app.modules.demo_mode.service import DemoModeService
 from app.modules.seeding.service import SeedService
 from app.modules.smoke.service import SmokeService
 from app.modules.synthetic_fixtures.generator import SyntheticFixtureGenerator
@@ -82,6 +84,25 @@ async def run_smoke_command(database_url_env: str, include_write_tests: bool) ->
             },
         )
         print(json.dumps(result.to_dict(), default=str, sort_keys=True))
+
+
+async def run_demo_full_flow_command(database_url_env: str) -> None:
+    configure_database_url(database_url_env, allow_test_fallback=True)
+    settings = get_settings()
+    configure_logging(settings.log_level)
+    session_factory = get_async_session_factory()
+    if session_factory is None:
+        msg = "DATABASE_URL is not configured"
+        raise RuntimeError(msg)
+    async with session_factory() as session:
+        result = await DemoModeService(session, settings).run_full_demo_flow(DemoModeRunRequest())
+        print(
+            json.dumps(
+                result.model_dump(mode="json", by_alias=True),
+                default=str,
+                sort_keys=True,
+            )
+        )
 
 
 def run_synthetic_fixture_generate_command(args: argparse.Namespace) -> None:
@@ -178,6 +199,10 @@ def main() -> None:
     generate_parser.add_argument("--user-id", default=None)
     generate_parser.add_argument("--source-id", default=None)
     generate_parser.add_argument("--symbol-id", default=None)
+    demo_parser = subparsers.add_parser("demo")
+    demo_subparsers = demo_parser.add_subparsers(dest="demo_command", required=True)
+    demo_run_parser = demo_subparsers.add_parser("run-full-flow")
+    demo_run_parser.add_argument("--database-url-env", default="DATABASE_URL")
     args = parser.parse_args()
     if args.command == "seed":
         asyncio.run(run_seed_command())
@@ -190,6 +215,8 @@ def main() -> None:
         )
     if args.command == "synthetic-fixtures" and args.synthetic_command == "generate":
         run_synthetic_fixture_generate_command(args)
+    if args.command == "demo" and args.demo_command == "run-full-flow":
+        asyncio.run(run_demo_full_flow_command(database_url_env=args.database_url_env))
 
 
 if __name__ == "__main__":
