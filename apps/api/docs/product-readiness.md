@@ -47,10 +47,12 @@ workspace-scoped setup; a run without one validates global API/database state wh
 - `data_sources_present`
 - `provider_credentials_status`
 - `provider_health_available`
+- `read_model_availability`
 - `fresh_candles_available`
 - `watchlist_configured`
 - `scan_configured`
 - `daily_workflow_available`
+- `runtime_supervisor_status`
 - `worker_health_available`
 - `notification_channels_optional`
 - `journal_available`
@@ -77,6 +79,14 @@ Readiness responses point to existing operator surfaces:
 - `/notifications` for optional notification channel review.
 - `/command-center` for explicit daily workflow runs.
 - `/journal` for operator notes and outcome reflection.
+
+## Integration Scope
+
+The readiness run reads persisted provider credential reference status, provider health snapshots,
+read model counts, runtime supervisor definitions/instances/run requests, live worker health,
+workspace setup, symbols, data sources, candles, watchlists, scans, optional notifications, and
+journal state. Read model checks treat snapshots as rebuildable acceleration data, not source of
+truth. Runtime checks inspect persisted worker state only and do not start workers.
 
 ## Safety Boundary
 

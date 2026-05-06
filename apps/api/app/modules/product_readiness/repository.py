@@ -21,7 +21,18 @@ from app.modules.notifications.models import (
     NotificationWorkerRun,
 )
 from app.modules.product_readiness.models import ProductReadinessRun
+from app.modules.provider_credentials.models import ProviderCredentialRef
 from app.modules.provider_health.models import ProviderHealthSnapshot
+from app.modules.read_models.models import (
+    CommandCenterReadModel,
+    DashboardSymbolReadModel,
+    SignalCardReadModel,
+)
+from app.modules.runtime_supervisor.models import (
+    RuntimeWorkerDefinition,
+    RuntimeWorkerInstance,
+    RuntimeWorkerRunRequest,
+)
 from app.modules.scanner_presets.models import ScannerPreset
 from app.modules.strategy_profiles.models import StrategyProfile
 from app.modules.symbols.models import Symbol
@@ -150,6 +161,31 @@ class ProductReadinessRepository:
     async def count_provider_health_snapshots(self, workspace_id: UUID | None) -> int:
         return await self.count_by_workspace(ProviderHealthSnapshot, workspace_id)
 
+    async def count_provider_credential_refs(self, workspace_id: UUID | None) -> int:
+        return await self.count_by_workspace(ProviderCredentialRef, workspace_id)
+
+    async def provider_credential_status_counts(
+        self,
+        workspace_id: UUID | None,
+    ) -> dict[str, int]:
+        statement = select(ProviderCredentialRef.status, func.count()).group_by(
+            ProviderCredentialRef.status
+        )
+        if workspace_id is not None:
+            statement = statement.where(ProviderCredentialRef.workspace_id == workspace_id)
+        return await self.counts_by_key(statement)
+
+    async def provider_credential_test_status_counts(
+        self,
+        workspace_id: UUID | None,
+    ) -> dict[str, int]:
+        statement = select(ProviderCredentialRef.last_test_status, func.count()).group_by(
+            ProviderCredentialRef.last_test_status
+        )
+        if workspace_id is not None:
+            statement = statement.where(ProviderCredentialRef.workspace_id == workspace_id)
+        return await self.counts_by_key(statement)
+
     async def provider_health_status_counts(self, workspace_id: UUID | None) -> dict[str, int]:
         statement = select(ProviderHealthSnapshot.status, func.count()).group_by(
             ProviderHealthSnapshot.status
@@ -214,6 +250,53 @@ class ProductReadinessRepository:
 
     async def count_journal_entries(self, workspace_id: UUID | None) -> int:
         return await self.count_by_workspace(JournalEntry, workspace_id)
+
+    async def read_model_counts(self, workspace_id: UUID | None) -> dict[str, int]:
+        return {
+            "dashboard_symbol_read_models": await self.count_by_workspace(
+                DashboardSymbolReadModel,
+                workspace_id,
+            ),
+            "signal_card_read_models": await self.count_by_workspace(
+                SignalCardReadModel,
+                workspace_id,
+            ),
+            "command_center_read_models": await self.count_by_workspace(
+                CommandCenterReadModel,
+                workspace_id,
+            ),
+        }
+
+    async def count_runtime_worker_definitions(self) -> int:
+        return await self.scalar_count(select(func.count()).select_from(RuntimeWorkerDefinition))
+
+    async def runtime_worker_definition_status_counts(self) -> dict[str, int]:
+        statement = select(RuntimeWorkerDefinition.status, func.count()).group_by(
+            RuntimeWorkerDefinition.status
+        )
+        return await self.counts_by_key(statement)
+
+    async def runtime_worker_instance_status_counts(
+        self,
+        workspace_id: UUID | None,
+    ) -> dict[str, int]:
+        statement = select(RuntimeWorkerInstance.status, func.count()).group_by(
+            RuntimeWorkerInstance.status
+        )
+        if workspace_id is not None:
+            statement = statement.where(RuntimeWorkerInstance.workspace_id == workspace_id)
+        return await self.counts_by_key(statement)
+
+    async def runtime_run_request_status_counts(
+        self,
+        workspace_id: UUID | None,
+    ) -> dict[str, int]:
+        statement = select(RuntimeWorkerRunRequest.status, func.count()).group_by(
+            RuntimeWorkerRunRequest.status
+        )
+        if workspace_id is not None:
+            statement = statement.where(RuntimeWorkerRunRequest.workspace_id == workspace_id)
+        return await self.counts_by_key(statement)
 
     async def market_memory_freshness_counts(self, workspace_id: UUID | None) -> dict[str, int]:
         statement = select(RollingMarketStateSnapshot.freshness_label, func.count()).group_by(

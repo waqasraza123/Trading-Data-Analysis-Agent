@@ -129,12 +129,14 @@ class ProductReadinessService:
             await self.check_symbols_present(),
             await self.check_data_sources_present(workspace_id),
             await self.check_seed_data_present(workspace_id),
-            await self.check_provider_credentials_status(),
+            await self.check_provider_credentials_status(workspace_id),
             await self.check_provider_health_available(workspace_id),
+            await self.check_read_model_availability(workspace_id),
             await self.check_fresh_candles_available(workspace_id),
             await self.check_watchlist_configured(workspace_id),
             await self.check_scan_configured(workspace_id),
             await self.check_daily_workflow_available(workspace_id),
+            await self.check_runtime_supervisor_status(workspace_id),
             await self.check_worker_health_available(),
             await self.check_notification_channels_optional(workspace_id),
             await self.check_journal_available(workspace_id),
@@ -341,7 +343,10 @@ class ProductReadinessService:
             metadata=counts,
         )
 
-    async def check_provider_credentials_status(self) -> ProductReadinessCheckResult:
+    async def check_provider_credentials_status(
+        self,
+        workspace_id: UUID | None,
+    ) -> ProductReadinessCheckResult:
         missing: list[str] = []
         if provider_requires_api_key(self.settings.live_feed_provider) and secret_is_empty(
             self.settings.live_feed_api_key
@@ -359,22 +364,46 @@ class ProductReadinessService:
             and secret_is_empty(self.settings.anthropic_api_key)
         ):
             missing.append("ANTHROPIC_API_KEY")
+        credential_count = await self.repository.count_provider_credential_refs(workspace_id)
+        status_counts = await self.repository.provider_credential_status_counts(workspace_id)
+        test_status_counts = await self.repository.provider_credential_test_status_counts(
+            workspace_id
+        )
+        failed_count = status_counts.get("test_failed", 0) + test_status_counts.get("failed", 0)
+        needs_review_count = (
+            status_counts.get("missing", 0)
+            + status_counts.get("paused", 0)
+            + status_counts.get("revoked", 0)
+            + test_status_counts.get("provider_not_configured", 0)
+        )
+        if missing or failed_count:
+            status = ProductReadinessCheckStatus.FAILED
+        elif credential_count == 0 or needs_review_count:
+            status = ProductReadinessCheckStatus.WARNING
+        else:
+            status = ProductReadinessCheckStatus.PASSED
         return readiness_check(
             key="provider_credentials_status",
-            status=ProductReadinessCheckStatus.PASSED
-            if not missing
-            else ProductReadinessCheckStatus.FAILED,
+            status=status,
             title="Provider credentials configured where needed",
-            summary=(
-                "Enabled providers do not require missing credentials."
-                if not missing
-                else "One or more enabled providers are missing required credentials."
+            summary=provider_credential_summary(
+                missing=missing,
+                credential_count=credential_count,
+                failed_count=failed_count,
+                needs_review_count=needs_review_count,
             ),
             remediation=(
-                "Configure only the provider credentials required by enabled backend features."
+                "Configure server-side credential references only for enabled data and delivery "
+                "providers."
             ),
             related_route="/data/onboarding",
-            metadata={"missing": missing, "live_feed_provider": self.settings.live_feed_provider},
+            metadata={
+                "missing_settings": missing,
+                "live_feed_provider": self.settings.live_feed_provider,
+                "credential_ref_count": credential_count,
+                "credential_status_counts": status_counts,
+                "credential_test_status_counts": test_status_counts,
+            },
         )
 
     async def check_provider_health_available(
@@ -398,6 +427,31 @@ class ProductReadinessService:
             ),
             related_route="/data/onboarding",
             metadata={"snapshot_count": count},
+        )
+
+    async def check_read_model_availability(
+        self,
+        workspace_id: UUID | None,
+    ) -> ProductReadinessCheckResult:
+        counts = await self.repository.read_model_counts(workspace_id)
+        total_count = sum(counts.values())
+        return readiness_check(
+            key="read_model_availability",
+            status=ProductReadinessCheckStatus.PASSED
+            if total_count
+            else ProductReadinessCheckStatus.WARNING,
+            title="Read models available",
+            summary=(
+                "Dashboard read model snapshots are available."
+                if total_count
+                else "Dashboard read model snapshots have not been materialized yet."
+            ),
+            remediation=(
+                "Run explicit read model rebuild endpoints or a workflow step after source "
+                "artifacts are available."
+            ),
+            related_route="/command-center",
+            metadata={**counts, "read_model_version": self.settings.read_model_version},
         )
 
     async def check_fresh_candles_available(
@@ -491,6 +545,51 @@ class ProductReadinessService:
             remediation="Run the daily workflow explicitly from Command Center when ready.",
             related_route="/command-center",
             metadata={"run_count": count, "latest_status": latest_status},
+        )
+
+    async def check_runtime_supervisor_status(
+        self,
+        workspace_id: UUID | None,
+    ) -> ProductReadinessCheckResult:
+        definition_count = await self.repository.count_runtime_worker_definitions()
+        definition_statuses = await self.repository.runtime_worker_definition_status_counts()
+        instance_statuses = await self.repository.runtime_worker_instance_status_counts(
+            workspace_id
+        )
+        request_statuses = await self.repository.runtime_run_request_status_counts(workspace_id)
+        degraded_count = (
+            instance_statuses.get("failed", 0)
+            + instance_statuses.get("stale", 0)
+            + request_statuses.get("failed", 0)
+        )
+        status = (
+            ProductReadinessCheckStatus.WARNING
+            if definition_count == 0 or degraded_count
+            else ProductReadinessCheckStatus.PASSED
+        )
+        return readiness_check(
+            key="runtime_supervisor_status",
+            status=status,
+            title="Runtime supervisor status available",
+            summary=(
+                "Runtime supervisor definitions and persisted status are available."
+                if status == ProductReadinessCheckStatus.PASSED
+                else "Runtime supervisor status needs review before relying on worker state."
+            ),
+            remediation=(
+                "Seed default worker definitions and inspect runtime status before operating "
+                "scheduled workers."
+            ),
+            related_route="/command-center",
+            metadata={
+                "definition_count": definition_count,
+                "definition_status_counts": definition_statuses,
+                "instance_status_counts": instance_statuses,
+                "run_request_status_counts": request_statuses,
+                "supervisor_version": self.settings.runtime_supervisor_version,
+                "heartbeat_enabled": self.settings.runtime_worker_heartbeat_enabled,
+                "run_requests_enabled": self.settings.runtime_supervisor_run_requests_enabled,
+            },
         )
 
     async def check_worker_health_available(self) -> ProductReadinessCheckResult:
@@ -687,3 +786,21 @@ def summarize_readiness(
     if label == ProductReadinessLabel.BLOCKED:
         return f"Product readiness is blocked: {len(blockers)} blocker(s) require remediation."
     return "Product readiness could not be determined."
+
+
+def provider_credential_summary(
+    *,
+    missing: list[str],
+    credential_count: int,
+    failed_count: int,
+    needs_review_count: int,
+) -> str:
+    if missing:
+        return "One or more enabled providers are missing required credential settings."
+    if failed_count:
+        return "One or more provider credential references have failing connection tests."
+    if credential_count == 0:
+        return "No persisted provider credential references have been configured."
+    if needs_review_count:
+        return "One or more provider credential references need operator review."
+    return "Provider credential references are configured where needed."
