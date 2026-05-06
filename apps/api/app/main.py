@@ -16,6 +16,7 @@ from app.modules.ai_intelligence.routes import router as ai_intelligence_router
 from app.modules.analysis.routes import router as analysis_router
 from app.modules.artifact_graph.routes import router as artifact_graph_router
 from app.modules.audit_timeline.routes import router as audit_timeline_router
+from app.modules.auth.routes import router as auth_router
 from app.modules.backfill_plans.routes import router as backfill_plans_router
 from app.modules.backtest_experiments.routes import router as backtest_experiments_router
 from app.modules.candle_gap_recovery.routes import router as candle_gap_recovery_router
@@ -142,6 +143,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     routers = (
         health_router,
         observability_router,
+        auth_router,
         workspaces_router,
         workspace_setup_router,
         users_router,

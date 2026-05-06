@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.read_models.schemas import (
     CommandCenterReadModelRead,
     DashboardSymbolReadModelFilters,
@@ -31,6 +33,7 @@ def get_read_model_service(
     "/symbols/rebuild",
     response_model=DashboardSymbolReadModelRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def rebuild_symbol_read_model(
     request: RebuildSymbolReadModelRequest,
@@ -76,6 +79,7 @@ async def get_dashboard_symbols(
     "/signals/{signal_id}/rebuild",
     response_model=SignalCardReadModelRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def rebuild_signal_card(
     signal_id: UUID,
@@ -89,6 +93,7 @@ async def rebuild_signal_card(
     "/signals/rebuild-workspace",
     response_model=RebuildWorkspaceSignalCardsResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def rebuild_workspace_signal_cards(
     request: RebuildWorkspaceSignalCardsRequest,
@@ -148,6 +153,7 @@ async def get_signal_cards(
     "/command-center/rebuild",
     response_model=CommandCenterReadModelRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def rebuild_command_center(
     request: RebuildCommandCenterRequest,

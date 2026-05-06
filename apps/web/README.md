@@ -172,9 +172,16 @@ Create `apps/web/.env.local` when local defaults are not enough:
 ```sh
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 NEXT_PUBLIC_APP_NAME=Daily Trading Dashboard
+NEXT_PUBLIC_AUTH_MODE=dev
+NEXT_PUBLIC_AUTH_DEV_USER_ID=
+NEXT_PUBLIC_AUTH_DEV_WORKSPACE_ID=
+NEXT_PUBLIC_AUTH_BEARER_TOKEN_STORAGE_KEY=
 ```
 
-Only public frontend configuration belongs in this file. Backend secrets, API keys, database URLs, and worker credentials must stay in backend environment files.
+The API client sends `x-user-id` and `x-workspace-id` in dev mode when those public values are set.
+For JWT/mixed deployments, the client can read a bearer token from the configured browser storage
+key. Only public frontend configuration belongs in this file. Backend secrets, API keys, database
+URLs, and worker credentials must stay in backend environment files.
 When building the Docker production image, pass `NEXT_PUBLIC_API_BASE_URL` as a build argument so
 browser code points at the public API origin.
 

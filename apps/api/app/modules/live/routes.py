@@ -18,6 +18,8 @@ from app.modules.live.schemas import (
     LiveSubscriptionUpdate,
 )
 from app.modules.live.service import LiveService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/live", tags=["live"])
 
@@ -32,6 +34,7 @@ def get_live_service(
     "/subscriptions",
     response_model=LiveSubscriptionRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
 )
 async def create_subscription(
     payload: LiveSubscriptionCreate,
@@ -63,7 +66,11 @@ async def list_subscriptions(
     return [LiveSubscriptionRead.model_validate(subscription) for subscription in subscriptions]
 
 
-@router.post("/subscriptions/stale-check", response_model=LiveSubscriptionStaleCheckRead)
+@router.post(
+    "/subscriptions/stale-check",
+    response_model=LiveSubscriptionStaleCheckRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def refresh_stale_statuses(
     payload: LiveSubscriptionStaleCheckRequest,
     service: Annotated[LiveService, Depends(get_live_service)],
@@ -87,7 +94,11 @@ async def get_subscription(
     return LiveSubscriptionRead.model_validate(subscription)
 
 
-@router.patch("/subscriptions/{subscription_id}", response_model=LiveSubscriptionRead)
+@router.patch(
+    "/subscriptions/{subscription_id}",
+    response_model=LiveSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def update_subscription(
     subscription_id: UUID,
     payload: LiveSubscriptionUpdate,
@@ -97,7 +108,11 @@ async def update_subscription(
     return LiveSubscriptionRead.model_validate(subscription)
 
 
-@router.post("/subscriptions/{subscription_id}/pause", response_model=LiveSubscriptionRead)
+@router.post(
+    "/subscriptions/{subscription_id}/pause",
+    response_model=LiveSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def pause_subscription(
     subscription_id: UUID,
     service: Annotated[LiveService, Depends(get_live_service)],
@@ -106,7 +121,11 @@ async def pause_subscription(
     return LiveSubscriptionRead.model_validate(subscription)
 
 
-@router.post("/subscriptions/{subscription_id}/resume", response_model=LiveSubscriptionRead)
+@router.post(
+    "/subscriptions/{subscription_id}/resume",
+    response_model=LiveSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def resume_subscription(
     subscription_id: UUID,
     service: Annotated[LiveService, Depends(get_live_service)],
@@ -115,7 +134,11 @@ async def resume_subscription(
     return LiveSubscriptionRead.model_validate(subscription)
 
 
-@router.post("/subscriptions/{subscription_id}/stop", response_model=LiveSubscriptionRead)
+@router.post(
+    "/subscriptions/{subscription_id}/stop",
+    response_model=LiveSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def stop_subscription(
     subscription_id: UUID,
     service: Annotated[LiveService, Depends(get_live_service)],
@@ -128,6 +151,7 @@ async def stop_subscription(
     "/subscriptions/{subscription_id}/events",
     response_model=LiveFeedEventRead,
     status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
 )
 async def ingest_provider_message(
     subscription_id: UUID,

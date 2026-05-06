@@ -13,6 +13,8 @@ from app.modules.data_quality.schemas import (
     DataQualitySourceRunRequest,
 )
 from app.modules.data_quality.service import DataQualityService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/data-quality", tags=["data-quality"])
 
@@ -23,7 +25,11 @@ def get_data_quality_service(
     return DataQualityService(session)
 
 
-@router.post("/candle-range/run", response_model=DataQualityRunRead)
+@router.post(
+    "/candle-range/run",
+    response_model=DataQualityRunRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def run_candle_range_quality(
     request: DataQualityCandleRangeRequest,
     service: Annotated[DataQualityService, Depends(get_data_quality_service)],
@@ -31,16 +37,25 @@ async def run_candle_range_quality(
     return DataQualityRunRead.model_validate(await service.run_candle_range(request))
 
 
-@router.post("/data-sources/{source_id}/run", response_model=DataQualityRunRead)
+@router.post(
+    "/data-sources/{source_id}/run",
+    response_model=DataQualityRunRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def run_source_quality(
     source_id: UUID,
     request: DataQualitySourceRunRequest,
     service: Annotated[DataQualityService, Depends(get_data_quality_service)],
 ) -> DataQualityRunRead:
-    return DataQualityRunRead.model_validate(await service.run_source(request.workspace_id, source_id))
+    run = await service.run_source(request.workspace_id, source_id)
+    return DataQualityRunRead.model_validate(run)
 
 
-@router.post("/live-subscriptions/{subscription_id}/run", response_model=DataQualityRunRead)
+@router.post(
+    "/live-subscriptions/{subscription_id}/run",
+    response_model=DataQualityRunRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def run_live_subscription_quality(
     subscription_id: UUID,
     request: DataQualitySourceRunRequest,

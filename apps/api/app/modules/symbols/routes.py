@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.symbols.schemas import SymbolCreate, SymbolRead, SymbolUpdate
 from app.modules.symbols.service import SymbolService
 
@@ -18,7 +20,12 @@ def get_symbol_service(
     return SymbolService(session)
 
 
-@router.post("", response_model=SymbolRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=SymbolRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_ADMIN))],
+)
 async def create_symbol(
     payload: SymbolCreate,
     service: Annotated[SymbolService, Depends(get_symbol_service)],
@@ -52,7 +59,11 @@ async def get_symbol(
     return SymbolRead.model_validate(symbol)
 
 
-@router.patch("/{symbol_id}", response_model=SymbolRead)
+@router.patch(
+    "/{symbol_id}",
+    response_model=SymbolRead,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_ADMIN))],
+)
 async def update_symbol(
     symbol_id: UUID,
     payload: SymbolUpdate,

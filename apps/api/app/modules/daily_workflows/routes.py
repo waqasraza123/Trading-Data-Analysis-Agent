@@ -13,6 +13,8 @@ from app.modules.daily_workflows.schemas import (
     DailyWorkflowStepRead,
 )
 from app.modules.daily_workflows.service import DailyWorkflowService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/daily-workflows", tags=["daily-workflows"])
 
@@ -24,7 +26,11 @@ def get_daily_workflow_service(
     return DailyWorkflowService(session=session, settings=request.app.state.settings)
 
 
-@router.post("/run", response_model=DailyWorkflowRunRead)
+@router.post(
+    "/run",
+    response_model=DailyWorkflowRunRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def run_daily_workflow(
     payload: DailyWorkflowRunRequest,
     service: Annotated[DailyWorkflowService, Depends(get_daily_workflow_service)],
@@ -74,7 +80,11 @@ async def list_daily_workflow_steps(
     return [DailyWorkflowStepRead.model_validate(step) for step in steps]
 
 
-@router.post("/runs/{run_id}/cancel", response_model=DailyWorkflowRunRead)
+@router.post(
+    "/runs/{run_id}/cancel",
+    response_model=DailyWorkflowRunRead,
+    dependencies=[Depends(require_permission(Permission.SCANS_WRITE))],
+)
 async def cancel_daily_workflow_run(
     run_id: UUID,
     service: Annotated[DailyWorkflowService, Depends(get_daily_workflow_service)],

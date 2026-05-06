@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.setup_context.schemas import SetupContextRead
 from app.modules.setup_context.service import SetupContextService
 
@@ -21,6 +23,7 @@ def get_setup_context_service(
     "/signals/{signal_id}/setup-context",
     response_model=SetupContextRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_signal_setup_context(
     signal_id: UUID,
@@ -47,6 +50,7 @@ async def get_signal_setup_context(
     "/analysis-runs/{analysis_run_id}/setup-context",
     response_model=SetupContextRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_analysis_run_setup_context(
     analysis_run_id: UUID,

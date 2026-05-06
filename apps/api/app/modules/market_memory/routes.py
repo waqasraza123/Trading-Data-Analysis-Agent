@@ -17,6 +17,8 @@ from app.modules.market_memory.schemas import (
     RollingMarketStateSnapshotRead,
 )
 from app.modules.market_memory.service import MarketMemoryService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/market-memory", tags=["market-memory"])
 
@@ -31,6 +33,7 @@ def get_market_memory_service(
     "/snapshots",
     response_model=RollingMarketStateSnapshotRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_market_memory_snapshot(
     payload: MarketMemorySnapshotBuildRequest,
@@ -99,6 +102,7 @@ async def get_market_memory_snapshot_by_symbol(
 @router.post(
     "/workspaces/{workspace_id}/refresh",
     response_model=MarketMemoryWorkspaceRefreshResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def refresh_workspace_market_memory_snapshots(
     workspace_id: UUID,

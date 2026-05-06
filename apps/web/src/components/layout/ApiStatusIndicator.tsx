@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { getPublicEnv } from "@/config/env";
+import { authHeaders } from "@/lib/api/client";
 import type { StatusTone } from "@/lib/ui/statusStyles";
 
 type ApiStatusIndicatorProps = {
@@ -21,7 +23,11 @@ export function ApiStatusIndicator({ apiBaseUrl }: ApiStatusIndicatorProps) {
     const timeout = window.setTimeout(() => controller.abort(), 3500);
     let active = true;
 
-    fetch(`${apiBaseUrl}/health`, { cache: "no-store", signal: controller.signal })
+    fetch(`${apiBaseUrl}/health`, {
+      cache: "no-store",
+      headers: authHeaders(getPublicEnv()),
+      signal: controller.signal,
+    })
       .then((response) => {
         if (active) {
           setState(response.ok ? { label: "Online", tone: "good" } : { label: "Degraded", tone: "warning" });

@@ -8,13 +8,12 @@ local/staging product validation only: no external providers, broker execution, 
 financial advice. Enable it with `DEMO_MODE_ENABLED=true` outside development. See
 `docs/demo-mode.md`.
 
-Workspace RBAC route permissions are implemented under `/permissions` and
-`app.modules.permissions`. The layer defines static permission names,
-role-to-permission mappings for `admin`, `analyst`, and `user`, reusable FastAPI
-dependencies, and structured permission-failure audit logs. `AUTH_ENABLED=false`
-continues to allow local/test development; when `AUTH_ENABLED=true`, the existing
-admin API key remains the active mutating-route guard until a real identity
-provider is introduced. See `docs/permissions.md`.
+Production auth and workspace RBAC are implemented under `/auth`, `/permissions`,
+`app.modules.auth`, and `app.modules.permissions`. The layer supports dev headers,
+legacy admin API keys, hashed persisted API keys, RS256 JWT verification, current
+identity/context routes, workspace isolation, and reusable permission dependencies.
+`AUTH_ENABLED=false` plus `AUTH_MODE=dev` remains the local/test default. See
+`docs/auth.md`, `docs/permissions.md`, and `docs/rbac-route-coverage.md`.
 
 Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
 London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
@@ -527,8 +526,19 @@ Security and traffic controls are configured through environment variables:
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 CORS_ALLOW_CREDENTIALS=false
 AUTH_ENABLED=false
+AUTH_MODE=dev
+AUTH_JWT_ENABLED=false
+AUTH_API_KEYS_ENABLED=true
+AUTH_DEV_USER_EMAIL=
+AUTH_DEV_WORKSPACE_ID=
+JWT_ISSUER=
+JWT_AUDIENCE=
+JWT_PUBLIC_KEY=
+JWT_ALGORITHM=RS256
 ADMIN_API_KEY=
-API_KEY_HEADER_NAME=x-admin-api-key
+API_KEY_HEADER_NAME=x-api-key
+USER_CONTEXT_HEADER_NAME=x-user-id
+WORKSPACE_CONTEXT_HEADER_NAME=x-workspace-id
 REDIS_URL=redis://localhost:6379/0
 RATE_LIMIT_ENABLED=false
 RATE_LIMIT_REQUESTS_PER_MINUTE=60
@@ -714,10 +724,12 @@ BACKFILL_PLAN_DEFAULT_LIMIT=1000
 BACKFILL_PLAN_MAX_LIMIT=10000
 ```
 
-`AUTH_ENABLED=false` is the local/test default. When enabled, mutating routes require the
-configured API key header; health/readiness endpoints stay public. Rate limiting is disabled by
-default, uses an in-memory fallback for local/test when Redis is not configured, and requires
-`REDIS_URL` when enabled in staging or production.
+`AUTH_MODE=dev` and `AUTH_ENABLED=false` are the local/test defaults. In production, use
+`AUTH_MODE=jwt`, `AUTH_MODE=api_key`, or `AUTH_MODE=mixed`; protected routes resolve an identity
+before applying workspace membership and permission checks. The legacy `ADMIN_API_KEY` remains
+supported for compatibility. Health endpoints stay public. Rate limiting is disabled by default,
+uses an in-memory fallback for local/test when Redis is not configured, and requires `REDIS_URL`
+when enabled in staging or production.
 
 Logs are JSON records with request id, method, path, status code, duration, safe client host, and
 error code when applicable. Request bodies, uploaded files, tokens, API keys, database URLs, and

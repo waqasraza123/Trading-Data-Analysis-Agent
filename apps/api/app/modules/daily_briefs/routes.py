@@ -21,6 +21,8 @@ from app.modules.daily_briefs.schemas import (
     DailyBriefWatchlistCreate,
 )
 from app.modules.daily_briefs.service import DailyBriefService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["daily-briefs"])
 
@@ -31,7 +33,12 @@ def get_daily_brief_service(
     return DailyBriefService(session)
 
 
-@router.post("/daily-briefs", response_model=DailyBriefRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/daily-briefs",
+    response_model=DailyBriefRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_daily_brief(
     payload: DailyBriefCreate,
     service: Annotated[DailyBriefService, Depends(get_daily_brief_service)],
@@ -41,7 +48,10 @@ async def create_daily_brief(
 
 
 @router.post(
-    "/daily-briefs/daily", response_model=DailyBriefRunRead, status_code=status.HTTP_201_CREATED
+    "/daily-briefs/daily",
+    response_model=DailyBriefRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def create_daily_directional_brief(
     payload: DailyBriefDailyCreate,
@@ -57,7 +67,10 @@ async def create_daily_directional_brief(
 
 
 @router.post(
-    "/daily-briefs/session", response_model=DailyBriefRunRead, status_code=status.HTTP_201_CREATED
+    "/daily-briefs/session",
+    response_model=DailyBriefRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def create_session_directional_brief(
     payload: DailyBriefSessionCreate,
@@ -74,7 +87,10 @@ async def create_session_directional_brief(
 
 
 @router.post(
-    "/daily-briefs/watchlist", response_model=DailyBriefRunRead, status_code=status.HTTP_201_CREATED
+    "/daily-briefs/watchlist",
+    response_model=DailyBriefRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def create_watchlist_directional_brief(
     payload: DailyBriefWatchlistCreate,

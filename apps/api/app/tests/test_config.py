@@ -34,8 +34,13 @@ def test_settings_load_defaults() -> None:
     assert settings.cors_allowed_origins == []
     assert settings.cors_allow_credentials is False
     assert settings.auth_enabled is False
+    assert settings.auth_mode == "dev"
+    assert settings.auth_jwt_enabled is False
+    assert settings.auth_api_keys_enabled is True
     assert settings.admin_api_key is None
-    assert settings.api_key_header_name == "x-admin-api-key"
+    assert settings.api_key_header_name == "x-api-key"
+    assert settings.user_context_header_name == "x-user-id"
+    assert settings.workspace_context_header_name == "x-workspace-id"
     assert settings.rate_limit_enabled is False
     assert settings.live_feed_api_key is None
     assert settings.seed_default_workspace_name is None
@@ -133,7 +138,7 @@ def test_settings_parse_cors_allowed_origins() -> None:
 
 def test_auth_enabled_requires_admin_api_key() -> None:
     with pytest.raises(ValueError, match="ADMIN_API_KEY"):
-        Settings(_env_file=None, auth_enabled=True)
+        Settings(_env_file=None, app_env=AppEnvironment.PRODUCTION, auth_enabled=True)
 
 
 def test_production_rate_limit_requires_redis_url() -> None:

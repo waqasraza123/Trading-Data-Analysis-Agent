@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.signal_priority.models import SignalPriorityLabel, SignalReviewBucket
 from app.modules.signal_priority.schemas import (
     SignalPriorityListFilters,
@@ -26,6 +28,7 @@ def get_signal_priority_service(
     "/signals/{signal_id}/priority-score",
     response_model=SignalPriorityScoreRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def score_signal_priority(
     signal_id: UUID,
@@ -79,6 +82,7 @@ async def list_signal_priorities(
 @router.post(
     "/signal-priorities/workspaces/{workspace_id}/score-recent",
     response_model=SignalPriorityWorkspaceScoreResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def score_workspace_recent_signal_priorities(
     workspace_id: UUID,

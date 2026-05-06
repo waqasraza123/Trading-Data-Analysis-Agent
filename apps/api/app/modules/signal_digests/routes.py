@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.signal_digests.models import (
     SignalDigestItemType,
     SignalDigestStatus,
@@ -29,7 +31,12 @@ def get_signal_digest_service(
     return SignalDigestService(session)
 
 
-@router.post("", response_model=SignalDigestRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=SignalDigestRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_signal_digest(
     payload: SignalDigestCreate,
     service: Annotated[SignalDigestService, Depends(get_signal_digest_service)],
@@ -85,7 +92,12 @@ async def list_signal_digest_items(
     return [SignalDigestItemRead.model_validate(item) for item in items]
 
 
-@router.post("/daily", response_model=SignalDigestRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/daily",
+    response_model=SignalDigestRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_daily_signal_digest(
     payload: DailySignalDigestRequest,
     service: Annotated[SignalDigestService, Depends(get_signal_digest_service)],
@@ -100,7 +112,12 @@ async def create_daily_signal_digest(
     return SignalDigestRunRead.model_validate(run)
 
 
-@router.post("/session", response_model=SignalDigestRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/session",
+    response_model=SignalDigestRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_session_signal_digest(
     payload: SessionSignalDigestRequest,
     service: Annotated[SignalDigestService, Depends(get_signal_digest_service)],

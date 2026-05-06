@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.provider_credentials.models import (
     ProviderConnectionTestType,
     ProviderCredentialStatus,
@@ -32,7 +34,12 @@ def get_provider_credential_service(
     return ProviderCredentialService(session=session, settings=request.app.state.settings)
 
 
-@router.post("", response_model=ProviderCredentialRefRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ProviderCredentialRefRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def create_credential_ref(
     payload: ProviderCredentialRefCreate,
     service: Annotated[
@@ -77,7 +84,11 @@ async def list_credential_refs(
     return [service.to_read_schema(credential_ref) for credential_ref in credential_refs]
 
 
-@router.post("/test-provider", response_model=ProviderConnectionTestRead)
+@router.post(
+    "/test-provider",
+    response_model=ProviderConnectionTestRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def test_provider_configuration(
     payload: ProviderConfigurationTestRequest,
     service: Annotated[
@@ -113,7 +124,11 @@ async def get_credential_ref(
     return service.to_read_schema(credential_ref)
 
 
-@router.patch("/{credential_ref_id}", response_model=ProviderCredentialRefRead)
+@router.patch(
+    "/{credential_ref_id}",
+    response_model=ProviderCredentialRefRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def update_credential_ref(
     credential_ref_id: UUID,
     payload: ProviderCredentialRefUpdate,
@@ -126,7 +141,11 @@ async def update_credential_ref(
     return service.to_read_schema(credential_ref)
 
 
-@router.post("/{credential_ref_id}/pause", response_model=ProviderCredentialRefRead)
+@router.post(
+    "/{credential_ref_id}/pause",
+    response_model=ProviderCredentialRefRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def pause_credential_ref(
     credential_ref_id: UUID,
     service: Annotated[
@@ -138,7 +157,11 @@ async def pause_credential_ref(
     return service.to_read_schema(credential_ref)
 
 
-@router.post("/{credential_ref_id}/revoke", response_model=ProviderCredentialRefRead)
+@router.post(
+    "/{credential_ref_id}/revoke",
+    response_model=ProviderCredentialRefRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def revoke_credential_ref(
     credential_ref_id: UUID,
     service: Annotated[
@@ -150,7 +173,11 @@ async def revoke_credential_ref(
     return service.to_read_schema(credential_ref)
 
 
-@router.post("/{credential_ref_id}/test", response_model=ProviderConnectionTestRead)
+@router.post(
+    "/{credential_ref_id}/test",
+    response_model=ProviderConnectionTestRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def test_credential_ref(
     credential_ref_id: UUID,
     service: Annotated[

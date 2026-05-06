@@ -186,7 +186,18 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
     admin_api_key: SecretStr | None = None
-    api_key_header_name: str = "x-admin-api-key"
+    auth_mode: str = "dev"
+    auth_jwt_enabled: bool = False
+    auth_api_keys_enabled: bool = True
+    auth_dev_user_email: str | None = None
+    auth_dev_workspace_id: str | None = None
+    jwt_issuer: str | None = None
+    jwt_audience: str | None = None
+    jwt_public_key: SecretStr | None = None
+    jwt_algorithm: str = "RS256"
+    api_key_header_name: str = "x-api-key"
+    user_context_header_name: str = "x-user-id"
+    workspace_context_header_name: str = "x-workspace-id"
     rate_limit_enabled: bool = False
     rate_limit_requests_per_minute: int = Field(default=60, ge=1)
     max_request_body_bytes: int = Field(default=1_048_576, ge=1)
@@ -437,14 +448,44 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
-    @field_validator("api_key_header_name")
+    @field_validator("auth_mode")
     @classmethod
-    def validate_api_key_header_name(cls, value: str) -> str:
+    def validate_auth_mode(cls, value: str) -> str:
         normalized_value = value.strip().lower()
-        if normalized_value == "":
-            msg = "API_KEY_HEADER_NAME must not be empty"
+        if normalized_value not in {"dev", "api_key", "jwt", "mixed"}:
+            msg = "AUTH_MODE must be dev, api_key, jwt, or mixed"
             raise ValueError(msg)
         return normalized_value
+
+    @field_validator("jwt_algorithm")
+    @classmethod
+    def validate_jwt_algorithm(cls, value: str) -> str:
+        normalized_value = value.strip().upper()
+        if normalized_value != "RS256":
+            msg = "JWT_ALGORITHM currently supports RS256"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator(
+        "api_key_header_name",
+        "user_context_header_name",
+        "workspace_context_header_name",
+    )
+    @classmethod
+    def validate_header_name(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value == "":
+            msg = "Header names must not be empty"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("auth_dev_user_email", "auth_dev_workspace_id", "jwt_issuer", "jwt_audience")
+    @classmethod
+    def normalize_optional_auth_setting(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized_value = value.strip()
+        return normalized_value or None
 
     @field_validator("live_feed_provider")
     @classmethod
@@ -901,9 +942,40 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> Self:
-        if self.auth_enabled and secret_is_empty(self.admin_api_key):
-            msg = "ADMIN_API_KEY is required when AUTH_ENABLED=true"
+        effective_auth_mode = (
+            "api_key" if self.auth_enabled and self.auth_mode == "dev" else self.auth_mode
+        )
+        if effective_auth_mode in {"api_key", "mixed"} and not self.auth_api_keys_enabled:
+            msg = "AUTH_API_KEYS_ENABLED must be true when AUTH_MODE uses API keys"
             raise ValueError(msg)
+        if effective_auth_mode == "jwt" and not self.auth_jwt_enabled:
+            msg = "AUTH_JWT_ENABLED must be true when AUTH_MODE=jwt"
+            raise ValueError(msg)
+        if effective_auth_mode == "mixed" and not (
+            self.auth_jwt_enabled or self.auth_api_keys_enabled
+        ):
+            msg = "AUTH_MODE=mixed requires JWT or API keys to be enabled"
+            raise ValueError(msg)
+        if (
+            effective_auth_mode in {"api_key", "mixed"}
+            and self.app_env in {AppEnvironment.STAGING, AppEnvironment.PRODUCTION}
+            and secret_is_empty(self.admin_api_key)
+        ):
+            msg = (
+                "ADMIN_API_KEY or persisted API keys are required for API-key auth in staging "
+                "and production"
+            )
+            raise ValueError(msg)
+        if effective_auth_mode in {"jwt", "mixed"} and self.auth_jwt_enabled:
+            if secret_is_empty(self.jwt_public_key):
+                msg = "JWT_PUBLIC_KEY is required when JWT auth is enabled"
+                raise ValueError(msg)
+            if not self.jwt_issuer:
+                msg = "JWT_ISSUER is required when JWT auth is enabled"
+                raise ValueError(msg)
+            if not self.jwt_audience:
+                msg = "JWT_AUDIENCE is required when JWT auth is enabled"
+                raise ValueError(msg)
         if self.app_env == AppEnvironment.PRODUCTION and "*" in self.cors_allowed_origins:
             msg = "CORS_ALLOWED_ORIGINS must not include * in production"
             raise ValueError(msg)

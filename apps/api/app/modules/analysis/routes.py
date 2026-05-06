@@ -20,6 +20,8 @@ from app.modules.analysis.service import AnalysisService
 from app.modules.features.schemas import FeatureSnapshotRead
 from app.modules.indicators.schemas import IndicatorSnapshotRead
 from app.modules.patterns.schemas import PatternCandidateRead
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.signals.schemas import SignalClassificationRead
 from app.modules.signals.service import SignalClassificationService
 
@@ -38,7 +40,12 @@ def get_signal_classification_service(
     return SignalClassificationService(session)
 
 
-@router.post("", response_model=AnalysisRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=AnalysisRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_analysis_run(
     payload: AnalysisRunCreate,
     service: Annotated[AnalysisService, Depends(get_analysis_service)],
@@ -47,7 +54,12 @@ async def create_analysis_run(
     return AnalysisRunRead.model_validate(run)
 
 
-@router.post("/live-window", response_model=AnalysisRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/live-window",
+    response_model=AnalysisRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_live_window_analysis_run(
     payload: LiveWindowAnalysisRunCreate,
     service: Annotated[AnalysisService, Depends(get_analysis_service)],
@@ -96,7 +108,11 @@ async def list_analysis_audit_logs(
     return [AnalysisAuditLogRead.model_validate(audit_log) for audit_log in audit_logs]
 
 
-@router.post("/{analysis_run_id}/replay", response_model=AnalysisReplayRead)
+@router.post(
+    "/{analysis_run_id}/replay",
+    response_model=AnalysisReplayRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def replay_analysis_run(
     analysis_run_id: UUID,
     payload: AnalysisReplayRequest,
@@ -159,7 +175,11 @@ async def list_analysis_patterns(
     return [PatternCandidateRead.model_validate(candidate) for candidate in candidates]
 
 
-@router.post("/{analysis_run_id}/classify", response_model=SignalClassificationRead)
+@router.post(
+    "/{analysis_run_id}/classify",
+    response_model=SignalClassificationRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def classify_analysis_run(
     analysis_run_id: UUID,
     service: Annotated[
@@ -181,7 +201,11 @@ async def get_analysis_signal(
     return await service.get_by_analysis_run_id(analysis_run_id)
 
 
-@router.post("/{analysis_run_id}/retry", response_model=AnalysisRunRead)
+@router.post(
+    "/{analysis_run_id}/retry",
+    response_model=AnalysisRunRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def retry_analysis_run(
     analysis_run_id: UUID,
     service: Annotated[AnalysisService, Depends(get_analysis_service)],

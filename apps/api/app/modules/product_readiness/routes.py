@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.product_readiness.models import (
     ProductReadinessLabel,
     ProductReadinessRunStatus,
@@ -27,7 +29,11 @@ def get_product_readiness_service(
     return ProductReadinessService(ProductReadinessRepository(session))
 
 
-@router.post("/run", response_model=ProductReadinessRunRead)
+@router.post(
+    "/run",
+    response_model=ProductReadinessRunRead,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_ADMIN))],
+)
 async def run_product_readiness_check(
     service: Annotated[ProductReadinessService, Depends(get_product_readiness_service)],
     payload: ProductReadinessRunRequest | None = None,

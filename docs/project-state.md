@@ -6,7 +6,7 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 
 ## Current Architecture
 
-- Workspace RBAC route permissions exist under `apps/api/app/modules/permissions/` as a backend-only static registry and reusable FastAPI dependency layer. `AUTH_ENABLED=false` remains the local/test pass-through default; when auth is enabled, protected mutating routes continue to require the existing admin API key until a real identity provider supplies trusted user context.
+- Production auth and workspace RBAC exist under `apps/api/app/modules/auth/` and `apps/api/app/modules/permissions/`. `AUTH_MODE=dev` with `AUTH_ENABLED=false` remains the local/test pass-through default; production modes support legacy admin API-key compatibility, hashed persisted API keys, RS256 JWT identity lookup through `auth_identities`, workspace membership enforcement, permission dependencies, and `/auth/me` plus `/auth/context` without adding broker execution, auto-trading, copy trading, or financial-advice behavior.
 
 - Workspace intelligence catalog metadata indexing and search endpoints exist for cross-artifact discovery without external search infrastructure or raw payload storage.
 

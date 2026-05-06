@@ -47,15 +47,15 @@ Admin permissions:
 - `safety_policies.admin`
 - `runtime.admin`
 
-## AUTH_ENABLED Behavior
+## Auth Behavior
 
-When `AUTH_ENABLED=false`, permission dependencies allow requests through. This is
-the local and test default and preserves current development workflows.
+When `AUTH_MODE=dev` and `AUTH_ENABLED=false`, permission dependencies allow requests
+through. This is the local and test default and preserves current development workflows.
 
-When `AUTH_ENABLED=true`, mutating requests still use the existing API-key guard.
-The permission dependency also accepts that configured admin API key as an admin
-principal. Optional user context can be supplied with `x-user-id` for future
-integration, but this is not a standalone authentication provider.
+For production modes, permissions run after `app.modules.auth` resolves a dev,
+API-key, JWT, or mixed identity. The legacy configured admin API key remains accepted
+as an admin principal. Dev context can be supplied with `x-user-id` and
+`x-workspace-id`; JWT providers should link subjects in `auth_identities`.
 
 Permission failures return standard API errors:
 
@@ -109,13 +109,18 @@ This phase applies permissions to focused high-impact write routes:
 - notification preference, channel, event, message, and dispatch mutations
 - backend-safe action-plan creation/execution mutations
 - data retention policy and apply mutations
+- production auth API-key management
+- live subscription writes and provider event ingestion
+- data quality, candle gap recovery, daily workflow, daily brief, signal digest,
+  setup context, market memory, read model rebuild, runtime supervisor, product
+  readiness, and symbol administration writes
 
 Read endpoints mostly preserve existing behavior unless they are later migrated
 behind explicit read permissions.
 
 ## Future Auth Integration
 
-Future OAuth/JWT/session integration should replace `x-user-id` resolution with a
-validated identity principal, then reuse the same `Permission` registry and
-`user_has_permission` workspace checks. The current API-key path should remain a
-service/admin principal, not a user impersonation mechanism.
+Future OAuth/session integrations should map their provider subject to
+`auth_identities`, then reuse the same `Permission` registry and workspace checks.
+The API-key path should remain a service/admin principal, not a user impersonation
+mechanism.

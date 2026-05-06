@@ -8,6 +8,7 @@ type RequestOptions = {
   optional?: boolean;
 };
 type RequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
+type ApiHeaders = Record<string, string>;
 
 const defaultTimeoutMs = 7000;
 
@@ -50,6 +51,7 @@ async function apiRequest<T>(
       method,
       headers: {
         accept: "application/json",
+        ...authHeaders(env),
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(stripUndefined(body)),
@@ -90,6 +92,39 @@ async function apiRequest<T>(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+export function authHeaders(env = getPublicEnv()): ApiHeaders {
+  const headers: ApiHeaders = {};
+  if (env.authMode === "dev") {
+    if (env.authDevUserId) {
+      headers["x-user-id"] = env.authDevUserId;
+    }
+    if (env.authDevWorkspaceId) {
+      headers["x-workspace-id"] = env.authDevWorkspaceId;
+    }
+    return headers;
+  }
+  const bearerToken = browserBearerToken(env.authBearerTokenStorageKey);
+  if (bearerToken) {
+    headers.authorization = `Bearer ${bearerToken}`;
+  }
+  if (env.authMode === "mixed") {
+    if (env.authDevUserId) {
+      headers["x-user-id"] = env.authDevUserId;
+    }
+    if (env.authDevWorkspaceId) {
+      headers["x-workspace-id"] = env.authDevWorkspaceId;
+    }
+  }
+  return headers;
+}
+
+function browserBearerToken(storageKey: string | null): string | null {
+  if (!storageKey || typeof window === "undefined") {
+    return null;
+  }
+  return window.localStorage.getItem(storageKey) || window.sessionStorage.getItem(storageKey);
 }
 
 function buildUrl(baseUrl: string, path: string, query?: Record<string, QueryValue>): string {

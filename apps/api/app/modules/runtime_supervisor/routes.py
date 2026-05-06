@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.runtime_supervisor.models import (
     RuntimeWorkerDefinitionStatus,
     RuntimeWorkerInstanceStatus,
@@ -32,7 +34,11 @@ def get_runtime_supervisor_service(
     return RuntimeSupervisorService(session)
 
 
-@router.post("/seed-default-workers", response_model=RuntimeWorkerSeedResponse)
+@router.post(
+    "/seed-default-workers",
+    response_model=RuntimeWorkerSeedResponse,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def seed_default_workers(
     service: Annotated[RuntimeSupervisorService, Depends(get_runtime_supervisor_service)],
 ) -> RuntimeWorkerSeedResponse:
@@ -86,7 +92,11 @@ async def list_instances(
     return [RuntimeWorkerInstanceRead.model_validate(instance) for instance in instances]
 
 
-@router.post("/instances/heartbeat", response_model=RuntimeWorkerInstanceRead)
+@router.post(
+    "/instances/heartbeat",
+    response_model=RuntimeWorkerInstanceRead,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def heartbeat(
     payload: RuntimeWorkerInstanceHeartbeat,
     service: Annotated[RuntimeSupervisorService, Depends(get_runtime_supervisor_service)],
@@ -95,7 +105,11 @@ async def heartbeat(
     return RuntimeWorkerInstanceRead.model_validate(instance)
 
 
-@router.post("/mark-stale", response_model=RuntimeMarkStaleResponse)
+@router.post(
+    "/mark-stale",
+    response_model=RuntimeMarkStaleResponse,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def mark_stale(
     service: Annotated[RuntimeSupervisorService, Depends(get_runtime_supervisor_service)],
 ) -> RuntimeMarkStaleResponse:
@@ -119,6 +133,7 @@ async def runtime_health(
     "/run-requests",
     response_model=RuntimeRunRequestRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def create_run_request(
     payload: RuntimeRunRequestCreate,

@@ -87,7 +87,7 @@ class OperationsMiddleware(BaseHTTPMiddleware):
         return create_error_response(request, 413, code, message)
 
     def enforce_api_key(self, request: Request) -> Response | None:
-        if not self.settings.auth_enabled:
+        if not self.settings.auth_enabled or self.settings.auth_mode != "dev":
             return None
         if self.is_public_path(request.url.path) or request.method in {"GET", "HEAD", "OPTIONS"}:
             return None
@@ -100,7 +100,9 @@ class OperationsMiddleware(BaseHTTPMiddleware):
                 "api_key_not_configured",
                 "API key authentication is not configured",
             )
-        supplied_key = request.headers.get(self.settings.api_key_header_name, "")
+        supplied_key = request.headers.get(
+            self.settings.api_key_header_name
+        ) or request.headers.get("x-admin-api-key", "")
         valid_key = secrets.compare_digest(
             supplied_key,
             configured_key.get_secret_value(),

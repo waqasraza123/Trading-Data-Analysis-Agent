@@ -15,6 +15,8 @@ from app.modules.candle_gap_recovery.schemas import (
     PrepareProviderPollingResponse,
 )
 from app.modules.candle_gap_recovery.service import CandleGapRecoveryService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/candle-gap-recovery", tags=["candle-gap-recovery"])
 
@@ -29,6 +31,7 @@ def get_candle_gap_recovery_service(
     "/plans",
     response_model=CandleGapRecoveryPlanRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
 )
 async def create_candle_gap_recovery_plan(
     payload: CandleGapRecoveryPlanCreate,
@@ -78,6 +81,7 @@ async def list_candle_gap_recovery_items(
 @router.post(
     "/plans/{plan_id}/prepare-provider-polling",
     response_model=PrepareProviderPollingResponse,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
 )
 async def prepare_candle_gap_recovery_provider_polling(
     plan_id: UUID,
@@ -93,7 +97,11 @@ async def prepare_candle_gap_recovery_provider_polling(
     )
 
 
-@router.post("/plans/{plan_id}/cancel", response_model=CandleGapRecoveryPlanRead)
+@router.post(
+    "/plans/{plan_id}/cancel",
+    response_model=CandleGapRecoveryPlanRead,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
+)
 async def cancel_candle_gap_recovery_plan(
     plan_id: UUID,
     service: Annotated[
