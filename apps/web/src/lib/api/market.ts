@@ -7,12 +7,19 @@ import type {
   UUID,
   Workspace,
 } from "./types";
+import type { WorkspaceDefaultContext } from "@/lib/workspace/types";
 
 export function listWorkspaces(): Promise<ApiResult<Workspace[]>> {
   return apiGet<Workspace[]>("/workspaces", {
     query: {
       limit: 100,
     },
+    optional: true,
+  });
+}
+
+export function getWorkspaceDefaultContext(): Promise<ApiResult<WorkspaceDefaultContext>> {
+  return apiGet<WorkspaceDefaultContext>("/workspaces/default-context", {
     optional: true,
   });
 }

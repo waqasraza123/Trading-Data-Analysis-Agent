@@ -61,6 +61,7 @@ from app.modules.news.routes import news_events_router
 from app.modules.news.routes import router as news_router
 from app.modules.notifications.routes import router as notifications_router
 from app.modules.observability.routes import router as observability_router
+from app.modules.onboarding.routes import router as onboarding_router
 from app.modules.operator_playbooks.routes import router as operator_playbooks_router
 from app.modules.operator_reviews.routes import router as operator_reviews_router
 from app.modules.outcomes.routes import router as outcomes_router
@@ -149,6 +150,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         workspaces_router,
         workspace_overview_router,
         workspace_actions_router,
+        onboarding_router,
         workspace_setup_router,
         users_router,
         symbols_router,

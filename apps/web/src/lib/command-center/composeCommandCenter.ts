@@ -59,6 +59,8 @@ type ComposeCommandCenterInput = {
   runtimeSupervisorFailures: CommandCenterFailure[];
   workspaceOverview: CommandCenterData["workspaceOverview"];
   workspaceOverviewFailure: CommandCenterData["workspaceOverviewFailure"];
+  onboardingStatus: CommandCenterData["onboardingStatus"];
+  onboardingFailure: CommandCenterData["onboardingFailure"];
   dailyRoutineTemplates: CommandCenterData["dailyRoutineTemplates"];
   dailyRoutineRuns: CommandCenterData["dailyRoutineRuns"];
   selectedDailyRoutineRun: CommandCenterData["selectedDailyRoutineRun"];
@@ -83,6 +85,7 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     input.qualityFailures,
     input.runtimeSupervisorFailures,
     input.workspaceOverviewFailure ? [input.workspaceOverviewFailure] : [],
+    input.onboardingFailure ? [input.onboardingFailure] : [],
     input.dailyRoutineFailures,
   );
   const dailyWorkflowFailures = input.scanner.dailyWorkflowFailures;
@@ -135,6 +138,8 @@ export function composeCommandCenter(input: ComposeCommandCenterInput): CommandC
     runtimeSupervisorHealth: input.runtimeSupervisorHealth,
     workspaceOverview: input.workspaceOverview,
     workspaceOverviewFailure: input.workspaceOverviewFailure,
+    onboardingStatus: input.onboardingStatus,
+    onboardingFailure: input.onboardingFailure,
     summary: {
       changedItemCount: whatChanged.length,
       freshSymbolCount: input.providerHealthSummary?.fresh_count ?? input.brief.summary.freshSymbols,

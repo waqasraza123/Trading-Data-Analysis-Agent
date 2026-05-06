@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { CredentialStep } from "./CredentialStep";
 import { DataSourceStep } from "./DataSourceStep";
 import { DemoDataStep } from "./DemoDataStep";
@@ -51,23 +52,20 @@ export function SetupWizardLayout({ initialData }: SetupWizardLayoutProps) {
   });
 
   const currentStep = run?.current_step || activeStep;
-  const sharedProps = useMemo(
-    () => ({
-      run,
-      initialData,
-      selectedWorkspaceId: selection.workspaceId,
-      selectedSymbolIds: selection.symbolIds,
-      selectedTimeframes: selection.timeframes,
-      selectedSourceId: selection.sourceId,
-      selectedWatchlistId: selection.watchlistId,
-      selectedScanConfigId: selection.scanConfigId,
-      mutation,
-      onComplete: completeStep,
-      onSkip: skipStep,
-      onLocalSelectionChange: updateSelection,
-    }),
-    [run, initialData, selection, mutation],
-  );
+  const sharedProps = {
+    run,
+    initialData,
+    selectedWorkspaceId: selection.workspaceId,
+    selectedSymbolIds: selection.symbolIds,
+    selectedTimeframes: selection.timeframes,
+    selectedSourceId: selection.sourceId,
+    selectedWatchlistId: selection.watchlistId,
+    selectedScanConfigId: selection.scanConfigId,
+    mutation,
+    onComplete: completeStep,
+    onSkip: skipStep,
+    onLocalSelectionChange: updateSelection,
+  };
 
   async function startWizard() {
     setMutation({ status: "pending", message: null });
@@ -182,6 +180,9 @@ export function SetupWizardLayout({ initialData }: SetupWizardLayoutProps) {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Link className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" href={selection.workspaceId ? `/onboarding?workspaceId=${selection.workspaceId}` : "/onboarding"}>
+            Onboarding status
+          </Link>
           <button className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" disabled={mutation.status === "pending"} type="button" onClick={startWizard}>
             {run ? "Start new run" : "Start setup"}
           </button>

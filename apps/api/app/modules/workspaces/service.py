@@ -1,12 +1,21 @@
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.modules.auth.identity import IdentityContext
+from app.modules.users.models import User
 from app.modules.workspaces.models import Workspace
 from app.modules.workspaces.repository import WorkspaceRepository
-from app.modules.workspaces.schemas import WorkspaceCreate, WorkspaceUpdate
+from app.modules.workspaces.schemas import (
+    WorkspaceCreate,
+    WorkspaceDefaultContextRead,
+    WorkspaceDefaultUserRead,
+    WorkspaceRead,
+    WorkspaceUpdate,
+)
 
 
 class WorkspaceService:
@@ -30,6 +39,39 @@ class WorkspaceService:
 
     async def list_workspaces(self, limit: int, offset: int) -> list[Workspace]:
         return await self.repository.list(limit=limit, offset=offset)
+
+    async def get_default_context(
+        self,
+        identity: IdentityContext | None,
+    ) -> WorkspaceDefaultContextRead:
+        workspaces = await self.repository.list(limit=100, offset=0)
+        workspace = identity.workspace if identity is not None and identity.workspace else None
+        if workspace is None:
+            workspace = workspaces[0] if workspaces else None
+        if workspace is None:
+            return WorkspaceDefaultContextRead(
+                status="missing_workspace",
+                workspace=None,
+                user=None,
+                available_workspaces=[],
+            )
+        user = identity.user if identity is not None and identity.user else None
+        if user is None:
+            result = await self.session.execute(
+                select(User)
+                .where(User.workspace_id == workspace.id)
+                .order_by(User.created_at.asc())
+                .limit(1)
+            )
+            user = result.scalar_one_or_none()
+        return WorkspaceDefaultContextRead(
+            status="ready",
+            workspace=WorkspaceRead.model_validate(workspace),
+            user=WorkspaceDefaultUserRead(id=user.id, role=user.role, name=user.name)
+            if user is not None
+            else None,
+            available_workspaces=[WorkspaceRead.model_validate(item) for item in workspaces],
+        )
 
     async def get_workspace(self, workspace_id: UUID) -> Workspace:
         workspace = await self.repository.get_by_id(workspace_id)

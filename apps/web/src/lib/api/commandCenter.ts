@@ -5,6 +5,7 @@ import { getProviderHealthSummary, listProviderHealthSnapshots } from "./provide
 import { listProviderPollingRequests } from "./providerPolling";
 import { getQualityScoreboardData } from "./quality";
 import { getCommandCenterReadModel } from "./readModels";
+import { getOnboardingStatus } from "./onboarding";
 import { getRuntimeSupervisorHealth } from "./runtimeSupervisor";
 import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
@@ -30,12 +31,21 @@ export async function getCommandCenterData(params: {
   routineRunId?: string;
 }): Promise<CommandCenterData> {
   const env = getPublicEnv();
-  const [brief, triage, scanner] = await Promise.all([
+  const [brief, triage, scanner, onboardingStatusResult] = await Promise.all([
     getWorkspaceBrief(params),
     getSignalTriageBoard(params),
     getScannerData(params),
+    getOnboardingStatus({ workspaceId: params.workspaceId || null }),
   ]);
-  const workspace = triage.workspace || scanner.workspace || null;
+  const onboardingWorkspace = onboardingStatusResult.ok && onboardingStatusResult.data.workspace.exists
+    ? {
+        id: onboardingStatusResult.data.workspace.workspace_id || "",
+        name: onboardingStatusResult.data.workspace.name || "Workspace",
+        created_at: "",
+        updated_at: "",
+      }
+    : null;
+  const workspace = triage.workspace || scanner.workspace || onboardingWorkspace;
   const workspaceOverviewResult = workspace
     ? await getWorkspaceOverview(workspace.id, {
         preferenceProfileId: params.preferenceProfileId || null,
@@ -103,6 +113,8 @@ export async function getCommandCenterData(params: {
     workspaceOverviewFailure: workspaceOverviewResult && !workspaceOverviewResult.ok
       ? toFailure("Workspace overview", workspaceOverviewResult)
       : null,
+    onboardingStatus: onboardingStatusResult.ok ? onboardingStatusResult.data : null,
+    onboardingFailure: onboardingStatusResult.ok ? null : toFailure("Onboarding status", onboardingStatusResult),
     dailyRoutineTemplates,
     dailyRoutineRuns,
     selectedDailyRoutineRun,

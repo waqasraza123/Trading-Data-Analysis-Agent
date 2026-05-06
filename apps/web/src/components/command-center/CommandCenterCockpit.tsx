@@ -4,6 +4,7 @@ import { formatInteger } from "@/lib/formatting/numbers";
 import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { commandCenterHref, commandCenterLabel, commandCenterText, toneForState } from "@/lib/command-center/labels";
 import type { CommandCenterData, CommandCenterTone } from "@/lib/command-center/types";
+import { CommandCenterReadinessGate } from "./CommandCenterReadinessGate";
 import { CommandCenterOverview } from "./CommandCenterOverview";
 import { CommandCenterDailyScanButton } from "./CommandCenterDailyScanButton";
 import {
@@ -19,6 +20,7 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
   return (
     <div className="space-y-6">
       <CommandCenterHero data={data} />
+      <CommandCenterReadinessGate data={data} />
       {!data.workspace && (
         <CockpitEmptyState
           title="No workspace available"

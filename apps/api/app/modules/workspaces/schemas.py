@@ -39,3 +39,16 @@ class WorkspaceRead(ApiReadSchema):
     name: str
     created_at: datetime
     updated_at: datetime
+
+
+class WorkspaceDefaultUserRead(ApiSchema):
+    id: UUID
+    role: str
+    name: str | None = None
+
+
+class WorkspaceDefaultContextRead(ApiSchema):
+    status: str
+    workspace: WorkspaceRead | None = None
+    user: WorkspaceDefaultUserRead | None = None
+    available_workspaces: list[WorkspaceRead] = Field(default_factory=list)

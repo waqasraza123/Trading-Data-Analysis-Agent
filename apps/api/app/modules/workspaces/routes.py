@@ -6,9 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.auth.dependencies import optional_identity
+from app.modules.auth.identity import IdentityContext
 from app.modules.permissions.dependencies import require_permission
 from app.modules.permissions.registry import Permission
-from app.modules.workspaces.schemas import WorkspaceCreate, WorkspaceRead, WorkspaceUpdate
+from app.modules.workspaces.schemas import (
+    WorkspaceCreate,
+    WorkspaceDefaultContextRead,
+    WorkspaceRead,
+    WorkspaceUpdate,
+)
 from app.modules.workspaces.service import WorkspaceService
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -46,6 +53,14 @@ async def list_workspaces(
         offset=pagination.offset,
     )
     return [WorkspaceRead.model_validate(workspace) for workspace in workspaces]
+
+
+@router.get("/default-context", response_model=WorkspaceDefaultContextRead)
+async def get_default_workspace_context(
+    service: Annotated[WorkspaceService, Depends(get_workspace_service)],
+    identity: Annotated[IdentityContext | None, Depends(optional_identity)] = None,
+) -> WorkspaceDefaultContextRead:
+    return await service.get_default_context(identity)
 
 
 @router.get("/{workspace_id}", response_model=WorkspaceRead)

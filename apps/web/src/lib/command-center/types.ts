@@ -7,6 +7,7 @@ import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provid
 import type { RuntimeSupervisorHealth } from "@/lib/api/runtimeSupervisor";
 import type { ProviderPollingRequest } from "@/lib/data-onboarding/types";
 import type { WorkspaceOverview } from "./overviewTypes";
+import type { OnboardingStatusResponse } from "@/lib/onboarding/types";
 
 export type CommandCenterTone = "neutral" | "good" | "warning" | "danger" | "info";
 
@@ -175,6 +176,8 @@ export type CommandCenterData = {
   runtimeSupervisorHealth: RuntimeSupervisorHealth | null;
   workspaceOverview: WorkspaceOverview | null;
   workspaceOverviewFailure: CommandCenterFailure | null;
+  onboardingStatus: OnboardingStatusResponse | null;
+  onboardingFailure: CommandCenterFailure | null;
   summary: CommandCenterSummary;
   whatChanged: CommandCenterChangedItem[];
   dataReadiness: CommandCenterDataReadinessItem[];

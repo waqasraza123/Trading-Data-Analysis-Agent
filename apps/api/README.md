@@ -24,6 +24,13 @@ run explicit backend-safe daily tasks only and do not perform broker execution,
 auto-trading, copy trading, external notification delivery, or financial-advice behavior.
 See `docs/workspace-overview.md` and `docs/workspace-quick-actions.md`.
 
+First-run onboarding is implemented under `/onboarding`. It composes workspace, operator, symbols,
+data sources, provider/data freshness, watchlist, scan config, daily workflow, product readiness,
+and demo-mode state into one setup status response. Explicit onboarding actions can create safe
+setup records or run a readiness/demo flow without hidden provider polling, broker execution,
+auto-trading, external notifications, or financial advice. `/workspaces/default-context` returns a
+read-only default workspace/user context without creating records. See `docs/onboarding.md`.
+
 Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
 London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
 review workflows. Applying a preset creates watchlists and scheduled scan configs only; it does not
@@ -42,7 +49,7 @@ Guided workspace setup is implemented under `/workspace-setup`. It persists audi
 and step results for workspace, operator, symbols, source, credential reference, watchlist, scanner
 preset, preference profile, optional synthetic demo candles, readiness validation, and an optional
 explicit first deterministic scan. It does not store raw secrets, connect to brokers for orders,
-place trades, auto-trade, send trading alerts, run hidden scans, or provide financial advice. See
+execute broker actions, auto-trade, send external signal delivery, run hidden scans, or provide financial advice. See
 `docs/workspace-setup.md`.
 
 Runtime supervisor APIs are implemented under `/runtime-supervisor`. They seed worker definitions,
@@ -1527,7 +1534,7 @@ web app without invoking external delivery. Supported inbox event types are sign
 review recommendation, outcome evaluation, digest creation, data-quality degradation, stale market
 memory, due reasoning action, blocked readiness, opened operator review, completed scan, degraded
 provider health, and needed gap recovery. Inbox copy must stay non-advisory and must not become
-trading alerts or broker workflow language.
+external signal delivery or broker workflow language.
 
 Multi-timeframe aggregation APIs derive complete higher-timeframe candles from final lower-timeframe
 candles, store lineage, and build context without changing existing signal classifications:

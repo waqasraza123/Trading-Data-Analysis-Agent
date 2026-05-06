@@ -34,6 +34,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Demo mode page at `/demo` for running the backend synthetic product smoke flow and opening the generated command center, brief, triage, scanner, signal detail, and journal artifacts.
 - Visual setup chart panels for compact final-candle, zone, signal-window, and observed-outcome context on signal detail pages.
 - Command center overview integration for one daily workspace payload, explicit backend-safe quick actions, missing-section fallback, and safe-copy labels.
+- First-run onboarding at `/onboarding` with product readiness gate, exact next step guidance, safe setup actions, demo workspace option, command center readiness banner, and workspace selector support.
 
 ## Backend Endpoints Used
 
@@ -50,6 +51,9 @@ The client composes data from optional backend APIs:
 - `GET /product-readiness/runs/{run_id}`
 - `GET /workspaces/{workspace_id}/overview`
 - `POST /workspaces/{workspace_id}/quick-actions`
+- `GET /onboarding/status`
+- `POST /onboarding/actions`
+- `GET /workspaces/default-context`
 - `GET /workspaces`
 - `GET /symbols`
 - `GET /symbols/{symbol_id}`
@@ -218,6 +222,7 @@ Open:
 
 ```txt
 http://127.0.0.1:3000/command-center
+http://127.0.0.1:3000/onboarding
 http://127.0.0.1:3000/setup
 http://127.0.0.1:3000/readiness
 http://127.0.0.1:3000/dashboard
@@ -234,6 +239,8 @@ http://127.0.0.1:3000/data/onboarding
 
 Use `?workspaceId=<workspace-id>` to pin a workspace and `?signalId=<signal-id>` to focus a dashboard signal.
 Use `/command-center?workspaceId=<workspace-id>` as the default start page for the daily workflow.
+Use `/onboarding` to review first-run readiness, complete safe setup actions, create a demo
+workspace when demo mode is available, and open the command center when setup is ready.
 Use `/setup` to create or select a workspace, configure the first review workflow, optionally seed synthetic demo candles, and then open the command center.
 Use `/readiness?workspaceId=<workspace-id>` to run and review the product readiness checklist. The run button is an explicit validation action only; it does not run scans, send alerts, call providers, or execute setup mutations.
 Use `/brief?workspaceId=<workspace-id>` to review the current workspace brief.

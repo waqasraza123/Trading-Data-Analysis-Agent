@@ -1,5 +1,6 @@
 export type NavigationTarget =
   | "commandCenter"
+  | "onboarding"
   | "dashboard"
   | "setup"
   | "readiness"
@@ -24,6 +25,7 @@ export type NavigationItem = {
 
 export const navigationItems: NavigationItem[] = [
   { key: "commandCenter", href: "/command-center", label: "Command Center", shortLabel: "Command", section: "Command Center", description: "Daily cockpit and workflow overview" },
+  { key: "onboarding", href: "/onboarding", label: "Onboarding", section: "Command Center", description: "First-run setup and readiness gate" },
   { key: "dashboard", href: "/dashboard", label: "Dashboard", section: "Command Center", description: "Read-only market intelligence summary" },
   { key: "brief", href: "/brief", label: "Brief", section: "Brief", description: "Workspace daily brief and review focus" },
   { key: "dataOnboarding", href: "/data/onboarding", label: "Data", section: "Data", description: "Freshness, source, and gap readiness" },
@@ -40,6 +42,7 @@ export const navigationItems: NavigationItem[] = [
 
 export const primaryNavigationTargets: NavigationTarget[] = [
   "commandCenter",
+  "onboarding",
   "dashboard",
   "brief",
   "dataOnboarding",
