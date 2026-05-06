@@ -175,15 +175,34 @@ NEXT_PUBLIC_APP_NAME=Daily Trading Dashboard
 ```
 
 Only public frontend configuration belongs in this file. Backend secrets, API keys, database URLs, and worker credentials must stay in backend environment files.
+When building the Docker production image, pass `NEXT_PUBLIC_API_BASE_URL` as a build argument so
+browser code points at the public API origin.
 
 ## Run
 
 From `apps/web`:
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
+
+From the repository root:
+
+```sh
+./scripts/dev-web.sh
+make web-check
+```
+
+Run with Docker:
+
+```sh
+docker build -f apps/web/Dockerfile -t trading-intelligence-web:latest .
+docker compose up --build web
+```
+
+The web app uses npm with the committed `package-lock.json`. The production image builds Next.js
+standalone output and runs as the non-root `node` user.
 
 Open:
 

@@ -1,5 +1,8 @@
 docs/_local/
 apps/api/.venv/
+apps/web/.next/
+apps/web/node_modules/
+apps/web/tsconfig.tsbuildinfo
 __pycache__/
 *.pyc
 .pytest_cache/

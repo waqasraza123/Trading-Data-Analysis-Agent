@@ -67,8 +67,8 @@ export function signalWindow(analysisRun: AnalysisRun | null): ChartSignalWindow
     return null;
   }
   return {
-    start: analysisRun.start_time,
-    end: analysisRun.end_time,
+    start: analysisRun.start_time ?? null,
+    end: analysisRun.end_time ?? null,
     label: "Signal window",
   };
 }

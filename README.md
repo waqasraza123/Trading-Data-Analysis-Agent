@@ -125,68 +125,49 @@ Current backend capabilities include:
 
 ## Run Locally
 
-Start the API:
+Start the full Docker dev stack:
 
 ```sh
-cd apps/api
-python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e ".[dev]"
-cp .env.example .env
+make dev
 ```
 
-Set a local or managed PostgreSQL connection in `apps/api/.env`, then apply the schema and run the
-server:
+Then apply migrations and seed deterministic defaults when needed:
 
 ```sh
-.venv/bin/alembic upgrade head
-.venv/bin/uvicorn app.main:app --reload
+make migrate
+make seed
 ```
 
-The API runs at:
+Open:
 
 ```txt
-http://127.0.0.1:8000
-```
-
-Start the web app:
-
-```sh
-cd apps/web
-npm install
-npm run dev
-```
-
-The default product entry point is:
-
-```txt
+http://127.0.0.1:8000/health
 http://127.0.0.1:3000/command-center
 ```
 
-Use `apps/web/.env.local` when the API is not running on the default local URL:
+Run API or web directly without Docker:
 
 ```sh
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
-NEXT_PUBLIC_APP_NAME=Daily Trading Dashboard
+./scripts/dev-api.sh
+./scripts/dev-web.sh
 ```
+
+The API uses Python packaging from `apps/api/pyproject.toml`. The web app uses npm with the
+committed `apps/web/package-lock.json`; use `npm ci` for clean installs. Only public frontend
+configuration belongs in `NEXT_PUBLIC_*` variables.
 
 ## Quality Checks
 
 API checks:
 
 ```sh
-cd apps/api
-.venv/bin/ruff check .
-.venv/bin/mypy app
-.venv/bin/pytest
+make api-check
 ```
 
 Web checks:
 
 ```sh
-cd apps/web
-npm run typecheck
-npm run build
+make web-check
 ```
 
 Repository whitespace check:
@@ -199,6 +180,8 @@ git diff --check
 
 - [Web app README](apps/web/README.md)
 - [API README](apps/api/README.md)
+- [Development setup](docs/development.md)
+- [Deployment](docs/deployment.md)
 - [Daily briefs](apps/api/docs/daily-briefs.md)
 - [Daily workflows](apps/api/docs/daily-workflows.md)
 - [Scanner presets](apps/api/docs/scanner-presets.md)

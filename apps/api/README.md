@@ -319,6 +319,34 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]"
 ```
 
+From the repository root, the same setup is wrapped by:
+
+```sh
+./scripts/dev-api.sh
+make api-check
+make migrate
+make seed
+```
+
+The API uses `pyproject.toml` as the dependency source of truth. No Python lockfile is currently
+committed.
+
+Run with Docker:
+
+```sh
+docker build -f apps/api/Dockerfile -t trading-intelligence-api:latest .
+docker compose up --build api postgres redis
+```
+
+Run the development Docker image with reload:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build api
+```
+
+The production image installs runtime dependencies only, runs as a non-root user, exposes `8000`,
+and uses `/health/live` as a liveness healthcheck. Secrets must be injected at runtime.
+
 Run the development server:
 
 ```sh

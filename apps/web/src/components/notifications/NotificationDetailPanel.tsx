@@ -44,16 +44,17 @@ export function NotificationDetailPanel({ data }: NotificationDetailPanelProps) 
   const payloadSummary = summarizeNotificationPayload(event);
   const warnings = notificationSafetyWarnings(event);
   const sourceHref = notificationSourceHref(event, data.workspace?.id);
+  const eventId = event.id;
 
   async function runAction(action: "read" | "acknowledge" | "archive") {
     setPendingAction(action);
     setError(null);
     const result =
       action === "read"
-        ? await markNotificationEventRead(event.id)
+        ? await markNotificationEventRead(eventId)
         : action === "acknowledge"
-          ? await acknowledgeNotificationEvent(event.id)
-          : await archiveNotificationEvent(event.id);
+          ? await acknowledgeNotificationEvent(eventId)
+          : await archiveNotificationEvent(eventId);
     setPendingAction(null);
     if (!result.ok) {
       setError(result.error);

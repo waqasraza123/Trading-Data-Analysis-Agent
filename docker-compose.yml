@@ -1,0 +1,142 @@
+name: trading-intelligence
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: trading_intelligence
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading -d trading_intelligence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - apps/api/.env.example
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql://trading:trading@postgres:5432/trading_intelligence
+      REDIS_URL: redis://redis:6379/0
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      RATE_LIMIT_ENABLED: "false"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3).read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+        NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+    env_file:
+      - apps/web/.env.example
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+      NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_started
+
+  live-worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - workers
+    env_file:
+      - apps/api/.env.example
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql://trading:trading@postgres:5432/trading_intelligence
+      REDIS_URL: redis://redis:6379/0
+    command: ["python", "-m", "app.workers.live_feed_worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  market-scan-worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - workers
+    env_file:
+      - apps/api/.env.example
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql://trading:trading@postgres:5432/trading_intelligence
+      REDIS_URL: redis://redis:6379/0
+      MARKET_SCAN_WORKER_ENABLED: "true"
+    command: ["python", "-m", "app.workers.market_scan_worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  job-queue-worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - workers
+    env_file:
+      - apps/api/.env.example
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql://trading:trading@postgres:5432/trading_intelligence
+      REDIS_URL: redis://redis:6379/0
+      REASONING_ACTION_WORKER_ENABLED: "true"
+      NOTIFICATION_WORKER_ENABLED: "true"
+      MARKET_SCAN_WORKER_ENABLED: "true"
+      WORKER_SUPERVISOR_COMPONENTS: reasoning_actions,notifications,market_scans
+    command: ["python", "-m", "app.workers.supervisor"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

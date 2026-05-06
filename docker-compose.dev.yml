@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql://trading:trading@postgres:5432/trading_intelligence
+      REDIS_URL: redis://redis:6379/0
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      RATE_LIMIT_ENABLED: "false"
+    volumes:
+      - ./apps/api:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+      NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+    volumes:
+      - ./apps/web:/app
+      - web-node-modules:/app/node_modules
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+
+volumes:
+  web-node-modules:

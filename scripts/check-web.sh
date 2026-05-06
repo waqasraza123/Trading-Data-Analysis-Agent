@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib.sh"
+
+ensure_web_deps
+
+cd "${WEB_DIR}"
+npm run lint
+npm run typecheck
+npm run build

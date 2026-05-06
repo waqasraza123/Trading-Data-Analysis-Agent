@@ -420,12 +420,10 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 
 ## Deferred / Not Yet Implemented
 
-- Lockfile.
 - Full external live provider websocket integrations beyond the current runtime/provider foundation.
 - Automatic data retention cleanup worker.
 - Historical engine code execution beyond registered current-v1 replay, news, and scanner modules.
 - External API integrations beyond current live provider adapters.
-- Deployment configuration beyond the API Dockerfile, CI workflow, and operational docs/env examples.
 - Chart screenshot support is hardened for candlestick/OHLC bar images; broader non-OHLC chart families remain unsupported for analysis by design.
 
 ## Risks / Watchouts
@@ -511,3 +509,10 @@ Durable decisions:
 - Daily cockpit navigation is centralized in `apps/web/src/lib/ui/navigation.ts` and rendered through the app shell with active route highlighting.
 - The command center, brief, dashboard, data onboarding, scanner, triage, signal detail, symbol detail, quality, notifications, journal, outcome review, and strategy preferences now share page/header/state/badge conventions without adding backend execution logic.
 - The frontend remains a read-only market-intelligence cockpit: no broker execution, auto-trading, external trading alerts, account-result language, or financial-advice output.
+
+## Production Docker CI Dev Setup
+
+- Production API Docker image is multi-stage, installs runtime dependencies only, runs as a non-root user, exposes `8000`, includes Alembic migrations, and uses `/health/live` for liveness.
+- Production web Docker image uses npm with `apps/web/package-lock.json`, builds Next.js standalone output, runs as the non-root `node` user, and treats `NEXT_PUBLIC_*` values as public configuration only.
+- Local reproducible setup is rooted in `docker-compose.yml`, `docker-compose.dev.yml`, `Makefile`, and `scripts/` wrappers for API/web dev, checks, migrations, seed, and workers.
+- CI is centralized in `.github/workflows/ci.yml` with backend lint/type/test/Alembic checks, frontend lint/type/build, and Docker image builds. Integration tests remain gated by explicit `TEST_DATABASE_URL`.
