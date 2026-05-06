@@ -199,6 +199,7 @@ From `apps/web`:
 ```sh
 npm ci
 npm run dev
+npm run test:e2e
 ```
 
 From the repository root:
@@ -217,6 +218,25 @@ docker compose up --build web
 
 The web app uses npm with the committed `package-lock.json`. The production image builds Next.js
 standalone output and runs as the non-root `node` user.
+
+## E2E Smoke
+
+Playwright smoke tests live under `tests/e2e` and are configured by `playwright.config.ts`.
+The harness starts a deterministic local mock API server and points `NEXT_PUBLIC_API_BASE_URL` at
+that server, so the smoke suite does not require a running FastAPI process, `DATABASE_URL`,
+external providers, LLM credentials, or notification delivery setup.
+
+Run from `apps/web`:
+
+```sh
+npm run test:e2e
+npm run test:e2e:headed
+npm run test:e2e:ui
+```
+
+The suite covers first-run onboarding, command-center readiness and overview payloads, safe
+quick-action states, core route navigation, optional endpoint fallbacks, and visible safe-copy
+checks. Fixture guidance is documented in `docs/e2e-smoke.md`.
 
 Open:
 

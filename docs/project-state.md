@@ -519,3 +519,9 @@ Durable decisions:
 - Production web Docker image uses npm with `apps/web/package-lock.json`, builds Next.js standalone output, runs as the non-root `node` user, and treats `NEXT_PUBLIC_*` values as public configuration only.
 - Local reproducible setup is rooted in `docker-compose.yml`, `docker-compose.dev.yml`, `Makefile`, and `scripts/` wrappers for API/web dev, checks, migrations, seed, and workers.
 - CI is centralized in `.github/workflows/ci.yml` with backend lint/type/test/Alembic checks, frontend lint/type/build, and Docker image builds. Integration tests remain gated by explicit `TEST_DATABASE_URL`.
+
+## Daily Workflow E2E Smoke Harness
+
+- The web app now has a Playwright E2E smoke foundation under `apps/web/tests/e2e` with a local deterministic mock API server.
+- The harness covers first-run onboarding, workspace/default context, command-center readiness, overview sections, backend-safe quick actions, core daily navigation, optional endpoint fallbacks, and visible safe-copy checks.
+- The smoke suite does not require `DATABASE_URL`, a running API process, external providers, LLM credentials, notification delivery, broker execution, hidden scans, or financial-advice behavior.

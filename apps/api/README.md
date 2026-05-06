@@ -31,6 +31,11 @@ setup records or run a readiness/demo flow without hidden provider polling, brok
 auto-trading, external notifications, or financial advice. `/workspaces/default-context` returns a
 read-only default workspace/user context without creating records. See `docs/onboarding.md`.
 
+The web app has a Playwright daily workflow smoke harness that uses mocked API responses for
+onboarding, workspace context, command-center overview, and backend-safe quick actions. It
+complements the backend smoke and unit tests without requiring `DATABASE_URL`, a running API
+process, external providers, LLM credentials, or notification delivery.
+
 Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
 London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
 review workflows. Applying a preset creates watchlists and scheduled scan configs only; it does not
