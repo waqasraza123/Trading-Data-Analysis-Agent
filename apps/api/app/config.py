@@ -359,6 +359,14 @@ class Settings(BaseSettings):
     runtime_worker_stale_seconds: int = Field(default=120, ge=1)
     runtime_worker_heartbeat_enabled: bool = True
     runtime_supervisor_run_requests_enabled: bool = True
+    observability_enabled: bool = True
+    metrics_endpoint_enabled: bool = True
+    tracing_enabled: bool = False
+    slo_version: str = "v1"
+    request_latency_warning_ms: int = Field(default=1000, ge=1)
+    worker_stale_warning_seconds: int = Field(default=300, ge=1)
+    provider_failure_warning_count: int = Field(default=3, ge=1)
+    stale_data_warning_count: int = Field(default=5, ge=1)
     market_scan_default_lookback_minutes: int = Field(default=60, ge=1, le=43200)
     market_scan_default_interval_seconds: int = Field(default=60, ge=1)
     scanner_preset_version: str = "v1"
@@ -562,6 +570,7 @@ class Settings(BaseSettings):
         "daily_workflow_version",
         "daily_routine_version",
         "runtime_supervisor_version",
+        "slo_version",
         "journal_review_version",
         "provider_health_version",
         "provider_credentials_version",

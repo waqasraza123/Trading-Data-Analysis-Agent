@@ -26,6 +26,11 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 - A backend-only intelligence state machine registry exists under `apps/api/app/modules/state_machines/` for versioned lifecycle definitions, valid transition inspection, terminal states, optional transition validation, and validation audit records.
 
 - Internal intelligence metrics endpoints and optional database snapshots exist for backend operational/product counters.
+- Production observability exists under `apps/api/app/modules/observability/` and `/observability`
+  for dependency-free service metrics, request latency/error counters, database-backed operational
+  metrics, SLO status, persisted SLO snapshots, and optional tracing status. It is internal
+  operational monitoring only and does not require external observability providers at startup,
+  send user alerts, run workers, execute brokers, auto-trade, or provide financial advice.
 
 - Operator review queue backend exists under `apps/api/app/modules/operator_reviews/` as a backend-only human workflow state layer for intelligence artifacts. It records review items and events only; it does not execute trades, send alerts, call LLMs, mutate signals, accept chart screenshot analysis, or change strategy profiles.
 - Trading journal feedback exists under `apps/api/app/modules/trading_journal/` as a backend-only user/operator decision-note layer around deterministic setup artifacts. It records journal entries, attachments, and deterministic outcome comparisons without broker execution, broker imports, account-return calculations, financial advice, signal mutation, or outcome mutation.
@@ -240,6 +245,10 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 - Implemented production runtime supervisor control plane with worker definition/instance/run-request
   tables, default worker seeding, heartbeat hooks for existing workers, stale marking, health API,
   safe unsupported/run-request handling, command-center worker health panel, docs, and focused tests.
+- Implemented production observability primitives with `/observability/metrics`,
+  `/observability/metrics.json`, `/observability/slo`, `/observability/slo/snapshot`, and
+  `/observability/tracing/status`, request duration/error recording, database-backed operational
+  counters, SLO snapshot persistence, docs, settings, and focused SLO tests.
 - Implemented data contract schema registry and validation tracking for important backend JSONB artifacts with default v1 contracts, strict/loose validation, source-payload validation support, API routes, migration, docs, and focused validator tests.
 - Implemented intelligence backfill plan and item persistence, bounded dry-run planner contracts, missing outcome/context/stale/module plan APIs, safety metadata, docs, and migration.
 - Implemented product readiness checklist persistence, read-only readiness checks, guided setup API contracts, `/readiness` web page, remediation links, docs, and migration.

@@ -419,6 +419,10 @@ GET /health/db
 GET /health/ready
 GET /health/workers
 GET /runtime-supervisor/health
+GET /observability/slo
+GET /observability/metrics
+GET /observability/metrics.json
+GET /observability/tracing/status
 ```
 
 `/health` and `/health/live` only prove the API process is alive. `/health/db` checks
@@ -427,6 +431,8 @@ configuration. `/health/workers` reports live worker and stale monitor state whe
 configured, and returns a safe degraded status otherwise.
 `/runtime-supervisor/health` reports seeded runtime worker definitions, worker heartbeats, stale
 instances, and runtime run request counters after migrations are applied.
+`/observability/*` exposes internal production observability metrics, SLO status, and tracing
+status. It requires no external observability provider at startup.
 
 Run the live feed worker:
 
@@ -663,6 +669,16 @@ default, uses an in-memory fallback for local/test when Redis is not configured,
 Logs are JSON records with request id, method, path, status code, duration, safe client host, and
 error code when applicable. Request bodies, uploaded files, tokens, API keys, database URLs, and
 live feed keys are not logged.
+
+Production observability is documented in:
+
+```txt
+docs/observability.md
+```
+
+Observability endpoints are internal operational monitoring only. They do not send user alerts,
+call external monitoring providers by default, execute workers, run analysis, call brokers,
+auto-trade, or provide financial advice.
 
 ## Schema Docs
 
@@ -997,6 +1013,12 @@ POST /intelligence-metrics/snapshots/workspace/{workspace_id}
 POST /intelligence-metrics/snapshots/global
 GET /intelligence-metrics/snapshots/latest
 GET /intelligence-metrics/snapshots
+```
+
+Production service metrics and SLO endpoints are documented in:
+
+```txt
+docs/observability.md
 ```
 
 When both `includeNewsCorrelation` and `includeAiExplanation` are enabled, news correlation runs

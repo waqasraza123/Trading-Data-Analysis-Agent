@@ -98,6 +98,7 @@ from app.modules.notifications.models import (
     NotificationPreference,
     NotificationWorkerRun,
 )
+from app.modules.observability.models import ServiceSloSnapshot
 from app.modules.operator_playbooks.models import OperatorPlaybook, OperatorPlaybookEvaluation
 from app.modules.operator_reviews.models import OperatorReviewEvent, OperatorReviewItem
 from app.modules.outcomes.models import OutcomeEvaluationRun, SignalOutcome
@@ -302,6 +303,7 @@ __all__ = [
     "RuntimeWorkerRunRequest",
     "ScannerPreset",
     "ScannerPresetApplication",
+    "ServiceSloSnapshot",
     "ScenarioConsensusResult",
     "ScenarioEnsembleItem",
     "ScenarioEnsembleRun",

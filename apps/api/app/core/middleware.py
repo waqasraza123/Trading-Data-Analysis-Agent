@@ -12,6 +12,7 @@ from starlette.types import ASGIApp
 from app.config import Settings
 from app.core.errors import create_error_response, get_request_id
 from app.core.rate_limit import RateLimitBackendUnavailable, RateLimiter, rate_limit_key
+from app.modules.observability.middleware import record_observed_request
 
 
 class OperationsMiddleware(BaseHTTPMiddleware):
@@ -157,6 +158,7 @@ class OperationsMiddleware(BaseHTTPMiddleware):
     ) -> None:
         event_name = "request_failed" if failed else "request_completed"
         duration_ms = round((time.perf_counter() - started_at) * 1000, 3)
+        record_observed_request(request, self.settings, status_code, duration_ms)
         log_method = self.logger.warning if failed else self.logger.info
         log_method(
             event_name,
