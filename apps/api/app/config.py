@@ -30,6 +30,7 @@ class WorkerSupervisorComponent(StrEnum):
     REASONING_ACTIONS = "reasoning_actions"
     NOTIFICATIONS = "notifications"
     MARKET_SCANS = "market_scans"
+    JOB_QUEUE = "job_queue"
 
 
 class Settings(BaseSettings):
@@ -389,6 +390,12 @@ class Settings(BaseSettings):
     engine_execution_default_max_attempts: int = Field(default=3, ge=1, le=100)
     engine_execution_lock_seconds: int = Field(default=120, ge=1)
     engine_execution_default_priority: str = "normal"
+    job_queue_backend: str = "database"
+    job_queue_default_max_attempts: int = Field(default=3, ge=1, le=100)
+    job_queue_lock_seconds: int = Field(default=300, ge=1)
+    job_queue_claim_batch_size: int = Field(default=25, ge=1, le=500)
+    job_queue_retry_backoff_seconds: int = Field(default=60, ge=1)
+    job_queue_redis_url: SecretStr | None = None
     backfill_plan_version: str = "v1"
     product_readiness_version: str = "v1"
     demo_mode_enabled: bool = False
@@ -495,6 +502,15 @@ class Settings(BaseSettings):
         normalized_value = value.strip().lower()
         if normalized_value not in {"low", "normal", "high"}:
             msg = "ENGINE_EXECUTION_DEFAULT_PRIORITY must be low, normal, or high"
+            raise ValueError(msg)
+        return normalized_value
+
+    @field_validator("job_queue_backend")
+    @classmethod
+    def validate_job_queue_backend(cls, value: str) -> str:
+        normalized_value = value.strip().lower()
+        if normalized_value not in {"database", "redis"}:
+            msg = "JOB_QUEUE_BACKEND must be database or redis"
             raise ValueError(msg)
         return normalized_value
 

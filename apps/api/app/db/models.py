@@ -77,6 +77,7 @@ from app.modules.intelligence_quality.models import (
     IntelligenceQualityRun,
     ShadowClassificationResult,
 )
+from app.modules.job_queue.models import JobQueueDefinition, JobQueueEvent, JobQueueItem
 from app.modules.live.models import LiveFeedEvent, LiveFeedSubscription
 from app.modules.llm_explanations.models import LlmExplanation
 from app.modules.market_memory.models import RollingMarketStateSnapshot
@@ -261,6 +262,9 @@ __all__ = [
     "JournalEntry",
     "JournalEntryAttachment",
     "JournalEntryReview",
+    "JobQueueDefinition",
+    "JobQueueEvent",
+    "JobQueueItem",
     "LiveFeedEvent",
     "LiveFeedSubscription",
     "LlmExplanation",

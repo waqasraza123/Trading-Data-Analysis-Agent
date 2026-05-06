@@ -164,6 +164,37 @@ def default_worker_definitions(settings: Settings) -> list[RuntimeWorkerDefiniti
             ),
             metadata={"heartbeatSupported": False},
         ),
+        RuntimeWorkerDefinitionSpec(
+            key="job_queue_worker",
+            name="Distributed job queue worker",
+            description=(
+                "Claims and dispatches queued backend workload items from configured queues."
+            ),
+            worker_type=RuntimeWorkerType.CUSTOM,
+            status=available_if_module("app.workers.job_queue_worker"),
+            command="python -m app.workers.job_queue_worker --queue <queue_name>",
+            required_settings=("DATABASE_URL",),
+            optional_settings=(
+                "JOB_QUEUE_BACKEND",
+                "JOB_QUEUE_CLAIM_BATCH_SIZE",
+                "JOB_QUEUE_LOCK_SECONDS",
+                "JOB_QUEUE_RETRY_BACKOFF_SECONDS",
+                "JOB_QUEUE_REDIS_URL",
+            ),
+            safety_notes=(
+                "Dispatches only registered backend-safe handlers.",
+                "Does not execute shell commands or arbitrary code.",
+                "Does not execute broker or order workflows.",
+            ),
+            metadata={
+                "enabledBySupervisorComponent": worker_component_enabled(
+                    settings,
+                    WorkerSupervisorComponent.JOB_QUEUE,
+                ),
+                "heartbeatSupported": True,
+                "safeRunRequestTypes": ("dry_run",),
+            },
+        ),
     ]
     definitions.extend(optional_definition_specs(settings))
     return definitions

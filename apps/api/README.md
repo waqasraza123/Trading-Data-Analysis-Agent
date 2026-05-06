@@ -43,6 +43,13 @@ operator run requests for existing backend workers. They do not start OS process
 commands, call brokers, auto-trade, mutate signals outside existing backend-safe workflows, or
 provide financial advice. See `docs/runtime-supervisor.md`.
 
+Distributed job queue APIs are implemented under `/job-queue`. The default backend is DB-backed and
+supports enqueue, claim, heartbeat, retry/backoff, cancellation, priority, scheduling,
+idempotency keys, dead-letter state, worker queues, payload validation, and metrics-ready status
+fields for backend workloads. The Redis adapter path exists without requiring Redis locally. It does
+not execute broker/order jobs, arbitrary code, shell commands, auto-trading, or financial-advice
+behavior. See `docs/job-queue.md`.
+
 Daily routine templates are implemented under `/daily-routines`. They seed named operator
 routines such as pre-market scan, London/New York open review, crypto 24h review, close-of-day
 review, stale-data repair, outcome review, quality review, and journal follow-up. Routine runs
@@ -464,6 +471,12 @@ Run the market scan worker:
 MARKET_SCAN_WORKER_ENABLED=true .venv/bin/python -m app.workers.market_scan_worker
 ```
 
+Run a job queue worker:
+
+```sh
+.venv/bin/python -m app.workers.job_queue_worker --queue scans
+```
+
 Run a supervised worker process:
 
 ```sh
@@ -652,6 +665,12 @@ RUNTIME_SUPERVISOR_VERSION=v1
 RUNTIME_WORKER_STALE_SECONDS=120
 RUNTIME_WORKER_HEARTBEAT_ENABLED=true
 RUNTIME_SUPERVISOR_RUN_REQUESTS_ENABLED=true
+JOB_QUEUE_BACKEND=database
+JOB_QUEUE_DEFAULT_MAX_ATTEMPTS=3
+JOB_QUEUE_LOCK_SECONDS=300
+JOB_QUEUE_CLAIM_BATCH_SIZE=25
+JOB_QUEUE_RETRY_BACKOFF_SECONDS=60
+JOB_QUEUE_REDIS_URL=
 BACKFILL_PLAN_VERSION=v1
 DEMO_MODE_ENABLED=false
 DEMO_MODE_DEFAULT_WORKSPACE_NAME="Demo Workspace"

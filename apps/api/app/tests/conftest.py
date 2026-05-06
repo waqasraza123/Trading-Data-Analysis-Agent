@@ -36,6 +36,9 @@ from app.modules.workspaces.models import Workspace
 
 TEST_DATABASE_SKIP_REASON = "DB integration tests require TEST_DATABASE_URL"
 APP_TABLES = (
+    "job_queue_events",
+    "job_queue_items",
+    "job_queue_definitions",
     "provider_connection_tests",
     "provider_credential_refs",
     "workspace_setup_step_results",

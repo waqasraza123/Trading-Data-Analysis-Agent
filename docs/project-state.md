@@ -15,6 +15,12 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   runtime health summaries, and safe run request records. It does not start OS processes, execute
   shell commands, call brokers, auto-trade, mutate signals outside existing backend-safe workflows,
   or provide financial advice.
+- Distributed job queue platform exists under `apps/api/app/modules/job_queue/` and `/job-queue`
+  with DB-backed durable jobs, definitions, events, idempotent enqueue, priority, scheduling,
+  locking, heartbeat, retry/backoff, cancellation, dead-letter state, worker queues, payload
+  validation, a Redis adapter path, and `python -m app.workers.job_queue_worker`. It is additive to
+  existing workers and does not execute broker/order jobs, shell commands, arbitrary code,
+  auto-trading, or financial-advice behavior.
 - Dashboard read model materialization exists under `apps/api/app/modules/read_models/` for rebuildable dashboard symbol, signal card, and command center snapshots. It reads existing deterministic artifacts only and does not mutate source artifacts, run scans/analysis/outcomes, call LLMs/providers, send notifications, execute broker workflows, auto-trade, or provide financial advice.
 
 - The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.

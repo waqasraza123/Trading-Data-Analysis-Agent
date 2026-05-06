@@ -46,6 +46,7 @@ from app.modules.intelligence_datasets.routes import router as intelligence_data
 from app.modules.intelligence_metrics.routes import router as intelligence_metrics_router
 from app.modules.intelligence_quality.routes import router as intelligence_quality_router
 from app.modules.intelligence_reports.routes import router as intelligence_reports_router
+from app.modules.job_queue.routes import router as job_queue_router
 from app.modules.live.routes import router as live_router
 from app.modules.llm_explanations.routes import router as llm_explanations_router
 from app.modules.market_memory.routes import router as market_memory_router
@@ -218,6 +219,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         data_retention_router,
         decision_readiness_router,
         engine_executions_router,
+        job_queue_router,
     )
     for router in routers:
         app.include_router(router, prefix=resolved_settings.api_prefix)
