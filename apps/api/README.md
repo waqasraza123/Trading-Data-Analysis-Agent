@@ -15,6 +15,15 @@ identity/context routes, workspace isolation, and reusable permission dependenci
 `AUTH_ENABLED=false` plus `AUTH_MODE=dev` remains the local/test default. See
 `docs/auth.md`, `docs/permissions.md`, and `docs/rbac-route-coverage.md`.
 
+Workspace overview and quick actions are implemented under
+`/workspaces/{workspace_id}/overview` and `/workspaces/{workspace_id}/quick-actions`.
+The overview endpoint composes persisted readiness, provider health, data freshness,
+daily brief, workflow, read model, outcome, notification, journal, and quality artifacts
+into one command-center payload while reporting missing sections safely. Quick actions
+run explicit backend-safe daily tasks only and do not perform broker execution,
+auto-trading, copy trading, external notification delivery, or financial-advice behavior.
+See `docs/workspace-overview.md` and `docs/workspace-quick-actions.md`.
+
 Scanner presets are implemented under `/scanner-presets`. They seed opinionated templates for
 London open, New York open, crypto 24h, volatility, pattern context, data repair, and close-of-day
 review workflows. Applying a preset creates watchlists and scheduled scan configs only; it does not

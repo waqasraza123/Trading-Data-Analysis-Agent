@@ -6,6 +6,7 @@ import type { PreferenceProfile } from "@/lib/preferences/types";
 import type { ProviderHealthSnapshot, ProviderHealthSummary } from "@/lib/provider-health/types";
 import type { RuntimeSupervisorHealth } from "@/lib/api/runtimeSupervisor";
 import type { ProviderPollingRequest } from "@/lib/data-onboarding/types";
+import type { WorkspaceOverview } from "./overviewTypes";
 
 export type CommandCenterTone = "neutral" | "good" | "warning" | "danger" | "info";
 
@@ -172,6 +173,8 @@ export type CommandCenterData = {
   latestProductReadiness: ProductReadinessRun | null;
   qualityWarnings: CommandCenterQualityWarning[];
   runtimeSupervisorHealth: RuntimeSupervisorHealth | null;
+  workspaceOverview: WorkspaceOverview | null;
+  workspaceOverviewFailure: CommandCenterFailure | null;
   summary: CommandCenterSummary;
   whatChanged: CommandCenterChangedItem[];
   dataReadiness: CommandCenterDataReadinessItem[];

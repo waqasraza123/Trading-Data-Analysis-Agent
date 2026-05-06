@@ -33,6 +33,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Polished daily review surfaces for `/journal`, `/review/outcomes`, `/quality`, and `/notifications` with shared filters, tables, empty states, source links, and safe non-advisory labels.
 - Demo mode page at `/demo` for running the backend synthetic product smoke flow and opening the generated command center, brief, triage, scanner, signal detail, and journal artifacts.
 - Visual setup chart panels for compact final-candle, zone, signal-window, and observed-outcome context on signal detail pages.
+- Command center overview integration for one daily workspace payload, explicit backend-safe quick actions, missing-section fallback, and safe-copy labels.
 
 ## Backend Endpoints Used
 
@@ -47,6 +48,8 @@ The client composes data from optional backend APIs:
 - `GET /product-readiness/latest`
 - `GET /product-readiness/runs`
 - `GET /product-readiness/runs/{run_id}`
+- `GET /workspaces/{workspace_id}/overview`
+- `POST /workspaces/{workspace_id}/quick-actions`
 - `GET /workspaces`
 - `GET /symbols`
 - `GET /symbols/{symbol_id}`

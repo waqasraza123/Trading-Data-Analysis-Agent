@@ -1,0 +1,1 @@
+"""Workspace quick-action module."""

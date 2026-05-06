@@ -10,6 +10,7 @@ import { getScannerData } from "./scanner";
 import { getSignalTriageBoard } from "./triage";
 import { listJournalEntries } from "./journal";
 import { getLatestProductReadiness } from "./productReadiness";
+import { getWorkspaceOverview } from "./workspaceOverview";
 import {
   dailyRoutineFailure,
   getDailyRoutineRun,
@@ -35,6 +36,11 @@ export async function getCommandCenterData(params: {
     getScannerData(params),
   ]);
   const workspace = triage.workspace || scanner.workspace || null;
+  const workspaceOverviewResult = workspace
+    ? await getWorkspaceOverview(workspace.id, {
+        preferenceProfileId: params.preferenceProfileId || null,
+      })
+    : null;
   const readModelResult = workspace ? await getCommandCenterReadModel(workspace.id) : null;
   const { recentJournalEntries, journalEntriesBySignalId, journalFailures, providerHealthSummary, providerHealthSnapshots, providerPollingRequests, providerHealthFailures, notificationUnreadCount, notificationReviewCount, notificationFailures, latestProductReadiness, readinessFailures, qualityWarnings, qualityFailures, runtimeSupervisorHealth, runtimeSupervisorFailures, dailyRoutineTemplates, dailyRoutineRuns, selectedDailyRoutineRun, selectedDailyRoutineRunSteps, dailyRoutineFailures } = workspace
     ? await fetchCommandCenterWorkspaceContext(
@@ -93,6 +99,10 @@ export async function getCommandCenterData(params: {
     qualityFailures,
     runtimeSupervisorHealth,
     runtimeSupervisorFailures,
+    workspaceOverview: workspaceOverviewResult?.ok ? workspaceOverviewResult.data : null,
+    workspaceOverviewFailure: workspaceOverviewResult && !workspaceOverviewResult.ok
+      ? toFailure("Workspace overview", workspaceOverviewResult)
+      : null,
     dailyRoutineTemplates,
     dailyRoutineRuns,
     selectedDailyRoutineRun,

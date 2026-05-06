@@ -94,6 +94,8 @@ from app.modules.trading_journal.routes import router as trading_journal_router
 from app.modules.users.routes import router as users_router
 from app.modules.walk_forward_validation.routes import router as walk_forward_validation_router
 from app.modules.webhook_outbox.routes import router as webhook_outbox_router
+from app.modules.workspace_actions.routes import router as workspace_actions_router
+from app.modules.workspace_overview.routes import router as workspace_overview_router
 from app.modules.workspace_setup.routes import router as workspace_setup_router
 from app.modules.workspaces.routes import router as workspaces_router
 from app.routes.health import router as health_router
@@ -145,6 +147,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         observability_router,
         auth_router,
         workspaces_router,
+        workspace_overview_router,
+        workspace_actions_router,
         workspace_setup_router,
         users_router,
         symbols_router,

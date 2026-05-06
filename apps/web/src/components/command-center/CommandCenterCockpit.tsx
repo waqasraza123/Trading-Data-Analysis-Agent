@@ -4,6 +4,7 @@ import { formatInteger } from "@/lib/formatting/numbers";
 import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { commandCenterHref, commandCenterLabel, commandCenterText, toneForState } from "@/lib/command-center/labels";
 import type { CommandCenterData, CommandCenterTone } from "@/lib/command-center/types";
+import { CommandCenterOverview } from "./CommandCenterOverview";
 import { CommandCenterDailyScanButton } from "./CommandCenterDailyScanButton";
 import {
   CockpitActionLink,
@@ -25,6 +26,7 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
         />
       )}
       <CommandCenterBackendState data={data} />
+      <CommandCenterOverview data={data} />
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.7fr)]">
         <div className="space-y-6">
           <ReviewFirstPanel data={data} />

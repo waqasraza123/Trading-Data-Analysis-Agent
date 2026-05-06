@@ -336,6 +336,10 @@ class Settings(BaseSettings):
     read_model_version: str = "v1"
     read_model_default_limit: int = Field(default=200, ge=1, le=1000)
     read_model_max_limit: int = Field(default=1000, ge=1, le=10000)
+    workspace_overview_version: str = "v1"
+    workspace_overview_max_review_items: int = Field(default=10, ge=1, le=100)
+    workspace_overview_max_action_items: int = Field(default=20, ge=1, le=100)
+    workspace_overview_max_warnings: int = Field(default=25, ge=1, le=200)
     daily_workflow_version: str = "v1"
     daily_workflow_max_symbols: int = Field(default=100, ge=1, le=1000)
     daily_workflow_max_scan_items: int = Field(default=500, ge=1, le=5000)
@@ -628,6 +632,7 @@ class Settings(BaseSettings):
         "daily_brief_version",
         "signal_priority_version",
         "read_model_version",
+        "workspace_overview_version",
         "daily_workflow_version",
         "daily_routine_version",
         "runtime_supervisor_version",
