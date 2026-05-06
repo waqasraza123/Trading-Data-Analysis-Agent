@@ -1,3 +1,4 @@
+from io import TextIOWrapper
 from typing import Annotated
 from uuid import UUID
 
@@ -22,9 +23,10 @@ router = APIRouter(prefix="/imports", tags=["imports"])
 
 
 def get_import_service(
+    request: Request,
     session: Annotated[AsyncSession, Depends(database_session)],
 ) -> ImportService:
-    return ImportService(session)
+    return ImportService(session, settings=request.app.state.settings)
 
 
 @router.post(
@@ -57,14 +59,12 @@ async def import_csv_candles(
     file: Annotated[UploadFile, File()],
     user_id: Annotated[UUID | None, Form()] = None,
 ) -> ImportBatchRead:
-    file_bytes = await file.read()
     settings = request.app.state.settings
-    if len(file_bytes) > settings.max_upload_file_bytes:
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    if file_size > settings.max_upload_file_bytes:
         raise AppError(413, "upload_file_too_large", "Upload file is too large")
-    try:
-        csv_text = file_bytes.decode("utf-8-sig")
-    except UnicodeDecodeError as error:
-        raise AppError(422, "invalid_csv_encoding", "CSV file must be UTF-8 encoded") from error
     payload = CsvCandleImportRequest(
         workspace_id=workspace_id,
         user_id=user_id,
@@ -73,7 +73,13 @@ async def import_csv_candles(
         timeframe=timeframe,
         file_name=file.filename,
     )
-    batch = await service.process_csv_import(payload=payload, csv_text=csv_text)
+    try:
+        csv_stream = TextIOWrapper(file.file, encoding="utf-8-sig")
+        batch = await service.process_csv_import_stream(payload=payload, csv_stream=csv_stream)
+    except UnicodeDecodeError as error:
+        raise AppError(422, "invalid_csv_encoding", "CSV file must be UTF-8 encoded") from error
+    finally:
+        await file.close()
     return ImportBatchRead.model_validate(batch)
 
 

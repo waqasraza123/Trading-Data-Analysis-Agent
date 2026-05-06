@@ -8,8 +8,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.core.errors import AppError
 from app.core.time import utc_now
+from app.modules.candle_ingestion_performance.batcher import iter_chunks
+from app.modules.candle_ingestion_performance.bulk_repository import CandleBulkRepository
+from app.modules.candle_ingestion_performance.diagnostics import serialize_incoming_candle
+from app.modules.candle_ingestion_performance.models import (
+    CandleIngestionConflict,
+    CandleIngestionConflictResolution,
+    CandleIngestionConflictType,
+    CandleIngestionMode,
+)
+from app.modules.candle_ingestion_performance.progress import CandleIngestionProgressTracker
+from app.modules.candle_ingestion_performance.schemas import (
+    CandleIngestionCandidate,
+    CandleIngestionCounters,
+    CandleIngestionRowReference,
+)
 from app.modules.candles.repository import CandleRepository
-from app.modules.candles.schemas import CandleUpsertStatus
+from app.modules.candles.schemas import CandleUpsertStatus, NormalizedCandleInput
 from app.modules.candles.validator import validate_candle
 from app.modules.data_sources.models import DataSource, DataSourceStatus, DataSourceType
 from app.modules.data_sources.repository import DataSourceRepository
@@ -55,6 +70,7 @@ class ProviderPollingService:
         self.settings = settings
         self.repository = ProviderPollingRepository(session)
         self.candle_repository = CandleRepository(session)
+        self.bulk_repository = CandleBulkRepository(session)
         self.symbol_repository = SymbolRepository(session)
         self.data_source_repository = DataSourceRepository(session)
         self.provider_credential_repository = ProviderCredentialRepository(session)
@@ -195,6 +211,18 @@ class ProviderPollingService:
         stored_count = 0
         skipped_count = 0
         error_count = 0
+        tracker = await CandleIngestionProgressTracker.start(
+            session=self.session,
+            workspace_id=polling_request.workspace_id,
+            ingestion_mode=CandleIngestionMode.PROVIDER_POLLING,
+            batch_size=self.settings.candle_ingestion_batch_size,
+            progress_every_rows=self.settings.candle_ingestion_progress_every_rows,
+            copy_path_enabled=self.settings.candle_ingestion_enable_copy_path,
+            provider_polling_request_id=polling_request.id,
+            source_id=polling_request.source_id,
+            symbol_id=polling_request.symbol_id,
+            timeframe=polling_request.timeframe,
+        )
         polling_request.requested_url = string_or_none(
             result.provider_metadata.get("requested_url")
         )
@@ -224,20 +252,98 @@ class ProviderPollingService:
                 )
             )
             error_count += 1
-        for provider_candle in result.candles:
-            outcome = await self.store_provider_candle(
-                polling_request=polling_request,
-                provider_candle=provider_candle,
-                symbol=symbol,
-                data_source=data_source,
+        for chunk in iter_chunks(result.candles, self.settings.candle_ingestion_batch_size):
+            chunk_counters = CandleIngestionCounters(rows_received=len(chunk))
+            candidates: list[CandleIngestionCandidate] = []
+            for provider_candle in chunk:
+                try:
+                    candle = normalize_provider_candle(
+                        provider_candle=provider_candle,
+                        workspace_id=polling_request.workspace_id,
+                        symbol_id=polling_request.symbol_id,
+                        source_id=polling_request.source_id,
+                        polling_request_id=polling_request.id,
+                    )
+                    validation_result = validate_candle(
+                        candle=candle,
+                        symbol=symbol,
+                        data_source=data_source,
+                    )
+                    if not validation_result.is_valid:
+                        for issue in validation_result.issues:
+                            await self.repository.add_error(
+                                ProviderPollingError(
+                                    workspace_id=polling_request.workspace_id,
+                                    polling_request_id=polling_request.id,
+                                    error_code=issue.code.value,
+                                    error_message=issue.message,
+                                    raw_item_json=provider_candle.raw_item_json,
+                                )
+                            )
+                            if issue.code.value == "invalid_timestamp":
+                                await self.record_performance_conflict(
+                                    performance_run_id=tracker.run.id,
+                                    candle=candle,
+                                    raw_item_json=provider_candle.raw_item_json,
+                                    conflict_type=CandleIngestionConflictType.TIMESTAMP_MISALIGNMENT,
+                                    resolution=CandleIngestionConflictResolution.REJECTED,
+                                )
+                        chunk_counters.rows_failed += 1
+                        error_count += 1
+                        continue
+                    candidates.append(
+                        CandleIngestionCandidate(
+                            candle=candle,
+                            row_reference=CandleIngestionRowReference(
+                                row_number=None,
+                                raw_payload=provider_candle.raw_item_json,
+                            ),
+                        )
+                    )
+                except (AppError, ValidationError, ValueError) as error:
+                    await self.repository.add_error(
+                        ProviderPollingError(
+                            workspace_id=polling_request.workspace_id,
+                            polling_request_id=polling_request.id,
+                            error_code=self.error_code(error),
+                            error_message=self.error_message(error),
+                            raw_item_json=provider_candle.raw_item_json,
+                        )
+                    )
+                    await self.record_invalid_provider_candle_conflict(
+                        performance_run_id=tracker.run.id,
+                        polling_request=polling_request,
+                        provider_candle=provider_candle,
+                    )
+                    chunk_counters.rows_failed += 1
+                    error_count += 1
+            bulk_outcome = await self.bulk_repository.apply_candidates(
+                candidates=candidates,
+                performance_run_id=tracker.run.id,
             )
-            if outcome == "stored":
-                stored_count += 1
-            elif outcome == "error":
-                skipped_count += 1
-                error_count += 1
-            else:
-                skipped_count += 1
+            for conflict in bulk_outcome.conflicts:
+                if conflict.conflict_type == CandleIngestionConflictType.FINAL_CONFLICT:
+                    await self.repository.add_error(
+                        ProviderPollingError(
+                            workspace_id=polling_request.workspace_id,
+                            polling_request_id=polling_request.id,
+                            error_code="conflicting_final_candle",
+                            error_message=(
+                                "Existing final candle conflicts with incoming final candle"
+                            ),
+                            raw_item_json=conflict.row_reference.raw_payload,
+                        )
+                    )
+                    error_count += 1
+            chunk_counters.add(bulk_outcome.counters)
+            await tracker.record(chunk_counters)
+        await tracker.finish()
+        stored_count = tracker.counters.rows_inserted + tracker.counters.rows_updated
+        skipped_count = (
+            tracker.counters.rows_skipped_duplicate
+            + tracker.counters.rows_conflicted
+            + tracker.counters.rows_failed
+        )
         polling_request.stored_candle_count = stored_count
         polling_request.skipped_candle_count = skipped_count
         polling_request.response_metadata_json = {
@@ -350,6 +456,50 @@ class ProviderPollingService:
                 error_code=error_item.code,
                 error_message=error_item.message,
                 raw_item_json=error_item.raw_item_json,
+            )
+        )
+
+    async def record_invalid_provider_candle_conflict(
+        self,
+        performance_run_id: UUID,
+        polling_request: ProviderPollingRequest,
+        provider_candle: ProviderCandle,
+    ) -> None:
+        self.session.add(
+            CandleIngestionConflict(
+                workspace_id=polling_request.workspace_id,
+                performance_run_id=performance_run_id,
+                symbol_id=polling_request.symbol_id,
+                source_id=polling_request.source_id,
+                timeframe=provider_candle.timeframe.value,
+                timestamp=provider_candle.timestamp,
+                conflict_type=CandleIngestionConflictType.INVALID_OHLC.value,
+                existing_candle_json={},
+                incoming_candle_json=provider_candle.raw_item_json,
+                resolution=CandleIngestionConflictResolution.REJECTED.value,
+            )
+        )
+
+    async def record_performance_conflict(
+        self,
+        performance_run_id: UUID,
+        candle: NormalizedCandleInput,
+        raw_item_json: dict[str, object],
+        conflict_type: CandleIngestionConflictType,
+        resolution: CandleIngestionConflictResolution,
+    ) -> None:
+        self.session.add(
+            CandleIngestionConflict(
+                workspace_id=candle.workspace_id,
+                performance_run_id=performance_run_id,
+                symbol_id=candle.symbol_id,
+                source_id=candle.source_id,
+                timeframe=candle.timeframe.value,
+                timestamp=candle.timestamp,
+                conflict_type=conflict_type.value,
+                existing_candle_json={},
+                incoming_candle_json=serialize_incoming_candle(candle) or raw_item_json,
+                resolution=resolution.value,
             )
         )
 

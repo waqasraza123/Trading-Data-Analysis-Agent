@@ -26,6 +26,10 @@ from app.modules.candle_gap_recovery.models import (
     CandleGapRecoveryItem,
     CandleGapRecoveryPlan,
 )
+from app.modules.candle_ingestion_performance.models import (
+    CandleIngestionConflict,
+    CandleIngestionPerformanceRun,
+)
 from app.modules.candles.models import Candle
 from app.modules.capabilities.models import IntelligenceCapability
 from app.modules.chart_screenshots.models import ChartScreenshotRun
@@ -208,6 +212,8 @@ __all__ = [
     "CandleAggregationRun",
     "CandleGapRecoveryItem",
     "CandleGapRecoveryPlan",
+    "CandleIngestionConflict",
+    "CandleIngestionPerformanceRun",
     "ChartScreenshotRun",
     "CohortDriftResult",
     "CohortDriftRun",

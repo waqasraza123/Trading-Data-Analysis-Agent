@@ -200,6 +200,12 @@ adapters under `/provider-polling`. It supports a deterministic mock provider, B
 klines without credentials, and a safe generic OHLC HTTP stub. Provider polling requires
 `api_polling` data sources and normalizes into the existing candle validator/repository path.
 
+Candle ingestion performance diagnostics are implemented under `/candle-ingestion`. CSV imports,
+JSON imports, and provider polling now create performance run records with batch counts, elapsed
+time, insert/update/duplicate/conflict/failure counts, and conflict drilldowns. The path keeps
+existing validation and final/partial candle semantics, and the COPY-style path remains disabled by
+default. See `docs/candle-ingestion-performance.md`.
+
 Candle gap recovery planning is implemented under `/candle-gap-recovery`. It detects missing final
 candles in live or imported datasets, groups adjacent missing timestamps into recovery items,
 records provider-polling/manual-import planning metadata, and can create pending provider polling

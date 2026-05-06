@@ -19,6 +19,9 @@ from app.modules.audit_timeline.routes import router as audit_timeline_router
 from app.modules.backfill_plans.routes import router as backfill_plans_router
 from app.modules.backtest_experiments.routes import router as backtest_experiments_router
 from app.modules.candle_gap_recovery.routes import router as candle_gap_recovery_router
+from app.modules.candle_ingestion_performance.routes import (
+    router as candle_ingestion_performance_router,
+)
 from app.modules.candles.routes import router as candles_router
 from app.modules.capabilities.routes import router as capabilities_router
 from app.modules.chart_screenshots.routes import router as chart_screenshot_router
@@ -156,6 +159,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         provider_health_router,
         provider_credentials_router,
         live_router,
+        candle_ingestion_performance_router,
         candles_router,
         data_quality_router,
         candle_gap_recovery_router,
