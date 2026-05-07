@@ -1,0 +1,247 @@
+import { getPublicEnv } from "@/config/env";
+import { apiDelete, apiGet, apiPost } from "./client";
+import { listSymbols, listWorkspaces } from "./market";
+import type { ApiResult, UUID } from "./types";
+import type {
+  EquityCatalystContext,
+  EquityCatalystCreateInput,
+  EquityResearchData,
+  EquityResearchFailure,
+  EquitySwingCandidate,
+  EquitySwingScanInput,
+  EquitySwingScanRun,
+  EquityUniverse,
+  EquityUniverseCreateInput,
+  EquityUniverseMember,
+  EquityUniverseMemberCreateInput,
+} from "@/lib/equity-research/types";
+import { equityFailure } from "@/lib/equity-research/types";
+
+export function listEquityUniverses(workspaceId: UUID): Promise<ApiResult<EquityUniverse[]>> {
+  return apiGet<EquityUniverse[]>("/equity-research/universes", {
+    query: {
+      workspace_id: workspaceId,
+      limit: 100,
+    },
+    optional: true,
+  });
+}
+
+export function createEquityUniverse(
+  input: EquityUniverseCreateInput,
+): Promise<ApiResult<EquityUniverse>> {
+  return apiPost<EquityUniverse>("/equity-research/universes", input, { optional: true });
+}
+
+export function listEquityUniverseMembers(
+  universeId: UUID,
+): Promise<ApiResult<EquityUniverseMember[]>> {
+  return apiGet<EquityUniverseMember[]>(`/equity-research/universes/${universeId}/members`, {
+    query: {
+      is_active: true,
+      limit: 500,
+    },
+    optional: true,
+  });
+}
+
+export function addEquityUniverseMember(
+  universeId: UUID,
+  input: EquityUniverseMemberCreateInput,
+): Promise<ApiResult<EquityUniverseMember>> {
+  return apiPost<EquityUniverseMember>(
+    `/equity-research/universes/${universeId}/members`,
+    input,
+    { optional: true },
+  );
+}
+
+export function removeEquityUniverseMember(
+  universeId: UUID,
+  memberId: UUID,
+): Promise<ApiResult<EquityUniverseMember>> {
+  return apiDelete<EquityUniverseMember>(
+    `/equity-research/universes/${universeId}/members/${memberId}`,
+    { optional: true },
+  );
+}
+
+export function runEquitySwingScan(
+  input: EquitySwingScanInput,
+): Promise<ApiResult<EquitySwingScanRun>> {
+  return apiPost<EquitySwingScanRun>("/equity-research/swing-scans", input, {
+    optional: true,
+    timeoutMs: 60000,
+  });
+}
+
+export function listEquitySwingScans(
+  workspaceId: UUID,
+): Promise<ApiResult<EquitySwingScanRun[]>> {
+  return apiGet<EquitySwingScanRun[]>("/equity-research/swing-scans", {
+    query: {
+      workspace_id: workspaceId,
+      limit: 50,
+    },
+    optional: true,
+  });
+}
+
+export function getEquitySwingScan(
+  scanRunId: UUID,
+): Promise<ApiResult<EquitySwingScanRun>> {
+  return apiGet<EquitySwingScanRun>(`/equity-research/swing-scans/${scanRunId}`, {
+    optional: true,
+  });
+}
+
+export function listEquitySwingCandidates(
+  scanRunId: UUID,
+): Promise<ApiResult<EquitySwingCandidate[]>> {
+  return apiGet<EquitySwingCandidate[]>(
+    `/equity-research/swing-scans/${scanRunId}/candidates`,
+    {
+      query: { limit: 500 },
+      optional: true,
+    },
+  );
+}
+
+export function getEquityCandidate(
+  candidateId: UUID,
+): Promise<ApiResult<EquitySwingCandidate>> {
+  return apiGet<EquitySwingCandidate>(`/equity-research/candidates/${candidateId}`, {
+    optional: true,
+  });
+}
+
+export function createEquityCatalyst(
+  input: EquityCatalystCreateInput,
+): Promise<ApiResult<EquityCatalystContext>> {
+  return apiPost<EquityCatalystContext>("/equity-research/catalysts", input, {
+    optional: true,
+  });
+}
+
+export function listEquityCatalysts(
+  workspaceId: UUID,
+  symbolId?: UUID,
+): Promise<ApiResult<EquityCatalystContext[]>> {
+  return apiGet<EquityCatalystContext[]>("/equity-research/catalysts", {
+    query: {
+      workspace_id: workspaceId,
+      symbol_id: symbolId,
+      limit: 100,
+    },
+    optional: true,
+  });
+}
+
+export async function getEquityResearchData(params: {
+  workspaceId?: string;
+  universeId?: string;
+  scanRunId?: string;
+  candidateId?: string;
+}): Promise<EquityResearchData> {
+  const env = getPublicEnv();
+  const failures: EquityResearchFailure[] = [];
+  const [workspacesResult, symbolsResult] = await Promise.all([listWorkspaces(), listSymbols()]);
+  const workspaces = readResult("Workspaces", workspacesResult, [], failures);
+  const symbols = readResult("Symbols", symbolsResult, [], failures);
+  const stockSymbols = symbols.filter((symbol) => symbol.market_type === "stock");
+  const workspace =
+    workspaces.find((candidate) => candidate.id === params.workspaceId) || workspaces[0] || null;
+  if (!workspace) {
+    return emptyEquityData(env.appName, env.apiBaseUrl, params.workspaceId || null, failures);
+  }
+  const [universesResult, runsResult, catalystsResult] = await Promise.all([
+    listEquityUniverses(workspace.id),
+    listEquitySwingScans(workspace.id),
+    listEquityCatalysts(workspace.id),
+  ]);
+  const universes = readResult("Equity universes", universesResult, [], failures);
+  const scanRuns = readResult("Equity swing scans", runsResult, [], failures);
+  const selectedUniverse =
+    universes.find((universe) => universe.id === params.universeId) || universes[0] || null;
+  const selectedScanRun =
+    scanRuns.find((run) => run.id === params.scanRunId) || scanRuns[0] || null;
+  const [membersResult, candidatesResult] = await Promise.all([
+    selectedUniverse
+      ? listEquityUniverseMembers(selectedUniverse.id)
+      : Promise.resolve<ApiResult<EquityUniverseMember[]>>({
+          ok: true,
+          status: 200,
+          url: "",
+          data: [],
+        }),
+    selectedScanRun
+      ? listEquitySwingCandidates(selectedScanRun.id)
+      : Promise.resolve<ApiResult<EquitySwingCandidate[]>>({
+          ok: true,
+          status: 200,
+          url: "",
+          data: [],
+        }),
+  ]);
+  const selectedUniverseMembers = readResult("Universe members", membersResult, [], failures);
+  const candidates = readResult("Swing candidates", candidatesResult, [], failures);
+  const selectedCandidate =
+    candidates.find((candidate) => candidate.id === params.candidateId) || candidates[0] || null;
+  return {
+    appName: env.appName,
+    apiBaseUrl: env.apiBaseUrl,
+    requestedWorkspaceId: params.workspaceId || null,
+    workspace,
+    workspaces,
+    stockSymbols,
+    universes,
+    selectedUniverse,
+    selectedUniverseMembers,
+    scanRuns,
+    selectedScanRun,
+    candidates,
+    selectedCandidate,
+    catalysts: readResult("Catalysts", catalystsResult, [], failures),
+    failures,
+    lastUpdatedAt: new Date().toISOString(),
+  };
+}
+
+function readResult<T>(
+  label: string,
+  result: ApiResult<T>,
+  fallback: T,
+  failures: EquityResearchFailure[],
+): T {
+  if (result.ok) {
+    return result.data;
+  }
+  failures.push(equityFailure(label, result));
+  return fallback;
+}
+
+function emptyEquityData(
+  appName: string,
+  apiBaseUrl: string,
+  requestedWorkspaceId: UUID | null,
+  failures: EquityResearchFailure[],
+): EquityResearchData {
+  return {
+    appName,
+    apiBaseUrl,
+    requestedWorkspaceId,
+    workspace: null,
+    workspaces: [],
+    stockSymbols: [],
+    universes: [],
+    selectedUniverse: null,
+    selectedUniverseMembers: [],
+    scanRuns: [],
+    selectedScanRun: null,
+    candidates: [],
+    selectedCandidate: null,
+    catalysts: [],
+    failures,
+    lastUpdatedAt: new Date().toISOString(),
+  };
+}

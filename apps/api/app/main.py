@@ -41,6 +41,7 @@ from app.modules.decision_readiness.routes import router as decision_readiness_r
 from app.modules.demo_mode.routes import router as demo_mode_router
 from app.modules.engine_executions.routes import router as engine_executions_router
 from app.modules.engine_versions.routes import router as engine_versions_router
+from app.modules.equity_research.routes import router as equity_research_router
 from app.modules.event_studies.routes import router as event_studies_router
 from app.modules.explanation_comparison.routes import router as explanation_comparison_router
 from app.modules.explanations.routes import router as explanations_router
@@ -162,6 +163,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         capabilities_router,
         permissions_router,
         engine_versions_router,
+        equity_research_router,
         imports_router,
         provider_polling_router,
         provider_health_router,

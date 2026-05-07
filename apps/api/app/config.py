@@ -375,6 +375,13 @@ class Settings(BaseSettings):
     market_scan_worker_enabled: bool = False
     market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
+    equity_research_version: str = "v1"
+    equity_swing_scan_max_symbols: int = Field(default=500, ge=1, le=5000)
+    equity_swing_min_average_volume: int = Field(default=500000, ge=0)
+    equity_swing_min_setup_score: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
+    equity_swing_strong_setup_score: Decimal = Field(default=Decimal("0.7500"), ge=0, le=1)
+    equity_swing_lookback_days: int = Field(default=90, ge=1, le=3660)
+    equity_swing_default_timeframes: str = "1d,4h,1h"
     runtime_supervisor_version: str = "v1"
     runtime_worker_stale_seconds: int = Field(default=120, ge=1)
     runtime_worker_heartbeat_enabled: bool = True

@@ -36,6 +36,11 @@ from app.modules.workspaces.models import Workspace
 
 TEST_DATABASE_SKIP_REASON = "DB integration tests require TEST_DATABASE_URL"
 APP_TABLES = (
+    "equity_catalyst_contexts",
+    "equity_swing_candidates",
+    "equity_swing_scan_runs",
+    "equity_universe_members",
+    "equity_universes",
     "candle_ingestion_conflicts",
     "candle_ingestion_performance_runs",
     "job_queue_events",

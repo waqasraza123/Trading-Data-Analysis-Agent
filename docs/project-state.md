@@ -457,6 +457,15 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 
 ## Latest Local Update
 
+- Equity research mode is implemented as an additive deterministic stock research workflow under
+  `/equity-research`.
+- New artifacts are `equity_universes`, `equity_universe_members`, `equity_swing_scan_runs`,
+  `equity_swing_candidates`, and `equity_catalyst_contexts`.
+- The module supports manual stock universes, swing scan profiles, ranked setup candidates,
+  component scoring, manual catalyst context, and a web page at `/equity-research`.
+- Scope remains market intelligence only: no broker execution, auto-trading, copy trading,
+  direct action instructions, signal-classification overrides, or financial advice.
+
 - Implemented safe webhook outbox records for future integrations with `webhook_subscriptions`, `webhook_outbox_events`, and `webhook_delivery_attempts`.
 - Webhook outbox is separate from notifications, does not deliver alerts or HTTP requests, and stores sanitized payloads only.
 - Payload redaction excludes secrets, signing secret plaintext, raw images, full candle series, unsafe blocked LLM output, and direct trading-instruction language.

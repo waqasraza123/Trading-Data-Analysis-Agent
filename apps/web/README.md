@@ -21,6 +21,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Provider health snapshots for source status, candle freshness, missing candles, recent polling failures, gap recovery preparation, and deterministic-analysis readiness.
 - Watchlist scanner controls for backend deterministic scan configuration, due scans, run-now execution, scan run item review, and produced signal review.
 - Scanner preset gallery for creating watchlists and scheduled scan configs from backend templates without running scans on apply.
+- Equity research page for stock universes, deterministic swing scan profiles, ranked swing setup candidates, setup scoring, evidence review, and manual catalyst context.
 - Guided scanner workflow with hero health metrics, preset gallery, watchlist manager, scan config builder, explicit run-now confirmation, scan history, and generated signal review.
 - Guided data onboarding workflow with source, credentials/config, symbols/timeframes, freshness check, gap detection, recovery plan, and ready summary steps.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
@@ -63,6 +64,17 @@ The client composes data from optional backend APIs:
 - `POST /scanner-presets/seed-default`
 - `POST /scanner-presets/{preset_id}/apply`
 - `GET /scanner-presets/applications/{application_id}`
+- `POST /equity-research/universes`
+- `GET /equity-research/universes`
+- `GET /equity-research/universes/{universe_id}/members`
+- `POST /equity-research/universes/{universe_id}/members`
+- `DELETE /equity-research/universes/{universe_id}/members/{member_id}`
+- `POST /equity-research/swing-scans`
+- `GET /equity-research/swing-scans`
+- `GET /equity-research/swing-scans/{scan_run_id}/candidates`
+- `GET /equity-research/candidates/{candidate_id}`
+- `POST /equity-research/catalysts`
+- `GET /equity-research/catalysts`
 - `GET /market-memory/snapshots`
 - `GET /read-models/symbols`
 - `GET /read-models/signals`

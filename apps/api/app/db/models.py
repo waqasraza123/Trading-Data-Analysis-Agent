@@ -61,6 +61,13 @@ from app.modules.data_sources.models import DataSource
 from app.modules.decision_readiness.models import DecisionReadinessAssessment
 from app.modules.engine_executions.models import EngineExecutionEvent, EngineExecutionRecord
 from app.modules.engine_versions.models import EngineVersion
+from app.modules.equity_research.models import (
+    EquityCatalystContext,
+    EquitySwingCandidate,
+    EquitySwingScanRun,
+    EquityUniverse,
+    EquityUniverseMember,
+)
 from app.modules.event_studies.models import EventStudyResult, EventStudyRun
 from app.modules.explanation_comparison.models import (
     ExplanationComparisonFinding,
@@ -247,6 +254,11 @@ __all__ = [
     "EngineExecutionEvent",
     "EngineExecutionRecord",
     "EngineVersion",
+    "EquityCatalystContext",
+    "EquitySwingCandidate",
+    "EquitySwingScanRun",
+    "EquityUniverse",
+    "EquityUniverseMember",
     "EventStudyResult",
     "EventStudyRun",
     "ExplanationComparisonFinding",

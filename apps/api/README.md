@@ -42,6 +42,14 @@ review workflows. Applying a preset creates watchlists and scheduled scan config
 run scans, create execution setups, send alerts, call brokers, auto-trade, or provide financial
 advice. See `docs/scanner-presets.md`.
 
+Equity research mode is implemented under `/equity-research`. It adds workspace-scoped stock
+universes, manual universe members, deterministic swing scan runs, ranked swing setup candidates,
+component scoring, and manual catalyst context. It reads existing symbols, candles, analysis
+artifacts, setup context, signal priority context, data quality, provider health, and news/event
+artifacts where available. It does not fetch external fundamentals automatically, place orders,
+connect to brokers for execution, auto-trade, mutate final signal classifications, call LLMs for
+classification, or provide financial advice. See `docs/equity-research.md`.
+
 Product readiness is implemented under `/product-readiness`. It persists an operator-facing
 checklist run for API reachability, database/migration detectability, seed/workspace/user setup,
 symbols, data sources, provider credentials, provider health, candle freshness, watchlists, scan

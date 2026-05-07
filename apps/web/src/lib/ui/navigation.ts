@@ -7,6 +7,7 @@ export type NavigationTarget =
   | "brief"
   | "dataOnboarding"
   | "scanner"
+  | "equityResearch"
   | "triage"
   | "quality"
   | "notifications"
@@ -30,6 +31,7 @@ export const navigationItems: NavigationItem[] = [
   { key: "brief", href: "/brief", label: "Brief", section: "Brief", description: "Workspace daily brief and review focus" },
   { key: "dataOnboarding", href: "/data/onboarding", label: "Data", section: "Data", description: "Freshness, source, and gap readiness" },
   { key: "scanner", href: "/scanner", label: "Scanner", section: "Scanner", description: "Watchlists and deterministic scan configs" },
+  { key: "equityResearch", href: "/equity-research", label: "Equity Research", shortLabel: "Equities", section: "Scanner", description: "Stock universes and swing setup candidate review" },
   { key: "triage", href: "/triage", label: "Triage", section: "Triage", description: "Prioritized deterministic signal review" },
   { key: "quality", href: "/quality", label: "Quality", section: "Quality", description: "Observed behavior and reliability diagnostics" },
   { key: "notifications", href: "/notifications", label: "Notifications", shortLabel: "Inbox", section: "Notifications", description: "In-app intelligence event review" },
@@ -47,6 +49,7 @@ export const primaryNavigationTargets: NavigationTarget[] = [
   "brief",
   "dataOnboarding",
   "scanner",
+  "equityResearch",
   "triage",
   "quality",
   "notifications",
