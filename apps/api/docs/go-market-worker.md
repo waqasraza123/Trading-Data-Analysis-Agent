@@ -129,6 +129,7 @@ Concurrency knobs:
 - `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS`: provider pause duration after the failure threshold is reached.
 - `MARKET_WORKER_JOB_TIMEOUT_SECONDS`: max runtime for one claimed job or direct request.
 - `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS`: bounded cleanup timeout for job/request status writes.
+- `MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS`: stale age before a Go-claimed direct request can be reclaimed.
 
 Docker:
 
@@ -145,8 +146,8 @@ GET /metrics.json
 ```
 
 `/readyz` exposes DB connectivity, provider registry state, and detected database capabilities.
-`/metrics.json` exposes job, timeout, candle, provider failure, provider gate wait, provider circuit
-breaker, job lock renewal, and capability counters as JSON.
+`/metrics.json` exposes job, timeout, reclaimed direct request, candle, provider failure, provider
+gate wait, provider circuit breaker, job lock renewal, and capability counters as JSON.
 
 ## Operational Checks
 

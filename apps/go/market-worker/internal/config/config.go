@@ -24,7 +24,8 @@ type Config struct {
 	ProviderCooldown         time.Duration
 	JobLockDuration          time.Duration
 	JobTimeout               time.Duration
-	DBWriteTimeout           time.Duration
+	DBWriteTimeout            time.Duration
+	ProviderRequestStaleAfter time.Duration
 	ProviderTimeout          time.Duration
 	MaxCandlesPerRequest     int
 	HealthAddr               string
@@ -52,7 +53,8 @@ func Load() (Config, error) {
 		ProviderCooldown:         time.Duration(envInt("MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS", 60)) * time.Second,
 		JobLockDuration:          time.Duration(envInt("MARKET_WORKER_JOB_LOCK_SECONDS", 120)) * time.Second,
 		JobTimeout:               time.Duration(envInt("MARKET_WORKER_JOB_TIMEOUT_SECONDS", 300)) * time.Second,
-		DBWriteTimeout:           time.Duration(envInt("MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS", 15)) * time.Second,
+		DBWriteTimeout:            time.Duration(envInt("MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS", 15)) * time.Second,
+		ProviderRequestStaleAfter: time.Duration(envInt("MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS", envInt("MARKET_WORKER_JOB_TIMEOUT_SECONDS", 300))) * time.Second,
 		ProviderTimeout:          time.Duration(envInt("MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS", 20)) * time.Second,
 		MaxCandlesPerRequest:     envInt("MARKET_WORKER_MAX_CANDLES_PER_REQUEST", 1000),
 		HealthAddr:               envString("MARKET_WORKER_HEALTH_ADDR", ":8091"),
@@ -90,6 +92,9 @@ func Load() (Config, error) {
 	}
 	if cfg.DBWriteTimeout <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS must be positive")
+	}
+	if cfg.ProviderRequestStaleAfter < 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS must be zero or positive")
 	}
 	if cfg.MaxCandlesPerRequest <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_MAX_CANDLES_PER_REQUEST must be positive")

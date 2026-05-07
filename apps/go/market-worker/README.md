@@ -66,6 +66,7 @@ Optional:
 - `MARKET_WORKER_JOB_LOCK_SECONDS`, default `120`
 - `MARKET_WORKER_JOB_TIMEOUT_SECONDS`, default `300`
 - `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS`, default `15`
+- `MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS`, default same as `MARKET_WORKER_JOB_TIMEOUT_SECONDS`
 - `MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS`, default `20`
 - `MARKET_WORKER_MAX_CANDLES_PER_REQUEST`, default `1000`
 - `MARKET_WORKER_HEALTH_ADDR`, default `:8091`
@@ -101,6 +102,10 @@ is retryable through the job queue policy.
 `MARKET_WORKER_JOB_TIMEOUT_SECONDS` bounds one claimed job or direct polling request. When it
 expires, the worker records `job_timeout` with a short `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS`
 cleanup context so the queue can retry according to its existing policy.
+
+`MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS` lets the direct `provider_polling_requests`
+fallback reclaim stale Go-claimed rows left in `running` after an interrupted worker. Reclaimed
+rows are marked in request metadata and counted in `/metrics.json`.
 
 ## Job Bridge
 

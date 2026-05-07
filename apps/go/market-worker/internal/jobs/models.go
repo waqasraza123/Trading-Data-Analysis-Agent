@@ -38,6 +38,7 @@ type PollingRequest struct {
 	EndTime        *time.Time
 	Limit          int
 	Metadata       map[string]any
+	Reclaimed      bool
 }
 
 func DecodePayload(payload map[string]any, fallbackWorkspaceID *uuid.UUID, maxLimit int) (PollingRequest, error) {

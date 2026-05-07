@@ -61,6 +61,7 @@ func run() error {
 		"providerCooldownSeconds", int(cfg.ProviderCooldown.Seconds()),
 		"jobTimeoutSeconds", int(cfg.JobTimeout.Seconds()),
 		"dbWriteTimeoutSeconds", int(cfg.DBWriteTimeout.Seconds()),
+		"providerRequestStaleSeconds", int(cfg.ProviderRequestStaleAfter.Seconds()),
 		"databaseUrl", safety.RedactDatabaseURL(cfg.DatabaseURL),
 		"healthAddr", cfg.HealthAddr,
 	)
@@ -114,12 +115,13 @@ func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, prov
 		"providerMaxConcurrency":   cfg.ProviderMaxConcurrency,
 		"providerMinIntervalMs":    cfg.ProviderMinInterval.Milliseconds(),
 		"providerFailureThreshold": cfg.ProviderFailureThreshold,
-		"providerCooldownSeconds":  int(cfg.ProviderCooldown.Seconds()),
-		"jobTimeoutSeconds":        int(cfg.JobTimeout.Seconds()),
-		"dbWriteTimeoutSeconds":    int(cfg.DBWriteTimeout.Seconds()),
-		"providers":                providers,
-		"dbCapabilities":           capabilities,
-		"ready":                    readyErr == nil,
+		"providerCooldownSeconds":     int(cfg.ProviderCooldown.Seconds()),
+		"jobTimeoutSeconds":           int(cfg.JobTimeout.Seconds()),
+		"dbWriteTimeoutSeconds":       int(cfg.DBWriteTimeout.Seconds()),
+		"providerRequestStaleSeconds": int(cfg.ProviderRequestStaleAfter.Seconds()),
+		"providers":                   providers,
+		"dbCapabilities":              capabilities,
+		"ready":                       readyErr == nil,
 	}
 	if readyErr != nil {
 		payload["error"] = readyErr.Error()

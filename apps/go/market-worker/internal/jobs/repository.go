@@ -211,7 +211,7 @@ where id = $1
 	return tag.RowsAffected() == 1, nil
 }
 
-func (r *Repository) ClaimProviderPollingRequests(ctx context.Context, workerID string, limit int) ([]PollingRequest, error) {
+func (r *Repository) ClaimProviderPollingRequests(ctx context.Context, workerID string, limit int, staleAfter time.Duration) ([]PollingRequest, error) {
 	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, err
@@ -220,14 +220,23 @@ func (r *Repository) ClaimProviderPollingRequests(ctx context.Context, workerID 
 		_ = tx.Rollback(ctx)
 	}()
 	rows, err := tx.Query(ctx, `
-select id, workspace_id, source_id, symbol_id, provider, provider_symbol, timeframe,
+select id, workspace_id, source_id, symbol_id, provider, provider_symbol, timeframe, status,
 	start_time, end_time, coalesce(limit, 1000), request_metadata_json::text
 from provider_polling_requests
 where status = 'pending'
-order by created_at asc
+	or (
+		$2 > 0
+		and status = 'running'
+		and started_at is not null
+		and started_at <= now() - ($2 * interval '1 second')
+		and request_metadata_json ->> 'claimedByGoWorker' = 'true'
+	)
+order by
+	case when status = 'pending' then 0 else 1 end,
+	created_at asc
 limit $1
 for update skip locked
-`, limit)
+`, limit, int(staleAfter.Seconds()))
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +246,8 @@ for update skip locked
 		var request PollingRequest
 		var metadataText string
 		var requestID uuid.UUID
-		if err := rows.Scan(&requestID, &request.WorkspaceID, &request.SourceID, &request.SymbolID, &request.Provider, &request.ProviderSymbol, &request.Timeframe, &request.StartTime, &request.EndTime, &request.Limit, &metadataText); err != nil {
+		var status string
+		if err := rows.Scan(&requestID, &request.WorkspaceID, &request.SourceID, &request.SymbolID, &request.Provider, &request.ProviderSymbol, &request.Timeframe, &status, &request.StartTime, &request.EndTime, &request.Limit, &metadataText); err != nil {
 			return nil, err
 		}
 		metadata, err := PayloadFromJSON(metadataText)
@@ -246,6 +256,7 @@ for update skip locked
 		}
 		request.ID = &requestID
 		request.Metadata = metadata
+		request.Reclaimed = status == "running"
 		requests = append(requests, request)
 	}
 	if err := rows.Err(); err != nil {
@@ -255,11 +266,20 @@ for update skip locked
 		_, err := tx.Exec(ctx, `
 update provider_polling_requests
 set status = 'running',
-	started_at = coalesce(started_at, now()),
+	started_at = now(),
 	request_metadata_json = request_metadata_json || $2::jsonb,
+	response_metadata_json = '{}'::jsonb,
+	error_message = null,
+	completed_at = null,
 	updated_at = now()
 where id = $1
-`, *request.ID, map[string]any{"claimedBy": workerID, "claimedByGoWorker": true})
+`, *request.ID, map[string]any{
+			"claimedBy":           workerID,
+			"claimedByGoWorker":   true,
+			"claimedAt":           time.Now().UTC().Format(time.RFC3339),
+			"staleAfterSeconds":   int(staleAfter.Seconds()),
+			"reclaimedByGoWorker": request.Reclaimed,
+		})
 		if err != nil {
 			return nil, err
 		}

@@ -10,44 +10,46 @@ import (
 type Metrics struct {
 	startedAt                time.Time
 	mu                       sync.RWMutex
-	JobsClaimed              int        `json:"jobsClaimed"`
-	JobsCompleted            int        `json:"jobsCompleted"`
-	JobsFailed               int        `json:"jobsFailed"`
-	JobsTimedOut             int        `json:"jobsTimedOut"`
-	CandlesReceived          int        `json:"candlesReceived"`
-	CandlesInserted          int        `json:"candlesInserted"`
-	CandlesSkipped           int        `json:"candlesSkipped"`
-	CandlesConflicted        int        `json:"candlesConflicted"`
-	ProviderFailures         int        `json:"providerFailures"`
-	ProviderGateWaits        int        `json:"providerGateWaits"`
-	ProviderGateWaitMillis   int64      `json:"providerGateWaitMillis"`
-	ProviderCircuitOpenings  int        `json:"providerCircuitOpenings"`
-	ProviderCircuitBlocks    int        `json:"providerCircuitBlocks"`
-	JobLockRenewals          int        `json:"jobLockRenewals"`
-	JobLockRenewalFailures   int        `json:"jobLockRenewalFailures"`
-	LastJobTime              *time.Time `json:"lastJobTime"`
+	JobsClaimed               int        `json:"jobsClaimed"`
+	ProviderRequestsReclaimed int        `json:"providerRequestsReclaimed"`
+	JobsCompleted             int        `json:"jobsCompleted"`
+	JobsFailed                int        `json:"jobsFailed"`
+	JobsTimedOut              int        `json:"jobsTimedOut"`
+	CandlesReceived           int        `json:"candlesReceived"`
+	CandlesInserted           int        `json:"candlesInserted"`
+	CandlesSkipped            int        `json:"candlesSkipped"`
+	CandlesConflicted         int        `json:"candlesConflicted"`
+	ProviderFailures          int        `json:"providerFailures"`
+	ProviderGateWaits         int        `json:"providerGateWaits"`
+	ProviderGateWaitMillis    int64      `json:"providerGateWaitMillis"`
+	ProviderCircuitOpenings   int        `json:"providerCircuitOpenings"`
+	ProviderCircuitBlocks     int        `json:"providerCircuitBlocks"`
+	JobLockRenewals           int        `json:"jobLockRenewals"`
+	JobLockRenewalFailures    int        `json:"jobLockRenewalFailures"`
+	LastJobTime               *time.Time `json:"lastJobTime"`
 }
 
 type Snapshot struct {
-	StartedAt              time.Time             `json:"startedAt"`
-	UptimeSeconds          int64                 `json:"uptimeSeconds"`
-	JobsClaimed            int                   `json:"jobsClaimed"`
-	JobsCompleted          int                   `json:"jobsCompleted"`
-	JobsFailed             int                   `json:"jobsFailed"`
-	JobsTimedOut           int                   `json:"jobsTimedOut"`
-	CandlesReceived        int                   `json:"candlesReceived"`
-	CandlesInserted        int                   `json:"candlesInserted"`
-	CandlesSkipped         int                   `json:"candlesSkipped"`
-	CandlesConflicted      int                   `json:"candlesConflicted"`
-	ProviderFailures       int                   `json:"providerFailures"`
-	ProviderGateWaits      int                   `json:"providerGateWaits"`
-	ProviderGateWaitMillis int64                 `json:"providerGateWaitMillis"`
-	ProviderCircuitOpenings int                   `json:"providerCircuitOpenings"`
-	ProviderCircuitBlocks   int                   `json:"providerCircuitBlocks"`
-	JobLockRenewals        int                   `json:"jobLockRenewals"`
-	JobLockRenewalFailures int                   `json:"jobLockRenewalFailures"`
-	LastJobTime            *time.Time            `json:"lastJobTime"`
-	DBCapabilities         workerdb.Capabilities `json:"dbCapabilities"`
+	StartedAt                 time.Time             `json:"startedAt"`
+	UptimeSeconds             int64                 `json:"uptimeSeconds"`
+	JobsClaimed               int                   `json:"jobsClaimed"`
+	ProviderRequestsReclaimed int                   `json:"providerRequestsReclaimed"`
+	JobsCompleted             int                   `json:"jobsCompleted"`
+	JobsFailed                int                   `json:"jobsFailed"`
+	JobsTimedOut              int                   `json:"jobsTimedOut"`
+	CandlesReceived           int                   `json:"candlesReceived"`
+	CandlesInserted           int                   `json:"candlesInserted"`
+	CandlesSkipped            int                   `json:"candlesSkipped"`
+	CandlesConflicted         int                   `json:"candlesConflicted"`
+	ProviderFailures          int                   `json:"providerFailures"`
+	ProviderGateWaits         int                   `json:"providerGateWaits"`
+	ProviderGateWaitMillis    int64                 `json:"providerGateWaitMillis"`
+	ProviderCircuitOpenings   int                   `json:"providerCircuitOpenings"`
+	ProviderCircuitBlocks     int                   `json:"providerCircuitBlocks"`
+	JobLockRenewals           int                   `json:"jobLockRenewals"`
+	JobLockRenewalFailures    int                   `json:"jobLockRenewalFailures"`
+	LastJobTime               *time.Time            `json:"lastJobTime"`
+	DBCapabilities            workerdb.Capabilities `json:"dbCapabilities"`
 }
 
 func NewMetrics() *Metrics {
@@ -60,6 +62,15 @@ func (m *Metrics) RecordClaimed(count int) {
 	m.JobsClaimed += count
 	now := time.Now().UTC()
 	m.LastJobTime = &now
+}
+
+func (m *Metrics) RecordProviderRequestsReclaimed(count int) {
+	if count <= 0 {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.ProviderRequestsReclaimed += count
 }
 
 func (m *Metrics) RecordCompleted(received int, inserted int, skipped int, conflicted int) {
@@ -129,22 +140,23 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 	return Snapshot{
 		StartedAt:              m.startedAt,
 		UptimeSeconds:          int64(time.Since(m.startedAt).Seconds()),
-		JobsClaimed:            m.JobsClaimed,
-		JobsCompleted:          m.JobsCompleted,
-		JobsFailed:             m.JobsFailed,
-		JobsTimedOut:           m.JobsTimedOut,
-		CandlesReceived:        m.CandlesReceived,
-		CandlesInserted:        m.CandlesInserted,
-		CandlesSkipped:         m.CandlesSkipped,
-		CandlesConflicted:      m.CandlesConflicted,
-		ProviderFailures:       m.ProviderFailures,
-		ProviderGateWaits:      m.ProviderGateWaits,
-		ProviderGateWaitMillis: m.ProviderGateWaitMillis,
-		ProviderCircuitOpenings: m.ProviderCircuitOpenings,
-		ProviderCircuitBlocks:   m.ProviderCircuitBlocks,
-		JobLockRenewals:        m.JobLockRenewals,
-		JobLockRenewalFailures: m.JobLockRenewalFailures,
-		LastJobTime:            m.LastJobTime,
-		DBCapabilities:         capabilities,
+		JobsClaimed:               m.JobsClaimed,
+		ProviderRequestsReclaimed: m.ProviderRequestsReclaimed,
+		JobsCompleted:             m.JobsCompleted,
+		JobsFailed:                m.JobsFailed,
+		JobsTimedOut:              m.JobsTimedOut,
+		CandlesReceived:           m.CandlesReceived,
+		CandlesInserted:           m.CandlesInserted,
+		CandlesSkipped:            m.CandlesSkipped,
+		CandlesConflicted:         m.CandlesConflicted,
+		ProviderFailures:          m.ProviderFailures,
+		ProviderGateWaits:         m.ProviderGateWaits,
+		ProviderGateWaitMillis:    m.ProviderGateWaitMillis,
+		ProviderCircuitOpenings:   m.ProviderCircuitOpenings,
+		ProviderCircuitBlocks:     m.ProviderCircuitBlocks,
+		JobLockRenewals:           m.JobLockRenewals,
+		JobLockRenewalFailures:    m.JobLockRenewalFailures,
+		LastJobTime:               m.LastJobTime,
+		DBCapabilities:            capabilities,
 	}
 }

@@ -72,6 +72,16 @@ bounded.
 request status writes. If the processing context has already expired, the worker uses a fresh
 bounded cleanup context so status updates can still be recorded without hanging shutdown forever.
 
+## Direct Request Recovery
+
+`provider_polling_requests` does not have native lock columns. The Go fallback claim path marks
+rows with Go claim metadata and can reclaim interrupted Go-owned `running` rows once
+`MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS` has elapsed. Reclaimed rows are counted as
+`providerRequestsReclaimed` in `/metrics.json`.
+
+The stale window should be at least as long as `MARKET_WORKER_JOB_TIMEOUT_SECONDS` in most
+deployments. Set it to `0` to disable stale direct request reclaiming.
+
 ## Provider Backpressure
 
 `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits concurrent fetches per provider key, independent of
@@ -132,8 +142,8 @@ GET /metrics.json
 
 `/healthz` reports process liveness, worker ID, and uptime. `/readyz` checks database connectivity,
 required table capabilities, and provider registration. `/metrics.json` reports job, candle,
-timeout, provider failure, provider gate wait, provider circuit breaker, job lock renewal, and
-capability counters.
+timeout, reclaimed direct request, provider failure, provider gate wait, provider circuit breaker,
+job lock renewal, and capability counters.
 
 ## Rollout Sequence
 
@@ -154,6 +164,8 @@ capability counters.
    from repeated provider failures, provider health snapshots, and job retry pressure.
 10. Tune `MARKET_WORKER_JOB_TIMEOUT_SECONDS` and `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS` from
     observed provider latency, candle batch size, and shutdown expectations.
+11. Tune `MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS` from direct fallback usage and the maximum
+    expected runtime of a provider polling request.
 
 ## Safety Boundary
 

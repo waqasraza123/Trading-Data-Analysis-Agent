@@ -86,11 +86,12 @@ func (r *Runner) RunOnce(ctx context.Context) (int, error) {
 
 func (r *Runner) pollOnce(ctx context.Context) (int, error) {
 	if r.config.Mode == "provider_polling_requests" || !r.capabilities.HasTable("job_queue_items") {
-		requests, err := r.repository.ClaimProviderPollingRequests(ctx, r.config.WorkerID, r.config.BatchSize)
+		requests, err := r.repository.ClaimProviderPollingRequests(ctx, r.config.WorkerID, r.config.BatchSize, r.config.ProviderRequestStaleAfter)
 		if err != nil {
 			return 0, err
 		}
 		r.metrics.RecordClaimed(len(requests))
+		r.metrics.RecordProviderRequestsReclaimed(reclaimedRequestCount(requests))
 		return len(requests), r.processRequests(ctx, requests)
 	}
 	jobs, err := r.repository.ClaimJobQueueItems(ctx, r.config.QueueName, r.config.WorkerID, r.config.BatchSize, r.config.JobLockDuration)
@@ -98,11 +99,12 @@ func (r *Runner) pollOnce(ctx context.Context) (int, error) {
 		return 0, err
 	}
 	if len(jobs) == 0 && r.capabilities.HasTable("provider_polling_requests") {
-		requests, err := r.repository.ClaimProviderPollingRequests(ctx, r.config.WorkerID, r.config.BatchSize)
+		requests, err := r.repository.ClaimProviderPollingRequests(ctx, r.config.WorkerID, r.config.BatchSize, r.config.ProviderRequestStaleAfter)
 		if err != nil {
 			return 0, err
 		}
 		r.metrics.RecordClaimed(len(requests))
+		r.metrics.RecordProviderRequestsReclaimed(reclaimedRequestCount(requests))
 		return len(requests), r.processRequests(ctx, requests)
 	}
 	r.metrics.RecordClaimed(len(jobs))
@@ -165,6 +167,16 @@ func (r *Runner) processRequests(ctx context.Context, requests []jobs.PollingReq
 		}
 	}
 	return nil
+}
+
+func reclaimedRequestCount(requests []jobs.PollingRequest) int {
+	count := 0
+	for _, request := range requests {
+		if request.Reclaimed {
+			count++
+		}
+	}
+	return count
 }
 
 func (r *Runner) handleJobWithLease(ctx context.Context, job jobs.Job) error {
