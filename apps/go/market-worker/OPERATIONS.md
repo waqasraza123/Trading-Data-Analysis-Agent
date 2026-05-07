@@ -48,6 +48,20 @@ MARKET_WORKER_RUN_MODE=inspect \
 go run ./cmd/market-worker
 ```
 
+## Concurrency And Locks
+
+`MARKET_WORKER_BATCH_SIZE` controls claim size. `MARKET_WORKER_MAX_CONCURRENCY` controls how many
+claimed items run at the same time. The default concurrency equals batch size.
+
+For `job_queue_items`, claimed rows are protected by `locked_by` and `locked_until`. While a job is
+running, the worker renews `locked_until` on a bounded interval derived from
+`MARKET_WORKER_JOB_LOCK_SECONDS`. Renewal only succeeds when the row is still running and still
+locked by the current worker ID.
+
+Use lower concurrency for public providers with strict rate limits or when the database pool is
+small. Raise batch size independently when claim overhead matters but execution should remain
+bounded.
+
 ## Failure Policy
 
 Terminal failures are completed as failed or dead-lettered without scheduling Go-side retry:
@@ -83,7 +97,7 @@ GET /metrics.json
 
 `/healthz` reports process liveness, worker ID, and uptime. `/readyz` checks database connectivity,
 required table capabilities, and provider registration. `/metrics.json` reports job, candle,
-provider failure, and capability counters.
+provider failure, job lock renewal, and capability counters.
 
 ## Rollout Sequence
 
@@ -95,6 +109,9 @@ provider failure, and capability counters.
 5. Enable `MARKET_WORKER_RUN_MODE=serve` behind the worker process manager.
 6. Watch `/readyz`, `/metrics.json`, runtime heartbeat rows when available, and job queue
    dead-letter counts.
+7. Tune `MARKET_WORKER_BATCH_SIZE`, `MARKET_WORKER_MAX_CONCURRENCY`, and
+   `MARKET_WORKER_JOB_LOCK_SECONDS` from observed provider latency, conflict counts, and lock
+   renewal failures.
 
 ## Safety Boundary
 

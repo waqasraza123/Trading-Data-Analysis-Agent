@@ -55,6 +55,7 @@ Optional:
 - `MARKET_WORKER_QUEUE_NAME`, default `market-data`
 - `MARKET_WORKER_POLL_SECONDS`, default `5`
 - `MARKET_WORKER_BATCH_SIZE`, default `10`
+- `MARKET_WORKER_MAX_CONCURRENCY`, default same as `MARKET_WORKER_BATCH_SIZE`
 - `MARKET_WORKER_JOB_LOCK_SECONDS`, default `120`
 - `MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS`, default `20`
 - `MARKET_WORKER_MAX_CANDLES_PER_REQUEST`, default `1000`
@@ -75,6 +76,10 @@ credentials at startup.
 - `serve`: long-running worker with health endpoints, DB heartbeat when available, and periodic job claiming.
 - `once`: claim and process one bounded batch, then exit.
 - `inspect`: connect to Postgres, detect table capabilities, print JSON, and exit without claiming work.
+
+`MARKET_WORKER_BATCH_SIZE` controls how much work one claim cycle can reserve. `MARKET_WORKER_MAX_CONCURRENCY`
+controls how many claimed jobs or direct polling requests execute at the same time. Keep concurrency below the
+database connection pool and provider rate-limit budget.
 
 ## Job Bridge
 
@@ -103,6 +108,11 @@ If a payload contains `providerPollingRequestId`, the worker loads the canonical
 Unsupported job types, malformed payloads, unsupported providers, unsupported timeframes, and
 secret-looking metadata fail terminally. Transient provider or database errors remain retryable and
 respect the existing job queue attempt limits plus `MARKET_WORKER_RETRY_BACKOFF_SECONDS`.
+
+For `job_queue_items`, the worker renews `locked_until` while a job is running. If renewal fails
+transiently, it is counted in metrics and retried on the next renewal tick. If the lock is no longer
+owned by the worker, the renewal loop stops and the job result update remains guarded by the queue
+row state.
 
 ## Candle Policy
 

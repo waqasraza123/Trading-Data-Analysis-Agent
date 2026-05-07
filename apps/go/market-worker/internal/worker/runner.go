@@ -112,14 +112,16 @@ func (r *Runner) pollOnce(ctx context.Context) (int, error) {
 func (r *Runner) processJobs(ctx context.Context, items []jobs.Job) error {
 	var wg sync.WaitGroup
 	errs := make(chan error, len(items))
-	sem := make(chan struct{}, min(len(items), max(1, r.config.BatchSize)))
+	sem := make(chan struct{}, r.concurrencyLimit(len(items)))
 	for _, item := range items {
 		wg.Add(1)
 		go func(job jobs.Job) {
 			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			if err := r.handleJob(ctx, job); err != nil {
+			if !acquire(ctx, sem) {
+				return
+			}
+			defer release(sem)
+			if err := r.handleJobWithLease(ctx, job); err != nil {
 				errs <- err
 			}
 		}(item)
@@ -137,13 +139,15 @@ func (r *Runner) processJobs(ctx context.Context, items []jobs.Job) error {
 func (r *Runner) processRequests(ctx context.Context, requests []jobs.PollingRequest) error {
 	var wg sync.WaitGroup
 	errs := make(chan error, len(requests))
-	sem := make(chan struct{}, min(len(requests), max(1, r.config.BatchSize)))
+	sem := make(chan struct{}, r.concurrencyLimit(len(requests)))
 	for _, request := range requests {
 		wg.Add(1)
 		go func(item jobs.PollingRequest) {
 			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
+			if !acquire(ctx, sem) {
+				return
+			}
+			defer release(sem)
 			if err := r.handleDirectRequest(ctx, item); err != nil {
 				errs <- err
 			}
@@ -157,4 +161,81 @@ func (r *Runner) processRequests(ctx context.Context, requests []jobs.PollingReq
 		}
 	}
 	return nil
+}
+
+func (r *Runner) handleJobWithLease(ctx context.Context, job jobs.Job) error {
+	leaseCtx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		r.renewJobLock(leaseCtx, job)
+	}()
+	err := r.handleJob(ctx, job)
+	cancel()
+	<-done
+	return err
+}
+
+func (r *Runner) renewJobLock(ctx context.Context, job jobs.Job) {
+	interval := r.config.JobLockDuration / 3
+	if interval < time.Second {
+		interval = time.Second
+	}
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			renewCtx, cancel := context.WithTimeout(ctx, renewalTimeout(interval))
+			renewed, err := r.repository.RenewJobLock(renewCtx, job, r.config.WorkerID, r.config.JobLockDuration)
+			cancel()
+			if err != nil {
+				r.metrics.RecordJobLockRenewal(false)
+				r.logger.Warn("market_worker_job_lock_renewal_failed", "jobId", job.ID.String(), "error", err)
+				continue
+			}
+			r.metrics.RecordJobLockRenewal(renewed)
+			if !renewed {
+				r.logger.Warn("market_worker_job_lock_lost", "jobId", job.ID.String())
+				return
+			}
+		}
+	}
+}
+
+func (r *Runner) concurrencyLimit(count int) int {
+	if count <= 0 {
+		return 1
+	}
+	limit := r.config.MaxConcurrency
+	if limit <= 0 {
+		limit = r.config.BatchSize
+	}
+	if limit > count {
+		return count
+	}
+	return limit
+}
+
+func acquire(ctx context.Context, sem chan struct{}) bool {
+	select {
+	case sem <- struct{}{}:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
+func release(sem chan struct{}) {
+	<-sem
+}
+
+func renewalTimeout(interval time.Duration) time.Duration {
+	timeout := 5 * time.Second
+	if interval < timeout {
+		return interval
+	}
+	return timeout
 }

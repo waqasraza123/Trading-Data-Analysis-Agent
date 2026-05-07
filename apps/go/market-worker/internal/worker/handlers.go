@@ -45,6 +45,7 @@ func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 		"conflicted":     result.Conflicted,
 		"invalid":        result.Invalid,
 	}, warnings); err != nil {
+		r.metrics.RecordFailed(false)
 		return err
 	}
 	r.metrics.RecordCompleted(result.Received, result.Counts.Inserted+result.Counts.Updated, result.Skipped, result.Conflicted)

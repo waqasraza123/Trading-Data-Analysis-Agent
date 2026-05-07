@@ -22,6 +22,7 @@ type Job struct {
 	JobType     string
 	Attempts    int
 	MaxAttempts int
+	LockedBy    string
 	Payload     map[string]any
 }
 

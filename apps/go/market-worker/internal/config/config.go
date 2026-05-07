@@ -17,6 +17,7 @@ type Config struct {
 	QueueName                string
 	PollInterval             time.Duration
 	BatchSize                int
+	MaxConcurrency           int
 	JobLockDuration          time.Duration
 	ProviderTimeout          time.Duration
 	MaxCandlesPerRequest     int
@@ -31,12 +32,14 @@ type Config struct {
 }
 
 func Load() (Config, error) {
+	batchSize := envInt("MARKET_WORKER_BATCH_SIZE", 10)
 	cfg := Config{
 		DatabaseURL:              strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		WorkerID:                 envString("MARKET_WORKER_ID", "market-worker-"+uuid.NewString()),
 		QueueName:                envString("MARKET_WORKER_QUEUE_NAME", "market-data"),
 		PollInterval:             time.Duration(envInt("MARKET_WORKER_POLL_SECONDS", 5)) * time.Second,
-		BatchSize:                envInt("MARKET_WORKER_BATCH_SIZE", 10),
+		BatchSize:                batchSize,
+		MaxConcurrency:           envInt("MARKET_WORKER_MAX_CONCURRENCY", batchSize),
 		JobLockDuration:          time.Duration(envInt("MARKET_WORKER_JOB_LOCK_SECONDS", 120)) * time.Second,
 		ProviderTimeout:          time.Duration(envInt("MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS", 20)) * time.Second,
 		MaxCandlesPerRequest:     envInt("MARKET_WORKER_MAX_CANDLES_PER_REQUEST", 1000),
@@ -54,6 +57,9 @@ func Load() (Config, error) {
 	}
 	if cfg.BatchSize <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_BATCH_SIZE must be positive")
+	}
+	if cfg.MaxConcurrency <= 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_MAX_CONCURRENCY must be positive")
 	}
 	if cfg.MaxCandlesPerRequest <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_MAX_CANDLES_PER_REQUEST must be positive")

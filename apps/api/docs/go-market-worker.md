@@ -81,6 +81,10 @@ unsupported provider, unsupported timeframe, secret-looking metadata, and not-co
 stubs. Transient provider or database failures remain retryable through the existing job queue
 attempt limits and `MARKET_WORKER_RETRY_BACKOFF_SECONDS`.
 
+The worker renews `job_queue_items.locked_until` while claimed jobs are running, so provider calls
+or larger candle batches do not become eligible for another worker before completion. Lock renewal
+is scoped to the same `locked_by` worker ID and running status.
+
 ## Candle Semantics
 
 The worker writes to the existing `candles` table and mirrors the Python source-of-truth policy:
@@ -115,6 +119,11 @@ Run modes:
 - `MARKET_WORKER_RUN_MODE=once`: claim and process one bounded batch, then exit.
 - `MARKET_WORKER_RUN_MODE=inspect`: print detected database capabilities as JSON and exit without claiming work.
 
+Concurrency knobs:
+
+- `MARKET_WORKER_BATCH_SIZE`: number of jobs or direct requests claimed per cycle.
+- `MARKET_WORKER_MAX_CONCURRENCY`: number of claimed jobs or direct requests processed in parallel.
+
 Docker:
 
 ```sh
@@ -130,7 +139,8 @@ GET /metrics.json
 ```
 
 `/readyz` exposes DB connectivity, provider registry state, and detected database capabilities.
-`/metrics.json` exposes job, candle, provider failure, and capability counters as JSON.
+`/metrics.json` exposes job, candle, provider failure, job lock renewal, and capability counters as
+JSON.
 
 ## Operational Checks
 

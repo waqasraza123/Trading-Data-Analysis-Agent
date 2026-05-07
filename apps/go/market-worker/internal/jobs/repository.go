@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -84,6 +85,7 @@ where id = $1
 			return nil, err
 		}
 		jobs[index].Attempts++
+		jobs[index].LockedBy = workerID
 		if err := r.addJobEventTx(ctx, tx, jobs[index], "claimed", "Job claimed", map[string]any{"workerId": workerID, "attempts": jobs[index].Attempts}); err != nil {
 			return nil, err
 		}
@@ -99,7 +101,7 @@ func (r *Repository) CompleteJob(ctx context.Context, job Job, result map[string
 	if warnings {
 		status = "completed_with_warnings"
 	}
-	_, err := r.pool.Exec(ctx, `
+	tag, err := r.pool.Exec(ctx, `
 update job_queue_items
 set status = $2,
 	result_json = $3,
@@ -110,9 +112,14 @@ set status = $2,
 	completed_at = now(),
 	updated_at = now()
 where id = $1
-`, job.ID, status, result)
+	and status = 'running'
+	and locked_by = $4
+`, job.ID, status, result, job.LockedBy)
 	if err != nil {
 		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return fmt.Errorf("job_lock_not_owned")
 	}
 	return r.AddJobEvent(ctx, job, "completed", "Job completed", map[string]any{"completedWithWarnings": warnings})
 }
@@ -127,7 +134,7 @@ func (r *Repository) FailJob(ctx context.Context, job Job, code string, message 
 	} else {
 		status = "dead_letter"
 	}
-	_, err := r.pool.Exec(ctx, `
+	tag, err := r.pool.Exec(ctx, `
 update job_queue_items
 set status = $2,
 	error_code = left($3, 120),
@@ -138,9 +145,14 @@ set status = $2,
 	completed_at = case when $2 in ('failed', 'dead_letter') then now() else completed_at end,
 	updated_at = now()
 where id = $1
-`, job.ID, status, code, message, availableAt)
+	and status = 'running'
+	and locked_by = $6
+`, job.ID, status, code, message, availableAt, job.LockedBy)
 	if err != nil {
 		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return fmt.Errorf("job_lock_not_owned")
 	}
 	eventType := "failed"
 	if status == "retrying" {
@@ -157,7 +169,7 @@ func (r *Repository) FailJobTerminal(ctx context.Context, job Job, code string, 
 	if job.Attempts >= job.MaxAttempts {
 		status = "dead_letter"
 	}
-	_, err := r.pool.Exec(ctx, `
+	tag, err := r.pool.Exec(ctx, `
 update job_queue_items
 set status = $2,
 	error_code = left($3, 120),
@@ -167,15 +179,36 @@ set status = $2,
 	completed_at = now(),
 	updated_at = now()
 where id = $1
-`, job.ID, status, code, message)
+	and status = 'running'
+	and locked_by = $5
+`, job.ID, status, code, message, job.LockedBy)
 	if err != nil {
 		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return fmt.Errorf("job_lock_not_owned")
 	}
 	eventType := "failed"
 	if status == "dead_letter" {
 		eventType = "dead_lettered"
 	}
 	return r.AddJobEvent(ctx, job, eventType, "Job failed without retry", map[string]any{"errorCode": code, "status": status, "retryable": false})
+}
+
+func (r *Repository) RenewJobLock(ctx context.Context, job Job, workerID string, lockDuration time.Duration) (bool, error) {
+	lockUntil := time.Now().UTC().Add(lockDuration)
+	tag, err := r.pool.Exec(ctx, `
+update job_queue_items
+set locked_until = $3,
+	updated_at = now()
+where id = $1
+	and locked_by = $2
+	and status = 'running'
+`, job.ID, workerID, lockUntil)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() == 1, nil
 }
 
 func (r *Repository) ClaimProviderPollingRequests(ctx context.Context, workerID string, limit int) ([]PollingRequest, error) {
