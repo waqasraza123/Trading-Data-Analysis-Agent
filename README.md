@@ -152,6 +152,13 @@ Run API or web directly without Docker:
 ./scripts/dev-web.sh
 ```
 
+Run the additive Go market data worker when Go is installed:
+
+```sh
+cd apps/go/market-worker
+DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence go run ./cmd/market-worker
+```
+
 The API uses Python packaging from `apps/api/pyproject.toml`. The web app uses npm with the
 committed `apps/web/package-lock.json`; use `npm ci` for clean installs. Only public frontend
 configuration belongs in `NEXT_PUBLIC_*` variables.

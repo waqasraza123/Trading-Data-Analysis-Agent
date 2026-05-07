@@ -1,0 +1,151 @@
+# Go Market Data Worker
+
+The Go market data worker is the first additive Go sidecar for this repository. It bridges to the
+existing Python/Postgres platform without migrating or replacing the FastAPI backend.
+
+Python remains the product brain:
+
+- FastAPI routes and UI-facing contracts
+- auth, RBAC, and workspace permissions
+- SQLAlchemy models and Alembic migrations
+- deterministic intelligence and reporting
+- LLM reasoning and explanations
+- product orchestration and readiness workflows
+
+Go owns only selected sidecar execution:
+
+- high-concurrency provider polling
+- batch candle validation and normalization
+- batch candle writes to the existing candle contract
+- provider polling request counts/errors
+- provider health snapshots when the table exists
+- candle ingestion performance/conflict diagnostics when the tables exist
+- runtime worker heartbeat when supervisor tables exist
+- local health and metrics endpoints
+
+It does not classify signals, calculate trading advice, place orders, connect to brokers for
+execution, send alerts, mutate strategy profiles, run LLMs, expose public advice, or replace
+FastAPI.
+
+## Location
+
+```txt
+apps/go/market-worker
+```
+
+## Tables Used
+
+Required:
+
+- `candles`
+- `symbols`
+- `data_sources`
+- either `job_queue_items` or `provider_polling_requests`
+
+Optional integrations:
+
+- `job_queue_events`
+- `provider_polling_errors`
+- `provider_health_snapshots`
+- `candle_ingestion_performance_runs`
+- `candle_ingestion_conflicts`
+- `runtime_worker_definitions`
+- `runtime_worker_instances`
+- `engine_execution_records`
+
+The worker detects table and column capabilities at startup. Optional tables are skipped when
+missing. No Python migration is required for this phase.
+
+## Job Queue Bridge
+
+When `job_queue_items` exists, the worker claims eligible jobs with row locks and skip-locked
+semantics. Eligibility includes configured queue name or provider polling job types, pending or
+retryable status, available scheduling, attempts below max attempts, and expired or missing locks.
+
+Supported job types:
+
+- `provider_polling.fetch`
+- `market_data.poll`
+- `candles.fetch_provider`
+- `provider_polling.run`
+
+Current Python migrations constrain job types to the existing backend-safe set, so
+`provider_polling.fetch` is the canonical current job type.
+
+If `job_queue_items` is missing or no eligible jobs are present, the worker can claim pending
+`provider_polling_requests` directly and update those rows through running, completed,
+completed-with-warnings, or failed states.
+
+## Candle Semantics
+
+The worker writes to the existing `candles` table and mirrors the Python source-of-truth policy:
+
+- final candles are the default;
+- partial candles do not overwrite existing final candles;
+- duplicate final candles with identical values are skipped;
+- conflicting final candles are kept out of storage and recorded as conflicts/errors;
+- partial candles may be updated or finalized;
+- timestamps must align with timeframe;
+- invalid OHLC rows are rejected;
+- decimal price and volume values are handled as strings before numeric insertion;
+- missing candles are not synthesized.
+
+## Providers
+
+- `mock_polling`: deterministic no-network provider for local development and tests.
+- `binance_public_rest`: Binance public REST `/api/v3/klines`, no API key.
+- `generic_ohlc_http`: safe extension stub that returns explicit not-configured errors.
+
+## Run
+
+```sh
+cd apps/go/market-worker
+DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence \
+go run ./cmd/market-worker
+```
+
+Docker:
+
+```sh
+docker compose --profile workers up --build go-market-worker
+```
+
+## Health
+
+```txt
+GET /healthz
+GET /readyz
+GET /metrics.json
+```
+
+`/readyz` exposes DB connectivity, provider registry state, and detected database capabilities.
+`/metrics.json` exposes job, candle, provider failure, and capability counters as JSON.
+
+## Enqueue From Python/API
+
+Use the existing job queue API with `provider_polling.fetch` and a provider polling payload:
+
+```json
+{
+  "queueName": "market-data",
+  "jobType": "provider_polling.fetch",
+  "payloadJson": {
+    "workspaceId": "00000000-0000-0000-0000-000000000000",
+    "sourceId": "00000000-0000-0000-0000-000000000000",
+    "symbolId": "00000000-0000-0000-0000-000000000000",
+    "provider": "mock_polling",
+    "providerSymbol": "BTCUSDT",
+    "timeframe": "1m",
+    "limit": 100
+  }
+}
+```
+
+The existing Python provider polling API remains available and unchanged.
+
+## Future Extensions
+
+- Provider-specific OHLC HTTP mappings.
+- COPY-optimized candle write path after DB contract review.
+- More detailed provider health reconciliation.
+- Deeper engine execution record linkage for market data jobs.

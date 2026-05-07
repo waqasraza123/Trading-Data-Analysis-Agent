@@ -22,6 +22,12 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   validation, a Redis adapter path, and `python -m app.workers.job_queue_worker`. It is additive to
   existing workers and does not execute broker/order jobs, shell commands, arbitrary code,
   auto-trading, or financial-advice behavior.
+- The first Go sidecar exists under `apps/go/market-worker` as an additive market data worker over
+  existing Postgres contracts. It can claim provider polling work from `job_queue_items` or pending
+  `provider_polling_requests`, fetch mock or Binance public REST candles, validate/normalize OHLC
+  rows, preserve existing final/partial candle write semantics, record optional provider health,
+  ingestion performance/conflict diagnostics, runtime heartbeats, and expose local health/metrics.
+  Python remains the canonical API/product brain and no Python provider polling path is removed.
 - Dashboard read model materialization exists under `apps/api/app/modules/read_models/` for rebuildable dashboard symbol, signal card, and command center snapshots. It reads existing deterministic artifacts only and does not mutate source artifacts, run scans/analysis/outcomes, call LLMs/providers, send notifications, execute broker workflows, auto-trade, or provide financial advice.
 
 - The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.

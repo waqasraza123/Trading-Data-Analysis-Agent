@@ -138,5 +138,21 @@ services:
       redis:
         condition: service_healthy
 
+  go-market-worker:
+    build:
+      context: .
+      dockerfile: apps/go/market-worker/Dockerfile
+    profiles:
+      - workers
+    environment:
+      DATABASE_URL: postgresql://trading:trading@postgres:5432/trading_intelligence
+      MARKET_WORKER_QUEUE_NAME: market-data
+      MARKET_WORKER_HEALTH_ADDR: :8091
+    ports:
+      - "8091:8091"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
