@@ -160,7 +160,7 @@ class EquitySwingScorer:
         component_scores = {
             "liquidity": liquidity_score(
                 candles,
-                payload.average_volume,
+                resolved_average_volume(payload),
                 payload.min_average_volume,
             ),
             "volume": volume_score(candles),
@@ -173,10 +173,7 @@ class EquitySwingScorer:
             "data_quality": data_quality_score(payload.artifacts, stale),
         }
         setup_score = decimal_score(
-            sum(
-                component_scores[name] * weight
-                for name, weight in COMPONENT_WEIGHTS.items()
-            )
+            sum(component_scores[name] * weight for name, weight in COMPONENT_WEIGHTS.items())
         )
         setup_type = resolve_setup_type(payload.profile, component_scores, payload.artifacts)
         directional_bias = resolve_directional_bias(candles, payload.artifacts.setup_context)
@@ -202,6 +199,7 @@ class EquitySwingScorer:
             "latestFinalCandleTime": candles[-1].timestamp.isoformat(),
             "candleCount": len(candles),
             "scoringVersion": self.settings.equity_research_version,
+            "enrichment": enrichment_context(payload),
         }
         return EquitySwingScoreDraft(
             candidate_status=candidate_status,
@@ -279,6 +277,30 @@ def liquidity_score(
     if min_average_volume <= 0:
         return Decimal("0.7500")
     return decimal_score(resolved_average / min_average_volume)
+
+
+def resolved_average_volume(payload: EquitySwingScoringInput) -> Decimal | None:
+    if payload.average_volume is not None:
+        return payload.average_volume
+    if (
+        payload.artifacts.fundamentals is not None
+        and payload.artifacts.fundamentals.average_volume is not None
+    ):
+        return Decimal(payload.artifacts.fundamentals.average_volume)
+    if (
+        payload.artifacts.symbol_metadata is not None
+        and payload.artifacts.symbol_metadata.average_volume is not None
+    ):
+        return Decimal(payload.artifacts.symbol_metadata.average_volume)
+    return None
+
+
+def enrichment_context(payload: EquitySwingScoringInput) -> dict[str, object]:
+    return {
+        "metadataAvailable": payload.artifacts.symbol_metadata is not None,
+        "fundamentalsAvailable": payload.artifacts.fundamentals is not None,
+        "earningsEventsAvailable": bool(payload.artifacts.earnings_events),
+    }
 
 
 def volume_score(candles: list[Candle]) -> Decimal:
@@ -410,8 +432,7 @@ def catalyst_score(catalysts: list[EquityCatalystContext]) -> Decimal:
         "unknown": Decimal("0.5000"),
     }
     return max(
-        importance_scores.get(catalyst.importance, Decimal("0.5000"))
-        for catalyst in catalysts
+        importance_scores.get(catalyst.importance, Decimal("0.5000")) for catalyst in catalysts
     )
 
 
@@ -508,10 +529,9 @@ def candidate_status_for(
         return EquitySwingCandidateStatus.NEEDS_CONFIRMATION
     if profile is not None and setup_score < profile.minimum_setup_score:
         return EquitySwingCandidateStatus.NEEDS_CONFIRMATION
-    if (
-        component_scores["trend_quality"] < Decimal("0.3500")
-        and component_scores["momentum"] > Decimal("0.6500")
-    ):
+    if component_scores["trend_quality"] < Decimal("0.3500") and component_scores[
+        "momentum"
+    ] > Decimal("0.6500"):
         return EquitySwingCandidateStatus.CONFLICTED
     if setup_label in {
         EquitySwingSetupQualityLabel.STRONG_CONTEXT,
@@ -556,6 +576,21 @@ def build_evidence(
             "message": "Persisted catalyst context was included when available.",
             "value": str(component_scores["catalyst"]),
         },
+        {
+            "type": "liquidity_context",
+            "message": average_volume_evidence_message(payload),
+            "value": str(component_scores["liquidity"]),
+        },
+        {
+            "type": "earnings_context",
+            "message": earnings_evidence_message(payload),
+            "value": len(payload.artifacts.earnings_events or []),
+        },
+        {
+            "type": "fundamentals_context",
+            "message": fundamentals_evidence_message(payload),
+            "value": payload.artifacts.fundamentals is not None,
+        },
     ]
 
 
@@ -589,6 +624,24 @@ def build_component_risks(
             }
         )
     return risks
+
+
+def average_volume_evidence_message(payload: EquitySwingScoringInput) -> str:
+    if resolved_average_volume(payload) is not None:
+        return "Average volume context available."
+    return "Average volume context unavailable."
+
+
+def earnings_evidence_message(payload: EquitySwingScoringInput) -> str:
+    if payload.artifacts.earnings_events:
+        return "Upcoming earnings context available."
+    return "Upcoming earnings context unavailable."
+
+
+def fundamentals_evidence_message(payload: EquitySwingScoringInput) -> str:
+    if payload.artifacts.fundamentals is not None:
+        return "Fundamentals context available."
+    return "Fundamentals context unavailable."
 
 
 def indicator_value(snapshot: IndicatorSnapshot | None, section: str, key: str) -> object | None:

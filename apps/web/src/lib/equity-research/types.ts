@@ -1,4 +1,13 @@
 import type { ApiFailure, JsonRecord, SymbolRead, UUID, Workspace } from "@/lib/api/types";
+import type {
+  EquityDataFailure,
+  EquityDataProviderCapability,
+  EquityDataProviderRequest,
+  EquityEarningsEvent,
+  EquityFundamentalSnapshot,
+  EquitySymbolMetadataSnapshot,
+} from "@/lib/equity-data/types";
+import type { ProviderCredentialRef } from "@/lib/data-onboarding/types";
 
 export type EquityUniverse = {
   id: UUID;
@@ -118,6 +127,13 @@ export type EquityResearchData = {
   candidates: EquitySwingCandidate[];
   selectedCandidate: EquitySwingCandidate | null;
   catalysts: EquityCatalystContext[];
+  equityDataProviders: EquityDataProviderCapability[];
+  providerRequests: EquityDataProviderRequest[];
+  selectedMetadata: EquitySymbolMetadataSnapshot | null;
+  selectedFundamentals: EquityFundamentalSnapshot | null;
+  selectedEarnings: EquityEarningsEvent[];
+  providerCredentialRefs: ProviderCredentialRef[];
+  equityDataFailures: EquityDataFailure[];
   failures: EquityResearchFailure[];
   lastUpdatedAt: string;
 };

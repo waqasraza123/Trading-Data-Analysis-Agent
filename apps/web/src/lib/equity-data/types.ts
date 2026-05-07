@@ -1,0 +1,150 @@
+import type { ApiFailure, JsonRecord, UUID } from "@/lib/api/types";
+
+export type EquityDataProviderCapability = {
+  provider: string;
+  label: string;
+  configured: boolean;
+  external_requests_enabled: boolean;
+  requires_credential_ref: boolean;
+  supports_universe_import: boolean;
+  supports_metadata_lookup: boolean;
+  supports_fundamentals_snapshot: boolean;
+  supports_earnings_calendar: boolean;
+  status: string;
+  message: string;
+};
+
+export type EquityDataProviderRequest = {
+  id: UUID;
+  workspace_id: UUID;
+  provider: string;
+  request_type: string;
+  status: string;
+  credential_ref_id: UUID | null;
+  universe_id: UUID | null;
+  symbol_id: UUID | null;
+  ticker: string | null;
+  request_json: JsonRecord;
+  response_summary_json: JsonRecord;
+  received_count: number;
+  stored_count: number;
+  skipped_count: number;
+  failed_count: number;
+  error_message: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EquitySymbolMetadataSnapshot = {
+  id: UUID;
+  workspace_id: UUID;
+  symbol_id: UUID;
+  ticker: string;
+  provider: string;
+  company_name: string | null;
+  exchange: string | null;
+  sector: string | null;
+  industry: string | null;
+  country: string | null;
+  currency: string | null;
+  market_cap: string | null;
+  average_volume: string | null;
+  shares_float: string | null;
+  is_etf: boolean | null;
+  is_active: boolean;
+  snapshot_time: string;
+  raw_reference_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EquityFundamentalSnapshot = {
+  id: UUID;
+  workspace_id: UUID;
+  symbol_id: UUID;
+  provider: string;
+  snapshot_time: string;
+  market_cap: string | null;
+  average_volume: string | null;
+  relative_volume: string | null;
+  beta: string | null;
+  pe_ratio: string | null;
+  eps: string | null;
+  revenue_growth: string | null;
+  earnings_growth: string | null;
+  debt_to_equity: string | null;
+  free_cash_flow: string | null;
+  raw_reference_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EquityEarningsEvent = {
+  id: UUID;
+  workspace_id: UUID;
+  symbol_id: UUID;
+  provider: string;
+  event_date: string;
+  fiscal_period: string | null;
+  report_time: string | null;
+  eps_estimate: string | null;
+  eps_actual: string | null;
+  revenue_estimate: string | null;
+  revenue_actual: string | null;
+  importance: string;
+  status: string;
+  raw_reference_json: JsonRecord;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EquityImportRowInput = {
+  ticker: string;
+  companyName?: string;
+  exchange?: string;
+  sector?: string;
+  industry?: string;
+  marketCap?: string;
+  averageVolume?: string;
+};
+
+export type EquityUniverseRowsImportInput = {
+  workspaceId: UUID;
+  universeId?: UUID;
+  createUniverseName?: string;
+  rows: EquityImportRowInput[];
+};
+
+export type EquityProviderUniverseImportInput = {
+  workspaceId: UUID;
+  provider: string;
+  credentialRefId?: UUID;
+  universeId?: UUID;
+  createUniverseName?: string;
+  filters: JsonRecord;
+};
+
+export type EquitySymbolEnrichmentInput = {
+  workspaceId: UUID;
+  provider?: string;
+  credentialRefId?: UUID;
+  filters?: JsonRecord;
+};
+
+export type EquityDataFailure = {
+  label: string;
+  status: number;
+  message: string;
+  missing: boolean;
+};
+
+export function equityDataFailure(label: string, result: ApiFailure): EquityDataFailure {
+  return {
+    label,
+    status: result.error.status,
+    message: result.error.message,
+    missing: result.error.missing,
+  };
+}

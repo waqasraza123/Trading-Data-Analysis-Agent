@@ -463,6 +463,11 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   `equity_swing_candidates`, and `equity_catalyst_contexts`.
 - The module supports manual stock universes, swing scan profiles, ranked setup candidates,
   component scoring, manual catalyst context, and a web page at `/equity-research`.
+- Equity data provider foundations are implemented under `/equity-data` and
+  `apps/api/app/modules/equity_data/` for deterministic mock import, CSV/JSON row import, stock
+  symbol creation, universe attachment, metadata snapshots, fundamentals snapshots, earnings
+  events, provider request audit records, import errors, credential-reference-aware external
+  provider stubs, earnings-to-catalyst conversion, and `/equity-research` enrichment panels.
 - Scope remains market intelligence only: no broker execution, auto-trading, copy trading,
   direct action instructions, signal-classification overrides, or financial advice.
 

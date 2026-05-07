@@ -1,0 +1,274 @@
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any
+from uuid import UUID
+
+from pydantic import Field, field_validator, model_validator
+
+from app.core.schemas import ApiReadSchema, ApiSchema
+from app.modules.equity_data.models import (
+    EquityDataRequestStatus,
+    EquityDataRequestType,
+    EquityEarningsImportance,
+    EquityEarningsStatus,
+)
+from app.modules.equity_data.normalizer import normalize_provider, normalize_ticker
+
+
+class EquityDataProviderCapability(ApiSchema):
+    provider: str
+    label: str
+    configured: bool
+    external_requests_enabled: bool
+    requires_credential_ref: bool
+    supports_universe_import: bool
+    supports_metadata_lookup: bool
+    supports_fundamentals_snapshot: bool
+    supports_earnings_calendar: bool
+    status: EquityDataRequestStatus
+    message: str
+
+
+class EquityDataProviderTestRequest(ApiSchema):
+    workspace_id: UUID
+    credential_ref_id: UUID | None = None
+
+
+class EquityDataProviderTestRead(ApiSchema):
+    provider: str
+    status: EquityDataRequestStatus
+    message: str
+    configured: bool
+
+
+class EquityImportRow(ApiSchema):
+    ticker: str = Field(min_length=1, max_length=32)
+    company_name: str | None = Field(default=None, alias="companyName", max_length=160)
+    exchange: str | None = Field(default=None, max_length=80)
+    sector: str | None = Field(default=None, max_length=120)
+    industry: str | None = Field(default=None, max_length=160)
+    country: str | None = Field(default=None, max_length=80)
+    currency: str | None = Field(default=None, max_length=16)
+    market_cap: Decimal | None = Field(default=None, alias="marketCap", ge=0)
+    average_volume: Decimal | None = Field(default=None, alias="averageVolume", ge=0)
+    shares_float: Decimal | None = Field(default=None, alias="sharesFloat", ge=0)
+    is_etf: bool | None = Field(default=None, alias="isEtf")
+    is_active: bool = Field(default=True, alias="isActive")
+    raw_reference_json: dict[str, Any] = Field(default_factory=dict, alias="rawReferenceJson")
+
+    @field_validator("ticker")
+    @classmethod
+    def validate_ticker(cls, value: str) -> str:
+        return normalize_ticker(value)
+
+    @field_validator("company_name", "exchange", "sector", "industry", "country", "currency")
+    @classmethod
+    def normalize_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EquityUniverseImportRowsRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    universe_id: UUID | None = Field(default=None, alias="universeId")
+    create_universe_name: str | None = Field(
+        default=None, alias="createUniverseName", max_length=160
+    )
+    provider: str = "csv_equity_import"
+    rows: list[EquityImportRow] = Field(min_length=1, max_length=5000)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, value: str) -> str:
+        return normalize_provider(value)
+
+    @field_validator("create_universe_name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EquityProviderUniverseImportRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    provider: str
+    credential_ref_id: UUID | None = Field(default=None, alias="credentialRefId")
+    universe_id: UUID | None = Field(default=None, alias="universeId")
+    create_universe_name: str | None = Field(
+        default=None, alias="createUniverseName", max_length=160
+    )
+    filters: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, value: str) -> str:
+        return normalize_provider(value)
+
+    @field_validator("create_universe_name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EquitySymbolProviderRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    provider: str | None = None
+    credential_ref_id: UUID | None = Field(default=None, alias="credentialRefId")
+    filters: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_provider(value)
+
+
+class EquityEarningsImportRow(ApiSchema):
+    symbol_id: UUID | None = Field(default=None, alias="symbolId")
+    ticker: str | None = Field(default=None, max_length=32)
+    provider: str = "csv_equity_import"
+    event_date: date = Field(alias="eventDate")
+    fiscal_period: str | None = Field(default=None, alias="fiscalPeriod", max_length=32)
+    report_time: str | None = Field(default=None, alias="reportTime", max_length=32)
+    eps_estimate: Decimal | None = Field(default=None, alias="epsEstimate")
+    eps_actual: Decimal | None = Field(default=None, alias="epsActual")
+    revenue_estimate: Decimal | None = Field(default=None, alias="revenueEstimate")
+    revenue_actual: Decimal | None = Field(default=None, alias="revenueActual")
+    importance: EquityEarningsImportance = EquityEarningsImportance.UNKNOWN
+    status: EquityEarningsStatus = EquityEarningsStatus.UNKNOWN
+    raw_reference_json: dict[str, Any] = Field(default_factory=dict, alias="rawReferenceJson")
+
+    @field_validator("ticker")
+    @classmethod
+    def validate_ticker(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_ticker(value)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, value: str) -> str:
+        return normalize_provider(value)
+
+    @model_validator(mode="after")
+    def validate_symbol_or_ticker(self) -> "EquityEarningsImportRow":
+        if self.symbol_id is None and self.ticker is None:
+            msg = "symbolId or ticker is required"
+            raise ValueError(msg)
+        return self
+
+
+class EquityEarningsImportRowsRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    provider: str = "csv_equity_import"
+    rows: list[EquityEarningsImportRow] = Field(min_length=1, max_length=5000)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, value: str) -> str:
+        return normalize_provider(value)
+
+
+class EquityDataProviderRequestRead(ApiReadSchema):
+    id: UUID
+    workspace_id: UUID
+    provider: str
+    request_type: EquityDataRequestType
+    status: EquityDataRequestStatus
+    credential_ref_id: UUID | None
+    universe_id: UUID | None
+    symbol_id: UUID | None
+    ticker: str | None
+    request_json: dict[str, Any]
+    response_summary_json: dict[str, Any]
+    received_count: int
+    stored_count: int
+    skipped_count: int
+    failed_count: int
+    error_message: str | None
+    started_at: datetime | None
+    completed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class EquityDataImportErrorRead(ApiReadSchema):
+    id: UUID
+    workspace_id: UUID
+    provider_request_id: UUID
+    row_number: int | None
+    error_code: str
+    error_message: str
+    raw_item_json: dict[str, Any] | None
+    created_at: datetime
+
+
+class EquitySymbolMetadataSnapshotRead(ApiReadSchema):
+    id: UUID
+    workspace_id: UUID
+    symbol_id: UUID
+    ticker: str
+    provider: str
+    company_name: str | None
+    exchange: str | None
+    sector: str | None
+    industry: str | None
+    country: str | None
+    currency: str | None
+    market_cap: Decimal | None
+    average_volume: Decimal | None
+    shares_float: Decimal | None
+    is_etf: bool | None
+    is_active: bool
+    snapshot_time: datetime
+    raw_reference_json: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+
+
+class EquityFundamentalSnapshotRead(ApiReadSchema):
+    id: UUID
+    workspace_id: UUID
+    symbol_id: UUID
+    provider: str
+    snapshot_time: datetime
+    market_cap: Decimal | None
+    average_volume: Decimal | None
+    relative_volume: Decimal | None
+    beta: Decimal | None
+    pe_ratio: Decimal | None
+    eps: Decimal | None
+    revenue_growth: Decimal | None
+    earnings_growth: Decimal | None
+    debt_to_equity: Decimal | None
+    free_cash_flow: Decimal | None
+    raw_reference_json: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+
+
+class EquityEarningsEventRead(ApiReadSchema):
+    id: UUID
+    workspace_id: UUID
+    symbol_id: UUID
+    provider: str
+    event_date: date
+    fiscal_period: str | None
+    report_time: str | None
+    eps_estimate: Decimal | None
+    eps_actual: Decimal | None
+    revenue_estimate: Decimal | None
+    revenue_actual: Decimal | None
+    importance: EquityEarningsImportance
+    status: EquityEarningsStatus
+    raw_reference_json: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime

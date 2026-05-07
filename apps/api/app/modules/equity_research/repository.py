@@ -9,6 +9,11 @@ from app.modules.advanced_features.models import AdvancedFeatureSnapshot
 from app.modules.analysis.models import AnalysisRun, AnalysisRunStatus
 from app.modules.candles.models import Candle
 from app.modules.data_quality.models import DataQualityRun
+from app.modules.equity_data.models import (
+    EquityEarningsEvent,
+    EquityFundamentalSnapshot,
+    EquitySymbolMetadataSnapshot,
+)
 from app.modules.equity_research.models import (
     EquityCatalystContext,
     EquitySwingCandidate,
@@ -37,6 +42,9 @@ class EquityResearchArtifacts:
     data_quality_run: DataQualityRun | None = None
     catalysts: list[EquityCatalystContext] | None = None
     news_events: list[NewsEvent] | None = None
+    symbol_metadata: EquitySymbolMetadataSnapshot | None = None
+    fundamentals: EquityFundamentalSnapshot | None = None
+    earnings_events: list[EquityEarningsEvent] | None = None
 
 
 class EquityResearchRepository:
@@ -349,6 +357,9 @@ class EquityResearchRepository:
             data_quality_run=await self.get_data_quality_run(analysis_run),
             catalysts=await self.list_catalysts(workspace_id, symbol_id, None, 20, 0),
             news_events=await self.list_news_events(workspace_id, symbol_id, None, None, 20),
+            symbol_metadata=await self.get_latest_symbol_metadata(workspace_id, symbol_id),
+            fundamentals=await self.get_latest_fundamentals(workspace_id, symbol_id),
+            earnings_events=await self.list_earnings_events(workspace_id, symbol_id, 20),
         )
 
     async def get_feature_snapshot(self, analysis_run_id: UUID | None) -> FeatureSnapshot | None:
@@ -422,6 +433,61 @@ class EquityResearchRepository:
             .limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def get_latest_symbol_metadata(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+    ) -> EquitySymbolMetadataSnapshot | None:
+        result = await self.session.execute(
+            select(EquitySymbolMetadataSnapshot)
+            .where(
+                EquitySymbolMetadataSnapshot.workspace_id == workspace_id,
+                EquitySymbolMetadataSnapshot.symbol_id == symbol_id,
+            )
+            .order_by(
+                EquitySymbolMetadataSnapshot.snapshot_time.desc(),
+                EquitySymbolMetadataSnapshot.created_at.desc(),
+            )
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_latest_fundamentals(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+    ) -> EquityFundamentalSnapshot | None:
+        result = await self.session.execute(
+            select(EquityFundamentalSnapshot)
+            .where(
+                EquityFundamentalSnapshot.workspace_id == workspace_id,
+                EquityFundamentalSnapshot.symbol_id == symbol_id,
+            )
+            .order_by(
+                EquityFundamentalSnapshot.snapshot_time.desc(),
+                EquityFundamentalSnapshot.created_at.desc(),
+            )
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_earnings_events(
+        self,
+        workspace_id: UUID,
+        symbol_id: UUID,
+        limit: int,
+    ) -> list[EquityEarningsEvent]:
+        result = await self.session.execute(
+            select(EquityEarningsEvent)
+            .where(
+                EquityEarningsEvent.workspace_id == workspace_id,
+                EquityEarningsEvent.symbol_id == symbol_id,
+            )
+            .order_by(EquityEarningsEvent.event_date.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
 
     async def create_catalyst(self, catalyst: EquityCatalystContext) -> EquityCatalystContext:
         self.session.add(catalyst)

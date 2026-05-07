@@ -61,6 +61,13 @@ from app.modules.data_sources.models import DataSource
 from app.modules.decision_readiness.models import DecisionReadinessAssessment
 from app.modules.engine_executions.models import EngineExecutionEvent, EngineExecutionRecord
 from app.modules.engine_versions.models import EngineVersion
+from app.modules.equity_data.models import (
+    EquityDataImportError,
+    EquityDataProviderRequest,
+    EquityEarningsEvent,
+    EquityFundamentalSnapshot,
+    EquitySymbolMetadataSnapshot,
+)
 from app.modules.equity_research.models import (
     EquityCatalystContext,
     EquitySwingCandidate,
@@ -255,6 +262,11 @@ __all__ = [
     "EngineExecutionRecord",
     "EngineVersion",
     "EquityCatalystContext",
+    "EquityDataImportError",
+    "EquityDataProviderRequest",
+    "EquityEarningsEvent",
+    "EquityFundamentalSnapshot",
+    "EquitySymbolMetadataSnapshot",
     "EquitySwingCandidate",
     "EquitySwingScanRun",
     "EquityUniverse",

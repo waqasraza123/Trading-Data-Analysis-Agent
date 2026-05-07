@@ -376,6 +376,13 @@ class Settings(BaseSettings):
     market_scan_worker_poll_seconds: float = Field(default=30, gt=0)
     market_scan_worker_batch_size: int = Field(default=10, ge=1, le=500)
     equity_research_version: str = "v1"
+    equity_data_version: str = "v1"
+    equity_data_default_provider: str = "mock_equity_data"
+    equity_data_max_universe_import_rows: int = Field(default=5000, ge=1, le=50000)
+    equity_data_max_metadata_lookups: int = Field(default=1000, ge=1, le=10000)
+    equity_data_provider_timeout_seconds: int = Field(default=20, ge=1, le=120)
+    equity_data_allow_external_requests: bool = False
+    equity_data_enable_mock_provider: bool = True
     equity_swing_scan_max_symbols: int = Field(default=500, ge=1, le=5000)
     equity_swing_min_average_volume: int = Field(default=500000, ge=0)
     equity_swing_min_setup_score: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
@@ -650,6 +657,9 @@ class Settings(BaseSettings):
         "scanner_preset_version",
         "product_readiness_version",
         "workspace_setup_version",
+        "equity_research_version",
+        "equity_data_version",
+        "equity_data_default_provider",
     )
     @classmethod
     def validate_non_empty_version(cls, value: str) -> str:

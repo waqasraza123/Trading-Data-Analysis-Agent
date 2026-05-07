@@ -14,6 +14,9 @@ execution controls, order workflows, auto-trading, copy-trading, or direct actio
 - Filter candidates by setup type, status, and quality label.
 - Review component scores, evidence, review notes, and artifact links.
 - Add manual catalyst context for universe symbols.
+- Import stock universes from CSV-like rows or the deterministic mock provider.
+- Review provider capability, credential reference, metadata, fundamentals, earnings, and
+  enrichment request status under the same page.
 
 ## Client Files
 
@@ -22,6 +25,8 @@ execution controls, order workflows, auto-trading, copy-trading, or direct actio
 - `apps/web/src/lib/equity-research/types.ts`
 - `apps/web/src/lib/equity-research/labels.ts`
 - `apps/web/src/components/equity-research/*`
+- `apps/web/src/lib/api/equityData.ts`
+- `apps/web/src/lib/equity-data/*`
 
 ## Data Flow
 

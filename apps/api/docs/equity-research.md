@@ -13,12 +13,13 @@ The module supports:
 - Manual stock universe membership from existing `symbols` records.
 - Deterministic swing scan runs over stored candles and persisted analysis artifacts.
 - Ranked swing setup candidates with auditable component scores.
-- Manual catalyst context attached to persisted symbols.
+- Manual and provider-derived catalyst context attached to persisted symbols.
+- Latest equity metadata, fundamentals, and earnings context when imported or enriched.
 - Optional links to existing analysis runs, signals, setup context, and priority context.
 
-External stock-universe, fundamentals, and news provider ingestion is intentionally out of scope for
-this phase. Provider integrations such as Polygon or Alpaca can be added later as ingestion layers
-that persist data before this module scores it.
+External stock-universe, fundamentals, and earnings ingestion now exists as an additive foundation
+under `/equity-data`. Polygon, Alpaca, and generic HTTP are registered as safe provider skeletons
+that use credential references and do not require paid credentials at startup.
 
 ## Data Model
 
@@ -29,6 +30,10 @@ The migration `202605071000_add_equity_research.py` adds:
 - `equity_swing_scan_runs`
 - `equity_swing_candidates`
 - `equity_catalyst_contexts`
+
+The equity data foundation separately adds provider request audit rows, metadata snapshots,
+fundamentals snapshots, earnings events, and import errors. Equity research reads those artifacts
+when available but keeps manual catalyst flows intact.
 
 Universes are workspace-scoped and can be manual, market-cap, sector, index, watchlist-linked, or
 custom. This phase implements manual membership and leaves provider-backed population for later.

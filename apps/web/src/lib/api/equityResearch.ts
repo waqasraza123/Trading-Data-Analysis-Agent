@@ -1,6 +1,14 @@
 import { getPublicEnv } from "@/config/env";
 import { apiDelete, apiGet, apiPost } from "./client";
+import {
+  getLatestEquityFundamentals,
+  getLatestEquityMetadata,
+  listEquityDataProviderRequests,
+  listEquityDataProviders,
+  listEquityEarnings,
+} from "./equityData";
 import { listSymbols, listWorkspaces } from "./market";
+import { listProviderCredentialRefs } from "./providerCredentials";
 import type { ApiResult, UUID } from "./types";
 import type {
   EquityCatalystContext,
@@ -16,6 +24,7 @@ import type {
   EquityUniverseMemberCreateInput,
 } from "@/lib/equity-research/types";
 import { equityFailure } from "@/lib/equity-research/types";
+import { equityDataFailure, type EquityDataFailure } from "@/lib/equity-data/types";
 
 export function listEquityUniverses(workspaceId: UUID): Promise<ApiResult<EquityUniverse[]>> {
   return apiGet<EquityUniverse[]>("/equity-research/universes", {
@@ -154,10 +163,13 @@ export async function getEquityResearchData(params: {
   if (!workspace) {
     return emptyEquityData(env.appName, env.apiBaseUrl, params.workspaceId || null, failures);
   }
-  const [universesResult, runsResult, catalystsResult] = await Promise.all([
+  const [universesResult, runsResult, catalystsResult, providersResult, requestsResult, credentialsResult] = await Promise.all([
     listEquityUniverses(workspace.id),
     listEquitySwingScans(workspace.id),
     listEquityCatalysts(workspace.id),
+    listEquityDataProviders(),
+    listEquityDataProviderRequests(workspace.id),
+    listProviderCredentialRefs(workspace.id),
   ]);
   const universes = readResult("Equity universes", universesResult, [], failures);
   const scanRuns = readResult("Equity swing scans", runsResult, [], failures);
@@ -187,6 +199,18 @@ export async function getEquityResearchData(params: {
   const candidates = readResult("Swing candidates", candidatesResult, [], failures);
   const selectedCandidate =
     candidates.find((candidate) => candidate.id === params.candidateId) || candidates[0] || null;
+  const selectedSymbolId =
+    selectedCandidate?.symbol_id || selectedUniverseMembers[0]?.symbol_id || stockSymbols[0]?.id || null;
+  const [metadataResult, fundamentalsResult, earningsResult] = await Promise.all([
+    selectedSymbolId
+      ? getLatestEquityMetadata(workspace.id, selectedSymbolId)
+      : emptyResult(null),
+    selectedSymbolId
+      ? getLatestEquityFundamentals(workspace.id, selectedSymbolId)
+      : emptyResult(null),
+    selectedSymbolId ? listEquityEarnings(workspace.id, selectedSymbolId) : emptyResult([]),
+  ]);
+  const equityDataFailures: EquityDataFailure[] = [];
   return {
     appName: env.appName,
     apiBaseUrl: env.apiBaseUrl,
@@ -202,6 +226,43 @@ export async function getEquityResearchData(params: {
     candidates,
     selectedCandidate,
     catalysts: readResult("Catalysts", catalystsResult, [], failures),
+    equityDataProviders: readEquityDataResult(
+      "Equity data providers",
+      providersResult,
+      [],
+      equityDataFailures,
+    ),
+    providerRequests: readEquityDataResult(
+      "Equity data requests",
+      requestsResult,
+      [],
+      equityDataFailures,
+    ),
+    selectedMetadata: readEquityDataResult(
+      "Symbol metadata",
+      metadataResult,
+      null,
+      equityDataFailures,
+    ),
+    selectedFundamentals: readEquityDataResult(
+      "Fundamentals context",
+      fundamentalsResult,
+      null,
+      equityDataFailures,
+    ),
+    selectedEarnings: readEquityDataResult(
+      "Earnings context",
+      earningsResult,
+      [],
+      equityDataFailures,
+    ),
+    providerCredentialRefs: readEquityDataResult(
+      "Provider credential refs",
+      credentialsResult,
+      [],
+      equityDataFailures,
+    ),
+    equityDataFailures,
     failures,
     lastUpdatedAt: new Date().toISOString(),
   };
@@ -241,7 +302,36 @@ function emptyEquityData(
     candidates: [],
     selectedCandidate: null,
     catalysts: [],
+    equityDataProviders: [],
+    providerRequests: [],
+    selectedMetadata: null,
+    selectedFundamentals: null,
+    selectedEarnings: [],
+    providerCredentialRefs: [],
+    equityDataFailures: [],
     failures,
     lastUpdatedAt: new Date().toISOString(),
   };
+}
+
+function readEquityDataResult<T>(
+  label: string,
+  result: ApiResult<T>,
+  fallback: T,
+  failures: EquityDataFailure[],
+): T {
+  if (result.ok) {
+    return result.data;
+  }
+  failures.push(equityDataFailure(label, result));
+  return fallback;
+}
+
+function emptyResult<T>(data: T): Promise<ApiResult<T>> {
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    url: "",
+    data,
+  });
 }
