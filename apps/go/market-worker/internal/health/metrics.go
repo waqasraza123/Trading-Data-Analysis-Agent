@@ -20,6 +20,8 @@ type Metrics struct {
 	ProviderFailures         int        `json:"providerFailures"`
 	ProviderGateWaits        int        `json:"providerGateWaits"`
 	ProviderGateWaitMillis   int64      `json:"providerGateWaitMillis"`
+	ProviderCircuitOpenings  int        `json:"providerCircuitOpenings"`
+	ProviderCircuitBlocks    int        `json:"providerCircuitBlocks"`
 	JobLockRenewals          int        `json:"jobLockRenewals"`
 	JobLockRenewalFailures   int        `json:"jobLockRenewalFailures"`
 	LastJobTime              *time.Time `json:"lastJobTime"`
@@ -38,6 +40,8 @@ type Snapshot struct {
 	ProviderFailures       int                   `json:"providerFailures"`
 	ProviderGateWaits      int                   `json:"providerGateWaits"`
 	ProviderGateWaitMillis int64                 `json:"providerGateWaitMillis"`
+	ProviderCircuitOpenings int                   `json:"providerCircuitOpenings"`
+	ProviderCircuitBlocks   int                   `json:"providerCircuitBlocks"`
 	JobLockRenewals        int                   `json:"jobLockRenewals"`
 	JobLockRenewalFailures int                   `json:"jobLockRenewalFailures"`
 	LastJobTime            *time.Time            `json:"lastJobTime"`
@@ -99,6 +103,18 @@ func (m *Metrics) RecordProviderGateWait(wait time.Duration) {
 	m.ProviderGateWaitMillis += wait.Milliseconds()
 }
 
+func (m *Metrics) RecordProviderCircuitOpened() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.ProviderCircuitOpenings++
+}
+
+func (m *Metrics) RecordProviderCircuitBlocked() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.ProviderCircuitBlocks++
+}
+
 func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -115,6 +131,8 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		ProviderFailures:       m.ProviderFailures,
 		ProviderGateWaits:      m.ProviderGateWaits,
 		ProviderGateWaitMillis: m.ProviderGateWaitMillis,
+		ProviderCircuitOpenings: m.ProviderCircuitOpenings,
+		ProviderCircuitBlocks:   m.ProviderCircuitBlocks,
 		JobLockRenewals:        m.JobLockRenewals,
 		JobLockRenewalFailures: m.JobLockRenewalFailures,
 		LastJobTime:            m.LastJobTime,

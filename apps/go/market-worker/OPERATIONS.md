@@ -74,6 +74,17 @@ Provider gate wait time is reported in `/metrics.json` as `providerGateWaits` an
 raise provider limits only after checking provider rate limits, database write capacity, and candle
 conflict counts.
 
+## Provider Circuit Breaker
+
+`MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD` opens a per-provider circuit after consecutive fetch
+failures. `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS` controls how long the provider key stays
+paused. Set the threshold to `0` to disable circuit breaking.
+
+When a circuit is open, work fails with `provider_circuit_open`. That error is retryable through
+the existing job queue policy, and provider health is recorded as failing when the optional provider
+health table exists. `/metrics.json` reports `providerCircuitOpenings` and
+`providerCircuitBlocks`.
+
 ## Failure Policy
 
 Terminal failures are completed as failed or dead-lettered without scheduling Go-side retry:
@@ -90,6 +101,7 @@ Retryable failures use the existing job queue attempt policy and
 
 - provider network or timeout failures;
 - public provider HTTP failures;
+- provider circuit-open responses;
 - transient database contention;
 - serialization or deadlock errors;
 - unknown operational errors.
@@ -109,7 +121,8 @@ GET /metrics.json
 
 `/healthz` reports process liveness, worker ID, and uptime. `/readyz` checks database connectivity,
 required table capabilities, and provider registration. `/metrics.json` reports job, candle,
-provider failure, provider gate wait, job lock renewal, and capability counters.
+provider failure, provider gate wait, provider circuit breaker, job lock renewal, and capability
+counters.
 
 ## Rollout Sequence
 
@@ -126,6 +139,8 @@ provider failure, provider gate wait, job lock renewal, and capability counters.
    renewal failures.
 8. Tune `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` and `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS` from
    provider response codes, provider gate wait metrics, and provider-specific public REST limits.
+9. Tune `MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD` and `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS`
+   from repeated provider failures, provider health snapshots, and job retry pressure.
 
 ## Safety Boundary
 

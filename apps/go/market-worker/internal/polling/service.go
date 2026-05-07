@@ -19,34 +19,36 @@ import (
 )
 
 type Service struct {
-	pool          *pgxpool.Pool
-	capabilities  workerdb.Capabilities
-	repository    *jobs.Repository
-	writer        *candles.BatchWriter
-	validator     *candles.SymbolSourceValidator
-	providers     *providers.Registry
-	providerGate  *ProviderGate
-	maxCandles    int
-	timeout       time.Duration
-	binanceBaseURL string
-	metrics       *health.Metrics
-	logger        *slog.Logger
+	pool            *pgxpool.Pool
+	capabilities    workerdb.Capabilities
+	repository      *jobs.Repository
+	writer          *candles.BatchWriter
+	validator       *candles.SymbolSourceValidator
+	providers       *providers.Registry
+	providerGate    *ProviderGate
+	providerCircuit *ProviderCircuitBreaker
+	maxCandles      int
+	timeout         time.Duration
+	binanceBaseURL  string
+	metrics         *health.Metrics
+	logger          *slog.Logger
 }
 
-func NewService(pool *pgxpool.Pool, capabilities workerdb.Capabilities, registry *providers.Registry, maxCandles int, timeout time.Duration, binanceBaseURL string, providerMaxConcurrency int, providerMinInterval time.Duration, metrics *health.Metrics, logger *slog.Logger) *Service {
+func NewService(pool *pgxpool.Pool, capabilities workerdb.Capabilities, registry *providers.Registry, maxCandles int, timeout time.Duration, binanceBaseURL string, providerMaxConcurrency int, providerMinInterval time.Duration, providerFailureThreshold int, providerCooldown time.Duration, metrics *health.Metrics, logger *slog.Logger) *Service {
 	return &Service{
-		pool:           pool,
-		capabilities:   capabilities,
-		repository:     jobs.NewRepository(pool, capabilities),
-		writer:         candles.NewBatchWriter(pool, capabilities),
-		validator:      candles.NewSymbolSourceValidator(pool),
-		providers:      registry,
-		providerGate:   NewProviderGate(providerMaxConcurrency, providerMinInterval),
-		maxCandles:     maxCandles,
-		timeout:        timeout,
-		binanceBaseURL: binanceBaseURL,
-		metrics:        metrics,
-		logger:         logger,
+		pool:            pool,
+		capabilities:    capabilities,
+		repository:      jobs.NewRepository(pool, capabilities),
+		writer:          candles.NewBatchWriter(pool, capabilities),
+		validator:       candles.NewSymbolSourceValidator(pool),
+		providers:       registry,
+		providerGate:    NewProviderGate(providerMaxConcurrency, providerMinInterval),
+		providerCircuit: NewProviderCircuitBreaker(providerFailureThreshold, providerCooldown),
+		maxCandles:      maxCandles,
+		timeout:         timeout,
+		binanceBaseURL:  binanceBaseURL,
+		metrics:         metrics,
+		logger:          logger,
 	}
 }
 
@@ -76,6 +78,24 @@ func (s *Service) Process(ctx context.Context, request jobs.PollingRequest) (Res
 	if err != nil {
 		return Result{}, err
 	}
+	circuitState, circuitAllowed := s.providerCircuit.Allow(request.Provider)
+	if !circuitAllowed {
+		circuitErr := providers.NewProviderError("provider_circuit_open", "Provider temporarily paused after repeated failures")
+		_ = s.writer.FinishRun(ctx, run, candles.WriteCounts{}, true)
+		if request.ID != nil && s.capabilities.HasTable("provider_polling_requests") {
+			_ = s.repository.FailProviderPollingRequest(ctx, *request.ID, circuitErr.Code, circuitErr.Error())
+		}
+		if s.metrics != nil {
+			s.metrics.RecordProviderCircuitBlocked()
+		}
+		_ = s.recordProviderHealth(ctx, request, Result{
+			Provider: request.Provider,
+			ProviderMetadata: map[string]any{
+				"circuitOpenUntil": circuitState.OpenUntil,
+			},
+		}, circuitErr)
+		return Result{}, circuitErr
+	}
 	releaseProvider, providerWait, gateErr := s.providerGate.Wait(ctx, request.Provider)
 	if gateErr != nil {
 		_ = s.writer.FinishRun(ctx, run, candles.WriteCounts{}, true)
@@ -103,6 +123,9 @@ func (s *Service) Process(ctx context.Context, request jobs.PollingRequest) (Res
 		})
 	}()
 	if fetchErr != nil {
+		if s.providerCircuit.RecordFailure(request.Provider) && s.metrics != nil {
+			s.metrics.RecordProviderCircuitOpened()
+		}
 		_ = s.writer.FinishRun(ctx, run, candles.WriteCounts{}, true)
 		if request.ID != nil && s.capabilities.HasTable("provider_polling_requests") {
 			_ = s.repository.FailProviderPollingRequest(ctx, *request.ID, errorCode(fetchErr), fetchErr.Error())
@@ -110,6 +133,7 @@ func (s *Service) Process(ctx context.Context, request jobs.PollingRequest) (Res
 		_ = s.recordProviderHealth(ctx, request, Result{Provider: request.Provider}, fetchErr)
 		return Result{}, fetchErr
 	}
+	s.providerCircuit.RecordSuccess(request.Provider)
 	for _, warning := range result.Warnings {
 		if request.ID != nil {
 			_ = s.repository.AddProviderPollingError(ctx, *request.ID, request.WorkspaceID, warning.Code, warning.Message, warning.RawItem)
@@ -218,6 +242,18 @@ func (s *Service) recordProviderHealth(ctx context.Context, request jobs.Polling
 			summary = "Provider polling completed with warnings"
 		}
 	}
+	metadata := map[string]any{
+		"worker":         "go_market_worker",
+		"providerSymbol": request.ProviderSymbol,
+		"stored":         result.Stored,
+		"skipped":        result.Skipped,
+		"received":       result.Received,
+	}
+	for key, value := range result.ProviderMetadata {
+		if !safety.KeyContainsSecret(key) {
+			metadata[key] = value
+		}
+	}
 	_, err := s.pool.Exec(ctx, `
 insert into provider_health_snapshots (
 	id, workspace_id, source_id, provider, symbol_id, timeframe, status, freshness_label,
@@ -225,13 +261,7 @@ insert into provider_health_snapshots (
 	consecutive_failure_count, missing_candle_count, stale_seconds, summary, metadata_json,
 	created_at, updated_at
 ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 0, $13, left($14, 2000), $15, now(), now())
-`, uuid.New(), request.WorkspaceID, request.SourceID, request.Provider, request.SymbolID, request.Timeframe, status, freshness, latestFinal, latestSuccessful, latestFailed, consecutiveFailures, staleSeconds, summary, map[string]any{
-		"worker":         "go_market_worker",
-		"providerSymbol": request.ProviderSymbol,
-		"stored":         result.Stored,
-		"skipped":        result.Skipped,
-		"received":       result.Received,
-	})
+	`, uuid.New(), request.WorkspaceID, request.SourceID, request.Provider, request.SymbolID, request.Timeframe, status, freshness, latestFinal, latestSuccessful, latestFailed, consecutiveFailures, staleSeconds, summary, metadata)
 	return err
 }
 

@@ -20,6 +20,8 @@ type Config struct {
 	MaxConcurrency           int
 	ProviderMaxConcurrency   int
 	ProviderMinInterval      time.Duration
+	ProviderFailureThreshold int
+	ProviderCooldown         time.Duration
 	JobLockDuration          time.Duration
 	ProviderTimeout          time.Duration
 	MaxCandlesPerRequest     int
@@ -44,6 +46,8 @@ func Load() (Config, error) {
 		MaxConcurrency:           envInt("MARKET_WORKER_MAX_CONCURRENCY", batchSize),
 		ProviderMaxConcurrency:   envInt("MARKET_WORKER_PROVIDER_MAX_CONCURRENCY", batchSize),
 		ProviderMinInterval:      time.Duration(envInt("MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS", 0)) * time.Millisecond,
+		ProviderFailureThreshold: envInt("MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD", 5),
+		ProviderCooldown:         time.Duration(envInt("MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS", 60)) * time.Second,
 		JobLockDuration:          time.Duration(envInt("MARKET_WORKER_JOB_LOCK_SECONDS", 120)) * time.Second,
 		ProviderTimeout:          time.Duration(envInt("MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS", 20)) * time.Second,
 		MaxCandlesPerRequest:     envInt("MARKET_WORKER_MAX_CANDLES_PER_REQUEST", 1000),
@@ -70,6 +74,12 @@ func Load() (Config, error) {
 	}
 	if cfg.ProviderMinInterval < 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS must be zero or positive")
+	}
+	if cfg.ProviderFailureThreshold < 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD must be zero or positive")
+	}
+	if cfg.ProviderCooldown < 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS must be zero or positive")
 	}
 	if cfg.MaxCandlesPerRequest <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_MAX_CANDLES_PER_REQUEST must be positive")

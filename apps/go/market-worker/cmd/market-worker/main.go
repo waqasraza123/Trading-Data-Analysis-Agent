@@ -57,6 +57,8 @@ func run() error {
 		"maxConcurrency", cfg.MaxConcurrency,
 		"providerMaxConcurrency", cfg.ProviderMaxConcurrency,
 		"providerMinIntervalMs", cfg.ProviderMinInterval.Milliseconds(),
+		"providerFailureThreshold", cfg.ProviderFailureThreshold,
+		"providerCooldownSeconds", int(cfg.ProviderCooldown.Seconds()),
 		"databaseUrl", safety.RedactDatabaseURL(cfg.DatabaseURL),
 		"healthAddr", cfg.HealthAddr,
 	)
@@ -72,6 +74,8 @@ func run() error {
 		cfg.BinancePublicRESTBaseURL,
 		cfg.ProviderMaxConcurrency,
 		cfg.ProviderMinInterval,
+		cfg.ProviderFailureThreshold,
+		cfg.ProviderCooldown,
 		metrics,
 		logger,
 	)
@@ -99,17 +103,19 @@ func run() error {
 
 func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, providers []string, readyErr error) error {
 	payload := map[string]any{
-		"workerId":       cfg.WorkerID,
-		"queueName":      cfg.QueueName,
-		"mode":           cfg.Mode,
-		"runMode":        cfg.RunMode,
-		"batchSize":      cfg.BatchSize,
-		"maxConcurrency": cfg.MaxConcurrency,
-		"providerMaxConcurrency": cfg.ProviderMaxConcurrency,
-		"providerMinIntervalMs": cfg.ProviderMinInterval.Milliseconds(),
-		"providers":      providers,
-		"dbCapabilities": capabilities,
-		"ready":          readyErr == nil,
+		"workerId":                 cfg.WorkerID,
+		"queueName":                cfg.QueueName,
+		"mode":                     cfg.Mode,
+		"runMode":                  cfg.RunMode,
+		"batchSize":                cfg.BatchSize,
+		"maxConcurrency":           cfg.MaxConcurrency,
+		"providerMaxConcurrency":   cfg.ProviderMaxConcurrency,
+		"providerMinIntervalMs":    cfg.ProviderMinInterval.Milliseconds(),
+		"providerFailureThreshold": cfg.ProviderFailureThreshold,
+		"providerCooldownSeconds":  int(cfg.ProviderCooldown.Seconds()),
+		"providers":                providers,
+		"dbCapabilities":           capabilities,
+		"ready":                    readyErr == nil,
 	}
 	if readyErr != nil {
 		payload["error"] = readyErr.Error()

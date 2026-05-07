@@ -61,6 +61,8 @@ Optional:
 - `MARKET_WORKER_MAX_CONCURRENCY`, default same as `MARKET_WORKER_BATCH_SIZE`
 - `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY`, default same as `MARKET_WORKER_BATCH_SIZE`
 - `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`, default `0`
+- `MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD`, default `5`
+- `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS`, default `60`
 - `MARKET_WORKER_JOB_LOCK_SECONDS`, default `120`
 - `MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS`, default `20`
 - `MARKET_WORKER_MAX_CANDLES_PER_REQUEST`, default `1000`
@@ -89,6 +91,10 @@ database connection pool and provider rate-limit budget.
 `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits in-flight fetches per provider key. `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`
 adds optional provider-key pacing before each fetch. These controls are independent from database
 write concurrency and are intended for public REST providers with rate limits.
+
+`MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD` and `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS` pause a
+provider key after repeated fetch failures. A paused provider returns `provider_circuit_open`, which
+is retryable through the job queue policy.
 
 ## Job Bridge
 
