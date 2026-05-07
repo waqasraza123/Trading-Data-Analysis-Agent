@@ -279,5 +279,6 @@ Some checks require installed local dependencies, a configured database, or Go t
 
 ## License
 
-No license file is currently published for this repository. Add a license before distributing,
-packaging, or accepting external contributions.
+This repository is published under a restrictive proprietary license. All rights are reserved, and
+use, copying, modification, distribution, hosting, sublicensing, or commercialization requires prior
+written permission from the copyright holder. See [LICENSE](LICENSE).

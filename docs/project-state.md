@@ -130,6 +130,9 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 - Deterministic engines calculate and classify; AI/LLMs may explain only supplied evidence and must never classify or override signals.
 - Store intermediate artifacts for audit/replay once implementation begins.
 - Do not store secrets in repository memory or local session memory.
+- Repository licensing is restrictive proprietary/all-rights-reserved; use, copying, modification,
+  distribution, hosting, sublicensing, or commercialization requires prior written permission from
+  the copyright holder.
 - Keep durable state concise, factual, and grounded in repository files.
 - Follow repository conventions once they exist; until then, choose conservative, minimal conventions for the first implementation slice.
 - Code must be production-grade, strongly typed, validated, modular, testable, and scalable.
