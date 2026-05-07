@@ -123,6 +123,8 @@ Concurrency knobs:
 
 - `MARKET_WORKER_BATCH_SIZE`: number of jobs or direct requests claimed per cycle.
 - `MARKET_WORKER_MAX_CONCURRENCY`: number of claimed jobs or direct requests processed in parallel.
+- `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY`: in-flight fetch limit per provider key.
+- `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`: optional pacing interval between fetch starts per provider key.
 
 Docker:
 
@@ -139,8 +141,8 @@ GET /metrics.json
 ```
 
 `/readyz` exposes DB connectivity, provider registry state, and detected database capabilities.
-`/metrics.json` exposes job, candle, provider failure, job lock renewal, and capability counters as
-JSON.
+`/metrics.json` exposes job, candle, provider failure, provider gate wait, job lock renewal, and
+capability counters as JSON.
 
 ## Operational Checks
 

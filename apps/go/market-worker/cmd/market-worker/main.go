@@ -54,13 +54,27 @@ func run() error {
 		"queueName", cfg.QueueName,
 		"mode", cfg.Mode,
 		"runMode", cfg.RunMode,
+		"maxConcurrency", cfg.MaxConcurrency,
+		"providerMaxConcurrency", cfg.ProviderMaxConcurrency,
+		"providerMinIntervalMs", cfg.ProviderMinInterval.Milliseconds(),
 		"databaseUrl", safety.RedactDatabaseURL(cfg.DatabaseURL),
 		"healthAddr", cfg.HealthAddr,
 	)
 	if readyErr != nil {
 		return readyErr
 	}
-	pollingService := polling.NewService(pool, capabilities, registry, cfg.MaxCandlesPerRequest, cfg.ProviderTimeout, cfg.BinancePublicRESTBaseURL, logger)
+	pollingService := polling.NewService(
+		pool,
+		capabilities,
+		registry,
+		cfg.MaxCandlesPerRequest,
+		cfg.ProviderTimeout,
+		cfg.BinancePublicRESTBaseURL,
+		cfg.ProviderMaxConcurrency,
+		cfg.ProviderMinInterval,
+		metrics,
+		logger,
+	)
 	runner := worker.NewRunner(cfg, pool, capabilities, pollingService, metrics, logger)
 	if cfg.RunMode == "once" {
 		claimed, err := runner.RunOnce(ctx)
@@ -89,6 +103,10 @@ func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, prov
 		"queueName":      cfg.QueueName,
 		"mode":           cfg.Mode,
 		"runMode":        cfg.RunMode,
+		"batchSize":      cfg.BatchSize,
+		"maxConcurrency": cfg.MaxConcurrency,
+		"providerMaxConcurrency": cfg.ProviderMaxConcurrency,
+		"providerMinIntervalMs": cfg.ProviderMinInterval.Milliseconds(),
 		"providers":      providers,
 		"dbCapabilities": capabilities,
 		"ready":          readyErr == nil,

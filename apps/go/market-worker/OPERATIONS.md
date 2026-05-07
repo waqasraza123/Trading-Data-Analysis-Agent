@@ -62,6 +62,18 @@ Use lower concurrency for public providers with strict rate limits or when the d
 small. Raise batch size independently when claim overhead matters but execution should remain
 bounded.
 
+## Provider Backpressure
+
+`MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits concurrent fetches per provider key, independent of
+job processing concurrency. `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS` adds a minimum interval between
+fetch starts for the same provider key. Use these settings to protect public REST providers and to
+keep provider latency from overwhelming candle writes.
+
+Provider gate wait time is reported in `/metrics.json` as `providerGateWaits` and
+`providerGateWaitMillis`. Sustained growth means the worker is intentionally pacing provider calls;
+raise provider limits only after checking provider rate limits, database write capacity, and candle
+conflict counts.
+
 ## Failure Policy
 
 Terminal failures are completed as failed or dead-lettered without scheduling Go-side retry:
@@ -97,7 +109,7 @@ GET /metrics.json
 
 `/healthz` reports process liveness, worker ID, and uptime. `/readyz` checks database connectivity,
 required table capabilities, and provider registration. `/metrics.json` reports job, candle,
-provider failure, job lock renewal, and capability counters.
+provider failure, provider gate wait, job lock renewal, and capability counters.
 
 ## Rollout Sequence
 
@@ -112,6 +124,8 @@ provider failure, job lock renewal, and capability counters.
 7. Tune `MARKET_WORKER_BATCH_SIZE`, `MARKET_WORKER_MAX_CONCURRENCY`, and
    `MARKET_WORKER_JOB_LOCK_SECONDS` from observed provider latency, conflict counts, and lock
    renewal failures.
+8. Tune `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` and `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS` from
+   provider response codes, provider gate wait metrics, and provider-specific public REST limits.
 
 ## Safety Boundary
 

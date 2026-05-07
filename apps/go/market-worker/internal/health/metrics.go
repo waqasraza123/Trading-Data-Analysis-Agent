@@ -18,6 +18,8 @@ type Metrics struct {
 	CandlesSkipped           int        `json:"candlesSkipped"`
 	CandlesConflicted        int        `json:"candlesConflicted"`
 	ProviderFailures         int        `json:"providerFailures"`
+	ProviderGateWaits        int        `json:"providerGateWaits"`
+	ProviderGateWaitMillis   int64      `json:"providerGateWaitMillis"`
 	JobLockRenewals          int        `json:"jobLockRenewals"`
 	JobLockRenewalFailures   int        `json:"jobLockRenewalFailures"`
 	LastJobTime              *time.Time `json:"lastJobTime"`
@@ -34,6 +36,8 @@ type Snapshot struct {
 	CandlesSkipped         int                   `json:"candlesSkipped"`
 	CandlesConflicted      int                   `json:"candlesConflicted"`
 	ProviderFailures       int                   `json:"providerFailures"`
+	ProviderGateWaits      int                   `json:"providerGateWaits"`
+	ProviderGateWaitMillis int64                 `json:"providerGateWaitMillis"`
 	JobLockRenewals        int                   `json:"jobLockRenewals"`
 	JobLockRenewalFailures int                   `json:"jobLockRenewalFailures"`
 	LastJobTime            *time.Time            `json:"lastJobTime"`
@@ -85,6 +89,16 @@ func (m *Metrics) RecordJobLockRenewal(success bool) {
 	}
 }
 
+func (m *Metrics) RecordProviderGateWait(wait time.Duration) {
+	if wait < time.Millisecond {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.ProviderGateWaits++
+	m.ProviderGateWaitMillis += wait.Milliseconds()
+}
+
 func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -99,6 +113,8 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		CandlesSkipped:         m.CandlesSkipped,
 		CandlesConflicted:      m.CandlesConflicted,
 		ProviderFailures:       m.ProviderFailures,
+		ProviderGateWaits:      m.ProviderGateWaits,
+		ProviderGateWaitMillis: m.ProviderGateWaitMillis,
 		JobLockRenewals:        m.JobLockRenewals,
 		JobLockRenewalFailures: m.JobLockRenewalFailures,
 		LastJobTime:            m.LastJobTime,

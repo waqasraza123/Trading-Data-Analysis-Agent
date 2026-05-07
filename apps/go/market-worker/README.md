@@ -43,6 +43,9 @@ GET http://127.0.0.1:8091/readyz
 GET http://127.0.0.1:8091/metrics.json
 ```
 
+`/metrics.json` includes provider gate wait counters so operators can see whether provider
+backpressure is active.
+
 ## Configuration
 
 Required:
@@ -56,6 +59,8 @@ Optional:
 - `MARKET_WORKER_POLL_SECONDS`, default `5`
 - `MARKET_WORKER_BATCH_SIZE`, default `10`
 - `MARKET_WORKER_MAX_CONCURRENCY`, default same as `MARKET_WORKER_BATCH_SIZE`
+- `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY`, default same as `MARKET_WORKER_BATCH_SIZE`
+- `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`, default `0`
 - `MARKET_WORKER_JOB_LOCK_SECONDS`, default `120`
 - `MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS`, default `20`
 - `MARKET_WORKER_MAX_CANDLES_PER_REQUEST`, default `1000`
@@ -80,6 +85,10 @@ credentials at startup.
 `MARKET_WORKER_BATCH_SIZE` controls how much work one claim cycle can reserve. `MARKET_WORKER_MAX_CONCURRENCY`
 controls how many claimed jobs or direct polling requests execute at the same time. Keep concurrency below the
 database connection pool and provider rate-limit budget.
+
+`MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits in-flight fetches per provider key. `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`
+adds optional provider-key pacing before each fetch. These controls are independent from database
+write concurrency and are intended for public REST providers with rate limits.
 
 ## Job Bridge
 

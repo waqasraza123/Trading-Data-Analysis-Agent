@@ -12,6 +12,7 @@ import (
 
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/candles"
 	workerdb "github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/db"
+	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/health"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/jobs"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/providers"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/safety"
@@ -24,13 +25,15 @@ type Service struct {
 	writer        *candles.BatchWriter
 	validator     *candles.SymbolSourceValidator
 	providers     *providers.Registry
+	providerGate  *ProviderGate
 	maxCandles    int
 	timeout       time.Duration
 	binanceBaseURL string
+	metrics       *health.Metrics
 	logger        *slog.Logger
 }
 
-func NewService(pool *pgxpool.Pool, capabilities workerdb.Capabilities, registry *providers.Registry, maxCandles int, timeout time.Duration, binanceBaseURL string, logger *slog.Logger) *Service {
+func NewService(pool *pgxpool.Pool, capabilities workerdb.Capabilities, registry *providers.Registry, maxCandles int, timeout time.Duration, binanceBaseURL string, providerMaxConcurrency int, providerMinInterval time.Duration, metrics *health.Metrics, logger *slog.Logger) *Service {
 	return &Service{
 		pool:           pool,
 		capabilities:   capabilities,
@@ -38,9 +41,11 @@ func NewService(pool *pgxpool.Pool, capabilities workerdb.Capabilities, registry
 		writer:         candles.NewBatchWriter(pool, capabilities),
 		validator:      candles.NewSymbolSourceValidator(pool),
 		providers:      registry,
+		providerGate:   NewProviderGate(providerMaxConcurrency, providerMinInterval),
 		maxCandles:     maxCandles,
 		timeout:        timeout,
 		binanceBaseURL: binanceBaseURL,
+		metrics:        metrics,
 		logger:         logger,
 	}
 }
@@ -71,20 +76,32 @@ func (s *Service) Process(ctx context.Context, request jobs.PollingRequest) (Res
 	if err != nil {
 		return Result{}, err
 	}
-	result, fetchErr := provider.FetchCandles(ctx, providers.FetchCandlesRequest{
-		WorkspaceID:     request.WorkspaceID,
-		SourceID:        request.SourceID,
-		SymbolID:        request.SymbolID,
-		Provider:        request.Provider,
-		ProviderSymbol:  request.ProviderSymbol,
-		Timeframe:       request.Timeframe,
-		StartTime:       request.StartTime,
-		EndTime:         request.EndTime,
-		Limit:           request.Limit,
-		Timeout:         s.timeout,
-		BaseURL:         s.binanceBaseURL,
-		Metadata:        request.Metadata,
-	})
+	releaseProvider, providerWait, gateErr := s.providerGate.Wait(ctx, request.Provider)
+	if gateErr != nil {
+		_ = s.writer.FinishRun(ctx, run, candles.WriteCounts{}, true)
+		_ = s.recordProviderHealth(ctx, request, Result{Provider: request.Provider}, gateErr)
+		return Result{}, gateErr
+	}
+	if s.metrics != nil {
+		s.metrics.RecordProviderGateWait(providerWait)
+	}
+	result, fetchErr := func() (providers.FetchCandlesResult, error) {
+		defer releaseProvider()
+		return provider.FetchCandles(ctx, providers.FetchCandlesRequest{
+			WorkspaceID:    request.WorkspaceID,
+			SourceID:       request.SourceID,
+			SymbolID:       request.SymbolID,
+			Provider:       request.Provider,
+			ProviderSymbol: request.ProviderSymbol,
+			Timeframe:      request.Timeframe,
+			StartTime:      request.StartTime,
+			EndTime:        request.EndTime,
+			Limit:          request.Limit,
+			Timeout:        s.timeout,
+			BaseURL:        s.binanceBaseURL,
+			Metadata:       request.Metadata,
+		})
+	}()
 	if fetchErr != nil {
 		_ = s.writer.FinishRun(ctx, run, candles.WriteCounts{}, true)
 		if request.ID != nil && s.capabilities.HasTable("provider_polling_requests") {
