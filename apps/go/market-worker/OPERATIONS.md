@@ -62,6 +62,16 @@ Use lower concurrency for public providers with strict rate limits or when the d
 small. Raise batch size independently when claim overhead matters but execution should remain
 bounded.
 
+## Execution Timeouts
+
+`MARKET_WORKER_JOB_TIMEOUT_SECONDS` bounds one claimed `job_queue_items` row or direct
+`provider_polling_requests` row. A timed-out item is recorded as `job_timeout`, counted in
+`jobsTimedOut`, and treated as retryable by the existing job queue policy.
+
+`MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS` is the cleanup timeout for completion, failure, and direct
+request status writes. If the processing context has already expired, the worker uses a fresh
+bounded cleanup context so status updates can still be recorded without hanging shutdown forever.
+
 ## Provider Backpressure
 
 `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits concurrent fetches per provider key, independent of
@@ -100,6 +110,7 @@ Retryable failures use the existing job queue attempt policy and
 `MARKET_WORKER_RETRY_BACKOFF_SECONDS`:
 
 - provider network or timeout failures;
+- job timeout failures;
 - public provider HTTP failures;
 - provider circuit-open responses;
 - transient database contention;
@@ -121,8 +132,8 @@ GET /metrics.json
 
 `/healthz` reports process liveness, worker ID, and uptime. `/readyz` checks database connectivity,
 required table capabilities, and provider registration. `/metrics.json` reports job, candle,
-provider failure, provider gate wait, provider circuit breaker, job lock renewal, and capability
-counters.
+timeout, provider failure, provider gate wait, provider circuit breaker, job lock renewal, and
+capability counters.
 
 ## Rollout Sequence
 
@@ -141,6 +152,8 @@ counters.
    provider response codes, provider gate wait metrics, and provider-specific public REST limits.
 9. Tune `MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD` and `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS`
    from repeated provider failures, provider health snapshots, and job retry pressure.
+10. Tune `MARKET_WORKER_JOB_TIMEOUT_SECONDS` and `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS` from
+    observed provider latency, candle batch size, and shutdown expectations.
 
 ## Safety Boundary
 

@@ -13,6 +13,7 @@ type Metrics struct {
 	JobsClaimed              int        `json:"jobsClaimed"`
 	JobsCompleted            int        `json:"jobsCompleted"`
 	JobsFailed               int        `json:"jobsFailed"`
+	JobsTimedOut             int        `json:"jobsTimedOut"`
 	CandlesReceived          int        `json:"candlesReceived"`
 	CandlesInserted          int        `json:"candlesInserted"`
 	CandlesSkipped           int        `json:"candlesSkipped"`
@@ -33,6 +34,7 @@ type Snapshot struct {
 	JobsClaimed            int                   `json:"jobsClaimed"`
 	JobsCompleted          int                   `json:"jobsCompleted"`
 	JobsFailed             int                   `json:"jobsFailed"`
+	JobsTimedOut           int                   `json:"jobsTimedOut"`
 	CandlesReceived        int                   `json:"candlesReceived"`
 	CandlesInserted        int                   `json:"candlesInserted"`
 	CandlesSkipped         int                   `json:"candlesSkipped"`
@@ -83,6 +85,12 @@ func (m *Metrics) RecordFailed(providerFailure bool) {
 	m.LastJobTime = &now
 }
 
+func (m *Metrics) RecordTimedOut() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.JobsTimedOut++
+}
+
 func (m *Metrics) RecordJobLockRenewal(success bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -124,6 +132,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		JobsClaimed:            m.JobsClaimed,
 		JobsCompleted:          m.JobsCompleted,
 		JobsFailed:             m.JobsFailed,
+		JobsTimedOut:           m.JobsTimedOut,
 		CandlesReceived:        m.CandlesReceived,
 		CandlesInserted:        m.CandlesInserted,
 		CandlesSkipped:         m.CandlesSkipped,

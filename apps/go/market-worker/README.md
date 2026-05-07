@@ -64,6 +64,8 @@ Optional:
 - `MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD`, default `5`
 - `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS`, default `60`
 - `MARKET_WORKER_JOB_LOCK_SECONDS`, default `120`
+- `MARKET_WORKER_JOB_TIMEOUT_SECONDS`, default `300`
+- `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS`, default `15`
 - `MARKET_WORKER_PROVIDER_TIMEOUT_SECONDS`, default `20`
 - `MARKET_WORKER_MAX_CANDLES_PER_REQUEST`, default `1000`
 - `MARKET_WORKER_HEALTH_ADDR`, default `:8091`
@@ -95,6 +97,10 @@ write concurrency and are intended for public REST providers with rate limits.
 `MARKET_WORKER_PROVIDER_FAILURE_THRESHOLD` and `MARKET_WORKER_PROVIDER_COOLDOWN_SECONDS` pause a
 provider key after repeated fetch failures. A paused provider returns `provider_circuit_open`, which
 is retryable through the job queue policy.
+
+`MARKET_WORKER_JOB_TIMEOUT_SECONDS` bounds one claimed job or direct polling request. When it
+expires, the worker records `job_timeout` with a short `MARKET_WORKER_DB_WRITE_TIMEOUT_SECONDS`
+cleanup context so the queue can retry according to its existing policy.
 
 ## Job Bridge
 

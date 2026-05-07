@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +12,9 @@ import (
 
 func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 	if !jobs.SupportedJobTypes[job.JobType] {
-		err := r.repository.FailJobTerminal(ctx, job, "unsupported_job_type", "Unsupported job type")
+		writeCtx, cancel := r.writeContext(ctx)
+		defer cancel()
+		err := r.repository.FailJobTerminal(writeCtx, job, "unsupported_job_type", "Unsupported job type")
 		if err == nil {
 			r.metrics.RecordFailed(false)
 		}
@@ -19,23 +22,32 @@ func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 	}
 	request, err := jobs.DecodePayload(job.Payload, job.WorkspaceID, r.config.MaxCandlesPerRequest)
 	if err != nil {
-		_ = r.repository.FailJobTerminal(ctx, job, "validation_error", err.Error())
+		writeCtx, cancel := r.writeContext(ctx)
+		defer cancel()
+		_ = r.repository.FailJobTerminal(writeCtx, job, "validation_error", err.Error())
 		r.metrics.RecordFailed(false)
 		return err
 	}
 	result, err := r.polling.Process(ctx, request)
 	if err != nil {
 		code := errorCode(err)
+		if code == "job_timeout" {
+			r.metrics.RecordTimedOut()
+		}
+		writeCtx, cancel := r.writeContext(ctx)
+		defer cancel()
 		if retryableError(code, err) {
-			_ = r.repository.FailJob(ctx, job, code, err.Error(), r.config.RetryBackoff)
+			_ = r.repository.FailJob(writeCtx, job, code, err.Error(), r.config.RetryBackoff)
 		} else {
-			_ = r.repository.FailJobTerminal(ctx, job, code, err.Error())
+			_ = r.repository.FailJobTerminal(writeCtx, job, code, err.Error())
 		}
 		r.metrics.RecordFailed(true)
 		return err
 	}
 	warnings := result.Skipped > 0 || result.Warnings > 0 || result.ProviderErrors > 0 || result.Conflicted > 0 || result.Invalid > 0
-	if err := r.repository.CompleteJob(ctx, job, map[string]any{
+	writeCtx, cancel := r.writeContext(ctx)
+	defer cancel()
+	if err := r.repository.CompleteJob(writeCtx, job, map[string]any{
 		"provider":       result.Provider,
 		"providerSymbol": result.ProviderSymbol,
 		"timeframe":      result.Timeframe,
@@ -55,8 +67,14 @@ func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 func (r *Runner) handleDirectRequest(ctx context.Context, request jobs.PollingRequest) error {
 	result, err := r.polling.Process(ctx, request)
 	if err != nil {
+		code := errorCode(err)
+		if code == "job_timeout" {
+			r.metrics.RecordTimedOut()
+		}
 		if request.ID != nil {
-			_ = r.repository.FailProviderPollingRequest(ctx, *request.ID, errorCode(err), err.Error())
+			writeCtx, cancel := r.writeContext(ctx)
+			defer cancel()
+			_ = r.repository.FailProviderPollingRequest(writeCtx, *request.ID, code, err.Error())
 		}
 		r.metrics.RecordFailed(true)
 		return err
@@ -68,6 +86,12 @@ func (r *Runner) handleDirectRequest(ctx context.Context, request jobs.PollingRe
 func errorCode(err error) string {
 	if err == nil {
 		return ""
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "job_timeout"
+	}
+	if errors.Is(err, context.Canceled) {
+		return "job_canceled"
 	}
 	text := err.Error()
 	if text == "" {
@@ -113,4 +137,15 @@ func retryableError(code string, err error) bool {
 		}
 	}
 	return true
+}
+
+func (r *Runner) writeContext(parent context.Context) (context.Context, context.CancelFunc) {
+	timeout := r.config.DBWriteTimeout
+	if timeout <= 0 {
+		timeout = 15 * time.Second
+	}
+	if parent == nil || parent.Err() != nil {
+		return context.WithTimeout(context.Background(), timeout)
+	}
+	return context.WithTimeout(parent, timeout)
 }

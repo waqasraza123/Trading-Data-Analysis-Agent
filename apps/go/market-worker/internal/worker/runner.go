@@ -121,7 +121,9 @@ func (r *Runner) processJobs(ctx context.Context, items []jobs.Job) error {
 				return
 			}
 			defer release(sem)
-			if err := r.handleJobWithLease(ctx, job); err != nil {
+			itemCtx, cancel := r.itemContext(ctx)
+			defer cancel()
+			if err := r.handleJobWithLease(itemCtx, job); err != nil {
 				errs <- err
 			}
 		}(item)
@@ -148,7 +150,9 @@ func (r *Runner) processRequests(ctx context.Context, requests []jobs.PollingReq
 				return
 			}
 			defer release(sem)
-			if err := r.handleDirectRequest(ctx, item); err != nil {
+			itemCtx, cancel := r.itemContext(ctx)
+			defer cancel()
+			if err := r.handleDirectRequest(itemCtx, item); err != nil {
 				errs <- err
 			}
 		}(request)
@@ -217,6 +221,13 @@ func (r *Runner) concurrencyLimit(count int) int {
 		return count
 	}
 	return limit
+}
+
+func (r *Runner) itemContext(parent context.Context) (context.Context, context.CancelFunc) {
+	if r.config.JobTimeout <= 0 {
+		return context.WithCancel(parent)
+	}
+	return context.WithTimeout(parent, r.config.JobTimeout)
 }
 
 func acquire(ctx context.Context, sem chan struct{}) bool {
