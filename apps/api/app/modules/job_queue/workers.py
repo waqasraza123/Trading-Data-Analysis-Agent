@@ -7,7 +7,9 @@ from uuid import UUID, uuid4
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import Settings
+from app.modules.equity_data.jobs import handle_equity_data_operation_job
 from app.modules.job_queue.dispatcher import JobQueueDispatcher
+from app.modules.job_queue.models import JobQueueJobType
 from app.modules.job_queue.service import JobQueueService
 from app.modules.runtime_supervisor.heartbeats import RuntimeWorkerHeartbeatClient
 
@@ -87,6 +89,10 @@ class JobQueueWorkerRuntime:
         async def run_one(job_id: UUID) -> None:
             async with semaphore, self.session_factory() as session:
                 dispatcher = JobQueueDispatcher(session, JobQueueService(session, self.settings))
+                dispatcher.register_handler(
+                    JobQueueJobType.EQUITY_DATA_OPERATION.value,
+                    handle_equity_data_operation_job,
+                )
                 await dispatcher.dispatch_job(job_id, self.worker_id)
 
         await asyncio.gather(*(run_one(job_id) for job_id in job_ids))

@@ -24,6 +24,62 @@ export function apiPost<T>(
   return apiRequest<T>("POST", path, body, options);
 }
 
+export async function apiPostForm<T>(
+  path: string,
+  body: FormData,
+  options: RequestOptions = {},
+): Promise<ApiResult<T>> {
+  const env = getPublicEnv();
+  const url = buildUrl(env.apiBaseUrl, path, options.query);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || defaultTimeoutMs);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        ...authHeaders(env),
+      },
+      body,
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const payload = await parseResponse(response);
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: {
+          status: response.status,
+          code: extractErrorCode(payload, response.status),
+          message: extractErrorMessage(payload, response.statusText),
+          url,
+          missing: response.status === 404 && Boolean(options.optional),
+        },
+      };
+    }
+    return {
+      ok: true,
+      status: response.status,
+      url,
+      data: normalizeApiPayload(payload) as T,
+    };
+  } catch (error) {
+    const isAbort = error instanceof Error && error.name === "AbortError";
+    return {
+      ok: false,
+      error: {
+        status: 0,
+        code: isAbort ? "request_timeout" : "network_error",
+        message: isAbort ? "Request timed out" : "Unable to reach API",
+        url,
+        missing: false,
+      },
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export function apiPatch<T>(
   path: string,
   body?: unknown,

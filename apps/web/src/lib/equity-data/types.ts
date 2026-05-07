@@ -37,6 +37,57 @@ export type EquityDataProviderRequest = {
   updated_at: string;
 };
 
+export type EquityDataOperation = {
+  id: UUID;
+  operation_id: UUID;
+  workspace_id: UUID;
+  operation_type: string;
+  provider_name: string | null;
+  status: string;
+  requested_by_user_id: UUID | null;
+  idempotency_key: string | null;
+  progress_current: number;
+  progress_total: number | null;
+  progress_message: string | null;
+  counters_json: JsonRecord;
+  request_summary_json: JsonRecord;
+  result_summary_json: JsonRecord;
+  error_summary_json: JsonRecord;
+  linked_provider_request_id: UUID | null;
+  linked_job_id: UUID | null;
+  dry_run: boolean;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EquityDataOperationList = {
+  operations: EquityDataOperation[];
+};
+
+export type EquityDataOperationInput = {
+  workspaceId: UUID;
+  provider?: string;
+  credentialRefId?: UUID;
+  universeId?: UUID;
+  symbolIds?: UUID[];
+  filters?: JsonRecord;
+  limit?: number;
+  runMode?: "sync" | "queued" | "auto";
+  dryRun?: boolean;
+  idempotencyKey?: string;
+};
+
+export type EquityFileImportResult = {
+  run_mode: "sync" | "queued" | "auto";
+  operation: EquityDataOperation | null;
+  provider_request: EquityDataProviderRequest | null;
+  validation_errors: unknown[];
+  rows_received: number;
+  rows_valid: number;
+};
+
 export type EquitySymbolMetadataSnapshot = {
   id: UUID;
   workspace_id: UUID;

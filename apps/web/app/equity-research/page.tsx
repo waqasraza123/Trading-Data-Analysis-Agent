@@ -1,7 +1,9 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { CatalystContextPanel } from "@/components/equity-research/CatalystContextPanel";
 import { EquityDataProviderPanel } from "@/components/equity-research/EquityDataProviderPanel";
+import { EquityDataOperationsPanel } from "@/components/equity-research/EquityDataOperationsPanel";
 import { EquityDataReadinessPanel } from "@/components/equity-research/EquityDataReadinessPanel";
+import { EquityEnrichmentJobsPanel } from "@/components/equity-research/EquityEnrichmentJobsPanel";
 import { EquityEarningsPanel } from "@/components/equity-research/EquityEarningsPanel";
 import { EquityFundamentalsPanel } from "@/components/equity-research/EquityFundamentalsPanel";
 import { EquityMetadataPanel } from "@/components/equity-research/EquityMetadataPanel";
@@ -10,6 +12,7 @@ import { EquityResearchEmptyState } from "@/components/equity-research/EquityRes
 import { EquityResearchErrorState } from "@/components/equity-research/EquityResearchErrorState";
 import { EquityResearchHeader } from "@/components/equity-research/EquityResearchHeader";
 import { EquityUniverseMembers } from "@/components/equity-research/EquityUniverseMembers";
+import { EquityUniverseFileImportPanel } from "@/components/equity-research/EquityUniverseFileImportPanel";
 import { EquityUniverseImportPanel } from "@/components/equity-research/EquityUniverseImportPanel";
 import { EquityUniversePanel } from "@/components/equity-research/EquityUniversePanel";
 import { SwingCandidateDetail } from "@/components/equity-research/SwingCandidateDetail";
@@ -46,11 +49,14 @@ export default async function EquityResearchPage({ searchParams }: EquityResearc
             <EquityDataProviderPanel data={data} />
             <EquityUniversePanel data={data} />
             <EquityUniverseImportPanel data={data} />
+            <EquityUniverseFileImportPanel data={data} />
             <EquityUniverseMembers data={data} />
             <SwingScanForm data={data} />
             <SwingCandidateTable data={data} />
           </div>
           <div className="space-y-6">
+            <EquityDataOperationsPanel data={data} />
+            <EquityEnrichmentJobsPanel data={data} />
             <SwingCandidateDetail data={data} />
             <EquityMetadataPanel data={data} />
             <EquityFundamentalsPanel data={data} />

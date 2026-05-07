@@ -3,6 +3,7 @@ import { apiDelete, apiGet, apiPost } from "./client";
 import {
   getLatestEquityFundamentals,
   getLatestEquityMetadata,
+  listEquityDataOperations,
   listEquityDataProviderRequests,
   listEquityDataProviders,
   listEquityEarnings,
@@ -163,12 +164,13 @@ export async function getEquityResearchData(params: {
   if (!workspace) {
     return emptyEquityData(env.appName, env.apiBaseUrl, params.workspaceId || null, failures);
   }
-  const [universesResult, runsResult, catalystsResult, providersResult, requestsResult, credentialsResult] = await Promise.all([
+  const [universesResult, runsResult, catalystsResult, providersResult, requestsResult, operationsResult, credentialsResult] = await Promise.all([
     listEquityUniverses(workspace.id),
     listEquitySwingScans(workspace.id),
     listEquityCatalysts(workspace.id),
     listEquityDataProviders(),
     listEquityDataProviderRequests(workspace.id),
+    listEquityDataOperations(workspace.id),
     listProviderCredentialRefs(workspace.id),
   ]);
   const universes = readResult("Equity universes", universesResult, [], failures);
@@ -238,6 +240,12 @@ export async function getEquityResearchData(params: {
       [],
       equityDataFailures,
     ),
+    operations: readEquityDataResult(
+      "Equity data operations",
+      operationsResult,
+      { operations: [] },
+      equityDataFailures,
+    ).operations,
     selectedMetadata: readEquityDataResult(
       "Symbol metadata",
       metadataResult,
@@ -304,6 +312,7 @@ function emptyEquityData(
     catalysts: [],
     equityDataProviders: [],
     providerRequests: [],
+    operations: [],
     selectedMetadata: null,
     selectedFundamentals: null,
     selectedEarnings: [],

@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.equity_data.models import (
     EquityDataImportError,
+    EquityDataOperation,
     EquityDataProviderRequest,
     EquityEarningsEvent,
     EquityFundamentalSnapshot,
     EquitySymbolMetadataSnapshot,
 )
+from app.modules.equity_research.models import EquityCatalystContext, EquityUniverseMember
 
 
 class EquityDataRepository:
@@ -61,6 +63,45 @@ class EquityDataRepository:
             statement = statement.where(EquityDataProviderRequest.request_type == request_type)
         if status is not None:
             statement = statement.where(EquityDataProviderRequest.status == status)
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def create_operation(self, operation: EquityDataOperation) -> EquityDataOperation:
+        self.session.add(operation)
+        await self.session.flush()
+        await self.session.refresh(operation)
+        return operation
+
+    async def update_operation(self, operation: EquityDataOperation) -> EquityDataOperation:
+        await self.session.flush()
+        await self.session.refresh(operation)
+        return operation
+
+    async def get_operation(self, operation_id: UUID) -> EquityDataOperation | None:
+        return await self.session.get(EquityDataOperation, operation_id)
+
+    async def list_operations(
+        self,
+        workspace_id: UUID,
+        status: str | None,
+        operation_type: str | None,
+        provider_name: str | None,
+        limit: int,
+        offset: int,
+    ) -> list[EquityDataOperation]:
+        statement: Select[tuple[EquityDataOperation]] = (
+            select(EquityDataOperation)
+            .where(EquityDataOperation.workspace_id == workspace_id)
+            .order_by(EquityDataOperation.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        if status is not None:
+            statement = statement.where(EquityDataOperation.status == status)
+        if operation_type is not None:
+            statement = statement.where(EquityDataOperation.operation_type == operation_type)
+        if provider_name is not None:
+            statement = statement.where(EquityDataOperation.provider_name == provider_name)
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
@@ -190,3 +231,59 @@ class EquityDataRepository:
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def list_universe_symbol_ids(
+        self,
+        workspace_id: UUID,
+        universe_id: UUID,
+        limit: int,
+    ) -> list[UUID]:
+        statement = (
+            select(EquityUniverseMember.symbol_id)
+            .where(
+                EquityUniverseMember.workspace_id == workspace_id,
+                EquityUniverseMember.universe_id == universe_id,
+                EquityUniverseMember.is_active.is_(True),
+            )
+            .order_by(EquityUniverseMember.ticker.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_earnings_events_for_symbols(
+        self,
+        workspace_id: UUID,
+        symbol_ids: list[UUID],
+        limit: int,
+    ) -> list[EquityEarningsEvent]:
+        if not symbol_ids:
+            return []
+        statement = (
+            select(EquityEarningsEvent)
+            .where(
+                EquityEarningsEvent.workspace_id == workspace_id,
+                EquityEarningsEvent.symbol_id.in_(symbol_ids),
+            )
+            .order_by(EquityEarningsEvent.event_date.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def get_catalyst_for_earnings_event(
+        self,
+        workspace_id: UUID,
+        earnings_event_id: UUID,
+    ) -> EquityCatalystContext | None:
+        statement = (
+            select(EquityCatalystContext)
+            .where(
+                EquityCatalystContext.workspace_id == workspace_id,
+                EquityCatalystContext.raw_reference_json["equityEarningsEventId"].astext
+                == str(earnings_event_id),
+            )
+            .limit(1)
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()

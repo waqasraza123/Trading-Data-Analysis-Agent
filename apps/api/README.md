@@ -53,8 +53,9 @@ classification, or provide financial advice. See `docs/equity-research.md`.
 Equity data provider foundations are implemented under `/equity-data`. They support deterministic
 mock universe import, CSV/JSON row import, symbol metadata snapshots, fundamentals snapshots,
 earnings events, provider request audit rows, import errors, credential-reference-aware provider
-skeletons, and earnings-to-catalyst conversion. External provider calls are disabled by default and
-raw provider secrets are not stored. See `docs/equity-data.md`.
+skeletons, earnings-to-catalyst conversion, CSV file uploads, and queued background operations for
+larger import/enrichment work. External provider calls are disabled by default, raw uploaded files
+are not persisted, and raw provider secrets are not stored. See `docs/equity-data.md`.
 
 Product readiness is implemented under `/product-readiness`. It persists an operator-facing
 checklist run for API reachability, database/migration detectability, seed/workspace/user setup,

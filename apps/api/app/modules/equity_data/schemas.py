@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
@@ -7,6 +8,8 @@ from pydantic import Field, field_validator, model_validator
 
 from app.core.schemas import ApiReadSchema, ApiSchema
 from app.modules.equity_data.models import (
+    EquityDataOperationStatus,
+    EquityDataOperationType,
     EquityDataRequestStatus,
     EquityDataRequestType,
     EquityEarningsImportance,
@@ -272,3 +275,141 @@ class EquityEarningsEventRead(ApiReadSchema):
     raw_reference_json: dict[str, Any]
     created_at: datetime
     updated_at: datetime
+
+
+class EquityDataOperationRunMode(StrEnum):
+    SYNC = "sync"
+    QUEUED = "queued"
+    AUTO = "auto"
+
+
+class EquityDataOperationRead(ApiReadSchema):
+    id: UUID
+    operation_id: UUID = Field(alias="operationId")
+    workspace_id: UUID
+    operation_type: EquityDataOperationType
+    provider_name: str | None
+    status: EquityDataOperationStatus
+    requested_by_user_id: UUID | None
+    idempotency_key: str | None
+    progress_current: int
+    progress_total: int | None
+    progress_message: str | None
+    counters_json: dict[str, Any]
+    request_summary_json: dict[str, Any]
+    result_summary_json: dict[str, Any]
+    error_summary_json: dict[str, Any]
+    linked_provider_request_id: UUID | None
+    linked_job_id: UUID | None
+    dry_run: bool
+    started_at: datetime | None
+    finished_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class EquityDataOperationDetailRead(EquityDataOperationRead):
+    recent_errors: list[EquityDataImportErrorRead] = Field(
+        default_factory=list,
+        alias="recentErrors",
+    )
+
+
+class EquityDataOperationListRead(ApiSchema):
+    operations: list[EquityDataOperationRead]
+
+
+class EquityOperationUniverseImportRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    universe_id: UUID | None = Field(default=None, alias="universeId")
+    create_universe_name: str | None = Field(
+        default=None, alias="createUniverseName", max_length=160
+    )
+    provider: str = "csv_equity_import"
+    rows: list[EquityImportRow] = Field(default_factory=list, max_length=5000)
+    filters: dict[str, Any] = Field(default_factory=dict)
+    credential_ref_id: UUID | None = Field(default=None, alias="credentialRefId")
+    run_mode: EquityDataOperationRunMode = Field(
+        default=EquityDataOperationRunMode.AUTO,
+        alias="runMode",
+    )
+    dry_run: bool = Field(default=False, alias="dryRun")
+    idempotency_key: str | None = Field(default=None, alias="idempotencyKey", max_length=240)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_operation_provider(cls, value: str) -> str:
+        return normalize_provider(value)
+
+    @field_validator("create_universe_name", "idempotency_key")
+    @classmethod
+    def normalize_operation_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EquityEnrichmentOperationRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    provider: str = "mock_equity_data"
+    credential_ref_id: UUID | None = Field(default=None, alias="credentialRefId")
+    universe_id: UUID | None = Field(default=None, alias="universeId")
+    symbol_ids: list[UUID] = Field(default_factory=list, alias="symbolIds", max_length=1000)
+    filters: dict[str, Any] = Field(default_factory=dict)
+    limit: int = Field(default=100, ge=1, le=1000)
+    run_mode: EquityDataOperationRunMode = Field(
+        default=EquityDataOperationRunMode.QUEUED,
+        alias="runMode",
+    )
+    dry_run: bool = Field(default=False, alias="dryRun")
+    idempotency_key: str | None = Field(default=None, alias="idempotencyKey", max_length=240)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_enrichment_provider(cls, value: str) -> str:
+        return normalize_provider(value)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def normalize_enrichment_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EquityCatalystOperationRequest(ApiSchema):
+    workspace_id: UUID = Field(alias="workspaceId")
+    universe_id: UUID | None = Field(default=None, alias="universeId")
+    symbol_ids: list[UUID] = Field(default_factory=list, alias="symbolIds", max_length=1000)
+    limit: int = Field(default=100, ge=1, le=1000)
+    run_mode: EquityDataOperationRunMode = Field(
+        default=EquityDataOperationRunMode.QUEUED,
+        alias="runMode",
+    )
+    dry_run: bool = Field(default=False, alias="dryRun")
+    idempotency_key: str | None = Field(default=None, alias="idempotencyKey", max_length=240)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def normalize_catalyst_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EquityFileImportRead(ApiSchema):
+    run_mode: EquityDataOperationRunMode = Field(alias="runMode")
+    operation: EquityDataOperationRead | None = None
+    provider_request: EquityDataProviderRequestRead | None = Field(
+        default=None,
+        alias="providerRequest",
+    )
+    validation_errors: list[EquityDataImportErrorRead] = Field(
+        default_factory=list,
+        alias="validationErrors",
+    )
+    rows_received: int = Field(alias="rowsReceived")
+    rows_valid: int = Field(alias="rowsValid")

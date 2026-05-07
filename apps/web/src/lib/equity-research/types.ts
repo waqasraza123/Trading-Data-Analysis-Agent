@@ -1,6 +1,7 @@
 import type { ApiFailure, JsonRecord, SymbolRead, UUID, Workspace } from "@/lib/api/types";
 import type {
   EquityDataFailure,
+  EquityDataOperation,
   EquityDataProviderCapability,
   EquityDataProviderRequest,
   EquityEarningsEvent,
@@ -129,6 +130,7 @@ export type EquityResearchData = {
   catalysts: EquityCatalystContext[];
   equityDataProviders: EquityDataProviderCapability[];
   providerRequests: EquityDataProviderRequest[];
+  operations: EquityDataOperation[];
   selectedMetadata: EquitySymbolMetadataSnapshot | null;
   selectedFundamentals: EquityFundamentalSnapshot | null;
   selectedEarnings: EquityEarningsEvent[];

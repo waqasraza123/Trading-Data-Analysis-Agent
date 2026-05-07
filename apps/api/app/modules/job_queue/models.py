@@ -63,6 +63,7 @@ class JobQueueJobType(StrEnum):
     RETENTION_APPLY = "retention.apply"
     LLM_EXPLAIN = "llm.explain"
     REPORT_BUILD = "report.build"
+    EQUITY_DATA_OPERATION = "equity_data.operation"
 
 
 class JobQueueDefinition(Base):
@@ -76,7 +77,8 @@ class JobQueueDefinition(Base):
             "job_type in ('import.csv', 'import.json', 'provider_polling.fetch', 'scan.run', "
             "'daily_workflow.run', 'outcome.evaluate', 'reasoning.generate', "
             "'notification.deliver', 'read_model.rebuild', 'backfill.item', "
-            "'data_quality.run', 'retention.apply', 'llm.explain', 'report.build')",
+            "'data_quality.run', 'retention.apply', 'llm.explain', 'report.build', "
+            "'equity_data.operation')",
             name="job_queue_definitions_job_type_allowed",
         ),
         CheckConstraint(
@@ -134,7 +136,8 @@ class JobQueueItem(Base):
             "job_type in ('import.csv', 'import.json', 'provider_polling.fetch', 'scan.run', "
             "'daily_workflow.run', 'outcome.evaluate', 'reasoning.generate', "
             "'notification.deliver', 'read_model.rebuild', 'backfill.item', "
-            "'data_quality.run', 'retention.apply', 'llm.explain', 'report.build')",
+            "'data_quality.run', 'retention.apply', 'llm.explain', 'report.build', "
+            "'equity_data.operation')",
             name="job_queue_items_job_type_allowed",
         ),
         CheckConstraint("attempts >= 0", name="job_queue_items_attempts_non_negative"),

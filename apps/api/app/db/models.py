@@ -63,6 +63,7 @@ from app.modules.engine_executions.models import EngineExecutionEvent, EngineExe
 from app.modules.engine_versions.models import EngineVersion
 from app.modules.equity_data.models import (
     EquityDataImportError,
+    EquityDataOperation,
     EquityDataProviderRequest,
     EquityEarningsEvent,
     EquityFundamentalSnapshot,
@@ -263,6 +264,7 @@ __all__ = [
     "EngineVersion",
     "EquityCatalystContext",
     "EquityDataImportError",
+    "EquityDataOperation",
     "EquityDataProviderRequest",
     "EquityEarningsEvent",
     "EquityFundamentalSnapshot",

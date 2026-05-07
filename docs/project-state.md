@@ -468,6 +468,12 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   symbol creation, universe attachment, metadata snapshots, fundamentals snapshots, earnings
   events, provider request audit records, import errors, credential-reference-aware external
   provider stubs, earnings-to-catalyst conversion, and `/equity-research` enrichment panels.
+- Equity data background operations are implemented with `equity_data_operations`, the
+  `equity_data.operation` job queue type on the `equity_data` queue, operation progress/counters
+  APIs, CSV file-upload parsing with sync/queued/auto modes, safe credential-reference readiness,
+  and `/equity-research` panels for file import, queued enrichment, and operation history. Raw CSV
+  file bytes and raw provider secrets are not persisted; real Polygon/Alpaca fetches and
+  secret-manager value retrieval remain deferred.
 - Scope remains market intelligence only: no broker execution, auto-trading, copy trading,
   direct action instructions, signal-classification overrides, or financial advice.
 

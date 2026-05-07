@@ -9,7 +9,9 @@ from app.config import Settings
 from app.modules.candles.models import Candle
 from app.modules.equity_data.adapters.base import EquityProviderContext
 from app.modules.equity_data.adapters.mock import MockEquityDataProvider
+from app.modules.equity_data.csv_import import parse_equity_universe_csv
 from app.modules.equity_data.normalizer import normalize_ticker, safe_reference
+from app.modules.equity_data.operations import empty_counters, operation_request_summary
 from app.modules.equity_research.repository import EquityResearchArtifacts
 from app.modules.equity_research.scoring import EquitySwingScorer, EquitySwingScoringInput
 
@@ -19,12 +21,60 @@ def test_normalize_ticker_uppercases_and_trims() -> None:
 
 
 def test_safe_reference_redacts_secret_like_keys() -> None:
-    payload = {"api_key": "secret-value", "nested": {"authorization": "bearer value"}}
+    payload = {
+        "api_key": "secret-value",
+        "nested": {"authorization": "bearer value"},
+        "credential": "credential-value",
+        "access_key": "access-value",
+        "passwd": "password-value",
+    }
 
     redacted = safe_reference(payload)
 
     assert redacted["api_key"] == "[redacted]"
     assert redacted["nested"] == {"authorization": "[redacted]"}
+    assert redacted["credential"] == "[redacted]"
+    assert redacted["access_key"] == "[redacted]"
+    assert redacted["passwd"] == "[redacted]"
+
+
+def test_csv_parser_accepts_symbol_header_bom_and_redacts_sensitive_columns() -> None:
+    content = (
+        "\ufeffsymbol,name,exchange,sector,api-key\n"
+        " aapl , Apple Inc. , NASDAQ , Technology , secret-value\n"
+    ).encode()
+
+    parsed = parse_equity_universe_csv(content, max_bytes=10_000, max_rows=10)
+
+    assert parsed.received_count == 1
+    assert parsed.rows[0].ticker == "AAPL"
+    assert parsed.rows[0].company_name == "Apple Inc."
+    assert parsed.rows[0].exchange == "NASDAQ"
+    assert parsed.redacted_preview[0]["api_key"] == "[redacted]"
+
+
+def test_csv_parser_collects_row_errors() -> None:
+    content = b"ticker,name\n,Missing Ticker\nmsft,Microsoft\n"
+
+    parsed = parse_equity_universe_csv(content, max_bytes=10_000, max_rows=10)
+
+    assert [row.ticker for row in parsed.rows] == ["MSFT"]
+    assert len(parsed.errors) == 1
+    assert parsed.errors[0].row_number == 2
+
+
+def test_operation_summary_counts_rows_without_storing_full_payload() -> None:
+    summary = operation_request_summary(
+        {
+            "rows": [{"ticker": "AAPL"}, {"ticker": "MSFT"}],
+            "credentialRefId": "provider:polygon:default",
+            "token": "secret-value",
+        }
+    )
+
+    assert summary["rows"] == {"count": 2, "preview": [{"ticker": "AAPL"}, {"ticker": "MSFT"}]}
+    assert summary["token"] == "[redacted]"
+    assert empty_counters()["errors_count"] == 0
 
 
 @pytest.mark.asyncio

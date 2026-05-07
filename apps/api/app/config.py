@@ -379,6 +379,8 @@ class Settings(BaseSettings):
     equity_data_version: str = "v1"
     equity_data_default_provider: str = "mock_equity_data"
     equity_data_max_universe_import_rows: int = Field(default=5000, ge=1, le=50000)
+    equity_data_sync_import_row_threshold: int = Field(default=250, ge=1, le=5000)
+    equity_data_max_queued_import_rows: int = Field(default=5000, ge=1, le=50000)
     equity_data_max_metadata_lookups: int = Field(default=1000, ge=1, le=10000)
     equity_data_provider_timeout_seconds: int = Field(default=20, ge=1, le=120)
     equity_data_allow_external_requests: bool = False

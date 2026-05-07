@@ -1,21 +1,35 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
-from app.modules.equity_data.models import EquityDataRequestStatus, EquityDataRequestType
+from app.modules.equity_data.csv_import import parse_equity_universe_csv
+from app.modules.equity_data.models import (
+    EquityDataOperationType,
+    EquityDataRequestStatus,
+    EquityDataRequestType,
+)
+from app.modules.equity_data.operations import EquityDataOperationService
 from app.modules.equity_data.schemas import (
+    EquityCatalystOperationRequest,
     EquityDataImportErrorRead,
+    EquityDataOperationDetailRead,
+    EquityDataOperationListRead,
+    EquityDataOperationRead,
+    EquityDataOperationRunMode,
     EquityDataProviderCapability,
     EquityDataProviderRequestRead,
     EquityDataProviderTestRead,
     EquityDataProviderTestRequest,
     EquityEarningsEventRead,
     EquityEarningsImportRowsRequest,
+    EquityEnrichmentOperationRequest,
+    EquityFileImportRead,
     EquityFundamentalSnapshotRead,
+    EquityOperationUniverseImportRequest,
     EquityProviderUniverseImportRequest,
     EquitySymbolMetadataSnapshotRead,
     EquitySymbolProviderRequest,
@@ -33,6 +47,12 @@ def get_equity_data_service(
     session: Annotated[AsyncSession, Depends(database_session)],
 ) -> EquityDataService:
     return EquityDataService(session)
+
+
+def get_equity_data_operation_service(
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> EquityDataOperationService:
+    return EquityDataOperationService(session)
 
 
 @router.get("/providers", response_model=list[EquityDataProviderCapability])
@@ -133,6 +153,213 @@ async def list_provider_request_errors(
     pagination = PaginationParams(limit=limit, offset=offset)
     errors = await service.list_request_errors(request_id, pagination.limit, pagination.offset)
     return [EquityDataImportErrorRead.model_validate(error) for error in errors]
+
+
+@router.get("/operations", response_model=EquityDataOperationListRead)
+async def list_operations(
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    workspace_id: UUID,
+    status_filter: Annotated[str | None, Query(alias="status")] = None,
+    operation_type: str | None = None,
+    provider_name: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> EquityDataOperationListRead:
+    pagination = PaginationParams(limit=limit, offset=offset)
+    operations = await service.list_operations(
+        workspace_id=workspace_id,
+        status=status_filter,
+        operation_type=operation_type,
+        provider_name=provider_name,
+        limit=pagination.limit,
+        offset=pagination.offset,
+    )
+    return EquityDataOperationListRead(
+        operations=[EquityDataOperationRead.model_validate(operation) for operation in operations]
+    )
+
+
+@router.get("/operations/{operation_id}", response_model=EquityDataOperationDetailRead)
+async def get_operation(
+    operation_id: UUID,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationDetailRead:
+    operation = await service.get_operation(operation_id)
+    errors = await service.list_operation_errors(operation)
+    data = EquityDataOperationRead.model_validate(operation).model_dump(mode="python")
+    return EquityDataOperationDetailRead.model_validate(
+        data
+        | {
+            "recentErrors": [
+                EquityDataImportErrorRead.model_validate(error) for error in errors
+            ]
+        }
+    )
+
+
+@router.post(
+    "/operations/universe-import",
+    response_model=EquityDataOperationRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def submit_universe_import_operation(
+    payload: EquityOperationUniverseImportRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.submit_universe_import(payload)
+    return EquityDataOperationRead.model_validate(operation)
+
+
+@router.post(
+    "/operations/metadata-enrichment",
+    response_model=EquityDataOperationRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def submit_metadata_enrichment_operation(
+    payload: EquityEnrichmentOperationRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.submit_enrichment(
+        EquityDataOperationType.METADATA_ENRICHMENT,
+        payload,
+    )
+    return EquityDataOperationRead.model_validate(operation)
+
+
+@router.post(
+    "/operations/fundamentals-enrichment",
+    response_model=EquityDataOperationRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def submit_fundamentals_enrichment_operation(
+    payload: EquityEnrichmentOperationRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.submit_enrichment(
+        EquityDataOperationType.FUNDAMENTALS_ENRICHMENT,
+        payload,
+    )
+    return EquityDataOperationRead.model_validate(operation)
+
+
+@router.post(
+    "/operations/earnings-enrichment",
+    response_model=EquityDataOperationRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def submit_earnings_enrichment_operation(
+    payload: EquityEnrichmentOperationRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.submit_enrichment(
+        EquityDataOperationType.EARNINGS_ENRICHMENT,
+        payload,
+    )
+    return EquityDataOperationRead.model_validate(operation)
+
+
+@router.post(
+    "/operations/earnings-to-catalysts",
+    response_model=EquityDataOperationRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def submit_earnings_to_catalysts_operation(
+    payload: EquityCatalystOperationRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.submit_catalyst_conversion(payload)
+    return EquityDataOperationRead.model_validate(operation)
+
+
+@router.post(
+    "/operations/universe-import-file",
+    response_model=EquityFileImportRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def import_universe_file(
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    workspace_id: Annotated[UUID, Form()],
+    file: Annotated[UploadFile, File()],
+    universe_id: Annotated[UUID | None, Form()] = None,
+    create_universe_name: Annotated[str | None, Form()] = None,
+    provider_name: Annotated[str, Form()] = "csv_equity_import",
+    run_mode: Annotated[EquityDataOperationRunMode, Form()] = EquityDataOperationRunMode.AUTO,
+    dry_run: Annotated[bool, Form()] = False,
+) -> EquityFileImportRead:
+    content = await file.read()
+    parse_result = parse_equity_universe_csv(
+        content,
+        max_bytes=service.settings.max_upload_file_bytes,
+        max_rows=service.settings.equity_data_max_queued_import_rows,
+    )
+    import_payload = EquityUniverseImportRowsRequest(
+        workspaceId=workspace_id,
+        universeId=universe_id,
+        createUniverseName=create_universe_name,
+        provider=provider_name,
+        rows=parse_result.rows,
+    )
+    resolved_run_mode = (
+        EquityDataOperationRunMode.SYNC
+        if run_mode == EquityDataOperationRunMode.AUTO
+        and len(parse_result.rows) <= service.settings.equity_data_sync_import_row_threshold
+        else EquityDataOperationRunMode.QUEUED
+        if run_mode == EquityDataOperationRunMode.AUTO
+        else run_mode
+    )
+    if resolved_run_mode == EquityDataOperationRunMode.SYNC:
+        operation = await service.submit_universe_import(
+            EquityOperationUniverseImportRequest(
+                workspaceId=workspace_id,
+                universeId=universe_id,
+                createUniverseName=create_universe_name,
+                provider=provider_name,
+                rows=parse_result.rows,
+                runMode=EquityDataOperationRunMode.SYNC,
+                dryRun=dry_run,
+            )
+        )
+        if operation.linked_provider_request_id is not None:
+            request = await service.data_service.get_provider_request(
+                operation.linked_provider_request_id
+            )
+            await service.record_payload_validation_errors(
+                request,
+                [error.__dict__ for error in parse_result.errors],
+            )
+        else:
+            request = None
+        return EquityFileImportRead(
+            runMode=resolved_run_mode,
+            operation=EquityDataOperationRead.model_validate(operation),
+            providerRequest=EquityDataProviderRequestRead.model_validate(request)
+            if request
+            else None,
+            validationErrors=[],
+            rowsReceived=parse_result.received_count,
+            rowsValid=len(parse_result.rows),
+        )
+    operation = await service.create_file_import_operation(
+        import_payload,
+        run_mode=resolved_run_mode,
+        dry_run=dry_run,
+        validation_errors=parse_result.errors,
+        received_count=parse_result.received_count,
+    )
+    return EquityFileImportRead(
+        runMode=resolved_run_mode,
+        operation=EquityDataOperationRead.model_validate(operation),
+        providerRequest=None,
+        validationErrors=[],
+        rowsReceived=parse_result.received_count,
+        rowsValid=len(parse_result.rows),
+    )
 
 
 @router.post(

@@ -43,6 +43,25 @@ class EquityDataRequestStatus(StrEnum):
     PROVIDER_NOT_IMPLEMENTED = "provider_not_implemented"
 
 
+class EquityDataOperationType(StrEnum):
+    UNIVERSE_IMPORT_ROWS = "universe_import_rows"
+    UNIVERSE_IMPORT_FILE = "universe_import_file"
+    PROVIDER_UNIVERSE_IMPORT = "provider_universe_import"
+    METADATA_ENRICHMENT = "metadata_enrichment"
+    FUNDAMENTALS_ENRICHMENT = "fundamentals_enrichment"
+    EARNINGS_ENRICHMENT = "earnings_enrichment"
+    EARNINGS_TO_CATALYSTS = "earnings_to_catalysts"
+
+
+class EquityDataOperationStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    COMPLETED_WITH_WARNINGS = "completed_with_warnings"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 class EquityEarningsImportance(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
@@ -150,6 +169,116 @@ class EquityDataProviderRequest(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at = created_at_column()
     updated_at = updated_at_column()
+
+class EquityDataOperation(Base):
+    __tablename__ = "equity_data_operations"
+    __table_args__ = (
+        CheckConstraint(
+            "operation_type in ('universe_import_rows', 'universe_import_file', "
+            "'provider_universe_import', 'metadata_enrichment', 'fundamentals_enrichment', "
+            "'earnings_enrichment', 'earnings_to_catalysts')",
+            name="equity_data_operations_type_allowed",
+        ),
+        CheckConstraint(
+            "status in ('pending', 'running', 'completed', 'completed_with_warnings', "
+            "'failed', 'cancelled')",
+            name="equity_data_operations_status_allowed",
+        ),
+        CheckConstraint(
+            "progress_current >= 0",
+            name="equity_data_operations_progress_current_non_negative",
+        ),
+        CheckConstraint(
+            "progress_total is null or progress_total >= 0",
+            name="equity_data_operations_progress_total_non_negative",
+        ),
+        Index(
+            "ix_equity_data_operations_workspace_status_created",
+            "workspace_id",
+            "status",
+            "created_at",
+        ),
+        Index(
+            "ix_equity_data_operations_workspace_type_created",
+            "workspace_id",
+            "operation_type",
+            "created_at",
+        ),
+        Index("ix_equity_data_operations_provider", "provider_name"),
+        Index("ix_equity_data_operations_idempotency", "workspace_id", "idempotency_key"),
+    )
+
+    id = uuid_primary_key()
+    workspace_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    operation_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    provider_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    status: Mapped[str] = mapped_column(String(40), nullable=False)
+    requested_by_user_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    idempotency_key: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    progress_current: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
+    )
+    progress_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    progress_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    counters_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    request_summary_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    result_summary_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    error_summary_json: Mapped[dict[str, object]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    linked_provider_request_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("equity_data_provider_requests.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    linked_job_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("job_queue_items.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    dry_run: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at = created_at_column()
+    updated_at = updated_at_column()
+
+    @property
+    def operation_id(self) -> UUID:
+        return self.id
 
 
 class EquitySymbolMetadataSnapshot(Base):

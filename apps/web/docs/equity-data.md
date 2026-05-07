@@ -11,6 +11,11 @@ account actions, direct buy/sell wording, or financial-advice language.
 - `EquityDataProviderPanel`: lists provider capabilities and whether credential references are
   required or missing.
 - `EquityUniverseImportPanel`: imports CSV-like ticker rows or the deterministic mock universe.
+- `EquityUniverseFileImportPanel`: uploads CSV files with auto, sync, or queued import mode.
+- `EquityDataOperationsPanel`: lists recent background operations with status, progress, counters,
+  and safe error summaries.
+- `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
+  operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
   average volume context.
 - `EquityFundamentalsPanel`: displays latest fundamentals context where available.
@@ -24,7 +29,10 @@ account actions, direct buy/sell wording, or financial-advice language.
 src/lib/api/equityData.ts
 src/lib/equity-data/types.ts
 src/lib/equity-data/labels.ts
+src/components/equity-research/EquityDataOperationsPanel.tsx
+src/components/equity-research/EquityEnrichmentJobsPanel.tsx
 src/components/equity-research/EquityDataProviderPanel.tsx
+src/components/equity-research/EquityUniverseFileImportPanel.tsx
 src/components/equity-research/EquityUniverseImportPanel.tsx
 src/components/equity-research/EquityMetadataPanel.tsx
 src/components/equity-research/EquityFundamentalsPanel.tsx
@@ -37,9 +45,29 @@ src/components/equity-research/EquityDataReadinessPanel.tsx
 
 The equity research page loads provider capabilities, provider credential references, recent
 provider requests, and enrichment snapshots for the selected candidate symbol or first selected
-universe member. Optional endpoint failures are rendered as unavailable state instead of crashing
-the page.
+universe member. It also loads recent equity data operations. Optional endpoint failures are
+rendered as unavailable state instead of crashing the page.
 
 Import and enrichment actions call `/equity-data` APIs explicitly from client panels. Mock provider
 actions work without credentials. External providers show provider configured or provider not
 configured state based on backend settings and credential references.
+
+## CSV File Import
+
+The file import panel sends `multipart/form-data` to
+`POST /equity-data/operations/universe-import-file`. Accepted columns are `ticker` or `symbol`,
+plus optional `name`, `exchange`, `sector`, `industry`, `currency`, `country`, and `asset_type`.
+The backend trims fields, normalizes tickers uppercase, redacts credential-shaped columns, and does
+not persist raw uploaded file bytes.
+
+Run mode options:
+
+- `auto`: synchronous for small files, queued for larger files.
+- `sync`: request/response import for bounded small files.
+- `queued`: parse and validate now, then run sanitized rows through the background worker.
+
+## Safe Copy
+
+The UI uses research-context language: import research universe, queue enrichment, provider
+readiness, and operation progress. It does not present broker actions, copy trading, auto-trading,
+external signal delivery, or financial-advice output.

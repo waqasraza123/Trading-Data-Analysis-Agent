@@ -1,9 +1,13 @@
-import { apiGet, apiPost } from "./client";
+import { apiGet, apiPost, apiPostForm } from "./client";
 import type { ApiResult, UUID } from "./types";
 import type {
   EquityDataProviderCapability,
+  EquityDataOperation,
+  EquityDataOperationInput,
+  EquityDataOperationList,
   EquityDataProviderRequest,
   EquityEarningsEvent,
+  EquityFileImportResult,
   EquityFundamentalSnapshot,
   EquityProviderUniverseImportInput,
   EquitySymbolEnrichmentInput,
@@ -40,6 +44,79 @@ export function listEquityDataProviderRequests(
     query: { workspace_id: workspaceId, limit: 25 },
     optional: true,
   });
+}
+
+export function listEquityDataOperations(
+  workspaceId: UUID,
+): Promise<ApiResult<EquityDataOperationList>> {
+  return apiGet<EquityDataOperationList>("/equity-data/operations", {
+    query: { workspace_id: workspaceId, limit: 25 },
+    optional: true,
+  });
+}
+
+export function queueEquityMetadataEnrichment(
+  input: EquityDataOperationInput,
+): Promise<ApiResult<EquityDataOperation>> {
+  return apiPost<EquityDataOperation>("/equity-data/operations/metadata-enrichment", input, {
+    optional: true,
+    timeoutMs: 30000,
+  });
+}
+
+export function queueEquityFundamentalsEnrichment(
+  input: EquityDataOperationInput,
+): Promise<ApiResult<EquityDataOperation>> {
+  return apiPost<EquityDataOperation>("/equity-data/operations/fundamentals-enrichment", input, {
+    optional: true,
+    timeoutMs: 30000,
+  });
+}
+
+export function queueEquityEarningsEnrichment(
+  input: EquityDataOperationInput,
+): Promise<ApiResult<EquityDataOperation>> {
+  return apiPost<EquityDataOperation>("/equity-data/operations/earnings-enrichment", input, {
+    optional: true,
+    timeoutMs: 30000,
+  });
+}
+
+export function queueEquityEarningsToCatalysts(
+  input: Omit<EquityDataOperationInput, "provider" | "credentialRefId" | "filters">,
+): Promise<ApiResult<EquityDataOperation>> {
+  return apiPost<EquityDataOperation>("/equity-data/operations/earnings-to-catalysts", input, {
+    optional: true,
+    timeoutMs: 30000,
+  });
+}
+
+export function importEquityUniverseFile(input: {
+  workspaceId: UUID;
+  file: File;
+  universeId?: UUID;
+  createUniverseName?: string;
+  providerName?: string;
+  runMode?: "sync" | "queued" | "auto";
+  dryRun?: boolean;
+}): Promise<ApiResult<EquityFileImportResult>> {
+  const formData = new FormData();
+  formData.set("workspace_id", input.workspaceId);
+  formData.set("file", input.file);
+  if (input.universeId) {
+    formData.set("universe_id", input.universeId);
+  }
+  if (input.createUniverseName) {
+    formData.set("create_universe_name", input.createUniverseName);
+  }
+  formData.set("provider_name", input.providerName || "csv_equity_import");
+  formData.set("run_mode", input.runMode || "auto");
+  formData.set("dry_run", input.dryRun ? "true" : "false");
+  return apiPostForm<EquityFileImportResult>(
+    "/equity-data/operations/universe-import-file",
+    formData,
+    { optional: true, timeoutMs: 60000 },
+  );
 }
 
 export function lookupEquityMetadata(

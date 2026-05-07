@@ -150,6 +150,13 @@ def default_job_queue_definitions() -> list[DefaultJobQueueDefinition]:
             "reports",
             JobQueueJobType.REPORT_BUILD,
         ),
+        DefaultJobQueueDefinition(
+            "equity_data_operation",
+            "Equity data operation",
+            "Runs bounded equity data import and enrichment operations.",
+            "equity_data",
+            JobQueueJobType.EQUITY_DATA_OPERATION,
+        ),
     ]
 
 
