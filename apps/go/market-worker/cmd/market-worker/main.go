@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"time"
@@ -44,18 +45,15 @@ func run() error {
 	readyErr := capabilities.Validate(cfg.Mode)
 	registry := providerRegistry(cfg)
 	metrics := health.NewMetrics()
-	healthServer := health.NewServer(cfg.HealthAddr, pool, cfg.WorkerID, registry.Keys(), capabilities, metrics, readyErr)
-	go func() {
-		if err := healthServer.ListenAndServe(); err != nil {
-			logger.Error("market_worker_health_server_failed", "error", err)
-			stop()
-		}
-	}()
+	if cfg.RunMode == "inspect" {
+		return writeInspection(cfg, capabilities, registry.Keys(), readyErr)
+	}
 	logger.Info(
 		"market_worker_started",
 		"workerId", cfg.WorkerID,
 		"queueName", cfg.QueueName,
 		"mode", cfg.Mode,
+		"runMode", cfg.RunMode,
 		"databaseUrl", safety.RedactDatabaseURL(cfg.DatabaseURL),
 		"healthAddr", cfg.HealthAddr,
 	)
@@ -64,6 +62,18 @@ func run() error {
 	}
 	pollingService := polling.NewService(pool, capabilities, registry, cfg.MaxCandlesPerRequest, cfg.ProviderTimeout, cfg.BinancePublicRESTBaseURL, logger)
 	runner := worker.NewRunner(cfg, pool, capabilities, pollingService, metrics, logger)
+	if cfg.RunMode == "once" {
+		claimed, err := runner.RunOnce(ctx)
+		logger.Info("market_worker_once_completed", "claimedCount", claimed)
+		return err
+	}
+	healthServer := health.NewServer(cfg.HealthAddr, pool, cfg.WorkerID, registry.Keys(), capabilities, metrics, readyErr)
+	go func() {
+		if err := healthServer.ListenAndServe(); err != nil {
+			logger.Error("market_worker_health_server_failed", "error", err)
+			stop()
+		}
+	}()
 	runErr := runner.Run(ctx)
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -71,6 +81,24 @@ func run() error {
 		logger.Warn("market_worker_health_shutdown_failed", "error", err)
 	}
 	return runErr
+}
+
+func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, providers []string, readyErr error) error {
+	payload := map[string]any{
+		"workerId":       cfg.WorkerID,
+		"queueName":      cfg.QueueName,
+		"mode":           cfg.Mode,
+		"runMode":        cfg.RunMode,
+		"providers":      providers,
+		"dbCapabilities": capabilities,
+		"ready":          readyErr == nil,
+	}
+	if readyErr != nil {
+		payload["error"] = readyErr.Error()
+	}
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(payload)
 }
 
 func providerRegistry(cfg config.Config) *providers.Registry {

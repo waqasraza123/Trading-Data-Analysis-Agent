@@ -70,6 +70,20 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 }
 
+func (r *Runner) RunOnce(ctx context.Context) (int, error) {
+	_ = r.heartbeat.Starting(ctx, map[string]any{"queueName": r.config.QueueName, "runMode": "once"})
+	defer func() {
+		_ = r.heartbeat.Stopped(context.Background(), map[string]any{"queueName": r.config.QueueName, "runMode": "once"})
+	}()
+	claimed, err := r.pollOnce(ctx)
+	if err != nil {
+		_ = r.heartbeat.Failed(ctx, map[string]any{"error": err.Error(), "runMode": "once"})
+		return claimed, err
+	}
+	_ = r.heartbeat.Running(ctx, map[string]any{"claimedCount": claimed, "queueName": r.config.QueueName, "runMode": "once"})
+	return claimed, nil
+}
+
 func (r *Runner) pollOnce(ctx context.Context) (int, error) {
 	if r.config.Mode == "provider_polling_requests" || !r.capabilities.HasTable("job_queue_items") {
 		requests, err := r.repository.ClaimProviderPollingRequests(ctx, r.config.WorkerID, r.config.BatchSize)

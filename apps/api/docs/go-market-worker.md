@@ -76,6 +76,11 @@ If `job_queue_items` is missing or no eligible jobs are present, the worker can 
 `provider_polling_requests` directly and update those rows through running, completed,
 completed-with-warnings, or failed states.
 
+Terminal failures are not retried by the Go bridge: unsupported job type, invalid payload,
+unsupported provider, unsupported timeframe, secret-looking metadata, and not-configured provider
+stubs. Transient provider or database failures remain retryable through the existing job queue
+attempt limits and `MARKET_WORKER_RETRY_BACKOFF_SECONDS`.
+
 ## Candle Semantics
 
 The worker writes to the existing `candles` table and mirrors the Python source-of-truth policy:
@@ -104,6 +109,12 @@ DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence \
 go run ./cmd/market-worker
 ```
 
+Run modes:
+
+- `MARKET_WORKER_RUN_MODE=serve`: default long-running worker with health endpoints.
+- `MARKET_WORKER_RUN_MODE=once`: claim and process one bounded batch, then exit.
+- `MARKET_WORKER_RUN_MODE=inspect`: print detected database capabilities as JSON and exit without claiming work.
+
 Docker:
 
 ```sh
@@ -120,6 +131,22 @@ GET /metrics.json
 
 `/readyz` exposes DB connectivity, provider registry state, and detected database capabilities.
 `/metrics.json` exposes job, candle, provider failure, and capability counters as JSON.
+
+## Operational Checks
+
+Use inspect mode before enabling a new environment:
+
+```sh
+cd apps/go/market-worker
+DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence \
+MARKET_WORKER_RUN_MODE=inspect \
+go run ./cmd/market-worker
+```
+
+Readiness requires a database connection, `candles`, `symbols`, `data_sources`, at least one work
+source from `job_queue_items` or `provider_polling_requests`, and at least one enabled provider.
+Missing optional provider health, ingestion diagnostics, runtime heartbeat, and job event tables
+are reported as capabilities but do not block the worker.
 
 ## Enqueue From Python/API
 

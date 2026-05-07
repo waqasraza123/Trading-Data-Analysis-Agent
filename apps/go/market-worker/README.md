@@ -17,6 +17,24 @@ DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence \
 go run ./cmd/market-worker
 ```
 
+Run one bounded claim/process pass:
+
+```sh
+cd apps/go/market-worker
+DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence \
+MARKET_WORKER_RUN_MODE=once \
+go run ./cmd/market-worker
+```
+
+Inspect database compatibility without claiming work:
+
+```sh
+cd apps/go/market-worker
+DATABASE_URL=postgresql://trading:trading@127.0.0.1:5432/trading_intelligence \
+MARKET_WORKER_RUN_MODE=inspect \
+go run ./cmd/market-worker
+```
+
 Health endpoints:
 
 ```txt
@@ -43,12 +61,20 @@ Optional:
 - `MARKET_WORKER_HEALTH_ADDR`, default `:8091`
 - `MARKET_WORKER_LOG_LEVEL`, default `info`
 - `MARKET_WORKER_MODE`, default `jobs`
+- `MARKET_WORKER_RUN_MODE`, default `serve`
+- `MARKET_WORKER_RETRY_BACKOFF_SECONDS`, default `60`
 - `BINANCE_PUBLIC_REST_BASE_URL`, default `https://api.binance.com`
 - `MARKET_WORKER_ENABLE_BINANCE_PUBLIC`, default `true`
 - `MARKET_WORKER_ENABLE_MOCK_PROVIDER`, default `true`
 
 The worker does not require Redis, LLM keys, OCR keys, broker credentials, or external provider
 credentials at startup.
+
+## Run Modes
+
+- `serve`: long-running worker with health endpoints, DB heartbeat when available, and periodic job claiming.
+- `once`: claim and process one bounded batch, then exit.
+- `inspect`: connect to Postgres, detect table capabilities, print JSON, and exit without claiming work.
 
 ## Job Bridge
 
@@ -73,6 +99,10 @@ Supported job payload:
 
 If a payload contains `providerPollingRequestId`, the worker loads the canonical request row from
 `provider_polling_requests`.
+
+Unsupported job types, malformed payloads, unsupported providers, unsupported timeframes, and
+secret-looking metadata fail terminally. Transient provider or database errors remain retryable and
+respect the existing job queue attempt limits plus `MARKET_WORKER_RETRY_BACKOFF_SECONDS`.
 
 ## Candle Policy
 

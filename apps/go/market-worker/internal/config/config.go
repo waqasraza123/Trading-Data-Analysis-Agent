@@ -23,6 +23,8 @@ type Config struct {
 	HealthAddr               string
 	LogLevel                 string
 	Mode                     string
+	RunMode                  string
+	RetryBackoff             time.Duration
 	BinancePublicRESTBaseURL string
 	EnableBinancePublic      bool
 	EnableMockProvider       bool
@@ -41,6 +43,8 @@ func Load() (Config, error) {
 		HealthAddr:               envString("MARKET_WORKER_HEALTH_ADDR", ":8091"),
 		LogLevel:                 strings.ToLower(envString("MARKET_WORKER_LOG_LEVEL", "info")),
 		Mode:                     strings.ToLower(envString("MARKET_WORKER_MODE", "jobs")),
+		RunMode:                  strings.ToLower(envString("MARKET_WORKER_RUN_MODE", "serve")),
+		RetryBackoff:             time.Duration(envInt("MARKET_WORKER_RETRY_BACKOFF_SECONDS", 60)) * time.Second,
 		BinancePublicRESTBaseURL: envString("BINANCE_PUBLIC_REST_BASE_URL", "https://api.binance.com"),
 		EnableBinancePublic:      envBool("MARKET_WORKER_ENABLE_BINANCE_PUBLIC", true),
 		EnableMockProvider:       envBool("MARKET_WORKER_ENABLE_MOCK_PROVIDER", true),
@@ -56,6 +60,9 @@ func Load() (Config, error) {
 	}
 	if cfg.Mode != "jobs" && cfg.Mode != "provider_polling_requests" {
 		return Config{}, fmt.Errorf("MARKET_WORKER_MODE must be jobs or provider_polling_requests")
+	}
+	if cfg.RunMode != "serve" && cfg.RunMode != "once" && cfg.RunMode != "inspect" {
+		return Config{}, fmt.Errorf("MARKET_WORKER_RUN_MODE must be serve, once, or inspect")
 	}
 	return cfg, nil
 }

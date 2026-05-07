@@ -152,6 +152,32 @@ where id = $1
 	return r.AddJobEvent(ctx, job, eventType, "Job failed", map[string]any{"errorCode": code, "status": status})
 }
 
+func (r *Repository) FailJobTerminal(ctx context.Context, job Job, code string, message string) error {
+	status := "failed"
+	if job.Attempts >= job.MaxAttempts {
+		status = "dead_letter"
+	}
+	_, err := r.pool.Exec(ctx, `
+update job_queue_items
+set status = $2,
+	error_code = left($3, 120),
+	error_message = left($4, 2000),
+	locked_by = null,
+	locked_until = null,
+	completed_at = now(),
+	updated_at = now()
+where id = $1
+`, job.ID, status, code, message)
+	if err != nil {
+		return err
+	}
+	eventType := "failed"
+	if status == "dead_letter" {
+		eventType = "dead_lettered"
+	}
+	return r.AddJobEvent(ctx, job, eventType, "Job failed without retry", map[string]any{"errorCode": code, "status": status, "retryable": false})
+}
+
 func (r *Repository) ClaimProviderPollingRequests(ctx context.Context, workerID string, limit int) ([]PollingRequest, error) {
 	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {

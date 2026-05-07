@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/jobs"
@@ -10,7 +11,7 @@ import (
 
 func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 	if !jobs.SupportedJobTypes[job.JobType] {
-		err := r.repository.FailJob(ctx, job, "unsupported_job_type", "Unsupported job type", time.Minute)
+		err := r.repository.FailJobTerminal(ctx, job, "unsupported_job_type", "Unsupported job type")
 		if err == nil {
 			r.metrics.RecordFailed(false)
 		}
@@ -18,13 +19,18 @@ func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 	}
 	request, err := jobs.DecodePayload(job.Payload, job.WorkspaceID, r.config.MaxCandlesPerRequest)
 	if err != nil {
-		_ = r.repository.FailJob(ctx, job, "validation_error", err.Error(), time.Minute)
+		_ = r.repository.FailJobTerminal(ctx, job, "validation_error", err.Error())
 		r.metrics.RecordFailed(false)
 		return err
 	}
 	result, err := r.polling.Process(ctx, request)
 	if err != nil {
-		_ = r.repository.FailJob(ctx, job, errorCode(err), err.Error(), time.Minute)
+		code := errorCode(err)
+		if retryableError(code, err) {
+			_ = r.repository.FailJob(ctx, job, code, err.Error(), r.config.RetryBackoff)
+		} else {
+			_ = r.repository.FailJobTerminal(ctx, job, code, err.Error())
+		}
 		r.metrics.RecordFailed(true)
 		return err
 	}
@@ -48,6 +54,9 @@ func (r *Runner) handleJob(ctx context.Context, job jobs.Job) error {
 func (r *Runner) handleDirectRequest(ctx context.Context, request jobs.PollingRequest) error {
 	result, err := r.polling.Process(ctx, request)
 	if err != nil {
+		if request.ID != nil {
+			_ = r.repository.FailProviderPollingRequest(ctx, *request.ID, errorCode(err), err.Error())
+		}
 		r.metrics.RecordFailed(true)
 		return err
 	}
@@ -59,5 +68,48 @@ func errorCode(err error) string {
 	if err == nil {
 		return ""
 	}
-	return fmt.Sprintf("%T", err)
+	text := err.Error()
+	if text == "" {
+		return fmt.Sprintf("%T", err)
+	}
+	code := strings.Split(text, ":")[0]
+	code = strings.TrimSpace(code)
+	code = strings.ReplaceAll(code, " ", "_")
+	if code == "" || len(code) > 120 {
+		return fmt.Sprintf("%T", err)
+	}
+	return code
+}
+
+func retryableError(code string, err error) bool {
+	text := strings.ToLower(code + " " + err.Error())
+	terminalMarkers := []string{
+		"validation_error",
+		"provider_not_supported",
+		"unsupported_timeframe",
+		"missing_",
+		"invalid_",
+		"secret_metadata",
+		"not_configured",
+	}
+	for _, marker := range terminalMarkers {
+		if strings.Contains(text, marker) {
+			return false
+		}
+	}
+	retryableMarkers := []string{
+		"network",
+		"timeout",
+		"http_error",
+		"temporarily",
+		"connection",
+		"deadlock",
+		"serialization",
+	}
+	for _, marker := range retryableMarkers {
+		if strings.Contains(text, marker) {
+			return true
+		}
+	}
+	return true
 }
