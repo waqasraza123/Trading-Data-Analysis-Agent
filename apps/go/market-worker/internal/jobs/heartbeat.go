@@ -51,6 +51,9 @@ func (h *Heartbeat) send(ctx context.Context, status string, payload map[string]
 	if !h.capabilities.HasTable("runtime_worker_instances") || !h.capabilities.HasTable("runtime_worker_definitions") {
 		return nil
 	}
+	if !h.capabilities.HasOptionalColumns("runtime_worker_instances") || !h.capabilities.HasOptionalColumns("runtime_worker_definitions") {
+		return nil
+	}
 	if err := h.ensureDefinition(ctx); err != nil {
 		return err
 	}

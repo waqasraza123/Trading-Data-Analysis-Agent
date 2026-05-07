@@ -30,8 +30,9 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   It supports `serve`, `once`, and `inspect` run modes, explicit terminal versus retryable failure
   handling, bounded parallel execution, provider backpressure controls, per-provider circuit
   breaking, claimed job lock renewal, bounded job/request execution timeouts, direct request stale
-  reclaim for Go-owned fallback rows, and an operations runbook. Python remains the canonical
-  API/product brain and no Python provider polling path is removed.
+  reclaim for Go-owned fallback rows, explicit required/optional schema column compatibility
+  checks, and an operations runbook. Python remains the canonical API/product brain and no Python
+  provider polling path is removed.
 - Dashboard read model materialization exists under `apps/api/app/modules/read_models/` for rebuildable dashboard symbol, signal card, and command center snapshots. It reads existing deterministic artifacts only and does not mutate source artifacts, run scans/analysis/outcomes, call LLMs/providers, send notifications, execute broker workflows, auto-trade, or provide financial advice.
 
 - The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.

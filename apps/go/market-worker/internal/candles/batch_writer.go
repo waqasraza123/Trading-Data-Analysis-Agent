@@ -43,7 +43,7 @@ func (w *BatchWriter) StartRun(ctx context.Context, workspaceID uuid.UUID, sourc
 		Timeframe:                timeframe,
 		StartedAt:                time.Now().UTC(),
 	}
-	if !w.capabilities.HasTable("candle_ingestion_performance_runs") {
+	if !w.capabilities.HasTable("candle_ingestion_performance_runs") || !w.capabilities.HasOptionalColumns("candle_ingestion_performance_runs") {
 		return run, nil
 	}
 	runID := uuid.New()
@@ -63,7 +63,7 @@ insert into candle_ingestion_performance_runs (
 }
 
 func (w *BatchWriter) FinishRun(ctx context.Context, run RunContext, counts WriteCounts, failed bool) error {
-	if run.ID == nil || !w.capabilities.HasTable("candle_ingestion_performance_runs") {
+	if run.ID == nil || !w.capabilities.HasTable("candle_ingestion_performance_runs") || !w.capabilities.HasOptionalColumns("candle_ingestion_performance_runs") {
 		return nil
 	}
 	elapsed := int(time.Since(run.StartedAt).Milliseconds())
@@ -147,7 +147,7 @@ func (w *BatchWriter) Write(ctx context.Context, run RunContext, candles []Candl
 			return counts, conflicts, err
 		}
 	}
-	if len(conflicts) > 0 && run.ID != nil && w.capabilities.HasTable("candle_ingestion_conflicts") {
+	if len(conflicts) > 0 && run.ID != nil && w.capabilities.HasTable("candle_ingestion_conflicts") && w.capabilities.HasOptionalColumns("candle_ingestion_conflicts") {
 		if err := w.recordConflicts(ctx, *run.ID, conflicts); err != nil {
 			return counts, conflicts, err
 		}
@@ -157,7 +157,7 @@ func (w *BatchWriter) Write(ctx context.Context, run RunContext, candles []Candl
 }
 
 func (w *BatchWriter) RecordInvalidConflicts(ctx context.Context, run RunContext, invalid []ValidationIssue, fallback Candle) error {
-	if run.ID == nil || !w.capabilities.HasTable("candle_ingestion_conflicts") {
+	if run.ID == nil || !w.capabilities.HasTable("candle_ingestion_conflicts") || !w.capabilities.HasOptionalColumns("candle_ingestion_conflicts") {
 		return nil
 	}
 	batch := &pgx.Batch{}

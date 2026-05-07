@@ -350,7 +350,7 @@ where id = $1
 }
 
 func (r *Repository) AddProviderPollingError(ctx context.Context, requestID uuid.UUID, workspaceID uuid.UUID, code string, message string, raw map[string]any) error {
-	if !r.capabilities.HasTable("provider_polling_errors") {
+	if !r.capabilities.HasTable("provider_polling_errors") || !r.capabilities.HasOptionalColumns("provider_polling_errors") {
 		return nil
 	}
 	if workspaceID == uuid.Nil {
@@ -380,7 +380,7 @@ type eventExecutor interface {
 }
 
 func (r *Repository) addJobEvent(ctx context.Context, executor eventExecutor, job Job, eventType string, message string, metadata map[string]any) error {
-	if !r.capabilities.HasTable("job_queue_events") {
+	if !r.capabilities.HasTable("job_queue_events") || !r.capabilities.HasOptionalColumns("job_queue_events") {
 		return nil
 	}
 	_, err := executor.Exec(ctx, `

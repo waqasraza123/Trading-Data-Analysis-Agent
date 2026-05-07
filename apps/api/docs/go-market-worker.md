@@ -53,8 +53,10 @@ Optional integrations:
 - `runtime_worker_instances`
 - `engine_execution_records`
 
-The worker detects table and column capabilities at startup. Optional tables are skipped when
-missing. No Python migration is required for this phase.
+The worker detects table and column capabilities at startup. Required schema gaps block readiness
+before any job is claimed. Optional tables are skipped when missing, and optional tables with
+incompatible column shapes are reported in readiness output without blocking candle ingestion. No
+Python migration is required for this phase.
 
 ## Job Queue Bridge
 
@@ -145,7 +147,8 @@ GET /readyz
 GET /metrics.json
 ```
 
-`/readyz` exposes DB connectivity, provider registry state, and detected database capabilities.
+`/readyz` exposes DB connectivity, provider registry state, detected database capabilities,
+required column problems, and optional column problems.
 `/metrics.json` exposes job, timeout, reclaimed direct request, candle, provider failure, provider
 gate wait, provider circuit breaker, job lock renewal, and capability counters as JSON.
 
@@ -160,10 +163,11 @@ MARKET_WORKER_RUN_MODE=inspect \
 go run ./cmd/market-worker
 ```
 
-Readiness requires a database connection, `candles`, `symbols`, `data_sources`, at least one work
-source from `job_queue_items` or `provider_polling_requests`, and at least one enabled provider.
-Missing optional provider health, ingestion diagnostics, runtime heartbeat, and job event tables
-are reported as capabilities but do not block the worker.
+Readiness requires a database connection, compatible `candles`, `symbols`, `data_sources`, at least
+one compatible work source from `job_queue_items` or `provider_polling_requests`, and at least one
+enabled provider. Missing optional provider health, ingestion diagnostics, runtime heartbeat, and
+job event tables are reported as capabilities but do not block the worker. Existing optional tables
+with missing columns are reported in `optionalColumnProblems` and skipped by the worker.
 
 ## Enqueue From Python/API
 

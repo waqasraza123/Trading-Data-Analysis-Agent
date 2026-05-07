@@ -15,6 +15,7 @@ type Server struct {
 	server       *http.Server
 	pool         *pgxpool.Pool
 	workerID     string
+	mode         string
 	providers    []string
 	capabilities workerdb.Capabilities
 	metrics      *Metrics
@@ -22,10 +23,11 @@ type Server struct {
 	readyErr      error
 }
 
-func NewServer(addr string, pool *pgxpool.Pool, workerID string, providers []string, capabilities workerdb.Capabilities, metrics *Metrics, readyErr error) *Server {
+func NewServer(addr string, pool *pgxpool.Pool, workerID string, mode string, providers []string, capabilities workerdb.Capabilities, metrics *Metrics, readyErr error) *Server {
 	instance := &Server{
 		pool:         pool,
 		workerID:     workerID,
+		mode:         mode,
 		providers:    providers,
 		capabilities: capabilities,
 		metrics:      metrics,
@@ -70,11 +72,13 @@ func (s *Server) readyz(writer http.ResponseWriter, request *http.Request) {
 		status = http.StatusServiceUnavailable
 	}
 	payload := map[string]any{
-		"ready":          ready,
-		"dbConnected":    dbConnected,
-		"workerId":       s.workerID,
-		"providers":      s.providers,
-		"dbCapabilities": s.capabilities,
+		"ready":                  ready,
+		"dbConnected":            dbConnected,
+		"workerId":               s.workerID,
+		"providers":              s.providers,
+		"dbCapabilities":         s.capabilities,
+		"requiredColumnProblems": s.capabilities.RequiredColumnProblems(s.mode),
+		"optionalColumnProblems": s.capabilities.OptionalColumnProblems(),
 	}
 	if s.readyErr != nil {
 		payload["error"] = s.readyErr.Error()

@@ -88,7 +88,7 @@ func run() error {
 		logger.Info("market_worker_once_completed", "claimedCount", claimed)
 		return err
 	}
-	healthServer := health.NewServer(cfg.HealthAddr, pool, cfg.WorkerID, registry.Keys(), capabilities, metrics, readyErr)
+	healthServer := health.NewServer(cfg.HealthAddr, pool, cfg.WorkerID, cfg.Mode, registry.Keys(), capabilities, metrics, readyErr)
 	go func() {
 		if err := healthServer.ListenAndServe(); err != nil {
 			logger.Error("market_worker_health_server_failed", "error", err)
@@ -121,6 +121,8 @@ func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, prov
 		"providerRequestStaleSeconds": int(cfg.ProviderRequestStaleAfter.Seconds()),
 		"providers":                   providers,
 		"dbCapabilities":              capabilities,
+		"requiredColumnProblems":      capabilities.RequiredColumnProblems(cfg.Mode),
+		"optionalColumnProblems":      capabilities.OptionalColumnProblems(),
 		"ready":                       readyErr == nil,
 	}
 	if readyErr != nil {

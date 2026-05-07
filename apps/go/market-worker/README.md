@@ -43,8 +43,9 @@ GET http://127.0.0.1:8091/readyz
 GET http://127.0.0.1:8091/metrics.json
 ```
 
-`/metrics.json` includes provider gate wait counters so operators can see whether provider
-backpressure is active.
+`/readyz` and inspect mode include required and optional column problems so operators can catch
+schema drift before enabling the worker. `/metrics.json` includes provider gate wait counters so
+operators can see whether provider backpressure is active.
 
 ## Configuration
 
@@ -85,7 +86,7 @@ credentials at startup.
 
 - `serve`: long-running worker with health endpoints, DB heartbeat when available, and periodic job claiming.
 - `once`: claim and process one bounded batch, then exit.
-- `inspect`: connect to Postgres, detect table capabilities, print JSON, and exit without claiming work.
+- `inspect`: connect to Postgres, detect table and column capabilities, print JSON, and exit without claiming work.
 
 `MARKET_WORKER_BATCH_SIZE` controls how much work one claim cycle can reserve. `MARKET_WORKER_MAX_CONCURRENCY`
 controls how many claimed jobs or direct polling requests execute at the same time. Keep concurrency below the
@@ -106,6 +107,23 @@ cleanup context so the queue can retry according to its existing policy.
 `MARKET_WORKER_PROVIDER_REQUEST_STALE_SECONDS` lets the direct `provider_polling_requests`
 fallback reclaim stale Go-claimed rows left in `running` after an interrupted worker. Reclaimed
 rows are marked in request metadata and counted in `/metrics.json`.
+
+## Schema Compatibility
+
+Python owns SQLAlchemy models and Alembic migrations. The Go worker only inspects the resulting
+Postgres contract.
+
+Startup readiness requires the `candles`, `symbols`, and `data_sources` tables plus the columns the
+worker reads or writes for candle validation and storage. In `jobs` mode, readiness also requires a
+compatible `job_queue_items` table when present and a compatible `provider_polling_requests` table
+when present because fallback direct requests can be claimed when the queue is empty. In
+`provider_polling_requests` mode, readiness requires a compatible direct request table.
+
+Optional tables remain optional. If an optional table exists but does not expose the columns the Go
+worker needs, the worker skips that integration and reports the missing columns in
+`optionalColumnProblems` from inspect mode and `/readyz`. This applies to job queue events,
+provider polling errors, provider health snapshots, ingestion performance runs, ingestion
+conflicts, and runtime worker heartbeat tables.
 
 ## Job Bridge
 

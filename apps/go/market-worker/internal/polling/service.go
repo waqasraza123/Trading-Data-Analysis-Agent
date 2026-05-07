@@ -215,7 +215,7 @@ func (s *Service) Process(ctx context.Context, request jobs.PollingRequest) (Res
 }
 
 func (s *Service) recordProviderHealth(ctx context.Context, request jobs.PollingRequest, result Result, cause error) error {
-	if !s.capabilities.HasTable("provider_health_snapshots") {
+	if !s.capabilities.HasTable("provider_health_snapshots") || !s.capabilities.HasOptionalColumns("provider_health_snapshots") {
 		return nil
 	}
 	latestFinal, staleSeconds, freshness := s.latestFinalFreshness(ctx, request)

@@ -16,11 +16,31 @@ go run ./cmd/market-worker
 ```
 
 The JSON output includes worker identity, queue, run mode, registered providers, detected database
-capabilities, and readiness status. Required capabilities are `candles`, `symbols`, `data_sources`,
-and at least one work source from `job_queue_items` or `provider_polling_requests`.
+capabilities, required column problems, optional column problems, and readiness status. Required
+capabilities are compatible `candles`, `symbols`, `data_sources`, and at least one compatible work
+source from `job_queue_items` or `provider_polling_requests`.
 
 Optional provider health, ingestion performance, conflict, runtime heartbeat, and job event tables
-are reported but do not block startup.
+are reported but do not block startup. If one of those optional tables exists with missing columns,
+the worker skips that integration and reports it in `optionalColumnProblems`.
+
+## Schema Contract Checks
+
+The Go worker does not own migrations. It validates the Postgres shape produced by the Python
+Alembic migrations before it claims work.
+
+Readiness blocks when required tables or required columns are missing. Core required contracts are:
+
+- `candles` for source-of-truth candle reads and writes;
+- `symbols` and `data_sources` for active symbol/source validation;
+- `job_queue_items` when the table exists in jobs mode;
+- `provider_polling_requests` when direct request mode is selected or the table exists as a
+  fallback work source.
+
+Optional integrations are enabled only when both the table and the columns used by the worker are
+present. Optional compatibility problems do not block candle ingestion, but they explain why the
+worker is not writing job events, provider polling errors, provider health snapshots, ingestion
+performance rows, ingestion conflicts, or runtime heartbeats.
 
 ## Execution Modes
 
@@ -141,9 +161,9 @@ GET /metrics.json
 ```
 
 `/healthz` reports process liveness, worker ID, and uptime. `/readyz` checks database connectivity,
-required table capabilities, and provider registration. `/metrics.json` reports job, candle,
-timeout, reclaimed direct request, provider failure, provider gate wait, provider circuit breaker,
-job lock renewal, and capability counters.
+required table and column capabilities, optional column problems, and provider registration.
+`/metrics.json` reports job, candle, timeout, reclaimed direct request, provider failure, provider
+gate wait, provider circuit breaker, job lock renewal, and capability counters.
 
 ## Rollout Sequence
 
