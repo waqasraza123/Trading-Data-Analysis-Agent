@@ -1,50 +1,86 @@
 # AI Trading Intelligence Agent
 
 [![API CI](https://github.com/waqasraza123/Trading-Data-Analysis-Agent/actions/workflows/api-ci.yml/badge.svg)](https://github.com/waqasraza123/Trading-Data-Analysis-Agent/actions/workflows/api-ci.yml)
-![Status](https://img.shields.io/badge/status-daily%20dashboard%20%2B%20intelligence%20backend-blue)
+![Status](https://img.shields.io/badge/status-read--only%20market%20intelligence-blue)
+![Safety](https://img.shields.io/badge/safety-no%20broker%20execution-success)
+![API](https://img.shields.io/badge/API-FastAPI%20%2B%20Python%203.12-009688)
+![Web](https://img.shields.io/badge/Web-Next.js%2015%20%2B%20React%2019-111111)
+![Worker](https://img.shields.io/badge/Worker-Go%20market%20data%20sidecar-00ADD8)
 
-AI Trading Intelligence Agent is a deterministic market-intelligence product for daily review of
-market data, signal context, data readiness, quality diagnostics, and observed outcomes.
+AI Trading Intelligence Agent is a read-only market intelligence product for daily review of
+market data, deterministic signal context, data readiness, quality diagnostics, equity research,
+and observed outcomes.
 
-The product is centered on a read-only Daily Trading Command Center backed by a FastAPI intelligence
-engine. It helps an operator answer practical review questions:
+It is built around a Daily Trading Command Center and a deterministic FastAPI intelligence engine.
+The product helps an operator review what is ready, what changed, what needs attention, and what
+should be treated as stale, conflicted, or not actionable enough for review.
 
-- Is the market data fresh enough to review?
-- What changed since the last scan or brief?
-- Which stored signals deserve attention first?
-- Which setups need confirmation, have conflicting evidence, or should be avoided for now?
-- What happened after earlier signals, and what should be reviewed in the journal?
-- Which provider, data-quality, or diagnostic issues need cleanup before analysis is trusted?
+It is not a trading bot, broker terminal, copy-trading platform, external signal delivery product,
+or financial-advice system.
 
-It is not a trading bot, broker terminal, copy-trading platform, external alerting product, or
-financial-advice system.
-
-## Product Boundary
+## Product Focus
 
 The product turns structured market data and persisted intelligence artifacts into an auditable
 daily review workflow.
 
-It does:
+It helps answer:
 
-- Ingest historical CSV/JSON candles and live/provider-originated candle data.
-- Normalize imported, live, and provider-polled candles through one shared validation path.
-- Store final and partial candle state with freshness, gap, and quality metadata.
-- Run deterministic analysis, pattern, indicator, setup-context, signal-priority, and quality
-  workflows.
-- Persist daily briefs, signal digests, market memory, setup context, observed outcomes, journal
-  notes, notification inbox events, and audit timelines.
-- Provide a web command center for daily review, triage, scanner management, quality diagnostics,
-  outcome review, preferences, journal notes, and data onboarding.
-- Use optional grounded AI/LLM layers only to explain or reason from supplied persisted evidence.
+- Is the workspace ready for review today?
+- Is the candle data fresh, complete, and good enough to trust?
+- Which stored signals deserve review first?
+- Which setups need confirmation, have conflicting evidence, or should be avoided for now?
+- What changed in a watchlist, scanner run, daily brief, or equity research universe?
+- What happened after earlier signals, and what should be reviewed in the journal?
+- Which provider, data-quality, readiness, or diagnostic issues need cleanup?
 
-It does not:
+## Current Product Surfaces
 
-- Place orders or connect to brokers for execution.
-- Auto-trade, copy-trade, or create direct order instructions.
-- Let an LLM override deterministic classification or mutate source signals.
-- Treat observed outcomes as account performance, P&L, or broker results.
-- Send external alerts by default from scan, digest, or brief generation.
-- Provide regulated financial advice.
+The web app in `apps/web` redirects `/` to `/command-center` and currently includes:
+
+| Route | Product Role |
+| --- | --- |
+| `/command-center` | Default daily cockpit for readiness, freshness, review-first setups, scanner context, workflow progress, notifications, and quality warnings. |
+| `/onboarding` | First-run status, workspace selector support, demo workspace option, and explicit safe setup actions. |
+| `/setup` | Guided workspace setup for workspace, symbols, sources, credential references, watchlists, scanner presets, preference profile, and optional demo candles. |
+| `/readiness` | Product readiness checklist for API, DB, migrations, setup state, data freshness, worker state, and optional modules. |
+| `/brief` | Daily/session/watchlist brief over persisted backend intelligence, with fail-soft frontend composition. |
+| `/triage` | Signal review board for Review First, Needs Confirmation, Conflicted, Avoid / No Directional, Stale / Data Issue, and Review Required. |
+| `/signals/[signalId]` | Read-only setup detail with visual chart context, evidence, confidence, outcomes, reasoning, historical cases, quality gates, audit, and journal panels. |
+| `/scanner` | Watchlist scanner presets, scheduled scan configs, due scans, scan execution review, and scan result context. |
+| `/equity-research` | Equity swing research mode with universes, members, background data operations, metadata, fundamentals, earnings, catalysts, scans, and candidate review. |
+| `/data/onboarding` | Data-source setup, candle freshness, provider health, gap planning, quality checks, and prepare-only recovery metadata. |
+| `/quality` | Signal quality scoreboard over observed behavior, calibration, validation, drift, attribution, and data coverage. |
+| `/review/outcomes` | Outcome review queue with linked journal prompts and reliability diagnostics. |
+| `/journal` | Observation journal for reviewed, ignored, paper-followed, external-action-noted, or uncertain setup feedback. |
+| `/notifications` | In-app inbox for sanitized backend intelligence events, source links, delivery attempts, and review state. |
+| `/dashboard` | Broader operator dashboard for watchlists, signal focus, digests, backend state, and follow-up context. |
+| `/symbols/[symbolId]` | Symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs. |
+| `/preferences/strategy` | Personal review preference profiles for filtering by market, symbol, session, timeframe, confidence, setup quality, stale-data tolerance, and confirmation rules. |
+| `/demo` | Demo workspace flow for smoke validation with synthetic, clearly labeled data. |
+
+The web client is intentionally fail-soft. Optional backend modules can be absent, and the UI should
+show scoped empty states or backend-state warnings instead of breaking the daily workflow.
+
+## Daily Review Loop
+
+The intended operator loop is:
+
+1. Open the Command Center and confirm workspace readiness.
+2. Check provider health, candle freshness, stale data, and quality warnings.
+3. Run an explicit daily workflow or scanner action when review inputs need refreshing.
+4. Read the generated daily brief.
+5. Triage stored signals by review priority, confirmation need, conflict, stale data, and safety state.
+6. Inspect setup detail for evidence, setup context, final-candle chart context, outcomes, reasoning,
+   historical cases, quality gates, and audit timeline.
+7. Review equity research universes and candidates when the workspace includes equity swing research.
+8. Add observational journal notes and review observed outcomes.
+9. Clear in-app intelligence notifications and return to the Command Center summary.
+
+Daily workflows record completed, skipped, and failed backend steps. They do not place orders,
+execute broker actions, send external alerts by default, or call external providers unless polling
+is explicitly enabled for that workflow and environment.
+
+## Safety Boundary
 
 Core rule:
 
@@ -52,86 +88,93 @@ Core rule:
 Persisted artifacts are the source of truth. Deterministic engines classify and score. AI may only explain supplied evidence.
 ```
 
-## Daily Workflow
+The system does:
 
-The implemented daily product loop is:
+- Ingest CSV/JSON candles, live feed candles, provider-polled candles, and equity research data.
+- Normalize all candle paths through shared validation and storage contracts.
+- Persist deterministic analysis artifacts, setup context, signal priority, market memory, daily
+  briefs, signal digests, observed outcomes, journal notes, review items, notifications, and audit
+  timelines.
+- Use optional grounded AI/LLM layers only to explain, compare, or reason from supplied persisted
+  evidence.
+- Support explicit backend-safe actions such as readiness checks, scan runs, gap-recovery planning,
+  journal follow-up, and outcome review.
 
-1. Check data freshness in the Command Center or Data Onboarding.
-2. Run the daily workflow to refresh provider health, prepare recovery plans, run deterministic
-   scans, generate setup context, score review priority, refresh market memory, create signal
-   digests, and generate a persisted brief.
-3. Apply scanner presets when a repeatable session, watchlist, volatility, pattern, or data-repair
-   configuration is useful.
-4. Read the daily brief for workspace-level review context.
-5. Triage stored signals by quality, confirmation need, conflict, stale data, and review status.
-6. Inspect setup detail for evidence, confidence, zones, invalidation context, outcomes, reasoning,
-   historical cases, quality findings, audit timeline, and journal context.
-7. Add observational journal notes.
-8. Review observed outcomes and quality diagnostics.
-9. Review in-app intelligence notifications and return to the Command Center summary.
+The system does not:
 
-The daily workflow records completed, skipped, and failed backend steps. It does not execute broker
-actions, execute external notifications, or call external providers unless provider polling is
-explicitly enabled for that workflow.
+- Place orders or connect to brokers for execution.
+- Auto-trade, copy-trade, or create direct order instructions.
+- Treat observed outcomes as account performance, P&L, or broker results.
+- Let an LLM override deterministic signal classification or mutate source signals.
+- Send external trading alerts from scans, digests, briefs, or reasoning output by default.
+- Store raw provider secrets; credential references use opaque secret pointers.
+- Provide regulated financial advice.
 
-## Implemented Web Surfaces
+## Technical Architecture
 
-The web app in `apps/web` redirects `/` to `/command-center` and includes these product routes:
+This is a multi-app repository:
 
-| Route | Purpose |
+| Path | Role |
 | --- | --- |
-| `/command-center` | Default daily start page for freshness, changes, review-first setups, scanner status, notifications, quality warnings, and next actions. |
-| `/brief` | Workspace daily brief, preferring the persisted backend brief and falling back to frontend composition when optional endpoints are missing. |
-| `/triage` | Read-only signal triage board across high-quality context, needs confirmation, conflicted, avoid/no directional signal, stale/data issue, and review required. |
-| `/scanner` | Watchlist scanner controls, scanner presets, scheduled scan configs, due scans, and scan result review. |
-| `/signals/[signalId]` | Full setup detail for one stored signal, including evidence, confidence, setup context, outcomes, quality, reasoning, audit, and journal panels. |
-| `/dashboard` | Daily operator cockpit over watchlists, signal focus, digests, avoid conditions, backend state, and follow-up context. |
-| `/symbols/[symbolId]` | Symbol/timeframe state, market memory, recent signals, outcomes, scheduled scans, and analysis runs. |
-| `/data/onboarding` | Data-source setup, freshness checks, candle quality, provider health, gap planning, and prepare-only recovery metadata. |
-| `/quality` | Signal quality scoreboard over observed behavior, calibration, validation, drift, attribution, and data coverage. |
-| `/review/outcomes` | Outcome review queue with linked journal prompts and optional reliability diagnostics. |
-| `/journal` | Observation journal for reviewed, ignored, paper-followed, external-action-noted, or uncertain setup feedback. |
-| `/preferences/strategy` | Personal review preference profiles for filtering by market, symbol, session, timeframe, confidence, setup quality, stale-data tolerance, and confirmation requirements. |
-| `/notifications` | In-app inbox for sanitized backend intelligence events, safety state, delivery attempts, and source links. |
+| `apps/api` | Canonical FastAPI backend, SQLAlchemy/Alembic schema, deterministic intelligence modules, auth/RBAC, read models, workers, and API docs. |
+| `apps/web` | Standalone Next.js App Router frontend with TypeScript, Tailwind CSS, typed API clients, read-only product surfaces, and mocked E2E smoke tests. |
+| `apps/go/market-worker` | Additive Go sidecar for market data polling jobs, candle normalization, provider backpressure, circuit breaking, runtime heartbeats, and health/metrics endpoints. |
+| `docs` | Repo-level architecture, development, deployment, roadmap, durable project state, and Codex working memory. |
 
-The web client tolerates missing optional backend modules with scoped empty states and backend-state
-warnings instead of crashing the workflow.
+Python remains the canonical API, product brain, orchestration layer, database contract owner, and
+UI-facing contract layer. Go is additive and scoped to market data ingestion work where a sidecar is
+a better operational fit.
 
-## Intelligence Capabilities
+## Backend Capabilities
 
-Current backend capabilities include:
+Current backend capability groups include:
 
-- Workspace, user, symbol, and data-source management.
-- Historical import, live ingestion, provider polling, candle queries, candle quality, and gap
-  recovery planning.
-- Analysis lifecycle with deterministic feature, indicator, pattern, strategy-profile, signal,
-  evidence, confidence, risk-note, and explanation artifacts.
-- Setup context, market regimes, market sessions, multi-timeframe context, cross-asset context,
-  market memory, historical-case search, and decision readiness.
-- Signal priority scoring, signal digests, daily briefs, and daily workflow orchestration.
-- Watchlists, scheduled scans, scanner presets, scan runs, and bounded market scanning from stored
-  final candles.
-- Observed outcome evaluation, backtest cohorts, profile diagnostics, confidence calibration,
-  walk-forward validation, cohort drift, pattern attribution, and quality gates.
-- Trading journal entries, operator review queue, notification event inbox, backend-safe action
-  plans, audit timelines, artifact graph, capability registry, state-machine registry, and
-  reproducibility manifests.
-- Optional grounded deterministic/AI explanation, scenario reasoning, scenario ensemble, scenario
-  outcome, explanation comparison, context pack, intelligence report, and dataset export surfaces.
-- Chart screenshot candle extraction and deterministic trend-hypothesis workflows with review
-  gating for low-confidence extraction.
-- Worker runtimes for live feeds, stale checks, market scans, reasoning actions, notifications, and
-  supervisor orchestration.
+- Workspaces, users, auth/RBAC, permissions, product readiness, onboarding, workspace setup, demo
+  mode, and workspace quick actions.
+- Symbols, data sources, historical imports, live ingestion, provider polling, provider health,
+  provider credential references, candle queries, candle quality, gap recovery, and ingestion
+  performance tracking.
+- Deterministic analysis lifecycle with features, indicators, patterns, strategy profiles, signal
+  classification, evidence, confidence components, risk notes, setup context, explanations, and
+  quality gates.
+- Market sessions, regimes, multi-timeframe context, cross-asset context, market memory,
+  historical-case search, decision readiness, and read-only intelligence reports.
+- Signal priority, signal digests, daily briefs, daily workflows, daily routines, watchlists,
+  scheduled scans, scanner presets, and bounded market scanning from stored final candles.
+- Equity research universes, members, swing scans, candidate scoring, manual catalysts, equity data
+  imports, metadata snapshots, fundamentals snapshots, earnings events, and queued background
+  equity data operations.
+- Outcome evaluation, backtest cohorts, profile diagnostics, confidence calibration, walk-forward
+  validation, cohort drift, pattern attribution, scenario outcome tracking, and review-focused
+  analytics.
+- Trading journal entries, operator reviews, notification inbox/outbox records, backend-safe action
+  plans, artifact graph, audit timeline, intelligence catalog, capability registry, state-machine
+  registry, reproducibility manifests, and dataset exports.
+- Optional grounded LLM explanations, multi-LLM scenario reasoning, explanation comparison,
+  context packs, AI insight cards, and chart screenshot extraction workflows with review gating.
+- Runtime supervisor, distributed job queue, worker heartbeats, observability metrics, SLO
+  snapshots, and internal operational health endpoints.
+
+## Data And Execution Model
+
+- Candles are normalized through shared validation before storage.
+- Final candles are the default source for deterministic analysis.
+- Imported, live, provider-polled, mock, and Go-worker-ingested candles converge on the same candle
+  storage model.
+- Read models are rebuildable and exist to make dashboard and command-center reads faster.
+- Background work is explicit, bounded, auditable, and persisted through job/workflow/run records.
+- Provider and notification integrations are gated by configuration and credential references.
+- Demo and synthetic fixture paths are labeled and kept separate from production data assumptions.
 
 ## Run Locally
 
-Start the full Docker dev stack:
+Start the Docker dev stack:
 
 ```sh
 make dev
 ```
 
-Then apply migrations and seed deterministic defaults when needed:
+Apply migrations and seed deterministic defaults when needed:
 
 ```sh
 make migrate
@@ -183,21 +226,44 @@ Repository whitespace check:
 git diff --check
 ```
 
+Focused commands used frequently in this repo:
+
+```sh
+cd apps/api && ruff check app alembic
+cd apps/api && pytest
+cd apps/web && npm run typecheck
+cd apps/web && npm run lint
+cd apps/web && npm run test:e2e
+cd apps/go/market-worker && go test ./...
+```
+
+Some checks require installed local dependencies, a configured database, or Go tooling.
+
 ## Documentation
 
-- [Web app README](apps/web/README.md)
 - [API README](apps/api/README.md)
+- [Web app README](apps/web/README.md)
+- [Go market worker README](apps/go/market-worker/README.md)
 - [Development setup](docs/development.md)
 - [Deployment](docs/deployment.md)
+- [Onboarding](apps/api/docs/onboarding.md)
+- [Workspace setup](apps/api/docs/workspace-setup.md)
+- [Product readiness](apps/api/docs/product-readiness.md)
 - [Daily briefs](apps/api/docs/daily-briefs.md)
 - [Daily workflows](apps/api/docs/daily-workflows.md)
+- [Daily routines](apps/api/docs/daily-routines.md)
 - [Scanner presets](apps/api/docs/scanner-presets.md)
+- [Equity research](apps/api/docs/equity-research.md)
+- [Equity data](apps/api/docs/equity-data.md)
+- [Go market worker](apps/api/docs/go-market-worker.md)
+- [Job queue](apps/api/docs/job-queue.md)
+- [Provider health](apps/api/docs/provider-health.md)
+- [Provider credentials](apps/api/docs/provider-credentials.md)
 - [Signal priority](apps/api/docs/signal-priority.md)
 - [Setup context](apps/api/docs/setup-context.md)
-- [Provider health](apps/api/docs/provider-health.md)
-- [Notifications](apps/api/docs/notifications.md)
 - [Trading journal](apps/api/docs/trading-journal.md)
-- [Intelligence quality](apps/api/docs/intelligence-quality.md)
+- [Notifications](apps/api/docs/notifications.md)
+- [Observability](apps/api/docs/observability.md)
 - [Project state](docs/project-state.md)
 
 ## Contributing
@@ -205,8 +271,9 @@ git diff --check
 - Keep product copy informational, non-advisory, and clear about review-only behavior.
 - Preserve deterministic artifacts as the source of truth.
 - Keep frontend workflows tolerant of missing optional backend endpoints.
-- Keep backend modules small, typed, validated, and auditable.
 - Route candle data through shared normalization and validation.
+- Keep backend modules small, typed, validated, and auditable.
+- Do not store raw secrets in code, docs, memory files, queued payloads, or API responses.
 - Add focused tests for new product behavior and run the relevant checks before pushing.
 - Keep commit messages under 140 characters.
 
