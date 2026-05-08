@@ -9,6 +9,8 @@ export const BASE_MOTION_DELAY_MS = 60;
 export const BASE_MOTION_DURATION_MS = 560;
 export const DEFAULT_MOTION_REVEAL_STEP_MS = 45;
 export const COMFORT_MOTION_REVEAL_STEP_MS = 60;
+export const MOTION_INTERACTIVE_CLASS =
+  "motion-hover-lift focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
 
 export type MotionVariant = (typeof MOTION_VARIANTS)[number];
 export type MotionPreset = (typeof MOTION_PRESETS)[number];

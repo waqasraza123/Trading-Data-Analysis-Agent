@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { overviewHref, overviewStatusTone } from "@/lib/command-center/overviewLabels";
 import type { WorkspaceOverview } from "@/lib/command-center/overviewTypes";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import { CockpitBadge, CockpitMetric } from "./CommandCenterCockpitPrimitives";
 
 export function CommandCenterReadinessStrip({ overview }: { overview: WorkspaceOverview }) {
@@ -10,7 +11,10 @@ export function CommandCenterReadinessStrip({ overview }: { overview: WorkspaceO
   const staleWorkers = readNumber(overview.workflow.metadata_json, "staleInstanceCount");
   return (
     <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-      <Link href={overviewHref("/readiness", overview.workspace_id)} className="rounded-2xl border border-slate-200 bg-white/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-950/60">
+      <Link
+        href={overviewHref("/readiness", overview.workspace_id)}
+        className={`rounded-2xl border border-slate-200 bg-white/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-950/60 ${MOTION_INTERACTIVE_CLASS}`}
+      >
         <p className="text-xs font-semibold uppercase text-slate-500">Readiness</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <CockpitBadge tone={overviewStatusTone(overview.readiness.status)}>{overview.readiness.label}</CockpitBadge>

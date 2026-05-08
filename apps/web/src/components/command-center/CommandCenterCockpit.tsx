@@ -8,7 +8,7 @@ import { CommandCenterReadinessGate } from "./CommandCenterReadinessGate";
 import { CommandCenterOverview } from "./CommandCenterOverview";
 import { CommandCenterDailyScanButton } from "./CommandCenterDailyScanButton";
 import { cn } from "@/lib/ui/cn";
-import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import {
   CockpitActionLink,
   CockpitBadge,
@@ -162,6 +162,7 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
                 className={cn(
                   "grid gap-3 px-4 py-4 transition hover:bg-teal-50/60 dark:hover:bg-teal-950/20 lg:grid-cols-[1.1fr_0.8fr_0.8fr_0.8fr_0.9fr_1.4fr_110px] lg:items-center",
                   motionCardClass,
+                  MOTION_INTERACTIVE_CLASS,
                   motionRevealClass(),
                 )}
                 style={motionRevealDensityStyle(index, "compact")}
@@ -201,14 +202,14 @@ function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
       ) : (
         <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
           {data.needsConfirmation.slice(0, 8).map((item, index) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={cn(
-                "rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-amber-900 dark:bg-amber-950/35",
-                motionCardClass,
-                motionRevealClass(),
-              )}
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  `rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition hover:shadow-sm dark:border-amber-900 dark:bg-amber-950/35 ${MOTION_INTERACTIVE_CLASS}`,
+                  motionCardClass,
+                  motionRevealClass(),
+                )}
               style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex items-start justify-between gap-3">
@@ -240,14 +241,14 @@ function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
       ) : (
         <div className="space-y-3">
           {data.avoidItems.slice(0, 6).map((item, index) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={cn(
-                "block rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/55 dark:hover:bg-slate-900",
-                motionCardClass,
-                motionRevealClass(),
-              )}
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  `block rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/55 dark:hover:bg-slate-900 ${MOTION_INTERACTIVE_CLASS}`,
+                  motionCardClass,
+                  motionRevealClass(),
+                )}
               style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -294,14 +295,14 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
       </div>
       <div className="mt-4 grid gap-3">
           {data.dataReadiness.slice(0, 4).map((item, index) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={cn(
-                "rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50",
-                motionCardClass,
-                motionRevealClass(),
-              )}
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  `rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50 ${MOTION_INTERACTIVE_CLASS}`,
+                  motionCardClass,
+                  motionRevealClass(),
+                )}
               style={motionRevealDensityStyle(index, "compact")}
             >
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -336,14 +337,14 @@ function OutcomeReviewPanel({ data }: { data: CommandCenterData }) {
       ) : (
         <div className="space-y-3">
           {data.outcomeReview.slice(0, 6).map((item, index) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={cn(
-                "block rounded-2xl border border-sky-200 bg-sky-50/70 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/30",
-                motionCardClass,
-                motionRevealClass(),
-              )}
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  `block rounded-2xl border border-sky-200 bg-sky-50/70 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/30 ${MOTION_INTERACTIVE_CLASS}`,
+                  motionCardClass,
+                  motionRevealClass(),
+                )}
               style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -451,7 +452,7 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
               key={`${item.key}:${item.title}`}
               href={item.related_route || commandCenterHref("/readiness", workspaceId)}
               className={cn(
-                "block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50",
+                  `block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50 ${MOTION_INTERACTIVE_CLASS}`,
                 motionCardClass,
                 motionRevealClass(),
               )}
@@ -486,14 +487,14 @@ function DailyIntelligenceMap({ data }: { data: CommandCenterData }) {
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {data.navigationItems.slice(0, 8).map((item, index) => (
-          <Link
-            key={item.id}
-            href={item.href}
-            className={cn(
-              "rounded-2xl border border-slate-200 bg-white/65 p-4 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/35",
-              motionCardClass,
-              motionRevealClass(),
-            )}
+            <Link
+              key={item.id}
+              href={item.href}
+              className={cn(
+                `rounded-2xl border border-slate-200 bg-white/65 p-4 transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/35 ${MOTION_INTERACTIVE_CLASS}`,
+                motionCardClass,
+                motionRevealClass(),
+              )}
             style={motionRevealDensityStyle(index, "compact")}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">

@@ -266,6 +266,31 @@ Keep the manifest in sync when adding new routes:
   - `Skeleton` now defaults to `aria-hidden` to keep loading shimmer decorative and avoid unnecessary announcement during assistive reading.
 - This step remains copy-safe and state-preserving: no backend contracts, data composition, or route-level navigation logic changed.
 
+## Detailed rollout notes (Production step: interaction hardening)
+
+- Added a reusable interactive motion-accessibility token:
+  - `MOTION_INTERACTIVE_CLASS` now centralizes hover-lift + explicit `focus-visible` ring behavior for interactive links/buttons.
+- Re-exported this token from `src/lib/ui/motion.ts` to keep command-center and triage usage aligned with the shared motion API.
+- Applied consistent production-safe interaction treatment to command-center row/link surfaces while preserving existing behavior:
+  - `CommandCenterCockpit`
+  - `CommandCenterFreshnessPanel`
+  - `CommandCenterMorningBrief`
+  - `CommandCenterPrioritySetups`
+  - `CommandCenterNavigationGrid`
+  - `CommandCenterOutcomeReview`
+  - `CommandCenterReadinessStrip`
+  - `CommandCenterJournalPrompt`
+  - `CommandCenterAvoidPanel`
+  - `CommandCenterConfirmationPanel`
+  - `CommandCenterNextActions`
+  - `CommandCenterScanStatus`
+  - `CommandCenterWorkflowStatus`
+  - `CommandCenterQuickActions`
+  - `CommandCenterDailyScanButton`
+  - `SignalTriageCard`
+- Updated `CommandCenterCockpitPrimitives.CockpitActionLink` and `RouteLoadingShell` to consume shared interaction and shell-context APIs without changing route semantics.
+- This polish pass preserves non-advisory wording, workspace-aware shell composition, and does not alter service contracts, query shapes, or load/retry behavior.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

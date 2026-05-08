@@ -2,6 +2,7 @@ import Link from "next/link";
 import { overviewHref, overviewStatusTone } from "@/lib/command-center/overviewLabels";
 import type { WorkspaceOverview, WorkspaceOverviewItem } from "@/lib/command-center/overviewTypes";
 import { sanitizeUnsafeCopy } from "@/lib/safety/safeCopy";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import { CockpitBadge, CockpitEmptyState, CockpitPanel } from "./CommandCenterCockpitPrimitives";
 
 export function CommandCenterWorkflowStatus({ overview }: { overview: WorkspaceOverview }) {
@@ -37,12 +38,16 @@ export function CommandCenterOverviewItemList({
 }) {
   return (
     <CockpitPanel title={title} eyebrow={eyebrow}>
-      {items.length === 0 ? (
+          {items.length === 0 ? (
         <CockpitEmptyState title={empty} message="Stored artifacts do not currently provide items for this section." />
       ) : (
         <div className="space-y-3">
           {items.slice(0, 6).map((item) => (
-            <Link key={item.id} href={overviewHref(item.href, workspaceId || "")} className="block rounded-2xl border border-slate-200 bg-white/70 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-950/45">
+            <Link
+              key={item.id}
+              href={overviewHref(item.href, workspaceId || "")}
+              className={`block rounded-2xl border border-slate-200 bg-white/70 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 ${MOTION_INTERACTIVE_CLASS}`}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{sanitizeUnsafeCopy(item.title)}</p>

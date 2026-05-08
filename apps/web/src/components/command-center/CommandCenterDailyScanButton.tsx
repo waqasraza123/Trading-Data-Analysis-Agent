@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { runDailyWorkflow } from "@/lib/api/dailyWorkflows";
 import { safeWorkflowText } from "@/lib/daily-workflows/labels";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import type { UUID } from "@/lib/api/types";
 
 type CommandCenterDailyScanButtonProps = {
@@ -61,7 +62,7 @@ export function CommandCenterDailyScanButton({
   return (
     <div className={className}>
       <button
-        className="inline-flex min-h-11 items-center justify-center rounded-full border border-teal-500 bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-950/10 transition hover:-translate-y-0.5 hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-400 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
+        className={`inline-flex min-h-11 items-center justify-center rounded-full border border-teal-500 bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-950/10 transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-400 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300 ${MOTION_INTERACTIVE_CLASS}`}
         disabled={pending || !workspaceId}
         type="button"
         onClick={runScan}

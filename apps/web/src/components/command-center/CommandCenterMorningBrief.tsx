@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import type { CommandCenterData } from "@/lib/command-center/types";
 
 export function CommandCenterMorningBrief({ data }: { data: CommandCenterData }) {
@@ -14,7 +15,7 @@ export function CommandCenterMorningBrief({ data }: { data: CommandCenterData })
             <Link
               key={item.id}
               href={item.href}
-              className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:-translate-y-0.5 hover:shadow-soft"
+              className={`block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:shadow-soft ${MOTION_INTERACTIVE_CLASS}`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

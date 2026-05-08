@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type { CommandCenterTone } from "@/lib/command-center/types";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 
 type CockpitPanelProps = {
   title: string;
@@ -86,7 +87,7 @@ export function CockpitActionLink({ href, children, tone = "neutral" }: CockpitA
   return (
     <Link
       href={href}
-      className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-sm ${toneClassName[tone]}`}
+      className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold ${MOTION_INTERACTIVE_CLASS} ${toneClassName[tone]}`}
     >
       {children}
     </Link>

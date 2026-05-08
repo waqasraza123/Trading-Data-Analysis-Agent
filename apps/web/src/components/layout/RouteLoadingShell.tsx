@@ -6,13 +6,20 @@ import { cn } from "@/lib/ui/cn";
 type RouteLoadingShellProps = {
   children: ReactNode;
   className?: string;
+  workspaceId?: string | null;
+  workspaceName?: string | null;
 };
 
-export function RouteLoadingShell({ children, className }: RouteLoadingShellProps) {
+export function RouteLoadingShell({
+  children,
+  className,
+  workspaceId,
+  workspaceName,
+}: RouteLoadingShellProps) {
   const env = getPublicEnv();
 
   return (
-    <AppShell appName={env.appName}>
+    <AppShell appName={env.appName} workspaceId={workspaceId} workspaceName={workspaceName}>
       <section className={cn("space-y-6", className)}>{children}</section>
     </AppShell>
   );

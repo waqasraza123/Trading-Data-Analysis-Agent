@@ -6,6 +6,7 @@ import { commandCenterHref } from "@/lib/command-center/labels";
 import { dailyWorkflowActionLabel } from "@/lib/daily-workflow/safeLabels";
 import type { DailyWorkflowActionType } from "@/lib/daily-workflow/types";
 import { runDailyWorkflowQuickAction } from "@/lib/daily-workflow/quickActions";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import type { UUID } from "@/lib/api/types";
 
 type CommandCenterQuickActionsProps = {
@@ -28,6 +29,8 @@ export function CommandCenterQuickActions({
   watchlistId,
   preferenceProfileId,
 }: CommandCenterQuickActionsProps) {
+  const actionPillClassName =
+    "rounded-full border px-4 py-2 text-sm font-semibold transition";
   const [pendingAction, setPendingAction] = useState<DailyWorkflowActionType | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,16 +65,25 @@ export function CommandCenterQuickActions({
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Explicit deterministic tasks only.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href={commandCenterHref("/scanner", workspaceId)} className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+          <Link
+            href={commandCenterHref("/scanner", workspaceId)}
+            className={`${actionPillClassName} ${MOTION_INTERACTIVE_CLASS} border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100`}
+          >
             Open scanner
           </Link>
-          <Link href={commandCenterHref("/data/onboarding", workspaceId)} className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+          <Link
+            href={commandCenterHref("/data/onboarding", workspaceId)}
+            className={`${actionPillClassName} ${MOTION_INTERACTIVE_CLASS} border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100`}
+          >
             Open data onboarding
           </Link>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Link href={commandCenterHref("/command-center", workspaceId)} className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <Link
+          href={commandCenterHref("/command-center", workspaceId)}
+          className={`${actionPillClassName} ${MOTION_INTERACTIVE_CLASS} border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200`}
+        >
           Refresh status
         </Link>
         {actions.map((actionType) => (
@@ -80,7 +92,7 @@ export function CommandCenterQuickActions({
             type="button"
             disabled={!workspaceId || pendingAction !== null}
             onClick={() => void runAction(actionType)}
-            className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-100"
+            className={`${actionPillClassName} ${MOTION_INTERACTIVE_CLASS} border-sky-200 bg-sky-50 text-sky-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-100`}
           >
             {pendingAction === actionType ? "Running..." : dailyWorkflowActionLabel(actionType)}
           </button>
