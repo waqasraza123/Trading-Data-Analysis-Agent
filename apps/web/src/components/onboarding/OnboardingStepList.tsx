@@ -1,4 +1,5 @@
 import type { OnboardingActionType, OnboardingStatusResponse } from "@/lib/onboarding/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { OnboardingStepCard } from "./OnboardingStepCard";
 
 export function OnboardingStepList({
@@ -23,15 +24,16 @@ export function OnboardingStepList({
       <div className="mt-4 grid gap-3">
         {status.steps
           .filter((step) => step.key !== "demo_mode")
-          .map((step) => (
-            <OnboardingStepCard
-              key={step.key}
-              step={step}
-              disabled={Boolean(step.action_type && !availableActions.has(step.action_type))}
-              pending={pendingAction === step.action_type}
-              workspaceId={status.workspace.workspace_id}
-              onAction={onAction}
-            />
+          .map((step, index) => (
+            <AnimatedListItem key={step.key} as="div" style={motionRevealDensityStyle(index, "compact")}>
+              <OnboardingStepCard
+                step={step}
+                disabled={Boolean(step.action_type && !availableActions.has(step.action_type))}
+                pending={pendingAction === step.action_type}
+                workspaceId={status.workspace.workspace_id}
+                onAction={onAction}
+              />
+            </AnimatedListItem>
           ))}
       </div>
     </section>

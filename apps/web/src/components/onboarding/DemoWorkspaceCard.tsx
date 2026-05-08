@@ -1,4 +1,6 @@
 import type { OnboardingStatusResponse } from "@/lib/onboarding/types";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass } from "@/lib/ui/motion";
 
 export function DemoWorkspaceCard({
   status,
@@ -10,7 +12,7 @@ export function DemoWorkspaceCard({
   onAction: () => void;
 }) {
   return (
-    <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+    <section className={cn("rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5", motionCardClass)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-[var(--strong)]">Demo workspace</p>
@@ -24,7 +26,7 @@ export function DemoWorkspaceCard({
       </div>
       <button
         type="button"
-        className="mt-4 w-full rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+        className={cn("mt-4 w-full rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60", motionCardClass)}
         disabled={!status.demo_mode.available || pending}
         onClick={onAction}
       >

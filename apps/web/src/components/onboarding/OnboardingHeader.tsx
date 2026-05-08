@@ -1,3 +1,6 @@
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealPresetClass } from "@/lib/ui/motion";
+
 export function OnboardingHeader({
   title,
   description,
@@ -8,7 +11,13 @@ export function OnboardingHeader({
   label: string;
 }) {
   return (
-    <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
+    <section
+      className={cn(
+        "rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6",
+        motionCardClass,
+        motionRevealPresetClass("fade-up"),
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">

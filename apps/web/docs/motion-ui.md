@@ -276,6 +276,25 @@ Keep the manifest in sync when adding new routes:
 - Reused shared motion API only (`AnimatedListItem`, `motionCardClass`, `motionRevealDensityStyle`, `motionRevealPresetClass`) and preserved route-level behavior, fallback structure, and non-advisory content.
 - No backend/API contracts or route-level safety logic were changed; this pass is presentation-only and documentation-focused.
 
+## Detailed rollout notes (Production step: onboarding reveal depth)
+
+- Extended reveal sequencing to first-run onboarding support cards and setup path rows:
+  - `apps/web/src/components/onboarding/OnboardingShell.tsx`
+  - `apps/web/src/components/onboarding/OnboardingHeader.tsx`
+  - `apps/web/src/components/onboarding/OnboardingErrorState.tsx`
+  - `apps/web/src/components/onboarding/ReadinessScorePanel.tsx`
+  - `apps/web/src/components/onboarding/OnboardingNextStepPanel.tsx`
+  - `apps/web/src/components/onboarding/OnboardingStepList.tsx`
+  - `apps/web/src/components/onboarding/OnboardingStepCard.tsx`
+  - `apps/web/src/components/onboarding/DemoWorkspaceCard.tsx`
+  - `apps/web/src/components/onboarding/OnboardingCompletionPanel.tsx`
+- Focused motion timing is now:
+  - compact staggering for setup steps
+  - comfortable pacing for section entry blocks
+  - scale-subtle/fade-up presets for card-level reveal rhythm
+- Route-level and backend behavior remains unchanged; this remains a production-safe presentation polish only.
+- No setup wizard flow contracts were changed beyond reveal and class-only motion token reuse.
+
 ## Detailed rollout notes (Production step: setup/equity/preferences/demo depth)
 
 - Added compact/comfortable staged reveals and card polish to additional high-impact setup/equity/preferences/demo surfaces without changing server contracts:

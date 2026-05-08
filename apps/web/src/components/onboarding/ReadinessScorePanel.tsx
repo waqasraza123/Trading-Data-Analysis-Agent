@@ -1,10 +1,18 @@
 import { onboardingReadinessLabel, onboardingTone, safeOnboardingCopy } from "@/lib/onboarding/labels";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealPresetClass } from "@/lib/ui/motion";
 import type { OnboardingStatusResponse } from "@/lib/onboarding/types";
 
 export function ReadinessScorePanel({ status }: { status: OnboardingStatusResponse }) {
   const score = Math.round(status.status.readiness_score * 100);
   return (
-    <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+    <section
+      className={cn(
+        "rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5",
+        motionCardClass,
+        motionRevealPresetClass("scale-subtle"),
+      )}
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-[var(--strong)]">Readiness score</p>

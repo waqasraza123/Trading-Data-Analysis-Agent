@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { runOnboardingAction } from "@/lib/api/onboarding";
+import { cn } from "@/lib/ui/cn";
 import { onboardingReadinessLabel, safeOnboardingCopy } from "@/lib/onboarding/labels";
 import { isCommandCenterReady, withWorkspace } from "@/lib/onboarding/nextStep";
 import type {
@@ -10,6 +11,12 @@ import type {
   OnboardingPageData,
   OnboardingStatusResponse,
 } from "@/lib/onboarding/types";
+import {
+  AnimatedListItem,
+  motionCardClass,
+  motionRevealDensityStyle,
+  motionRevealPresetClass,
+} from "@/lib/ui/motion";
 import { OnboardingCompletionPanel } from "./OnboardingCompletionPanel";
 import { OnboardingErrorState } from "./OnboardingErrorState";
 import { OnboardingHeader } from "./OnboardingHeader";
@@ -51,66 +58,120 @@ export function OnboardingShell({ initialData }: { initialData: OnboardingPageDa
 
   return (
     <div className="space-y-6">
-      <OnboardingHeader
-        title="First-run onboarding"
-        description="Review setup context, close readiness gaps, and open the command center when the workspace is ready for deterministic analysis."
-        label={status ? onboardingReadinessLabel(status.status.readiness_label) : "Backend unavailable"}
-      />
-      {error && <OnboardingErrorState message={error} />}
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+        <OnboardingHeader
+          title="First-run onboarding"
+          description="Review setup context, close readiness gaps, and open the command center when the workspace is ready for deterministic analysis."
+          label={status ? onboardingReadinessLabel(status.status.readiness_label) : "Backend unavailable"}
+        />
+      </AnimatedListItem>
+      {error && (
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "comfortable")}>
+          <OnboardingErrorState message={error} />
+        </AnimatedListItem>
+      )}
       {message && (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+        <AnimatedListItem
+          as="section"
+          style={motionRevealDensityStyle(1, "comfortable")}
+          className={cn(
+            "rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900",
+            motionCardClass,
+            motionRevealPresetClass("fade-in"),
+          )}
+        >
           {safeOnboardingCopy(message)}
-        </div>
+        </AnimatedListItem>
       )}
       {status ? (
         <>
           <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
             <div className="space-y-5">
-              <ReadinessScorePanel status={status} />
-              <OnboardingNextStepPanel
-                status={status}
-                pendingAction={pendingAction}
-                onAction={runAction}
-              />
-              <OnboardingStepList
-                status={status}
-                pendingAction={pendingAction}
-                availableActions={availableActions}
-                onAction={runAction}
-              />
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "comfortable")}>
+                <ReadinessScorePanel status={status} />
+              </AnimatedListItem>
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "comfortable")}>
+                <OnboardingNextStepPanel
+                  status={status}
+                  pendingAction={pendingAction}
+                  onAction={runAction}
+                />
+              </AnimatedListItem>
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "comfortable")}>
+                <OnboardingStepList
+                  status={status}
+                  pendingAction={pendingAction}
+                  availableActions={availableActions}
+                  onAction={runAction}
+                />
+              </AnimatedListItem>
             </div>
             <div className="space-y-5">
-              <DemoWorkspaceCard
-                status={status}
-                pending={pendingAction === "run_demo_flow"}
-                onAction={() => runAction("run_demo_flow")}
-              />
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "comfortable")}>
+                <DemoWorkspaceCard
+                  status={status}
+                  pending={pendingAction === "run_demo_flow"}
+                  onAction={() => runAction("run_demo_flow")}
+                />
+              </AnimatedListItem>
+              <AnimatedListItem
+                as="section"
+                className={cn(
+                  "rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5",
+                  motionCardClass,
+                  motionRevealPresetClass("scale-subtle"),
+                )}
+                style={motionRevealDensityStyle(3, "comfortable")}
+              >
                 <p className="text-sm font-semibold text-[var(--strong)]">Daily workflow links</p>
                 <div className="mt-4 grid gap-2">
-                  <Link className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold" href={withWorkspace("/data/onboarding", workspaceId)}>
+                  <Link
+                    className={cn("rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold", motionCardClass)}
+                    href={withWorkspace("/data/onboarding", workspaceId)}
+                  >
                     Data onboarding
                   </Link>
-                  <Link className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold" href={withWorkspace("/scanner", workspaceId)}>
+                  <Link
+                    className={cn("rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold", motionCardClass)}
+                    href={withWorkspace("/scanner", workspaceId)}
+                  >
                     Scanner
                   </Link>
-                  <Link className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold" href={withWorkspace("/preferences/strategy", workspaceId)}>
+                  <Link
+                    className={cn("rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold", motionCardClass)}
+                    href={withWorkspace("/preferences/strategy", workspaceId)}
+                  >
                     Review preferences
                   </Link>
-                  <Link className="rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold" href={withWorkspace("/readiness", workspaceId)}>
+                  <Link
+                    className={cn("rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold", motionCardClass)}
+                    href={withWorkspace("/readiness", workspaceId)}
+                  >
                     Product readiness
                   </Link>
-                  <Link className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white" href={withWorkspace("/command-center", workspaceId)}>
+                  <Link
+                    className={cn(
+                      "rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white",
+                      motionCardClass,
+                    )}
+                    href={withWorkspace("/command-center", workspaceId)}
+                  >
                     Command center
                   </Link>
                 </div>
-              </div>
+              </AnimatedListItem>
             </div>
           </section>
-          {isCommandCenterReady(status) && <OnboardingCompletionPanel workspaceId={workspaceId} />}
+          {isCommandCenterReady(status) && (
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "comfortable")}>
+              <OnboardingCompletionPanel workspaceId={workspaceId} />
+            </AnimatedListItem>
+          )}
         </>
       ) : (
-        <OnboardingErrorState message="The onboarding status endpoint is unavailable. The existing setup wizard remains available." />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "comfortable")}>
+          <OnboardingErrorState message="The onboarding status endpoint is unavailable. The existing setup wizard remains available." />
+        </AnimatedListItem>
       )}
     </div>
   );
