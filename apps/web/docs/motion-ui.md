@@ -265,6 +265,8 @@ Keep the manifest in sync when adding new routes:
   - `npm run motion:rollout-audit` (default gate mode)
   - `npm run motion:rollout-audit:json` (machine-readable JSON report)
   - `npm run motion:rollout-audit:strict` (alias for strict JSON contract-mode; no legacy/coverage overrides)
+  - `npm run motion:rollout-audit:report` (strict JSON output plus markdown report at `docs/motion-rollout-audit-report.md`)
+  - `node scripts/motion-rollout-audit.mjs --json --strict --report --report-path=docs/path/to/report.md` (custom report destination)
 - The gate validates each listed route by:
   - requiring expected motion entry tokens (for example `AnimatedSection`)
   - requiring motion helper usage (`motionRevealDensityStyle`, `motionRevealPresetClass`, `motionRevealProfileStyle`, etc.)
@@ -282,8 +284,13 @@ Keep the manifest in sync when adding new routes:
   - `npm run motion:rollout-audit`
   - `npm run motion:rollout-audit -- --allow-legacy` (use only for legacy migration windows)
   - `npm run motion:rollout-audit:json`
+  - `npm run motion:rollout-audit:report` (writes the markdown report artifact and exits with the strict contract result)
   - `npm run motion:rollout-audit -- --allow-coverage-gaps` (for temporary unblock during phased migration)
   - `npm run motion:rollout-audit:strict`
+- `npm run motion:rollout-audit:report` writes `docs/motion-rollout-audit-report.md` (or the path passed via `--report-path=...`) after strict checks.
+- JSON-mode report mode supports an optional markdown sink:
+  - `--report` enables markdown report output
+  - `--report-path=<path>` sets the output path (defaults to `apps/web/docs/motion-rollout-audit-report.md`)
 
 ## Detailed rollout notes (Production step: shell + primitive hardening)
 

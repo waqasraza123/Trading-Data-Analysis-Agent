@@ -3,13 +3,19 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const workingDir = process.cwd();
-const inWebWorkspace = path.basename(workingDir) === "web";
-const repoRoot = inWebWorkspace ? path.dirname(workingDir) : workingDir;
-const appRoot = path.resolve(repoRoot, "apps/web");
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const appRoot = path.resolve(scriptDir, "..");
 const manifestPath = path.resolve(scriptDir, "motion-rollout-manifest.json");
-const isJsonOutput = process.argv.includes("--json");
-const strictMode = process.argv.includes("--strict");
+const cliArgs = process.argv.slice(2);
+const isJsonOutput = cliArgs.includes("--json");
+const strictMode = cliArgs.includes("--strict");
+const isReportOutput = cliArgs.includes("--report");
+const reportPathArg = cliArgs.find((arg) => arg.startsWith("--report-path="));
+const defaultReportPath = "docs/motion-rollout-audit-report.md";
+const reportOutputPath = path.resolve(
+  workingDir,
+  reportPathArg ? reportPathArg.slice(14) : path.relative(workingDir, path.resolve(appRoot, defaultReportPath))
+);
 const failOnLegacyHelpers = strictMode ? true : !process.argv.includes("--allow-legacy");
 const failOnCoverageGaps = strictMode ? true : !process.argv.includes("--allow-coverage-gaps");
 
@@ -25,6 +31,77 @@ const motionRevealTokenPatterns = [
 const legacyHelperPatterns = [/motionRevealClass\(/, /motionRevealStyle\(/];
 const privateImportPattern = /from\s+["']@\/components\/ui\/motion["']/;
 const revealDensityValues = new Set(["compact", "regular", "comfortable"]);
+const defaultRevealDensity = "regular";
+
+function formatCell(value) {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\r?\n/g, " ")
+    .replace(/\|/g, "\\|")
+    .trim();
+}
+
+function buildMarkdownReport(payload) {
+  const rows = payload.routes.map((item) => ({
+    route: item.route || "unknown",
+    path: item.path || "unknown",
+    status: item.status || "warn",
+    density: item.revealDensity || defaultRevealDensity,
+    notes: item.reason || "",
+  }));
+
+  const lines = [
+    "# Motion Rollout Audit Report",
+    "",
+    `Generated: ${payload.generatedAt}`,
+    "",
+    "## Summary",
+    `- Manifest version: ${payload.manifestVersion}`,
+    `- Strict mode: ${payload.strictMode ? "enabled" : "disabled"}`,
+    `- Total manifest routes: ${payload.totalManifestRoutes}`,
+    `- Discovered routes checked: ${payload.coverage.discoveredCount}`,
+    `- Exempt routes: ${payload.coverage.exemptRoutes.length}`,
+    `- Pass: ${payload.summary.pass}`,
+    `- Warn: ${payload.summary.warn}`,
+    `- Fail: ${payload.summary.fail}`,
+    "",
+    "## Coverage",
+    `- Discovered route list: ${payload.coverage.discoveredRoutes.length > 0 ? payload.coverage.discoveredRoutes.join(", ") : "none"}`,
+    `- Manifest route list: ${payload.coverage.manifestRoutes.length > 0 ? payload.coverage.manifestRoutes.join(", ") : "none"}`,
+    `- Missing from manifest: ${payload.coverage.missingFromManifest.length > 0 ? payload.coverage.missingFromManifest.join(", ") : "none"}`,
+    `- Stale manifest routes: ${payload.coverage.staleManifestRoutes.length > 0 ? payload.coverage.staleManifestRoutes.join(", ") : "none"}`,
+    "",
+    "## Route checks",
+    "| Route | Status | Path | Reveal density | Notes |",
+    "| --- | --- | --- | --- | --- |",
+    ...rows.map(
+      (row) =>
+        `| \`${formatCell(row.route)}\` | ${formatCell(row.status)} | \`${formatCell(row.path)}\` | ${formatCell(row.density)} | ${formatCell(row.notes)} |`
+    ),
+    "",
+    "## Manifest validation issues",
+  ];
+
+  if (payload.manifestValidationIssues.length > 0) {
+    for (const issue of payload.manifestValidationIssues) {
+      const issueId = issue.route || `index ${issue.index ?? "n/a"}`;
+      lines.push(`- ${issueId}: ${formatCell(issue.issue)}`);
+      if (issue.manifestPath) {
+        lines.push(`  - path: \`${formatCell(issue.manifestPath)}\``);
+      }
+    }
+  } else {
+    lines.push("- No manifest validation issues found.");
+  }
+
+  lines.push("");
+  return `${lines.join("\n")}\n`;
+}
+
+async function writeReport(outputPath, payload) {
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(outputPath, buildMarkdownReport(payload), "utf8");
+}
 
 const ignoredPathSegment = (segment) =>
   segment.startsWith(".") || (segment.startsWith("(") && segment.endsWith(")"));
@@ -165,6 +242,9 @@ async function checkRoutes() {
   const checks = manifest.routes;
   const manifestRoutes = new Set(checks.map((check) => check.route));
   const discoveredRoutes = await collectPageRoutes();
+  const routeDensityByRoute = new Map(
+    checks.map((check) => [check.route, check.revealDensity || defaultRevealDensity])
+  );
 
   const failures = [];
   const summaries = [];
@@ -179,6 +259,7 @@ async function checkRoutes() {
     report.push({
       route,
       path: issue.manifestPath || "unknown",
+      revealDensity: routeDensityByRoute.get(route) || defaultRevealDensity,
       status: "fail",
       reason,
     });
@@ -203,6 +284,7 @@ async function checkRoutes() {
         report.push({
           route: check.route,
           path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
           status: "fail",
           reason: `missing required token(s): ${missing.join(", ")}`,
         });
@@ -215,6 +297,7 @@ async function checkRoutes() {
         report.push({
           route: check.route,
           path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
           status: "fail",
           reason: "no motion helper token usage detected",
         });
@@ -227,6 +310,7 @@ async function checkRoutes() {
         report.push({
           route: check.route,
           path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
           status: "fail",
           reason: "legacy motion import path used (@/components/ui/motion)",
         });
@@ -245,6 +329,7 @@ async function checkRoutes() {
         report.push({
           route: check.route,
           path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
           status: "fail",
           reason: "legacy motion helper call detected (motionRevealClass/motionRevealStyle)",
         });
@@ -255,6 +340,7 @@ async function checkRoutes() {
         report.push({
           route: check.route,
           path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
           status: "warn",
           reason: "legacy motion helper call remains in use",
         });
@@ -265,18 +351,19 @@ async function checkRoutes() {
         report.push({
           route: check.route,
           path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
           status: "warn",
           reason: "manifest page path not ending with current route/page.tsx",
         });
       }
 
       summaries.push(`✓ ${check.route}: motion rollout wiring present`);
-      report.push({
-        route: check.route,
-        path: check.page,
-        revealDensity: check.revealDensity || "regular",
-        status: "pass",
-      });
+        report.push({
+          route: check.route,
+          path: check.page,
+          revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
+          status: "pass",
+        });
     } catch (error) {
       const reason = String(error instanceof Error ? error.message : error);
       failures.push(makeFailure(check.route, reason));
@@ -284,6 +371,7 @@ async function checkRoutes() {
       report.push({
         route: check.route,
         path: check.page,
+        revealDensity: routeDensityByRoute.get(check.route) || defaultRevealDensity,
         status: "fail",
         reason,
       });
@@ -317,6 +405,7 @@ async function checkRoutes() {
     report.push({
       route,
       path: `app/${route}/page.tsx`,
+      revealDensity: "unassigned",
       status: failOnCoverageGaps ? "fail" : "warn",
       reason: "discovered route not listed in motion rollout manifest",
     });
@@ -331,6 +420,7 @@ async function checkRoutes() {
     report.push({
       route,
       path: manifestEntry?.page || "unknown",
+      revealDensity: routeDensityByRoute.get(route) || "unassigned",
       status: failOnCoverageGaps ? "fail" : "warn",
       reason: "manifest route has no corresponding app/page.tsx file",
     });
@@ -338,38 +428,39 @@ async function checkRoutes() {
 
   const discoveredCount = discoveredNonExempt.size;
 
+  const reportPayload = {
+    totalManifestRoutes: checks.length,
+    manifestVersion: manifest.version,
+    strictMode,
+    coverage: {
+      discoveredRoutes: Array.from(discoveredNonExempt).sort(),
+      manifestRoutes: Array.from(manifestRoutes).sort(),
+      staleManifestRoutes,
+      missingFromManifest,
+      exemptRoutes: Array.from(manifest.exemptRoutes).sort(),
+      discoveredCount,
+    },
+    manifestValidationIssues: manifest.validationIssues,
+    summary: {
+      pass: report.filter((item) => item.status === "pass").length,
+      warn: report.filter((item) => item.status === "warn").length,
+      fail: failures.length,
+    },
+    routes: report,
+    failedRoutes: failures,
+    config: {
+      failOnLegacyHelpers,
+      failOnCoverageGaps,
+    },
+    generatedAt: new Date().toISOString(),
+  };
+
+  if (isReportOutput && isJsonOutput) {
+    await writeReport(reportOutputPath, reportPayload);
+  }
+
   if (isJsonOutput) {
-    process.stdout.write(
-      `${JSON.stringify(
-        {
-          totalManifestRoutes: checks.length,
-          manifestVersion: manifest.version,
-          strictMode,
-          coverage: {
-            discoveredRoutes: Array.from(discoveredNonExempt).sort(),
-            manifestRoutes: Array.from(manifestRoutes).sort(),
-            staleManifestRoutes,
-            missingFromManifest,
-            exemptRoutes: Array.from(manifest.exemptRoutes).sort(),
-            discoveredCount,
-          },
-          manifestValidationIssues: manifest.validationIssues,
-          summary: {
-            pass: report.filter((item) => item.status === "pass").length,
-            warn: report.filter((item) => item.status === "warn").length,
-            fail: failures.length,
-          },
-          routes: report,
-          failedRoutes: failures,
-          config: {
-            failOnLegacyHelpers,
-            failOnCoverageGaps,
-          },
-        },
-        null,
-        2
-      )}\n`
-    );
+    process.stdout.write(`${JSON.stringify(reportPayload, null, 2)}\n`);
   } else {
     for (const item of summaries) {
       process.stdout.write(`${item}\n`);
