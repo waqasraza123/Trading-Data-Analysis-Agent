@@ -19,6 +19,14 @@ type Metrics struct {
 	CandlesInserted           int        `json:"candlesInserted"`
 	CandlesSkipped            int        `json:"candlesSkipped"`
 	CandlesConflicted         int        `json:"candlesConflicted"`
+	LiveSubscriptionsClaimed   int        `json:"liveSubscriptionsClaimed"`
+	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
+	LiveReconnects            int        `json:"liveReconnects"`
+	LiveMessagesReceived      int        `json:"liveMessagesReceived"`
+	LiveMessagesFailed        int        `json:"liveMessagesFailed"`
+	LiveCandlesWritten        int        `json:"liveCandlesWritten"`
+	LiveMessageDrops          int        `json:"liveMessageDrops"`
+	LiveGapRequests           int        `json:"liveGapRequests"`
 	ProviderFailures          int        `json:"providerFailures"`
 	ProviderGateWaits         int        `json:"providerGateWaits"`
 	ProviderGateWaitMillis    int64      `json:"providerGateWaitMillis"`
@@ -41,6 +49,14 @@ type Snapshot struct {
 	CandlesInserted           int                   `json:"candlesInserted"`
 	CandlesSkipped            int                   `json:"candlesSkipped"`
 	CandlesConflicted         int                   `json:"candlesConflicted"`
+	LiveSubscriptionsClaimed   int                   `json:"liveSubscriptionsClaimed"`
+	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
+	LiveReconnects            int                   `json:"liveReconnects"`
+	LiveMessagesReceived      int                   `json:"liveMessagesReceived"`
+	LiveMessagesFailed        int                   `json:"liveMessagesFailed"`
+	LiveCandlesWritten        int                   `json:"liveCandlesWritten"`
+	LiveMessageDrops          int                   `json:"liveMessageDrops"`
+	LiveGapRequests           int                   `json:"liveGapRequests"`
 	ProviderFailures          int                   `json:"providerFailures"`
 	ProviderGateWaits         int                   `json:"providerGateWaits"`
 	ProviderGateWaitMillis    int64                 `json:"providerGateWaitMillis"`
@@ -83,6 +99,57 @@ func (m *Metrics) RecordCompleted(received int, inserted int, skipped int, confl
 	m.CandlesConflicted += conflicted
 	now := time.Now().UTC()
 	m.LastJobTime = &now
+}
+
+func (m *Metrics) RecordLiveSubscriptionClaimed() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionsClaimed++
+}
+
+func (m *Metrics) RecordLiveSubscriptionStarted() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionsStarted++
+}
+
+func (m *Metrics) RecordLiveReconnect() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveReconnects++
+}
+
+func (m *Metrics) RecordLiveMessageReceived() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveMessagesReceived++
+}
+
+func (m *Metrics) RecordLiveMessageFailed() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveMessagesFailed++
+}
+
+func (m *Metrics) RecordLiveCandlesWritten(count int) {
+	if count <= 0 {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveCandlesWritten += count
+}
+
+func (m *Metrics) RecordLiveMessageDrop() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveMessageDrops++
+}
+
+func (m *Metrics) RecordLiveGapRequest() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveGapRequests++
 }
 
 func (m *Metrics) RecordFailed(providerFailure bool) {
@@ -138,25 +205,33 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return Snapshot{
-		StartedAt:              m.startedAt,
-		UptimeSeconds:          int64(time.Since(m.startedAt).Seconds()),
-		JobsClaimed:               m.JobsClaimed,
+		StartedAt:                m.startedAt,
+		UptimeSeconds:            int64(time.Since(m.startedAt).Seconds()),
+		JobsClaimed:              m.JobsClaimed,
 		ProviderRequestsReclaimed: m.ProviderRequestsReclaimed,
-		JobsCompleted:             m.JobsCompleted,
-		JobsFailed:                m.JobsFailed,
-		JobsTimedOut:              m.JobsTimedOut,
-		CandlesReceived:           m.CandlesReceived,
-		CandlesInserted:           m.CandlesInserted,
-		CandlesSkipped:            m.CandlesSkipped,
-		CandlesConflicted:         m.CandlesConflicted,
-		ProviderFailures:          m.ProviderFailures,
-		ProviderGateWaits:         m.ProviderGateWaits,
-		ProviderGateWaitMillis:    m.ProviderGateWaitMillis,
-		ProviderCircuitOpenings:   m.ProviderCircuitOpenings,
-		ProviderCircuitBlocks:     m.ProviderCircuitBlocks,
-		JobLockRenewals:           m.JobLockRenewals,
-		JobLockRenewalFailures:    m.JobLockRenewalFailures,
-		LastJobTime:               m.LastJobTime,
-		DBCapabilities:            capabilities,
+		JobsCompleted:            m.JobsCompleted,
+		JobsFailed:               m.JobsFailed,
+		JobsTimedOut:             m.JobsTimedOut,
+		CandlesReceived:          m.CandlesReceived,
+		CandlesInserted:          m.CandlesInserted,
+		CandlesSkipped:           m.CandlesSkipped,
+		CandlesConflicted:        m.CandlesConflicted,
+		LiveSubscriptionsClaimed:  m.LiveSubscriptionsClaimed,
+		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
+		LiveReconnects:           m.LiveReconnects,
+		LiveMessagesReceived:     m.LiveMessagesReceived,
+		LiveMessagesFailed:       m.LiveMessagesFailed,
+		LiveCandlesWritten:       m.LiveCandlesWritten,
+		LiveMessageDrops:         m.LiveMessageDrops,
+		LiveGapRequests:          m.LiveGapRequests,
+		ProviderFailures:         m.ProviderFailures,
+		ProviderGateWaits:        m.ProviderGateWaits,
+		ProviderGateWaitMillis:   m.ProviderGateWaitMillis,
+		ProviderCircuitOpenings:  m.ProviderCircuitOpenings,
+		ProviderCircuitBlocks:    m.ProviderCircuitBlocks,
+		JobLockRenewals:          m.JobLockRenewals,
+		JobLockRenewalFailures:   m.JobLockRenewalFailures,
+		LastJobTime:              m.LastJobTime,
+		DBCapabilities:           capabilities,
 	}
 }

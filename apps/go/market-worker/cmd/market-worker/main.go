@@ -13,6 +13,7 @@ import (
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/logging"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/polling"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/providers"
+	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/live"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/safety"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/worker"
 )
@@ -82,7 +83,8 @@ func run() error {
 		metrics,
 		logger,
 	)
-	runner := worker.NewRunner(cfg, pool, capabilities, pollingService, metrics, logger)
+	liveService := live.NewService(pool, capabilities, cfg, logger, metrics)
+	runner := worker.NewRunner(cfg, pool, capabilities, pollingService, liveService, metrics, logger)
 	if cfg.RunMode == "once" {
 		claimed, err := runner.RunOnce(ctx)
 		logger.Info("market_worker_once_completed", "claimedCount", claimed)
@@ -119,6 +121,18 @@ func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, prov
 		"jobTimeoutSeconds":           int(cfg.JobTimeout.Seconds()),
 		"dbWriteTimeoutSeconds":       int(cfg.DBWriteTimeout.Seconds()),
 		"providerRequestStaleSeconds": int(cfg.ProviderRequestStaleAfter.Seconds()),
+		"enableLiveStream":            cfg.EnableLiveStream,
+		"liveStreamEnabled":           cfg.Mode == "jobs" && cfg.EnableLiveStream && cfg.EnableLiveBinance,
+		"liveStreamClaimIntervalSeconds":  int(cfg.LiveStreamClaimInterval.Seconds()),
+		"liveStreamClaimBatchSize":       cfg.LiveStreamClaimBatchSize,
+		"liveStreamLeaseSeconds":         int(cfg.LiveStreamLeaseDuration.Seconds()),
+		"liveStreamReconnectSeconds":      int(cfg.LiveStreamReconnectDelay.Seconds()),
+		"liveStreamReadTimeoutSeconds":    int(cfg.LiveStreamReadTimeout.Seconds()),
+		"liveStreamMessageBuffer":         cfg.LiveStreamMessageBuffer,
+		"liveStreamGapRecoveryEnabled":    cfg.LiveStreamGapRecovery,
+		"liveStreamStaleAfterSeconds":     int(cfg.LiveStreamStaleAfter.Seconds()),
+		"liveStreamGapAfterSeconds":       int(cfg.LiveStreamGapAfter.Seconds()),
+		"liveStreamGapRequestLimit":       cfg.LiveStreamGapRequestLimit,
 		"providers":                   providers,
 		"dbCapabilities":              capabilities,
 		"requiredColumnProblems":      capabilities.RequiredColumnProblems(cfg.Mode),

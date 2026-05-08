@@ -1,5 +1,16 @@
 # Current Session
 
+## Go Market Worker Live Stream Runtime
+
+- Production-grade live stream runtime processing was reconnected in `apps/go/market-worker/internal/live` with
+  subscription candidate claiming, lease renewal/release, websocket consumption, and stop-aware stream
+  shutdown behavior in `apps/go/market-worker/internal/worker/runner.go`.
+- `cmd/market-worker/main.go` now wires live service creation into `worker.NewRunner` and exposes live
+  stream settings in inspect mode for operational verification.
+- `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md` were updated with live
+  run-time settings, tuning guidance, and metrics/log checks.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Modern Motion UI Rollout – Command Center Row Deepening (Continuation)
 
 - Added the remaining production-grade command-center row-level motion polish without logic or safety changes:

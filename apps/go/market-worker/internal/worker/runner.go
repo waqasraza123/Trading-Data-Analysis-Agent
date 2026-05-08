@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 	workerdb "github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/db"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/health"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/jobs"
+	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/live"
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/polling"
 )
 
@@ -21,18 +23,20 @@ type Runner struct {
 	capabilities workerdb.Capabilities
 	repository   *jobs.Repository
 	polling      *polling.Service
+	live         *live.Service
 	heartbeat    *jobs.Heartbeat
 	metrics      *health.Metrics
 	logger       *slog.Logger
 }
 
-func NewRunner(cfg config.Config, pool *pgxpool.Pool, capabilities workerdb.Capabilities, pollingService *polling.Service, metrics *health.Metrics, logger *slog.Logger) *Runner {
+func NewRunner(cfg config.Config, pool *pgxpool.Pool, capabilities workerdb.Capabilities, pollingService *polling.Service, liveService *live.Service, metrics *health.Metrics, logger *slog.Logger) *Runner {
 	return &Runner{
 		config:       cfg,
 		pool:         pool,
 		capabilities: capabilities,
 		repository:   jobs.NewRepository(pool, capabilities),
 		polling:      pollingService,
+		live:         liveService,
 		heartbeat:    jobs.NewHeartbeat(pool, capabilities, cfg.WorkerID),
 		metrics:      metrics,
 		logger:       logger,
@@ -44,30 +48,35 @@ func (r *Runner) Run(ctx context.Context) error {
 	defer func() {
 		_ = r.heartbeat.Stopped(context.Background(), map[string]any{"queueName": r.config.QueueName})
 	}()
-	ticker := time.NewTicker(r.config.PollInterval)
-	defer ticker.Stop()
-	for {
+
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	errCh := make(chan error, 2)
+	loopCount := 1
+
+	go func() {
+		errCh <- r.runJobsLoop(runCtx)
+	}()
+	if r.live != nil && r.live.Enabled() {
+		loopCount = 2
+		go func() {
+			errCh <- r.runLiveLoop(runCtx)
+		}()
+	}
+
+	for completed := 0; completed < loopCount; completed++ {
 		select {
 		case <-ctx.Done():
 			return nil
-		default:
-		}
-		claimed, err := r.pollOnce(ctx)
-		if err != nil {
-			r.logger.Error("market_worker_poll_failed", "error", err)
-			_ = r.heartbeat.Failed(ctx, map[string]any{"error": err.Error()})
-		} else {
-			_ = r.heartbeat.Running(ctx, map[string]any{"claimedCount": claimed, "queueName": r.config.QueueName})
-		}
-		if claimed > 0 {
-			continue
-		}
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-ticker.C:
+		case err := <-errCh:
+			if err != nil && !errors.Is(err, context.Canceled) {
+				cancel()
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func (r *Runner) RunOnce(ctx context.Context) (int, error) {
@@ -75,13 +84,78 @@ func (r *Runner) RunOnce(ctx context.Context) (int, error) {
 	defer func() {
 		_ = r.heartbeat.Stopped(context.Background(), map[string]any{"queueName": r.config.QueueName, "runMode": "once"})
 	}()
+
 	claimed, err := r.pollOnce(ctx)
 	if err != nil {
 		_ = r.heartbeat.Failed(ctx, map[string]any{"error": err.Error(), "runMode": "once"})
 		return claimed, err
 	}
+
+	if r.live != nil && r.live.Enabled() {
+		additionalClaims, liveErr := r.processLiveCandidates(ctx)
+		claimed += additionalClaims
+		if liveErr != nil {
+			_ = r.heartbeat.Failed(ctx, map[string]any{"error": liveErr.Error(), "runMode": "once"})
+			return claimed, liveErr
+		}
+	}
 	_ = r.heartbeat.Running(ctx, map[string]any{"claimedCount": claimed, "queueName": r.config.QueueName, "runMode": "once"})
 	return claimed, nil
+}
+
+func (r *Runner) runJobsLoop(ctx context.Context) error {
+	ticker := time.NewTicker(r.config.PollInterval)
+	defer ticker.Stop()
+
+	for {
+		claimed, err := r.pollOnce(ctx)
+		if err != nil {
+			r.logger.Warn("market_worker_poll_failed", "error", err, "mode", r.config.Mode)
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			_ = r.heartbeat.Failed(ctx, map[string]any{"error": err.Error(), "runMode": "jobs"})
+		} else {
+			_ = r.heartbeat.Running(ctx, map[string]any{"claimedCount": claimed, "queueName": r.config.QueueName, "runMode": "jobs"})
+		}
+		if claimed > 0 {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+		}
+	}
+}
+
+func (r *Runner) runLiveLoop(ctx context.Context) error {
+	if !r.live.Enabled() {
+		return nil
+	}
+	ticker := time.NewTicker(r.config.LiveStreamClaimInterval)
+	defer ticker.Stop()
+
+	for {
+		claimed, err := r.processLiveCandidates(ctx)
+		if err != nil {
+			r.logger.Warn("market_worker_live_claim_failed", "error", err)
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			_ = r.heartbeat.Failed(ctx, map[string]any{"error": err.Error(), "runMode": "live"})
+		} else {
+			_ = r.heartbeat.Running(ctx, map[string]any{"claimedCount": claimed, "runMode": "live"})
+		}
+		if claimed > 0 {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+		}
+	}
 }
 
 func (r *Runner) pollOnce(ctx context.Context) (int, error) {
@@ -111,89 +185,78 @@ func (r *Runner) pollOnce(ctx context.Context) (int, error) {
 	return len(jobs), r.processJobs(ctx, jobs)
 }
 
-func (r *Runner) processJobs(ctx context.Context, items []jobs.Job) error {
+func (r *Runner) processLiveCandidates(ctx context.Context) (int, error) {
+	if !r.live.Enabled() {
+		return 0, nil
+	}
+	subscriptions, err := r.live.RuntimeCandidates(ctx, r.config.LiveStreamClaimBatchSize)
+	if err != nil {
+		return 0, err
+	}
+	if len(subscriptions) == 0 {
+		return 0, nil
+	}
 	var wg sync.WaitGroup
-	errs := make(chan error, len(items))
-	sem := make(chan struct{}, r.concurrencyLimit(len(items)))
-	for _, item := range items {
+	errCh := make(chan error, len(subscriptions))
+	claimedMu := sync.Mutex{}
+	claimed := 0
+	sem := make(chan struct{}, r.concurrencyLimit(len(subscriptions)))
+	for _, subscription := range subscriptions {
 		wg.Add(1)
-		go func(job jobs.Job) {
+		go func(item live.Subscription) {
 			defer wg.Done()
 			if !acquire(ctx, sem) {
 				return
 			}
 			defer release(sem)
-			itemCtx, cancel := r.itemContext(ctx)
-			defer cancel()
-			if err := r.handleJobWithLease(itemCtx, job); err != nil {
-				errs <- err
-			}
-		}(item)
-	}
-	wg.Wait()
-	close(errs)
-	for err := range errs {
-		if err != nil {
-			r.logger.Warn("market_worker_job_failed", "error", err)
-		}
-	}
-	return nil
-}
-
-func (r *Runner) processRequests(ctx context.Context, requests []jobs.PollingRequest) error {
-	var wg sync.WaitGroup
-	errs := make(chan error, len(requests))
-	sem := make(chan struct{}, r.concurrencyLimit(len(requests)))
-	for _, request := range requests {
-		wg.Add(1)
-		go func(item jobs.PollingRequest) {
-			defer wg.Done()
-			if !acquire(ctx, sem) {
+			if !r.live.AcquireLease(ctx, item) {
 				return
 			}
-			defer release(sem)
-			itemCtx, cancel := r.itemContext(ctx)
-			defer cancel()
-			if err := r.handleDirectRequest(itemCtx, item); err != nil {
-				errs <- err
+			claimedMu.Lock()
+			claimed++
+			claimedMu.Unlock()
+			r.metrics.RecordLiveSubscriptionClaimed()
+			if err := r.handleLiveWithLease(ctx, item); err != nil {
+				if !errors.Is(err, context.Canceled) {
+					errCh <- err
+				}
 			}
-		}(request)
+		}(subscription)
 	}
 	wg.Wait()
-	close(errs)
-	for err := range errs {
-		if err != nil {
-			r.logger.Warn("market_worker_request_failed", "error", err)
+	close(errCh)
+	var firstErr error
+	for streamErr := range errCh {
+		if streamErr == nil {
+			continue
+		}
+		if firstErr == nil {
+			firstErr = streamErr
 		}
 	}
-	return nil
+	return claimed, firstErr
 }
 
-func reclaimedRequestCount(requests []jobs.PollingRequest) int {
-	count := 0
-	for _, request := range requests {
-		if request.Reclaimed {
-			count++
-		}
-	}
-	return count
-}
-
-func (r *Runner) handleJobWithLease(ctx context.Context, job jobs.Job) error {
+func (r *Runner) handleLiveWithLease(ctx context.Context, subscription live.Subscription) error {
 	leaseCtx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		r.renewJobLock(leaseCtx, job)
+		r.renewLiveLease(leaseCtx, subscription)
 	}()
-	err := r.handleJob(ctx, job)
+	err := r.live.Process(leaseCtx, subscription)
 	cancel()
 	<-done
+	releaseCtx, releaseCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer releaseCancel()
+	if !r.live.ReleaseLease(releaseCtx, subscription) {
+		r.logger.Warn("market_worker_live_lease_release_failed", "subscriptionId", subscription.ID.String())
+	}
 	return err
 }
 
-func (r *Runner) renewJobLock(ctx context.Context, job jobs.Job) {
-	interval := r.config.JobLockDuration / 3
+func (r *Runner) renewLiveLease(ctx context.Context, subscription live.Subscription) {
+	interval := r.config.LiveStreamLeaseDuration / 3
 	if interval < time.Second {
 		interval = time.Second
 	}
@@ -205,16 +268,14 @@ func (r *Runner) renewJobLock(ctx context.Context, job jobs.Job) {
 			return
 		case <-ticker.C:
 			renewCtx, cancel := context.WithTimeout(ctx, renewalTimeout(interval))
-			renewed, err := r.repository.RenewJobLock(renewCtx, job, r.config.WorkerID, r.config.JobLockDuration)
+			renewed, err := r.live.RefreshLease(renewCtx, subscription)
 			cancel()
 			if err != nil {
-				r.metrics.RecordJobLockRenewal(false)
-				r.logger.Warn("market_worker_job_lock_renewal_failed", "jobId", job.ID.String(), "error", err)
+				r.logger.Warn("market_worker_live_lease_renewal_failed", "subscriptionId", subscription.ID.String(), "error", err)
 				continue
 			}
-			r.metrics.RecordJobLockRenewal(renewed)
 			if !renewed {
-				r.logger.Warn("market_worker_job_lock_lost", "jobId", job.ID.String())
+				r.logger.Warn("market_worker_live_lease_lost", "subscriptionId", subscription.ID.String())
 				return
 			}
 		}
@@ -233,6 +294,16 @@ func (r *Runner) concurrencyLimit(count int) int {
 		return count
 	}
 	return limit
+}
+
+func reclaimedRequestCount(requests []jobs.PollingRequest) int {
+	count := 0
+	for _, request := range requests {
+		if request.Reclaimed {
+			count++
+		}
+	}
+	return count
 }
 
 func (r *Runner) itemContext(parent context.Context) (context.Context, context.CancelFunc) {

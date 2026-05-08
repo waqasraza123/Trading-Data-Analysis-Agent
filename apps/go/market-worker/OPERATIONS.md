@@ -68,6 +68,38 @@ MARKET_WORKER_RUN_MODE=inspect \
 go run ./cmd/market-worker
 ```
 
+## Live Runtime Processing
+
+Live runtime processing is only active in `jobs` mode when:
+
+- `MARKET_WORKER_ENABLE_LIVE_STREAM=true`;
+- `MARKET_WORKER_ENABLE_LIVE_BINANCE=true`;
+- `live_feed_subscriptions` and `live_feed_events` are schema-compatible.
+
+Operational defaults:
+
+- `MARKET_WORKER_LIVE_STREAM_CLAIM_INTERVAL_SECONDS` (claim loop cadence, default `5s`)
+- `MARKET_WORKER_LIVE_STREAM_CLAIM_BATCH_SIZE` (max subscriptions per cycle, default batch-size)
+- `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS` (lease ownership TTL, default `90s`)
+- `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` (reconnect backoff, default `5s`)
+- `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` (websocket read deadline, default `30s`)
+
+Operational checks in serve mode:
+
+- `/readyz` must remain green with `ready: true` after startup
+- `/metrics.json` should show live counters increasing for active streams:
+  - `liveSubscriptionsClaimed`
+  - `liveSubscriptionsStarted`
+  - `liveReconnects`
+  - `liveMessagesReceived`
+  - `liveCandlesWritten`
+  - `liveGapRequests`
+- Worker logs should show:
+  - `market_worker_live_claim_failed`
+  - `market_worker_live_lease_lost`
+  - `market_worker_live_lease_release_failed`
+  - `market_worker_live_subscription_stream_reconnect`
+
 ## Concurrency And Locks
 
 `MARKET_WORKER_BATCH_SIZE` controls claim size. `MARKET_WORKER_MAX_CONCURRENCY` controls how many

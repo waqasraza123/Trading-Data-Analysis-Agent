@@ -66,8 +66,8 @@ func Validate(candidate Candle, state SymbolSourceState) *ValidationIssue {
 	if !state.SymbolActive {
 		return issue("missing_symbol", "Symbol is missing or inactive", candidate.RawItem)
 	}
-	if !state.SourceActive || state.SourceType != "api_polling" {
-		return issue("missing_source", "Data source is missing, inactive, or not api_polling", candidate.RawItem)
+	if !state.SourceActive || (state.SourceType != "api_polling" && state.SourceType != "websocket_live") {
+		return issue("missing_source", "Data source is missing, inactive, or unsupported", candidate.RawItem)
 	}
 	if !TimestampAligns(candidate.Timestamp, timeframe) {
 		return issue("timestamp_misalignment", "Timestamp does not align with timeframe", candidate.RawItem)

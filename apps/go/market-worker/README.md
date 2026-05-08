@@ -76,6 +76,19 @@ Optional:
 - `MARKET_WORKER_RUN_MODE`, default `serve`
 - `MARKET_WORKER_RETRY_BACKOFF_SECONDS`, default `60`
 - `BINANCE_PUBLIC_REST_BASE_URL`, default `https://api.binance.com`
+- `MARKET_WORKER_ENABLE_LIVE_STREAM`, default `true`
+- `MARKET_WORKER_BINANCE_LIVE_WS_BASE_URL`, default `wss://stream.binance.com:9443/ws`
+- `MARKET_WORKER_LIVE_STREAM_CLAIM_INTERVAL_SECONDS`, default `5`
+- `MARKET_WORKER_LIVE_STREAM_CLAIM_BATCH_SIZE`, default same as `MARKET_WORKER_BATCH_SIZE`
+- `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS`, default `90`
+- `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS`, default `5`
+- `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS`, default `30`
+- `MARKET_WORKER_LIVE_STREAM_MESSAGE_BUFFER`, default `64`
+- `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`, default `180`
+- `MARKET_WORKER_LIVE_STREAM_FINAL_STALE_SECONDS`, default `300`
+- `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY`, default `true`
+- `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT`, default `1000`
+- `MARKET_WORKER_ENABLE_LIVE_BINANCE`, default `true`
 - `MARKET_WORKER_ENABLE_BINANCE_PUBLIC`, default `true`
 - `MARKET_WORKER_ENABLE_MOCK_PROVIDER`, default `true`
 
@@ -91,6 +104,18 @@ credentials at startup.
 `MARKET_WORKER_BATCH_SIZE` controls how much work one claim cycle can reserve. `MARKET_WORKER_MAX_CONCURRENCY`
 controls how many claimed jobs or direct polling requests execute at the same time. Keep concurrency below the
 database connection pool and provider rate-limit budget.
+
+Live processing is optional in `jobs` mode and requires compatible `live_feed_subscriptions` and
+`live_feed_events` tables:
+
+- `MARKET_WORKER_ENABLE_LIVE_STREAM` toggles the runtime consumer.
+- `MARKET_WORKER_LIVE_STREAM_CLAIM_INTERVAL_SECONDS` controls claim polling frequency.
+- `MARKET_WORKER_LIVE_STREAM_CLAIM_BATCH_SIZE` controls max active subscriptions per claim cycle.
+- `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS` controls lease TTL and heartbeat cadence.
+- `MARKET_WORKER_ENABLE_LIVE_BINANCE` and `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` control websocket
+  reconnect behavior.
+- `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
+  missing-final-candle recovery request creation.
 
 `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits in-flight fetches per provider key. `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`
 adds optional provider-key pacing before each fetch. These controls are independent from database
