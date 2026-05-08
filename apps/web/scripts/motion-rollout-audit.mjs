@@ -14,7 +14,11 @@ const reportPathArg = cliArgs.find((arg) => arg.startsWith("--report-path="));
 const defaultReportPath = "docs/motion-rollout-audit-report.md";
 const reportOutputPath = path.resolve(
   workingDir,
-  reportPathArg ? reportPathArg.slice(14) : path.relative(workingDir, path.resolve(appRoot, defaultReportPath))
+  reportPathArg && path.isAbsolute(reportPathArg.slice(14))
+    ? reportPathArg.slice(14)
+    : reportPathArg
+    ? reportPathArg.slice(14)
+    : path.relative(workingDir, path.resolve(appRoot, defaultReportPath))
 );
 const failOnLegacyHelpers = strictMode ? true : !process.argv.includes("--allow-legacy");
 const failOnCoverageGaps = strictMode ? true : !process.argv.includes("--allow-coverage-gaps");
@@ -455,8 +459,11 @@ async function checkRoutes() {
     generatedAt: new Date().toISOString(),
   };
 
-  if (isReportOutput && isJsonOutput) {
+  if (isReportOutput) {
     await writeReport(reportOutputPath, reportPayload);
+    if (!isJsonOutput) {
+      process.stdout.write(`Motion rollout audit report written to ${reportOutputPath}\n`);
+    }
   }
 
   if (isJsonOutput) {

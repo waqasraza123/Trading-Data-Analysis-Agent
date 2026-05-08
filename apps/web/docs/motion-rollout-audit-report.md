@@ -1,10 +1,10 @@
 # Motion Rollout Audit Report
 
-Generated: 2026-05-08T08:57:52.142Z
+Generated: 2026-05-08T08:58:57.155Z
 
 ## Summary
 - Manifest version: 1.0
-- Strict mode: enabled
+- Strict mode: disabled
 - Total manifest routes: 19
 - Discovered routes checked: 19
 - Exempt routes: 1

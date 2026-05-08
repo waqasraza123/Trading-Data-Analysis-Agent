@@ -215,6 +215,7 @@ From `apps/web`:
 npm ci
 npm run dev
 npm run test:e2e
+npm run motion:rollout-audit:report
 ```
 
 From the repository root:
@@ -233,6 +234,16 @@ docker compose up --build web
 
 The web app uses npm with the committed `package-lock.json`. The production image builds Next.js
 standalone output and runs as the non-root `node` user.
+
+Motion governance commands:
+
+```sh
+npm run motion:rollout-audit
+npm run motion:rollout-audit:json
+npm run motion:rollout-audit:strict
+npm run motion:rollout-audit:report
+node scripts/motion-rollout-audit.mjs --report
+```
 
 ## E2E Smoke
 
