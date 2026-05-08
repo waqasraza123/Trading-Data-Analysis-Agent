@@ -257,6 +257,25 @@ Keep the manifest in sync when adding new routes:
   - `comfortable` for hero and narrative pages, `compact` for dense rows, and `regular` for mixed layouts.
 - Reduced-motion behavior and safe focus/hover semantics remain explicit in unchanged components while motion wrappers are added through reusable API surfaces from `@/lib/ui/motion`.
 
+## Detailed rollout notes (Production step: setup wizard reveal depth)
+
+- Continued staged reveal rollout for setup surfaces to keep onboarding/setup transitions consistent with prior route-level parity:
+  - `apps/web/src/components/setup-wizard/SetupProgress.tsx`
+  - `apps/web/src/components/setup-wizard/SetupSummary.tsx`
+  - `apps/web/src/components/setup-wizard/WorkspaceStep.tsx`
+  - `apps/web/src/components/setup-wizard/UserStep.tsx`
+  - `apps/web/src/components/setup-wizard/SymbolsStep.tsx`
+  - `apps/web/src/components/setup-wizard/DataSourceStep.tsx`
+  - `apps/web/src/components/setup-wizard/CredentialStep.tsx`
+  - `apps/web/src/components/setup-wizard/WatchlistStep.tsx`
+  - `apps/web/src/components/setup-wizard/ScannerPresetStep.tsx`
+  - `apps/web/src/components/setup-wizard/PreferenceProfileStep.tsx`
+  - `apps/web/src/components/setup-wizard/DemoDataStep.tsx`
+  - `apps/web/src/components/setup-wizard/ReadinessStep.tsx`
+  - `apps/web/src/components/setup-wizard/FirstScanStep.tsx`
+- Reused shared motion API only (`AnimatedListItem`, `motionCardClass`, `motionRevealDensityStyle`, `motionRevealPresetClass`) and preserved route-level behavior, fallback structure, and non-advisory content.
+- No backend/API contracts or route-level safety logic were changed; this pass is presentation-only and documentation-focused.
+
 ## Detailed rollout notes (Production step: setup/equity/preferences/demo depth)
 
 - Added compact/comfortable staged reveals and card polish to additional high-impact setup/equity/preferences/demo surfaces without changing server contracts:
