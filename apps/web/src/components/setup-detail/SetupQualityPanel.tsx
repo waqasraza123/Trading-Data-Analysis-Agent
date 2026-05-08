@@ -4,6 +4,7 @@ import { formatPercent } from "@/lib/formatting/numbers";
 import { recordSection } from "@/lib/setup-detail/composeSetupDetail";
 import { setupLabel, setupRecordText } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupQualityPanelProps = {
@@ -35,14 +36,20 @@ export function SetupQualityPanel({ model }: SetupQualityPanelProps) {
         )}
         {componentEntries.length > 0 && (
           <div className="grid gap-3 md:grid-cols-2">
-            {componentEntries.map(([name, value]) => {
+            {componentEntries.map(([name, value], index) => {
               const record = recordSection(value);
               return (
-                <div key={name} className="muted-surface rounded-lg p-4">
+                <AnimatedListItem
+                  as="article"
+                  key={name}
+                  style={motionRevealDensityStyle(index, "compact")}
+                >
+                <div className="muted-surface rounded-lg p-4">
                   <p className="text-xs font-medium uppercase text-slate-500">{setupLabel(name)}</p>
                   <p className="mt-2 text-lg font-semibold text-[var(--strong)]">{formatPercent(record?.score as string)}</p>
                   <p className="mt-1 text-xs text-slate-500">Weight {formatPercent(record?.weight as string)}</p>
                 </div>
+                </AnimatedListItem>
               );
             })}
           </div>
@@ -51,9 +58,9 @@ export function SetupQualityPanel({ model }: SetupQualityPanelProps) {
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-[var(--strong)]">Readiness Blockers</h3>
             {model.readiness.blockers.map((blocker, index) => (
-              <div key={`blocker-${index}`} className="muted-surface rounded-lg p-3 text-sm">
-                {setupRecordText(blocker)}
-              </div>
+              <AnimatedListItem key={`blocker-${index}`} as="article" style={motionRevealDensityStyle(index + 1, "compact")}>
+                <div className="muted-surface rounded-lg p-3 text-sm">{setupRecordText(blocker)}</div>
+              </AnimatedListItem>
             ))}
           </div>
         )}

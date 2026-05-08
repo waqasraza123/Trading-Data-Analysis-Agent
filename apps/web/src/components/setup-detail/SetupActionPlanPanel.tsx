@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/formatting/dates";
 import { boundedSectionItems, itemBody, itemTitle, recordSection } from "@/lib/setup-detail/composeSetupDetail";
 import { sanitizeSetupText, setupLabel } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupActionPlanPanelProps = {
@@ -31,17 +32,23 @@ export function SetupActionPlanPanel({ model }: SetupActionPlanPanelProps) {
             <SetupEmptySection title="No action items" message="The action plan returned no follow-up items." />
           ) : (
             <div className="space-y-3">
-              {actionItems.map((item) => (
-                <div key={String(item.id || item.idempotency_key || itemTitle(item))} className="muted-surface rounded-lg p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-[var(--strong)]">{itemTitle(item)}</h3>
-                    <Badge value={String(item.status || "unknown")} tone={toneForQuality(String(item.status || ""))} />
+              {actionItems.map((item, index) => (
+                <AnimatedListItem
+                  as="article"
+                  key={String(item.id || item.idempotency_key || itemTitle(item))}
+                  style={motionRevealDensityStyle(index, "compact")}
+                >
+                  <div className="muted-surface rounded-lg p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h3 className="text-sm font-semibold text-[var(--strong)]">{itemTitle(item)}</h3>
+                      <Badge value={String(item.status || "unknown")} tone={toneForQuality(String(item.status || ""))} />
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(itemBody(item))}</p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      {setupLabel(String(item.action_type || "backend follow-up"))} | Due {formatDateTime(String(item.due_at || ""))}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(itemBody(item))}</p>
-                  <p className="mt-2 text-xs text-slate-500">
-                    {setupLabel(String(item.action_type || "backend follow-up"))} | Due {formatDateTime(String(item.due_at || ""))}
-                  </p>
-                </div>
+                </AnimatedListItem>
               ))}
             </div>
           )}

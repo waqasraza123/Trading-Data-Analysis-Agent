@@ -541,6 +541,25 @@ Keep the manifest in sync when adding new routes:
 - `Signal detail` pages now use `AnimatedSection` plus section-level `AnimatedListItem` wrappers in `SetupDetailView`, with compact-staggered row motion in detail panels where existing density warrants motion.
 - Setup review and setup-detail card-level motion uses shared preset/profile helpers only (`@/lib/ui/motion`) and keeps read-only route behavior unchanged.
 
+## Detailed rollout notes (Production step: setup detail panel deepening)
+
+- Extended compact-staggered row reveals to the remaining `setup-detail` panels:
+  - `apps/web/src/components/setup-detail/SetupDetailHeader.tsx`
+  - `apps/web/src/components/setup-detail/SetupErrorSection.tsx`
+  - `apps/web/src/components/setup-detail/SetupHistoricalCasesPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupEvidencePanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupQualityPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupBiasSummary.tsx`
+  - `apps/web/src/components/setup-detail/SetupZonesPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupOutcomeHistoryPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupWaitAvoidPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupAuditPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupActionPlanPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupReasoningPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupDataQualityPanel.tsx`
+- Motion implementation remains constrained to public helpers from `@/lib/ui/motion`: `AnimatedListItem`, `motionRevealDensityStyle`, and `motionCardClass` where panel-level motion tokens are needed.
+- No API contract, safety, or data-flow changes were introduced in this pass.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

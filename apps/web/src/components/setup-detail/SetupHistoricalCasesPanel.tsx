@@ -3,6 +3,7 @@ import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { setupLabel, sanitizeSetupText } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupHistoricalCasesPanelProps = {
@@ -18,8 +19,9 @@ export function SetupHistoricalCasesPanel({ model }: SetupHistoricalCasesPanelPr
         <SetupEmptySection title="No similar cases" message="Historical case search did not return comparable stored setups." />
       ) : (
         <div className="space-y-3">
-          {cases.map((item) => (
-            <div key={item.matched_signal_id} className="muted-surface rounded-lg p-4">
+          {cases.map((item, index) => (
+            <AnimatedListItem as="article" key={item.matched_signal_id} style={motionRevealDensityStyle(index, "compact")}>
+              <div className="muted-surface rounded-lg p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap gap-2">
                   <Badge value={item.signal_summary.bias} tone={toneForBias(item.signal_summary.bias)} />
@@ -41,7 +43,8 @@ export function SetupHistoricalCasesPanel({ model }: SetupHistoricalCasesPanelPr
                   Outcome summary: {Object.keys(item.outcome_summary).slice(0, 5).map(setupLabel).join(", ")}
                 </p>
               )}
-            </div>
+              </div>
+            </AnimatedListItem>
           ))}
         </div>
       )}

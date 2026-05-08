@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/formatting/dates";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { setupRecordText } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupDataQualityPanelProps = {
@@ -21,20 +22,26 @@ export function SetupDataQualityPanel({ model }: SetupDataQualityPanelProps) {
       ) : (
         <div className="space-y-4">
           {qualityRun && (
-            <div className="muted-surface rounded-lg p-4">
-              <div className="flex flex-wrap gap-2">
-                <Badge value={qualityRun.quality_label} tone={toneForQuality(qualityRun.quality_label)} />
-                <Badge value={qualityRun.status} tone={toneForQuality(qualityRun.status)} />
-                <Badge value={formatPercent(qualityRun.quality_score)} tone="info" />
+            <AnimatedListItem as="article" style={motionRevealDensityStyle(0, "compact")}>
+              <div className="muted-surface rounded-lg p-4">
+                <div className="flex flex-wrap gap-2">
+                  <Badge value={qualityRun.quality_label} tone={toneForQuality(qualityRun.quality_label)} />
+                  <Badge value={qualityRun.status} tone={toneForQuality(qualityRun.status)} />
+                  <Badge value={formatPercent(qualityRun.quality_score)} tone="info" />
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{qualityRun.summary}</p>
+                <p className="mt-2 text-xs text-slate-500">Checked {formatDateTime(qualityRun.checked_at)}</p>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{qualityRun.summary}</p>
-              <p className="mt-2 text-xs text-slate-500">Checked {formatDateTime(qualityRun.checked_at)}</p>
-            </div>
+            </AnimatedListItem>
           )}
           {warnings.map((warning, index) => (
-            <div key={`data-quality-warning-${index}`} className="muted-surface rounded-lg p-4 text-sm">
-              {setupRecordText(warning)}
-            </div>
+            <AnimatedListItem
+              as="article"
+              key={`data-quality-warning-${index}`}
+              style={motionRevealDensityStyle(qualityRun ? index + 1 : index, "compact")}
+            >
+              <div className="muted-surface rounded-lg p-4 text-sm">{setupRecordText(warning)}</div>
+            </AnimatedListItem>
           ))}
         </div>
       )}

@@ -2,6 +2,7 @@ import { Panel } from "@/components/layout/panel";
 import type { JsonRecord } from "@/lib/api/types";
 import { setupRecordDetail, setupRecordText } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupZonesPanelProps = {
@@ -34,10 +35,16 @@ function ZoneList({ title, items, empty }: { title: string; items: JsonRecord[];
         <SetupEmptySection title={title} message={empty} />
       ) : (
         items.slice(0, 6).map((item, index) => (
-          <div key={`${title}-${index}`} className="muted-surface rounded-lg p-4">
+          <AnimatedListItem
+            as="article"
+            key={`${title}-${index}`}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
+          <div className="muted-surface rounded-lg p-4">
             <p className="text-sm font-medium leading-6 text-[var(--strong)]">{setupRecordText(item)}</p>
             {setupRecordDetail(item) && <p className="mt-2 text-xs text-slate-500">{setupRecordDetail(item)}</p>}
           </div>
+          </AnimatedListItem>
         ))
       )}
     </div>

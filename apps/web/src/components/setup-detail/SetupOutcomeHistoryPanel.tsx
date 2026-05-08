@@ -3,6 +3,7 @@ import { Badge, toneForQuality } from "@/components/status/badge";
 import { formatDateTime } from "@/lib/formatting/dates";
 import { setupLabel } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupOutcomeHistoryPanelProps = {
@@ -22,13 +23,18 @@ export function SetupOutcomeHistoryPanel({ model }: SetupOutcomeHistoryPanelProp
             <span>Observation</span>
             <span>Window end</span>
           </div>
-          {model.outcomes.map((outcome) => (
-            <div key={outcome.id} className="grid grid-cols-4 gap-3 border-t border-[var(--line)] px-4 py-3 text-sm">
+          {model.outcomes.map((outcome, index) => (
+            <AnimatedListItem
+              as="div"
+              key={outcome.id}
+              style={motionRevealDensityStyle(index, "compact")}
+              className="grid grid-cols-4 gap-3 border-t border-[var(--line)] px-4 py-3 text-sm"
+            >
               <span className="font-medium">{outcome.horizon_minutes}m</span>
               <Badge value={outcome.evaluation_status} tone={toneForQuality(outcome.evaluation_status)} />
               <Badge value={setupLabel(outcome.outcome_label)} tone={toneForQuality(outcome.outcome_label)} />
               <span className="text-slate-500">{formatDateTime(outcome.future_window_end)}</span>
-            </div>
+            </AnimatedListItem>
           ))}
         </div>
       )}

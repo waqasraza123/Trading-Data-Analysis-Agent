@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/formatting/dates";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { setupRecordText } from "@/lib/setup-detail/labels";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupAuditPanelProps = {
@@ -27,10 +28,16 @@ export function SetupAuditPanel({ model }: SetupAuditPanelProps) {
             <summary className="cursor-pointer text-sm font-semibold text-[var(--strong)]">Recent trace events</summary>
             <div className="mt-3 space-y-3">
               {timeline.events.slice(0, 8).map((event, index) => (
-                <div key={`timeline-${index}`} className="muted-surface rounded-lg p-4">
-                  <p className="text-sm font-medium text-[var(--strong)]">{setupRecordText(event)}</p>
-                  <p className="mt-2 text-xs text-slate-500">{formatDateTime(String(event.occurred_at || event.created_at || ""))}</p>
-                </div>
+                <AnimatedListItem
+                  as="article"
+                  key={`timeline-${index}`}
+                  style={motionRevealDensityStyle(index, "compact")}
+                >
+                  <div className="muted-surface rounded-lg p-4">
+                    <p className="text-sm font-medium text-[var(--strong)]">{setupRecordText(event)}</p>
+                    <p className="mt-2 text-xs text-slate-500">{formatDateTime(String(event.occurred_at || event.created_at || ""))}</p>
+                  </div>
+                </AnimatedListItem>
               ))}
             </div>
           </details>

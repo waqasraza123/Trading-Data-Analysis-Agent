@@ -2,6 +2,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
 import { formatPercent } from "@/lib/formatting/numbers";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupEmptySection } from "./SetupEmptySection";
 
 type SetupBiasSummaryProps = {
@@ -28,9 +29,13 @@ export function SetupBiasSummary({ model }: SetupBiasSummaryProps) {
             {setupContext?.summary || signal?.summary || signal?.no_signal_reason || "No setup context summary returned."}
           </p>
           <dl className="grid gap-3 text-sm md:grid-cols-3">
-            <Detail label="Directional bias" value={setupContext?.directional_bias || signal?.bias || "Not available"} />
-            <Detail label="Pattern" value={signal?.pattern_type || "No pattern"} />
-            <Detail label="Classification" value={signal?.classification_status || "Not available"} />
+            <Detail
+              index={0}
+              label="Directional bias"
+              value={setupContext?.directional_bias || signal?.bias || "Not available"}
+            />
+            <Detail index={1} label="Pattern" value={signal?.pattern_type || "No pattern"} />
+            <Detail index={2} label="Classification" value={signal?.classification_status || "Not available"} />
           </dl>
         </div>
       )}
@@ -38,11 +43,13 @@ export function SetupBiasSummary({ model }: SetupBiasSummaryProps) {
   );
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ label, value, index }: { label: string; value: string; index: number }) {
   return (
-    <div className="muted-surface rounded-lg p-4">
-      <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
-      <dd className="mt-2 text-sm font-semibold text-[var(--strong)]">{value}</dd>
-    </div>
+    <AnimatedListItem as="div" style={motionRevealDensityStyle(index, "compact")}>
+      <div className="muted-surface rounded-lg p-4">
+        <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
+        <dd className="mt-2 text-sm font-semibold text-[var(--strong)]">{value}</dd>
+      </div>
+    </AnimatedListItem>
   );
 }
