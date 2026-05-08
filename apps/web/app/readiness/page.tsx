@@ -15,7 +15,7 @@ import {
   listProductReadinessRuns,
 } from "@/lib/api/productReadiness";
 import { listWorkspaces } from "@/lib/api/market";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import type { ApiFailure, ApiResult } from "@/lib/api/types";
 import type { ProductReadinessPageData, ProductReadinessRun, ReadinessFailure } from "@/lib/readiness/types";
 

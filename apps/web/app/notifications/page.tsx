@@ -9,7 +9,7 @@ import {
   ReviewMetricGrid,
   ReviewSurfaceMetric,
 } from "@/components/review-surfaces/ReviewSurface";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getNotificationInboxData } from "@/lib/api/notifications";
 
 type NotificationsPageProps = {

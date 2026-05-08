@@ -1,6 +1,6 @@
 import { CommandCenterCockpit } from "@/components/command-center/CommandCenterCockpit";
 import { AppShell } from "@/components/layout/AppShell";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getCommandCenterData } from "@/lib/api/commandCenter";
 
 type CommandCenterPageProps = {

@@ -18,6 +18,12 @@ This document defines the conservative animation layer used by the web product a
 - Optional animation utilities: `tailwind.config.ts`
 - Route entry usage: all product routes under `app/*/page.tsx` and major route components in `src/components`
 
+## Import policy
+
+- Use only `@/lib/ui/motion` for callsites.
+- Reserve `@/components/ui/motion` for the implementation file and local unit-level co-location if absolutely required.
+- This keeps app and component code consistent with the public API boundary and avoids mixed import patterns.
+
 ## Public Motion Types
 
 - `MotionPreset` values:

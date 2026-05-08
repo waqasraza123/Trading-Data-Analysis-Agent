@@ -7,7 +7,7 @@ import { Badge } from "@/components/status/badge";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Section } from "@/components/ui/Section";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getPreferenceProfilesPageData } from "@/lib/api/preferenceProfiles";
 import { formatDateTime } from "@/lib/formatting/dates";
 

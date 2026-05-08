@@ -11,7 +11,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getDashboardData } from "@/lib/api/dashboard";
 
 type DashboardPageProps = {

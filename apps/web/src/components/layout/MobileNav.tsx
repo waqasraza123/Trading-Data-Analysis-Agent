@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, primaryNavigationTargets, navigationItems } from "@/lib/ui/navigation";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
-import { AnimatedSection, motionRevealClass, motionRevealStyle } from "@/components/ui/motion";
+import { AnimatedSection, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
 
 type MobileNavProps = {
   appName: string;

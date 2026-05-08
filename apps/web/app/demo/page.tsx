@@ -3,7 +3,7 @@ import { DemoModeHeader } from "@/components/demo/DemoModeHeader";
 import { DemoRunButton } from "@/components/demo/DemoRunButton";
 import { Panel } from "@/components/layout/panel";
 import { AppShell } from "@/components/layout/AppShell";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getPublicEnv } from "@/config/env";
 import { getDemoModeStatus } from "@/lib/api/demoMode";
 import type { DemoModeStatus } from "@/lib/demo-mode/types";

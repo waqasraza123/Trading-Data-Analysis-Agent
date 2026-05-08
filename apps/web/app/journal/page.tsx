@@ -11,7 +11,7 @@ import {
   ReviewSurfaceHero,
   ReviewSurfaceMetric,
 } from "@/components/review-surfaces/ReviewSurface";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getJournalData } from "@/lib/api/journal";
 
 type JournalPageProps = {

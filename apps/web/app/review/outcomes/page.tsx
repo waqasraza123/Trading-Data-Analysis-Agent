@@ -11,7 +11,7 @@ import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
 import { ReviewSurfaceHero } from "@/components/review-surfaces/ReviewSurface";
 import { OutcomeReviewErrorState } from "@/components/review/OutcomeReviewErrorState";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getOutcomeReviewData } from "@/lib/api/outcomeReview";
 
 type OutcomeReviewPageProps = {

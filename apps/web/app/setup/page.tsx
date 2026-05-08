@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { SetupWizardLayout } from "@/components/setup-wizard/SetupWizardLayout";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getSetupWizardInitialData } from "@/lib/api/workspaceSetup";
 
 type SetupPageProps = {

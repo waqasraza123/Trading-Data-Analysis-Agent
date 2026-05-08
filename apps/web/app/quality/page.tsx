@@ -11,7 +11,7 @@ import { QualitySummaryCards } from "@/components/quality/QualitySummaryCards";
 import { QualityWarningsPanel } from "@/components/quality/QualityWarningsPanel";
 import { SymbolTimeframeQualityGrid } from "@/components/quality/SymbolTimeframeQualityGrid";
 import { WalkForwardPanel } from "@/components/quality/WalkForwardPanel";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getQualityScoreboardData } from "@/lib/api/quality";
 
 type QualityPageProps = {

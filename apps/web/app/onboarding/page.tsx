@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getOnboardingPageData } from "@/lib/api/onboarding";
 
 type OnboardingPageProps = {

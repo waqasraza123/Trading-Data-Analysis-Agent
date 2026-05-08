@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, navigationItems, navigationSections } from "@/lib/ui/navigation";
+import { AnimatedSection, motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
-import { AnimatedSection, motionCardClass, motionRevealStyle, motionRevealClass } from "@/components/ui/motion";
 
 type SidebarProps = {
   appName: string;

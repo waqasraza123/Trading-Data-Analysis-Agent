@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { SignalTriageBoard } from "@/components/triage/SignalTriageBoard";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getSignalTriageBoard } from "@/lib/api/triage";
 
 type TriagePageProps = {

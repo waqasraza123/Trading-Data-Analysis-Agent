@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { cn } from "@/lib/ui/cn";
 
 type TopbarProps = {

@@ -2,7 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { SetupReviewView } from "@/components/setup-review/SetupReviewView";
 import { getPublicEnv } from "@/config/env";
 import { getSetupReview } from "@/lib/api/setupReview";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 
 type SignalPageProps = {
   params: Promise<{

@@ -18,7 +18,7 @@ import { EquityUniversePanel } from "@/components/equity-research/EquityUniverse
 import { SwingCandidateDetail } from "@/components/equity-research/SwingCandidateDetail";
 import { SwingCandidateTable } from "@/components/equity-research/SwingCandidateTable";
 import { SwingScanForm } from "@/components/equity-research/SwingScanForm";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getEquityResearchData } from "@/lib/api/equityResearch";
 
 type EquityResearchPageProps = {

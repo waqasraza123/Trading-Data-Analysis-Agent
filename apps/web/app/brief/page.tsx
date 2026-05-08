@@ -1,6 +1,6 @@
 import { BriefNarrative } from "@/components/brief/BriefNarrative";
 import { AppShell } from "@/components/layout/AppShell";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getWorkspaceBrief } from "@/lib/api/brief";
 
 type BriefPageProps = {

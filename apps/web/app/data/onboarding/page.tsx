@@ -8,7 +8,7 @@ import {
   listProviderHealthSnapshots,
 } from "@/lib/api/providerHealth";
 import { listProviderCredentialRefs } from "@/lib/api/providerCredentials";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import type { ApiFailure, ApiResult } from "@/lib/api/types";
 import type { OnboardingFailure, OnboardingInitialData } from "@/lib/data-onboarding/types";
 

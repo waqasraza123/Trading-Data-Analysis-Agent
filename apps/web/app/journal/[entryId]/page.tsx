@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { JournalEntryDetail } from "@/components/journal/JournalEntryDetail";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { getJournalData } from "@/lib/api/journal";
 
 type JournalEntryPageProps = {

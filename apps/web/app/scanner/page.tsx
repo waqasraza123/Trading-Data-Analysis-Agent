@@ -12,7 +12,7 @@ import { WatchlistManager } from "@/components/scanner/WatchlistManager";
 import { DailyWorkflowPanel } from "@/components/daily-workflows/DailyWorkflowPanel";
 import { RunScanNowPanel } from "@/components/scanner/RunScanNowPanel";
 import { getScannerData } from "@/lib/api/scanner";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 
 type ScannerPageProps = {
   searchParams: Promise<{

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { cn } from "@/lib/ui/cn";
 
 type PageHeaderProps = {

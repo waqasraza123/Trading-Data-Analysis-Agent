@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { SymbolDetailView } from "@/components/market/symbol-detail-view";
 import { getPublicEnv } from "@/config/env";
-import { AnimatedSection } from "@/components/ui/motion";
+import { AnimatedSection } from "@/lib/ui/motion";
 import { listAnalysisRuns, listMarketMemorySnapshots, listWorkspaces, getSymbol } from "@/lib/api/market";
 import { listSignalOutcomes } from "@/lib/api/outcomes";
 import { listDashboardSymbolReadModels } from "@/lib/api/readModels";
