@@ -291,6 +291,16 @@ Keep the manifest in sync when adding new routes:
 - Updated `CommandCenterCockpitPrimitives.CockpitActionLink` and `RouteLoadingShell` to consume shared interaction and shell-context APIs without changing route semantics.
 - This polish pass preserves non-advisory wording, workspace-aware shell composition, and does not alter service contracts, query shapes, or load/retry behavior.
 
+## Detailed rollout notes (Production step: shell interaction harmonization)
+
+- Applied `MOTION_INTERACTIVE_CLASS` to shared layout shell navigation controls so interactive behavior is now centrally consistent.
+- Updated `apps/web/src/components/layout/Sidebar.tsx`:
+  - Added interactive class composition on top-brand link and nav items.
+  - Replaced duplicated inline `focus-visible` utilities with shared token usage while keeping active-state styles intact.
+- Updated `apps/web/src/components/layout/MobileNav.tsx`:
+  - Replaced duplicated inline `focus-visible` utilities with shared token usage for route pills.
+- No API contracts, route semantics, payload shape, or safety posture changes.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, navigationItems, navigationSections } from "@/lib/ui/navigation";
-import { AnimatedSection, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { AnimatedSection, MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type SidebarProps = {
@@ -25,7 +25,7 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
         "flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] p-4 shadow-panel backdrop-blur-xl",
       )}
     >
-      <Link href={navigationHref("commandCenter", workspaceId)} className="group flex items-center gap-3 rounded-2xl p-2 transition hover:bg-[var(--surface-muted)]">
+      <Link href={navigationHref("commandCenter", workspaceId)} className={`group flex items-center gap-3 rounded-2xl p-2 transition hover:bg-[var(--surface-muted)] ${MOTION_INTERACTIVE_CLASS}`}>
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--accent)_0%,var(--info)_100%)] text-sm font-black text-white shadow-glow">
           TI
         </span>
@@ -54,7 +54,7 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
                           "group flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition",
                           motionCardClass,
                           motionRevealClass(),
-                          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2",
+                          MOTION_INTERACTIVE_CLASS,
                           active
                             ? "bg-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
                             : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--strong)]",
