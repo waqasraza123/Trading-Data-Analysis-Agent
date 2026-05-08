@@ -17,7 +17,7 @@ export function Badge({ value, tone = "neutral", children, className, dot = fals
   return (
     <span
       className={cn(
-        "motion-hover-lift inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold leading-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]",
+        "inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold leading-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]",
         statusToneClassName[tone],
         interactive && MOTION_INTERACTIVE_CLASS,
         className,

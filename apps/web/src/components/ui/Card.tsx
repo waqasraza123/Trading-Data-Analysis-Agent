@@ -14,7 +14,7 @@ export function Card({ children, className, interactive = false }: CardProps) {
       className={cn(
         "surface motion-card rounded-2xl p-5 transition duration-200",
         interactive && [
-          "cursor-pointer motion-hover-lift",
+          "cursor-pointer",
           "hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--border))] hover:shadow-glow",
           MOTION_INTERACTIVE_CLASS,
         ],
@@ -32,7 +32,7 @@ export function MutedCard({ children, className, interactive = false }: CardProp
       className={cn(
         "muted-surface motion-card rounded-2xl p-4 transition duration-200",
         interactive && [
-          "cursor-pointer motion-hover-lift",
+          "cursor-pointer",
           "hover:border-[color-mix(in_srgb,var(--accent)_30%,var(--border))] hover:bg-[var(--surface-elevated)]",
           MOTION_INTERACTIVE_CLASS,
         ],

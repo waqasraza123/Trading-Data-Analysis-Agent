@@ -323,6 +323,15 @@ Keep the manifest in sync when adding new routes:
 - `MOTION_INTERACTIVE_CLASS` remains the single shared interaction source for hover/focus motion-safe polish in interactive primitives.
 - No API contracts, data flow, or safety posture changes.
 
+## Detailed rollout notes (Production step: interaction token normalization)
+
+- Removed remaining direct `motion-hover-lift` class usage from non-interactive and legacy interactive call paths in:
+  - `apps/web/src/components/ui/Card.tsx`
+  - `apps/web/src/components/ui/Surface.tsx`
+  - `apps/web/src/components/ui/Badge.tsx`
+- Preserved interactive motion/focus behavior by keeping `MOTION_INTERACTIVE_CLASS` and pointer-only hover styles only on explicit interactive states.
+- This pass avoids unintended hover/focus motion on static badges/surfaces while keeping keyboard-visible focus states explicit and unchanged.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

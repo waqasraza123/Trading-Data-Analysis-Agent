@@ -16,7 +16,7 @@ export function Surface({ children, className, muted = false, interactive = fals
         muted ? "muted-surface" : "surface",
         "motion-card rounded-2xl transition duration-200",
         interactive && [
-          "cursor-pointer motion-hover-lift hover:-translate-y-0.5 hover:shadow-glow",
+          "cursor-pointer hover:-translate-y-0.5 hover:shadow-glow",
           MOTION_INTERACTIVE_CLASS,
         ],
         className,
