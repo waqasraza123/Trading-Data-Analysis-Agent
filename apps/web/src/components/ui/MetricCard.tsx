@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/ui/cn";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 
 type MetricCardProps = {
   label: string;
@@ -14,10 +15,9 @@ export function MetricCard({ label, value, detail, trend, className, interactive
   return (
     <div
       className={cn(
-        "muted-surface motion-card motion-hover-lift min-w-0 rounded-2xl p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]",
+        "muted-surface motion-card min-w-0 rounded-2xl p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]",
         interactive && "cursor-pointer",
-        interactive &&
-          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+        interactive && MOTION_INTERACTIVE_CLASS,
         className,
       )}
     >

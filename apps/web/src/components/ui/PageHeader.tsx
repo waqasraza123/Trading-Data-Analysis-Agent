@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedSection, MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import { cn } from "@/lib/ui/cn";
 
 type PageHeaderProps = {
@@ -18,7 +18,7 @@ export function PageHeader({ eyebrow, title, description, meta, actions, classNa
       preset="fade-up"
       className={cn(
         "relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--accent-soft)_28%,var(--surface)))] p-5 shadow-panel sm:p-6 lg:p-7",
-        "motion-hover-lift",
+        MOTION_INTERACTIVE_CLASS,
         className,
       )}
     >

@@ -314,6 +314,12 @@ Keep the manifest in sync when adding new routes:
     - Replaced inline focus-visible utilities in interactive badge state with `MOTION_INTERACTIVE_CLASS`.
   - `apps/web/src/components/ui/Button.tsx`:
     - Replaced base button focus-visible utilities with `MOTION_INTERACTIVE_CLASS` in the shared class composition.
+- `apps/web/src/components/ui/MetricCard.tsx`:
+  - Replaced `motion-hover-lift` and inline `focus-visible` utility pair with `MOTION_INTERACTIVE_CLASS` while preserving interactive pointer behavior.
+- `apps/web/src/components/ui/Section.tsx`:
+  - Reused `MOTION_INTERACTIVE_CLASS` for section wrapper hover/focus polish consistency.
+- `apps/web/src/components/ui/PageHeader.tsx`:
+  - Applied `MOTION_INTERACTIVE_CLASS` in the animated page header container for consistent interaction styling.
 - `MOTION_INTERACTIVE_CLASS` remains the single shared interaction source for hover/focus motion-safe polish in interactive primitives.
 - No API contracts, data flow, or safety posture changes.
 
