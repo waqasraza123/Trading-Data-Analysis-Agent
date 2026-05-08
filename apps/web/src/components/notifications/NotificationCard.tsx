@@ -1,7 +1,9 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { formatRelativeTime } from "@/lib/formatting/dates";
 import { notificationEventTypeLabel, notificationSourceLabel } from "@/lib/notifications/labels";
 import type { NotificationEvent, NotificationFilters } from "@/lib/notifications/types";
+import { cn } from "@/lib/ui/cn";
 import { NotificationSeverityBadge } from "./NotificationSeverityBadge";
 import { NotificationStatusBadge } from "./NotificationStatusBadge";
 
@@ -9,15 +11,20 @@ type NotificationCardProps = {
   event: NotificationEvent;
   selected: boolean;
   filters: NotificationFilters;
+  style?: CSSProperties;
+  className?: string;
 };
 
-export function NotificationCard({ event, selected, filters }: NotificationCardProps) {
+export function NotificationCard({ event, selected, filters, style, className }: NotificationCardProps) {
   const href = buildEventHref(event, filters);
   return (
     <Link
-      className={`block rounded-lg border p-4 transition hover:border-[var(--accent)] ${
-        selected ? "border-[var(--accent)] bg-[var(--accent-soft)]/40" : "border-[var(--line)] bg-[var(--panel)]"
-      }`}
+      style={style}
+      className={cn(
+        "block rounded-lg border p-4 transition hover:border-[var(--accent)]",
+        selected ? "border-[var(--accent)] bg-[var(--accent-soft)]/40" : "border-[var(--line)] bg-[var(--panel)]",
+        className,
+      )}
       href={href}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">

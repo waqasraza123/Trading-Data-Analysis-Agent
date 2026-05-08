@@ -11,6 +11,7 @@ import type { DashboardData } from "@/lib/api/dashboard";
 import { formatDateTime } from "@/lib/formatting/dates";
 import { humanizeLabel } from "@/lib/formatting/labels";
 import { formatPercent } from "@/lib/formatting/numbers";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 export function SignalFocusPanel({ data }: { data: DashboardData }) {
   const selectedSignal = data.selectedSignal;
@@ -25,7 +26,12 @@ export function SignalFocusPanel({ data }: { data: DashboardData }) {
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
           <div className="space-y-5">
-            <div className="muted-surface rounded-lg p-4">
+            <AnimatedListItem
+              as="section"
+              className={`${motionCardClass} muted-surface rounded-lg p-4`}
+              preset="scale-subtle"
+              style={motionRevealDensityStyle(0, "compact")}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="text-xl font-semibold text-[var(--strong)]">{humanizeLabel(selectedSignal.signal.bias)}</h3>
@@ -67,19 +73,34 @@ export function SignalFocusPanel({ data }: { data: DashboardData }) {
                   </p>
                 </div>
               )}
-            </div>
-            <div>
+            </AnimatedListItem>
+            <AnimatedListItem
+              as="section"
+              className={`${motionCardClass} muted-surface rounded-lg p-4`}
+              preset="scale-subtle"
+              style={motionRevealDensityStyle(1, "compact")}
+            >
               <h3 className="mb-3 text-sm font-semibold uppercase text-slate-500">Key evidence</h3>
               <EvidenceList evidence={selectedSignal.evidence.slice(0, 6)} />
-            </div>
-            <div>
+            </AnimatedListItem>
+            <AnimatedListItem
+              as="section"
+              className={`${motionCardClass} muted-surface rounded-lg p-4`}
+              preset="scale-subtle"
+              style={motionRevealDensityStyle(2, "compact")}
+            >
               <h3 className="mb-3 text-sm font-semibold uppercase text-slate-500">Outcome history</h3>
               <OutcomeList outcomes={data.selectedOutcomes} />
-            </div>
-            <div>
+            </AnimatedListItem>
+            <AnimatedListItem
+              as="section"
+              className={`${motionCardClass} muted-surface rounded-lg p-4`}
+              preset="scale-subtle"
+              style={motionRevealDensityStyle(3, "compact")}
+            >
               <h3 className="mb-3 text-sm font-semibold uppercase text-slate-500">Setup context</h3>
               <SetupContextPanel setupContext={data.selectedSetupContext} />
-            </div>
+            </AnimatedListItem>
           </div>
           <aside className="space-y-5">
             <div>
@@ -94,10 +115,16 @@ export function SignalFocusPanel({ data }: { data: DashboardData }) {
               <div>
                 <h3 className="mb-3 text-sm font-semibold uppercase text-slate-500">Action plan items</h3>
                 <ul className="space-y-2">
-                  {data.selectedReadiness.next_steps.map((item) => (
-                    <li key={item} className="muted-surface rounded-lg p-3 text-sm text-[var(--strong)]">
+                  {data.selectedReadiness.next_steps.map((item, index) => (
+                    <AnimatedListItem
+                      as="li"
+                      key={item}
+                      className={`${motionCardClass} muted-surface rounded-lg p-3`}
+                      preset="scale-subtle"
+                      style={motionRevealDensityStyle(index, "compact")}
+                    >
                       {item}
-                    </li>
+                    </AnimatedListItem>
                   ))}
                 </ul>
               </div>

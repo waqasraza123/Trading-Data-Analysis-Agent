@@ -271,6 +271,24 @@ Keep the manifest in sync when adding new routes:
   - error and bottom action controls reuse density-aware sequencing
 - No backend/API contract changes were introduced; only presentation sequencing and `@/lib/ui/motion` usage.
 
+## Detailed rollout notes (Production step: dashboard and notifications density hardening)
+
+- Applied production-safe compact staggered row/card reveals to the remaining high-density dashboard surfaces:
+  - `apps/web/src/components/dashboard/market-board.tsx`
+  - `apps/web/src/components/dashboard/watchlist-panel.tsx`
+  - `apps/web/src/components/dashboard/follow-up-panel.tsx`
+  - `apps/web/src/components/dashboard/backend-state-panel.tsx`
+  - `apps/web/src/components/dashboard/signal-focus-panel.tsx`
+  - `apps/web/src/components/dashboard/signal-digest-panel.tsx`
+- Applied row/card reveal polish to notification entries:
+  - `apps/web/src/components/notifications/NotificationList.tsx`
+  - `apps/web/src/components/notifications/NotificationCard.tsx`
+- Reuse choices:
+  - `motionRevealDensityStyle(index, "compact")` for dense card surfaces
+  - `preset="scale-subtle"` for card-like row reveals
+  - shared `motionCardClass` where card borders/shadow feel require consistent hover micro-interaction timing
+- Kept section-level route wrappers and data contracts unchanged; no backend/API behavior changes introduced.
+
 ## Detailed rollout notes (Production step: rollout governance automation)
 
 - Added `apps/web/scripts/motion-rollout-audit.mjs` plus manifest source-of-truth file:

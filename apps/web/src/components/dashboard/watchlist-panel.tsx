@@ -3,6 +3,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import type { DashboardData } from "@/lib/api/dashboard";
 import { shortIdentifier } from "@/lib/formatting/labels";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 export function WatchlistPanel({ data }: { data: DashboardData }) {
   const symbolMap = new Map(data.symbols.map((symbol) => [symbol.id, symbol]));
@@ -13,8 +14,14 @@ export function WatchlistPanel({ data }: { data: DashboardData }) {
         <EmptyState title="No watchlists returned" message="The dashboard will still use market memory and signal data when available." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {data.watchlists.map(({ watchlist, items }) => (
-            <div key={watchlist.id} className="muted-surface rounded-lg p-4">
+          {data.watchlists.map(({ watchlist, items }, index) => (
+            <AnimatedListItem
+              as="article"
+              key={watchlist.id}
+              className={`${motionCardClass} muted-surface rounded-lg p-4`}
+              preset="scale-subtle"
+              style={motionRevealDensityStyle(index, "compact")}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-[var(--strong)]">{watchlist.name}</h3>
@@ -38,7 +45,7 @@ export function WatchlistPanel({ data }: { data: DashboardData }) {
                   <Badge value="No active items" tone="warning" />
                 )}
               </div>
-            </div>
+            </AnimatedListItem>
           ))}
         </div>
       )}

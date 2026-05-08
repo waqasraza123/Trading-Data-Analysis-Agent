@@ -6,6 +6,7 @@ import type { DashboardData } from "@/lib/api/dashboard";
 import type { MarketMemorySnapshot, SymbolRead, WatchlistItem } from "@/lib/api/types";
 import { formatRelativeTime } from "@/lib/formatting/dates";
 import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 type MarketBoardRow = {
   id: string;
@@ -28,8 +29,14 @@ export function MarketBoard({ data }: { data: DashboardData }) {
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-          {rows.map((row) => (
-            <article key={row.id} className="muted-surface rounded-lg p-4">
+          {rows.map((row, index) => (
+            <AnimatedListItem
+              as="article"
+              key={row.id}
+              className={`${motionCardClass} muted-surface rounded-lg p-4`}
+              preset="scale-subtle"
+              style={motionRevealDensityStyle(index, "compact")}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <Link
@@ -69,7 +76,7 @@ export function MarketBoard({ data }: { data: DashboardData }) {
                   ))}
                 </div>
               ) : null}
-            </article>
+            </AnimatedListItem>
           ))}
         </div>
       )}
