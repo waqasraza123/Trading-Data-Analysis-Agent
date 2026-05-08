@@ -155,8 +155,22 @@ export function AnimatedListItem({
   );
 }
 
-export function ShimmerSkeleton({ className, ariaLabel = "loading" }: { className?: string; ariaLabel?: string }): JSX.Element {
-  return <div aria-label={ariaLabel} className={cn("motion-shimmer rounded-xl", className)} />;
+export function ShimmerSkeleton({
+  className,
+  ariaLabel = "loading",
+  ariaHidden = true,
+}: {
+  className?: string;
+  ariaLabel?: string;
+  ariaHidden?: boolean;
+}): JSX.Element {
+  return (
+    <div
+      aria-hidden={ariaHidden}
+      aria-label={ariaLabel}
+      className={cn("motion-shimmer rounded-xl", className)}
+    />
+  );
 }
 
 export function PulseDot({ className }: { className?: string }): JSX.Element {

@@ -332,6 +332,12 @@ Keep the manifest in sync when adding new routes:
 - Preserved interactive motion/focus behavior by keeping `MOTION_INTERACTIVE_CLASS` and pointer-only hover styles only on explicit interactive states.
 - This pass avoids unintended hover/focus motion on static badges/surfaces while keeping keyboard-visible focus states explicit and unchanged.
 
+## Detailed rollout notes (Production step: shared loading shell hardening)
+
+- Consolidated loading skeleton behavior by routing `Skeleton` through `ShimmerSkeleton` in `apps/web/src/components/ui/Skeleton.tsx`.
+- Added explicit accessibility defaults to `ShimmerSkeleton` (`aria-hidden` enabled by default) so loading placeholders remain decorative while still exposing an optional `ariaLabel`.
+- Left route loading surfaces unchanged, preserving existing Suspense boundaries and fallback timing.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

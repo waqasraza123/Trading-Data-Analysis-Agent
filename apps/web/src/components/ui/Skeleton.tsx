@@ -1,4 +1,5 @@
 import { cn } from "@/lib/ui/cn";
+import { ShimmerSkeleton } from "./motion";
 
 type SkeletonProps = {
   className?: string;
@@ -7,10 +8,10 @@ type SkeletonProps = {
 
 export function Skeleton({ className, ariaHidden = true }: SkeletonProps) {
   return (
-    <div
-      aria-hidden={ariaHidden}
+    <ShimmerSkeleton
+      ariaHidden={ariaHidden}
       className={cn(
-        "motion-shimmer rounded-xl bg-[color-mix(in_srgb,var(--surface-muted)_78%,transparent)] dark:bg-[color-mix(in_srgb,var(--surface-muted)_78%,transparent)]",
+        "bg-[color-mix(in_srgb,var(--surface-muted)_78%,transparent)] dark:bg-[color-mix(in_srgb,var(--surface-muted)_78%,transparent)]",
         className,
       )}
     />
