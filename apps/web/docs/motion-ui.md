@@ -256,6 +256,16 @@ Keep the manifest in sync when adding new routes:
   - `Button` now includes explicit focus-visible ring-offset treatment plus shared hover-lift motion token in the base class composition.
   - Existing hover and focus-visible patterns remain explicit and non-semantic for state signaling.
 
+## Detailed rollout notes (Production step: primitive interaction harmonization)
+
+- Extended motion-safe interaction polish across additional shared primitives in `src/components/ui`:
+  - `Card` and `MutedCard` now apply a shared interactive focus-visible pattern and preserve pointer semantics when used as pressable surfaces.
+  - `Surface` now applies the same focus-visible and hover-lift treatment for interactive usage.
+  - `MetricCard` received an optional `interactive` prop with focus-visible token alignment.
+  - `Badge` received an optional `interactive` prop for explicit keyboard-focus affordances.
+  - `Skeleton` now defaults to `aria-hidden` to keep loading shimmer decorative and avoid unnecessary announcement during assistive reading.
+- This step remains copy-safe and state-preserving: no backend contracts, data composition, or route-level navigation logic changed.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

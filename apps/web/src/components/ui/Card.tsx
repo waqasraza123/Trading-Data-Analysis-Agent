@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/ui/cn";
 
+const interactiveFocusClass =
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
+
 type CardProps = {
   children: ReactNode;
   className?: string;
@@ -12,8 +15,11 @@ export function Card({ children, className, interactive = false }: CardProps) {
     <div
       className={cn(
         "surface motion-card rounded-2xl p-5 transition duration-200",
-        interactive && "hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--border))] hover:shadow-glow",
-        interactive && "motion-hover-lift",
+        interactive && [
+          "cursor-pointer motion-hover-lift",
+          "hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--border))] hover:shadow-glow",
+          interactiveFocusClass,
+        ],
         className,
       )}
     >
@@ -27,8 +33,11 @@ export function MutedCard({ children, className, interactive = false }: CardProp
     <div
       className={cn(
         "muted-surface motion-card rounded-2xl p-4 transition duration-200",
-        interactive && "hover:border-[color-mix(in_srgb,var(--accent)_30%,var(--border))] hover:bg-[var(--surface-elevated)]",
-        interactive && "motion-hover-lift",
+        interactive && [
+          "cursor-pointer motion-hover-lift",
+          "hover:border-[color-mix(in_srgb,var(--accent)_30%,var(--border))] hover:bg-[var(--surface-elevated)]",
+          interactiveFocusClass,
+        ],
         className,
       )}
     >

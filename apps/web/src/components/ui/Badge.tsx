@@ -9,14 +9,17 @@ export type BadgeProps = {
   children?: ReactNode;
   className?: string;
   dot?: boolean;
+  interactive?: boolean;
 };
 
-export function Badge({ value, tone = "neutral", children, className, dot = false }: BadgeProps) {
+export function Badge({ value, tone = "neutral", children, className, dot = false, interactive = false }: BadgeProps) {
   return (
     <span
       className={cn(
         "motion-hover-lift inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold leading-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]",
         statusToneClassName[tone],
+        interactive &&
+          "cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
         className,
       )}
     >

@@ -7,13 +7,17 @@ type MetricCardProps = {
   detail?: ReactNode;
   trend?: ReactNode;
   className?: string;
+  interactive?: boolean;
 };
 
-export function MetricCard({ label, value, detail, trend, className }: MetricCardProps) {
+export function MetricCard({ label, value, detail, trend, className, interactive = false }: MetricCardProps) {
   return (
     <div
       className={cn(
         "muted-surface motion-card motion-hover-lift min-w-0 rounded-2xl p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]",
+        interactive && "cursor-pointer",
+        interactive &&
+          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
         className,
       )}
     >
