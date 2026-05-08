@@ -575,6 +575,22 @@ Keep the manifest in sync when adding new routes:
 - Motion now uses shared public API only (`AnimatedListItem`, `motionCardClass`, `motionRevealPresetClass`, and `motionRevealDensityStyle`) and retains `motion-reduced-motion` expectations with non-invasive class-only changes.
 - No backend endpoints, data composition, or workflow execution semantics were changed.
 
+## Detailed rollout notes (Production step: command-center row deepening continuation)
+
+- Added compact/comfortable row-level sequencing to remaining command-center surfaces that still lacked staged reveal behavior:
+  - `apps/web/src/components/command-center/CommandCenterConfirmationPanel.tsx`
+  - `apps/web/src/components/command-center/CommandCenterScanStatus.tsx`
+  - `apps/web/src/components/command-center/CommandCenterNextActions.tsx`
+  - `apps/web/src/components/command-center/CommandCenterJournalPrompt.tsx`
+  - `apps/web/src/components/command-center/CommandCenterFreshnessPanel.tsx`
+  - `apps/web/src/components/command-center/CommandCenterDailyScanButton.tsx`
+  - `apps/web/src/components/command-center/CommandCenterErrorState.tsx`
+- Implementation pattern for this step:
+  - `motionRevealPresetClass` at panel/section level
+  - `AnimatedListItem` + `motionRevealDensityStyle(index, "compact")` on row/card lists
+  - `motionCardClass` and `MOTION_INTERACTIVE_CLASS` on interactive links/row containers not covered by shared card primitives.
+- Read-only safety copy, backend behavior, and fallback conditions were left unchanged.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

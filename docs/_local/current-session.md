@@ -1,5 +1,19 @@
 # Current Session
 
+## Modern Motion UI Rollout – Command Center Row Deepening (Continuation)
+
+- Added the remaining production-grade command-center row-level motion polish without logic or safety changes:
+  - `apps/web/src/components/command-center/CommandCenterConfirmationPanel.tsx`
+  - `apps/web/src/components/command-center/CommandCenterScanStatus.tsx`
+  - `apps/web/src/components/command-center/CommandCenterNextActions.tsx`
+  - `apps/web/src/components/command-center/CommandCenterJournalPrompt.tsx`
+  - `apps/web/src/components/command-center/CommandCenterFreshnessPanel.tsx`
+  - `apps/web/src/components/command-center/CommandCenterDailyScanButton.tsx`
+  - `apps/web/src/components/command-center/CommandCenterErrorState.tsx`
+- Updated rollout notes in:
+  - `apps/web/docs/motion-ui.md`
+- Scope remains documentation+code only; no tests/builds executed per request.
+
 ## Modern Motion UI Rollout – Command Center Deepening
 
 - Production motion pass added to command-center high-value surfaces without contract or behavior changes:
