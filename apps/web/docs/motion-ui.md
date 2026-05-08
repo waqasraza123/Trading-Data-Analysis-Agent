@@ -257,6 +257,13 @@ Keep the manifest in sync when adding new routes:
   - `comfortable` for hero and narrative pages, `compact` for dense rows, and `regular` for mixed layouts.
 - Reduced-motion behavior and safe focus/hover semantics remain explicit in unchanged components while motion wrappers are added through reusable API surfaces from `@/lib/ui/motion`.
 
+## Detailed rollout notes (Production step: rollout governance automation)
+
+- Added `apps/web/scripts/motion-rollout-audit.mjs` and `apps/web/package.json` script `motion:rollout-audit`.
+- The script validates that each rollout route keeps required `AnimatedSection` motion entry wrappers and at least one motion helper token.
+- This check is intended as an implementation-level guard for future rollout edits and helps keep `Motion UI Rollout` manifest coverage synchronized with route-level implementation.
+- Run `npm run motion:rollout-audit` from `apps/web` before merging route-level motion or layout edits.
+
 ## Detailed rollout notes (Production step: shell + primitive hardening)
 
 - Completed the shell-level hardening pass for shared layout and control surfaces:
