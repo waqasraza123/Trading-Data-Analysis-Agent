@@ -572,6 +572,7 @@ The app shell lives under `src/components/layout`:
 - `Topbar` renders workspace context and a safe `/health` API status indicator.
 - `MobileNav` renders compact mobile navigation from the same registry.
 - `WorkspaceSwitcher` and `PageContainer` provide shared context and content bounds.
+- Motion primitives for route and panel animation are documented in `docs/motion-ui.md`.
 
 Shared UI helpers live under `src/lib/ui`:
 

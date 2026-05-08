@@ -9,6 +9,7 @@ Global tokens live in `app/globals.css` and are exposed to Tailwind through `tai
 - `--background`, `--surface`, `--surface-muted`, `--surface-elevated`, `--border`, `--foreground`, and `--text-muted` define the app shell and cards.
 - `--accent`, `--success`, `--warning`, `--danger`, and `--info` define status and action tones.
 - `--shadow-soft`, `--shadow-panel`, and `--shadow-glow` define the cockpit depth model.
+- `motion-fade-up`, `motion-fade-in`, `motion-scale-subtle`, `motion-shimmer`, and `motion-pulse-dot` define the shared transition and skeleton/loader motion system.
 - `.surface`, `.muted-surface`, and `.premium-control` are the only shared global utility classes; prefer component props before adding more globals.
 
 ## Components
@@ -18,6 +19,7 @@ Global tokens live in `app/globals.css` and are exposed to Tailwind through `tai
 - `src/components/ui/MetricCard.tsx`, `StatGrid.tsx`, `Badge.tsx`, and `StatusPill.tsx`: dense dashboard stats and status metadata.
 - `src/components/ui/EmptyState.tsx`, `ErrorState.tsx`, `LoadingState.tsx`, and `Skeleton.tsx`: consistent loading and failure states.
 - `src/components/ui/Button.tsx`, `Tabs.tsx`, `FilterBar.tsx`, `ActionBar.tsx`, `Timeline.tsx`, `Tooltip.tsx`, and `Divider.tsx`: shared interaction and layout primitives.
+- `src/components/ui/motion.tsx` and `src/lib/ui/motion.ts`: shared page/list reveal wrappers and motion style tokens for route and panel motion.
 
 Compatibility exports remain for older imports such as `Metric`, `PageShell`, and `LoadingSkeleton`.
 
@@ -33,6 +35,8 @@ The shell lives under `src/components/layout/`:
 - `PageContainer.tsx`: shared route content bounds.
 
 `src/lib/ui/navigation.ts` is the route registry. Add routes there first, then use `navigationHref` or `WorkflowLinks` so workspace-aware URLs stay consistent. The current product map includes Command Center, Dashboard, Brief, Data, Scanner, Triage, Quality, Notifications, Journal, Review Outcomes, Preferences, Setup, and Readiness.
+
+The motion policy and reusable primitives for this rollout are documented in `docs/motion-ui.md`.
 
 ## Status Badges
 

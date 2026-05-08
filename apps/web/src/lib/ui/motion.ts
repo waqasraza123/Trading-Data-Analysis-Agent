@@ -2,7 +2,20 @@ export type {
   AnimateChildrenProps,
   AnimateListItemProps,
   MotionPreset,
-  MotionRevealStyle,
   MotionVariant,
+  MotionRevealStyle,
 } from "@/components/ui/motion";
-export { BASE_MOTION_DELAY_MS, AnimatedSection, AnimatedListItem, ShimmerSkeleton, PulseDot, motionCardClass, motionRevealClass, motionRevealStyle } from "@/components/ui/motion";
+export {
+  AnimatedListItem,
+  AnimatedSection,
+  BASE_MOTION_DELAY_MS,
+  BASE_MOTION_DURATION_MS,
+  DEFAULT_MOTION_PRESET,
+  MOTION_PRESETS,
+  MOTION_VARIANTS,
+  motionCardClass,
+  motionRevealClass,
+  motionRevealStyle,
+  PulseDot,
+  ShimmerSkeleton,
+} from "@/components/ui/motion";
