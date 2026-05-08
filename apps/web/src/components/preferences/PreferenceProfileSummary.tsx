@@ -1,41 +1,65 @@
 import { Badge } from "@/components/status/badge";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { humanizeLabel } from "@/lib/formatting/labels";
 import type { PreferenceProfilesPageData } from "@/lib/preferences/types";
 
 export function PreferenceProfileSummary({ data }: { data: PreferenceProfilesPageData }) {
   const profile = data.selectedProfile;
   const filters = profile ? countConfiguredFilters(profile) : 0;
+  const cards = [
+    {
+      key: "profiles",
+      label: "Profiles",
+      value: String(data.profiles.length),
+      detail: "Workspace review scopes",
+    },
+    {
+      key: "selected",
+      label: "Selected",
+      value: profile?.name || "No profile",
+      detail: profile?.status ? humanizeLabel(profile.status) : "No active profile",
+    },
+    {
+      key: "configured",
+      label: "Configured filters",
+      value: String(filters),
+      detail: "Review preferences only",
+    },
+    {
+      key: "default",
+      label: "Default",
+      value: data.profiles.find((item) => item.is_default)?.name || "Not set",
+      detail: profile ? humanizeLabel(profile.status) : "Create a profile to start",
+      showBadge: true,
+    },
+  ];
 
   return (
     <section className="grid gap-4 md:grid-cols-4">
-      <div className="muted-surface rounded-lg p-4">
-        <p className="text-xs font-medium uppercase text-slate-500">Profiles</p>
-        <p className="mt-2 text-2xl font-semibold text-[var(--strong)]">{data.profiles.length}</p>
-        <p className="mt-1 text-sm text-slate-500">Workspace review scopes</p>
-      </div>
-      <div className="muted-surface rounded-lg p-4">
-        <p className="text-xs font-medium uppercase text-slate-500">Selected</p>
-        <p className="mt-2 truncate text-lg font-semibold text-[var(--strong)]">
-          {profile?.name || "No profile"}
-        </p>
-        <div className="mt-2">
-          <Badge value={profile?.status || "Unavailable"} tone={profile?.status === "active" ? "good" : "warning"} />
-        </div>
-      </div>
-      <div className="muted-surface rounded-lg p-4">
-        <p className="text-xs font-medium uppercase text-slate-500">Configured filters</p>
-        <p className="mt-2 text-2xl font-semibold text-[var(--strong)]">{filters}</p>
-        <p className="mt-1 text-sm text-slate-500">Review preferences only</p>
-      </div>
-      <div className="muted-surface rounded-lg p-4">
-        <p className="text-xs font-medium uppercase text-slate-500">Default</p>
-        <p className="mt-2 text-lg font-semibold text-[var(--strong)]">
-          {data.profiles.find((item) => item.is_default)?.name || "Not set"}
-        </p>
-        <p className="mt-1 text-sm text-slate-500">
-          {profile ? humanizeLabel(profile.status) : "Create a profile to start"}
-        </p>
-      </div>
+      {cards.map((card, index) => (
+        <AnimatedListItem
+          as="article"
+          key={card.key}
+          className={cn(
+            "muted-surface rounded-lg p-4",
+            motionCardClass,
+            motionRevealPresetClass("scale-subtle"),
+          )}
+          style={motionRevealDensityStyle(index, "compact")}
+        >
+          <p className="text-xs font-medium uppercase text-slate-500">{card.label}</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--strong)]">
+            {card.value}
+          </p>
+          <p className="mt-1 text-sm text-slate-500">{card.detail}</p>
+          {card.showBadge && (
+            <div className="mt-2">
+              <Badge value={profile?.status || "Unavailable"} tone={profile?.status === "active" ? "good" : "warning"} />
+            </div>
+          )}
+        </AnimatedListItem>
+      ))}
     </section>
   );
 }

@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Panel } from "@/components/layout/panel";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { addEquityUniverseMember, removeEquityUniverseMember } from "@/lib/api/equityResearch";
 import { equitySymbolLabel } from "@/lib/equity-research/labels";
 import type { EquityResearchData } from "@/lib/equity-research/types";
@@ -102,8 +104,12 @@ export function EquityUniverseMembers({ data }: { data: EquityResearchData }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--line)]">
-            {data.selectedUniverseMembers.map((member) => (
-              <tr key={member.id}>
+            {data.selectedUniverseMembers.map((member, index) => (
+              <tr
+                key={member.id}
+                className={cn("border-t border-[var(--line)]", motionCardClass, motionRevealPresetClass("scale-subtle"))}
+                style={motionRevealDensityStyle(index, "compact")}
+              >
                 <td className="px-4 py-3 font-semibold text-[var(--strong)]">{equitySymbolLabel(data.stockSymbols, member.symbol_id)}</td>
                 <td className="px-4 py-3 text-slate-500">{member.sector || "Not set"}</td>
                 <td className="px-4 py-3 text-slate-500">{member.exchange || "Not set"}</td>

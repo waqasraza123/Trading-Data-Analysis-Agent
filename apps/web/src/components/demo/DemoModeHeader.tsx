@@ -1,10 +1,18 @@
 import { Badge } from "@/components/status/badge";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealPresetClass } from "@/lib/ui/motion";
 import type { DemoModeStatus } from "@/lib/demo-mode/types";
 
 export function DemoModeHeader({ status }: { status: DemoModeStatus | null }) {
   const enabled = Boolean(status?.enabled);
   return (
-    <section className="flex flex-wrap items-end justify-between gap-4">
+    <section
+      className={cn(
+        "flex flex-wrap items-end justify-between gap-4 rounded-lg bg-[var(--panel)] p-6",
+        motionCardClass,
+        motionRevealPresetClass("scale-subtle"),
+      )}
+    >
       <div>
         <p className="text-sm font-medium text-slate-500">Demo mode</p>
         <h2 className="mt-1 text-3xl font-semibold text-[var(--strong)]">Product smoke flow</h2>

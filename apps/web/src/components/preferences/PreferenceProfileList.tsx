@@ -9,6 +9,8 @@ import {
   archivePreferenceProfile,
   setDefaultPreferenceProfile,
 } from "@/lib/api/preferenceProfiles";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { humanizeLabel } from "@/lib/formatting/labels";
 import type { PreferenceProfilesPageData } from "@/lib/preferences/types";
 
@@ -54,8 +56,17 @@ export function PreferenceProfileList({ data }: { data: PreferenceProfilesPageDa
         </p>
       ) : (
         <div className="space-y-3">
-          {data.profiles.map((profile) => (
-            <article key={profile.id} className="muted-surface rounded-lg p-4">
+          {data.profiles.map((profile, index) => (
+            <AnimatedListItem
+              as="article"
+              key={profile.id}
+              className={cn(
+                "muted-surface rounded-lg p-4",
+                motionCardClass,
+                motionRevealPresetClass("scale-subtle"),
+              )}
+              style={motionRevealDensityStyle(index, "compact")}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -104,7 +115,7 @@ export function PreferenceProfileList({ data }: { data: PreferenceProfilesPageDa
                 <ProfileStat label="Avoid patterns" value={profile.excluded_pattern_types_json.map(humanizeLabel).join(", ")} />
                 <ProfileStat label="Minimum confidence" value={profile.minimum_confidence || "Not set"} />
               </dl>
-            </article>
+            </AnimatedListItem>
           ))}
         </div>
       )}

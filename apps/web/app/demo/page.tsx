@@ -3,7 +3,8 @@ import { DemoModeHeader } from "@/components/demo/DemoModeHeader";
 import { DemoRunButton } from "@/components/demo/DemoRunButton";
 import { Panel } from "@/components/layout/panel";
 import { AppShell } from "@/components/layout/AppShell";
-import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, AnimatedSection, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { getPublicEnv } from "@/config/env";
 import { getDemoModeStatus } from "@/lib/api/demoMode";
 import type { DemoModeStatus } from "@/lib/demo-mode/types";
@@ -44,10 +45,19 @@ function DemoSafetyPanel({ status }: { status: DemoModeStatus | null }) {
   return (
     <Panel title="Safety boundaries" eyebrow="Demo data">
       <div className="grid gap-3 md:grid-cols-2">
-        {notices.map((notice) => (
-          <div key={notice} className="muted-surface rounded-lg p-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+        {notices.map((notice, index) => (
+          <AnimatedListItem
+            as="article"
+            key={notice}
+            className={cn(
+              "muted-surface rounded-lg p-4 text-sm leading-6 text-slate-600 dark:text-slate-300",
+              motionCardClass,
+              motionRevealPresetClass("scale-subtle"),
+            )}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             {notice}
-          </div>
+          </AnimatedListItem>
         ))}
       </div>
     </Panel>

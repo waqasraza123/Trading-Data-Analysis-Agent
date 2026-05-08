@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Panel } from "@/components/layout/panel";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { runDemoModeFullFlow } from "@/lib/api/demoMode";
 import type { DemoModeRunFullFlow } from "@/lib/demo-mode/types";
 import { DemoFlowSteps } from "./DemoFlowSteps";
@@ -51,10 +53,25 @@ export function DemoRunButton({ enabled }: { enabled: boolean }) {
         {result && (
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-4">
-              <DemoMetric label="Signals" value={result.signal_ids.length} />
-              <DemoMetric label="Setup contexts" value={result.setup_context_ids.length} />
-              <DemoMetric label="Priority scores" value={result.priority_score_ids.length} />
-              <DemoMetric label="Outcomes" value={result.outcome_ids.length} />
+              {[
+                ["Signals", result.signal_ids.length],
+                ["Setup contexts", result.setup_context_ids.length],
+                ["Priority scores", result.priority_score_ids.length],
+                ["Outcomes", result.outcome_ids.length],
+              ].map(([label, value], index) => (
+                <AnimatedListItem
+                  as="article"
+                  key={label}
+                  className={cn(
+                    "muted-surface rounded-lg p-4",
+                    motionCardClass,
+                    motionRevealPresetClass("scale-subtle"),
+                  )}
+                  style={motionRevealDensityStyle(index, "compact")}
+                >
+                  <DemoMetric label={label} value={value} />
+                </AnimatedListItem>
+              ))}
             </div>
             <DemoFlowSteps steps={result.steps} />
             <DemoResultLinks links={result.links} />

@@ -1,9 +1,10 @@
 import { Panel } from "@/components/layout/panel";
+import { motionCardClass, motionRevealPresetClass } from "@/lib/ui/motion";
 import type { DemoModeStatus } from "@/lib/demo-mode/types";
 
 export function DemoDisabledState({ status }: { status: DemoModeStatus | null }) {
   return (
-    <Panel title="Demo mode disabled" eyebrow="Configuration">
+    <Panel title="Demo mode disabled" eyebrow="Configuration" className={motionCardClass + " " + motionRevealPresetClass("scale-subtle")}>
       <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
         {status?.reason || "The backend demo-mode endpoint is unavailable. Enable demo mode in the API before running the product smoke flow."}
       </p>

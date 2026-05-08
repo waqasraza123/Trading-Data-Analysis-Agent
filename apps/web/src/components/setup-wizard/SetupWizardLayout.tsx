@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { cn } from "@/lib/ui/cn";
 import { CredentialStep } from "./CredentialStep";
 import { DataSourceStep } from "./DataSourceStep";
 import { DemoDataStep } from "./DemoDataStep";
@@ -22,6 +23,7 @@ import {
   skipWorkspaceSetupStep,
   startWorkspaceSetup,
 } from "@/lib/api/workspaceSetup";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import type {
   SetupMutationState,
   SetupWizardInitialData,
@@ -171,38 +173,57 @@ export function SetupWizardLayout({ initialData }: SetupWizardLayoutProps) {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">Guided setup</p>
-          <h2 className="mt-1 text-3xl font-semibold text-[var(--strong)]">Workspace setup wizard</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-            Configure a deterministic market-analysis workspace, optional demo data, readiness, and an explicit first scan.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Link className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" href={selection.workspaceId ? `/onboarding?workspaceId=${selection.workspaceId}` : "/onboarding"}>
-            Onboarding status
-          </Link>
-          <button className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" disabled={mutation.status === "pending"} type="button" onClick={startWizard}>
-            {run ? "Start new run" : "Start setup"}
-          </button>
-          <button className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={mutation.status === "pending"} type="button" onClick={createDemo}>
-            Demo workspace
-          </button>
-          {run && (
-            <button className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" disabled={mutation.status === "pending"} type="button" onClick={finishWizard}>
-              Finish
+      <AnimatedListItem
+        as="section"
+        className={motionRevealPresetClass("fade-up")}
+        style={motionRevealDensityStyle(0, "comfortable")}
+      >
+        <section className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-slate-500">Guided setup</p>
+            <h2 className="mt-1 text-3xl font-semibold text-[var(--strong)]">Workspace setup wizard</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+              Configure a deterministic market-analysis workspace, optional demo data, readiness, and an explicit first scan.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" href={selection.workspaceId ? `/onboarding?workspaceId=${selection.workspaceId}` : "/onboarding"}>
+              Onboarding status
+            </Link>
+            <button className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" disabled={mutation.status === "pending"} type="button" onClick={startWizard}>
+              {run ? "Start new run" : "Start setup"}
             </button>
-          )}
+            <button className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={mutation.status === "pending"} type="button" onClick={createDemo}>
+              Demo workspace
+            </button>
+            {run && (
+              <button className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold" disabled={mutation.status === "pending"} type="button" onClick={finishWizard}>
+                Finish
+              </button>
+            )}
+          </div>
         </div>
-      </section>
+      </AnimatedListItem>
       {mutation.message && (
-        <p className={`rounded-md px-3 py-2 text-sm ${mutation.status === "error" ? "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-100" : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-100"}`}>
+        <AnimatedListItem
+          as="p"
+          className={cn(
+            "rounded-md px-3 py-2 text-sm",
+            motionCardClass,
+            motionRevealPresetClass("scale-subtle"),
+            mutation.status === "error" ? "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-100" : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-100",
+          )}
+          style={motionRevealDensityStyle(1, "compact")}
+        >
           {mutation.message}
-        </p>
+        </AnimatedListItem>
       )}
       {initialData.failures.length > 0 && (
-        <div className="surface rounded-lg p-4">
+        <AnimatedListItem
+          as="section"
+          className={cn("surface rounded-lg p-4", motionCardClass, motionRevealPresetClass("scale-subtle"))}
+          style={motionRevealDensityStyle(2, "compact")}
+        >
           <p className="text-sm font-semibold text-[var(--strong)]">Backend state</p>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             {initialData.failures.map((failure) => (
@@ -211,17 +232,35 @@ export function SetupWizardLayout({ initialData }: SetupWizardLayoutProps) {
               </p>
             ))}
           </div>
-        </div>
+        </AnimatedListItem>
       )}
-      <SetupProgress run={run} activeStep={currentStep} onSelectStep={setActiveStep} />
-      {!run ? (
-        <div className="surface rounded-lg p-6 text-sm leading-6 text-slate-600 dark:text-slate-300">
-          Start a setup run or create a demo workspace. The wizard stores setup progress in the backend and keeps provider secrets out of setup run payloads.
-        </div>
-      ) : (
-        renderStep(activeStep, sharedProps)
-      )}
-      <SetupSummary run={run} />
+      <AnimatedListItem
+        as="section"
+        className={cn(motionRevealPresetClass("fade-up"), motionCardClass)}
+        style={motionRevealDensityStyle(3, "comfortable")}
+      >
+        <SetupProgress run={run} activeStep={currentStep} onSelectStep={setActiveStep} />
+      </AnimatedListItem>
+      <AnimatedListItem
+        as="section"
+        className={cn(motionRevealPresetClass("fade-up"), motionCardClass)}
+        style={motionRevealDensityStyle(4, "regular")}
+      >
+        {!run ? (
+          <div className="surface rounded-lg p-6 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Start a setup run or create a demo workspace. The wizard stores setup progress in the backend and keeps provider secrets out of setup run payloads.
+          </div>
+        ) : (
+          renderStep(activeStep, sharedProps)
+        )}
+      </AnimatedListItem>
+      <AnimatedListItem
+        as="section"
+        className={cn(motionRevealPresetClass("scale-subtle"), motionCardClass)}
+        style={motionRevealDensityStyle(5, "comfortable")}
+      >
+        <SetupSummary run={run} />
+      </AnimatedListItem>
     </div>
   );
 }

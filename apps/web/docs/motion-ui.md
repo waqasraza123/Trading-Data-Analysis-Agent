@@ -257,6 +257,36 @@ Keep the manifest in sync when adding new routes:
   - `comfortable` for hero and narrative pages, `compact` for dense rows, and `regular` for mixed layouts.
 - Reduced-motion behavior and safe focus/hover semantics remain explicit in unchanged components while motion wrappers are added through reusable API surfaces from `@/lib/ui/motion`.
 
+## Detailed rollout notes (Production step: setup/equity/preferences/demo depth)
+
+- Added compact/comfortable staged reveals and card polish to additional high-impact setup/equity/preferences/demo surfaces without changing server contracts:
+  - `apps/web/src/components/setup-wizard/SetupWizardLayout.tsx`
+  - `apps/web/src/components/equity-research/EquityResearchHeader.tsx`
+  - `apps/web/src/components/equity-research/EquityUniversePanel.tsx`
+  - `apps/web/src/components/equity-research/EquityUniverseMembers.tsx`
+  - `apps/web/src/components/equity-research/SwingCandidateTable.tsx`
+  - `apps/web/src/components/equity-research/SwingCandidateDetail.tsx`
+  - `apps/web/src/components/preferences/PreferenceProfileSummary.tsx`
+  - `apps/web/src/components/preferences/PreferenceProfileList.tsx`
+  - `apps/web/src/components/demo/DemoModeHeader.tsx`
+  - `apps/web/src/components/demo/DemoFlowSteps.tsx`
+  - `apps/web/src/components/demo/DemoResultLinks.tsx`
+  - `apps/web/src/components/demo/DemoRunButton.tsx`
+  - `apps/web/src/components/demo/DemoDisabledState.tsx`
+- Route page-level container remains unchanged:
+  - `apps/web/app/demo/page.tsx`
+- Setup sequence now applies `AnimatedListItem` + density-aware timing for:
+  - wizard header entry
+  - mutation messaging
+  - backend failure surface
+  - setup progress and active step areas
+  - summary surface
+- Reuse pattern remains stable:
+  - `motionRevealDensityStyle(index, "compact")` for repeated rows
+  - `motionRevealDensityStyle(index, "comfortable")` for setup grouping
+  - `motionRevealPresetClass("scale-subtle")` and `motionCardClass` for card-like surfaces
+- No backend/API changes or safety text changes were introduced.
+
 ## Detailed rollout notes (Production step: component reveal depth)
 
 - Added panel and row-level reveal polish in `/symbols/[symbolId]` without altering endpoint composition:

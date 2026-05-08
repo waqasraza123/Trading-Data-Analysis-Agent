@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import {
   compactEquitySymbol,
   equityLabel,
@@ -33,14 +35,29 @@ export function SwingCandidateDetail({ data }: { data: EquityResearchData }) {
         <Badge value={equityLabel(candidate.directional_bias)} tone="info" />
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Setup score" value={formatScore(candidate.setup_quality_score)} />
-        <Metric label="Liquidity" value={formatScore(candidate.liquidity_score)} />
-        <Metric label="Volume" value={formatScore(candidate.volume_score)} />
-        <Metric label="Trend quality" value={formatScore(candidate.trend_quality_score)} />
-        <Metric label="Pullback quality" value={formatScore(candidate.pullback_quality_score)} />
-        <Metric label="Relative strength" value={formatScore(candidate.relative_strength_score)} />
-        <Metric label="Momentum" value={formatScore(candidate.momentum_score)} />
-        <Metric label="Volatility" value={formatScore(candidate.volatility_score)} />
+        {[
+          ["Setup score", formatScore(candidate.setup_quality_score)],
+          ["Liquidity", formatScore(candidate.liquidity_score)],
+          ["Volume", formatScore(candidate.volume_score)],
+          ["Trend quality", formatScore(candidate.trend_quality_score)],
+          ["Pullback quality", formatScore(candidate.pullback_quality_score)],
+          ["Relative strength", formatScore(candidate.relative_strength_score)],
+          ["Momentum", formatScore(candidate.momentum_score)],
+          ["Volatility", formatScore(candidate.volatility_score)],
+        ].map(([label, value], index) => (
+          <AnimatedListItem
+            as="article"
+            key={`${label}-${value}`}
+            className={cn(
+              "rounded-lg border border-[var(--line)] bg-[var(--panel-muted)] p-3",
+              motionCardClass,
+              motionRevealPresetClass("scale-subtle"),
+            )}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
+            <Metric label={label} value={value} />
+          </AnimatedListItem>
+        ))}
       </div>
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
         <ContextList title="Evidence" items={candidate.evidence_json} emptyLabel="No deterministic evidence stored." />
@@ -93,14 +110,23 @@ function ContextList({
       <h3 className="text-sm font-semibold text-[var(--strong)]">{title}</h3>
       <div className="mt-3 grid gap-3">
         {items.map((item, index) => (
-          <div key={`${title}-${index}`} className="rounded-md bg-[var(--panel)] p-3 text-sm">
+          <AnimatedListItem
+            as="article"
+            key={`${title}-${index}`}
+            className={cn(
+              "rounded-md bg-[var(--panel)] p-3",
+              motionCardClass,
+              motionRevealPresetClass("scale-subtle"),
+            )}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             {Object.entries(item).map(([key, value]) => (
               <p key={key} className="mt-1 first:mt-0">
                 <span className="font-semibold text-[var(--strong)]">{equityLabel(key)}:</span>{" "}
                 <span className="text-slate-500">{jsonValueLabel(value)}</span>
               </p>
             ))}
-          </div>
+          </AnimatedListItem>
         ))}
         {items.length === 0 && <p className="text-sm text-slate-500">{emptyLabel}</p>}
       </div>

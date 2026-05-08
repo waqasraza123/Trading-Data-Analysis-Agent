@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import {
   compactEquitySymbol,
   equityCandidateStatusFilters,
@@ -61,8 +63,16 @@ export function SwingCandidateTable({ data }: { data: EquityResearchData }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--line)]">
-            {filteredCandidates.map((candidate) => (
-              <tr key={candidate.id}>
+            {filteredCandidates.map((candidate, index) => (
+              <tr
+                key={candidate.id}
+                className={cn(
+                  "border-t border-[var(--line)]",
+                  motionCardClass,
+                  motionRevealPresetClass("scale-subtle"),
+                )}
+                style={motionRevealDensityStyle(index, "compact")}
+              >
                 <td className="px-4 py-3 font-semibold text-[var(--strong)]">
                   {compactEquitySymbol(data.stockSymbols, candidate.symbol_id)}
                 </td>
@@ -94,8 +104,15 @@ export function SwingCandidateTable({ data }: { data: EquityResearchData }) {
         </table>
       </div>
       <div className="mt-4 grid gap-3 xl:hidden">
-        {filteredCandidates.map((candidate) => (
-          <SwingCandidateCard key={candidate.id} candidate={candidate} data={data} />
+        {filteredCandidates.map((candidate, index) => (
+          <AnimatedListItem
+            as="section"
+            key={candidate.id}
+            className={motionRevealPresetClass("scale-subtle")}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
+            <SwingCandidateCard candidate={candidate} data={data} />
+          </AnimatedListItem>
         ))}
         {filteredCandidates.length === 0 && (
           <div className="muted-surface rounded-lg p-5 text-sm text-slate-500">

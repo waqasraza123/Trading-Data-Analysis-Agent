@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { createEquityUniverse } from "@/lib/api/equityResearch";
 import { equityStatusTone } from "@/lib/equity-research/labels";
 import type { EquityResearchData } from "@/lib/equity-research/types";
@@ -67,20 +69,29 @@ export function EquityUniversePanel({ data }: { data: EquityResearchData }) {
           {data.universes.length === 0 ? (
             <div className="muted-surface rounded-lg p-5 text-sm text-slate-500">No equity universes are available yet.</div>
           ) : (
-            data.universes.map((universe) => (
-              <Link
+            data.universes.map((universe, index) => (
+              <AnimatedListItem
+                as="article"
                 key={universe.id}
-                className="muted-surface block rounded-lg p-4 transition hover:border-[var(--accent)]"
-                href={`/equity-research?workspaceId=${universe.workspace_id}&universeId=${universe.id}`}
+                style={motionRevealDensityStyle(index, "compact")}
+                className={cn(
+                  "muted-surface rounded-lg p-4 transition hover:border-[var(--accent)]",
+                  motionCardClass,
+                  motionRevealPresetClass("scale-subtle"),
+                )}
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-[var(--strong)]">{universe.name}</h3>
-                    <p className="mt-1 text-sm text-slate-500">{universe.description || "Manual stock universe"}</p>
+                <Link
+                  href={`/equity-research?workspaceId=${universe.workspace_id}&universeId=${universe.id}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-[var(--strong)]">{universe.name}</h3>
+                      <p className="mt-1 text-sm text-slate-500">{universe.description || "Manual stock universe"}</p>
+                    </div>
+                    <Badge value={universe.status} tone={equityStatusTone(universe.status)} />
                   </div>
-                  <Badge value={universe.status} tone={equityStatusTone(universe.status)} />
-                </div>
-              </Link>
+                </Link>
+              </AnimatedListItem>
             ))
           )}
         </div>
