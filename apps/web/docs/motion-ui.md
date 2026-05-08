@@ -89,7 +89,7 @@ export function PageBlock() {
 ### Staggered list/panel reveal
 
 ```tsx
-import { AnimatedListItem, motionRevealStyle } from "@/lib/ui/motion";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 function SignalList({ items }: { items: { id: string }[] }) {
   return (
@@ -99,7 +99,7 @@ function SignalList({ items }: { items: { id: string }[] }) {
           key={item.id}
           index={index}
           as="section"
-          style={motionRevealStyle(index, 45)}
+          style={motionRevealDensityStyle(index, "compact")}
           preset="scale-subtle"
         >
           ...
@@ -113,7 +113,6 @@ function SignalList({ items }: { items: { id: string }[] }) {
 ### Class/style helpers (legacy utility path)
 
 - `motionRevealClass("up" | "scale" | "fade")`
-- `motionRevealStyle(index, stepMs, durationMs?)`
 - `motionRevealDensityStyle(index, density?, durationMs?)`
 - `motionRevealProfileStyle(index, profile?)`
 - `motionCardClass`
@@ -186,6 +185,13 @@ Keep the manifest in sync when adding new routes:
 - Add a route entry to this list before shipping.
 - Define the route's reveal density (`compact` for dense repeated rows, `comfortable` for large hero-first layouts, otherwise `regular`).
 - Add an integration note under "Detailed rollout notes".
+
+## Detailed rollout notes (Production step: density migration)
+
+- `Sidebar` and `MobileNav` migrated high-density navigation reveal timing to `motionRevealDensityStyle(index, "compact")`.
+- `SignalTriageBoard`, `SignalTriageColumn`, `SignalTriageCard`, `CommandCenterCockpit`, and `BriefNarrative` now consume density-aware reveal styles for section/panel ordering and dense row reveals.
+- Default section/panel reveals use `motionRevealDensityStyle(index)` to preserve baseline 45ms behavior while removing inline `motionRevealStyle(..., 45)` usage in active rollout surfaces.
+- This pass does not change route behavior, backend composition, or advisory/safety copy.
 
 ## Governance checklist
 

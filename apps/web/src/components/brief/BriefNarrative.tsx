@@ -4,7 +4,7 @@ import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { navigationHref } from "@/lib/ui/navigation";
 import { toneForBias, toneForDataQuality, toneForOutcome, toneForPriority } from "@/lib/ui/statusStyles";
 import { cn } from "@/lib/ui/cn";
-import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type {
   BriefActiveSetupItem,
   BriefAvoidConditionItem,
@@ -32,7 +32,7 @@ export function BriefNarrative({ brief }: { brief: WorkspaceBrief }) {
           title="Backend unavailable"
           eyebrow="Brief state"
           className={motionRevealClass()}
-          style={motionRevealStyle(1, 45)}
+          style={motionRevealDensityStyle(1)}
         >
           <BriefEmptyBlock
             title="Backend unavailable"
@@ -45,7 +45,7 @@ export function BriefNarrative({ brief }: { brief: WorkspaceBrief }) {
           title="No workspace available"
           eyebrow="Empty state"
           className={motionRevealClass()}
-          style={motionRevealStyle(2, 45)}
+          style={motionRevealDensityStyle(2)}
         >
           <BriefEmptyBlock
             title="No workspace available"
@@ -148,7 +148,7 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
     })),
   ].slice(0, 8);
   return (
-    <BriefPanel title="What Changed" eyebrow="Digest" className={motionRevealClass()} style={motionRevealStyle(3, 45)}>
+    <BriefPanel title="What Changed" eyebrow="Digest" className={motionRevealClass()} style={motionRevealDensityStyle(3)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No brief generated" message="No backend brief items or fallback digest rows were returned for this workspace." />
       ) : (
@@ -162,7 +162,7 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.title}</p>
@@ -180,7 +180,7 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
 function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
   const freshItems = brief.marketFocus.filter((item) => item.freshnessLabel === "fresh").slice(0, 8);
   return (
-    <BriefPanel title="Fresh Symbols" eyebrow="Data fresh" className={motionRevealClass()} style={motionRevealStyle(4, 45)}>
+    <BriefPanel title="Fresh Symbols" eyebrow="Data fresh" className={motionRevealClass()} style={motionRevealDensityStyle(4)}>
       {freshItems.length === 0 ? (
         <BriefEmptyBlock title="No fresh data" message="No fresh market-memory rows were returned for the current brief scope." />
       ) : (
@@ -194,7 +194,7 @@ function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -218,7 +218,7 @@ function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
 
 function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
   return (
-    <BriefPanel title="Review-First Setups" eyebrow="Setup context" className={motionRevealClass()} style={motionRevealStyle(5, 45)}>
+    <BriefPanel title="Review-First Setups" eyebrow="Setup context" className={motionRevealClass()} style={motionRevealDensityStyle(5)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No setups" message="No directional setup context was available in the current brief." />
       ) : (
@@ -232,7 +232,7 @@ function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -263,7 +263,7 @@ function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
 
 function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] }) {
   return (
-    <BriefPanel title="Needs Confirmation" eyebrow="Review queue" className={motionRevealClass()} style={motionRevealStyle(6, 45)}>
+    <BriefPanel title="Needs Confirmation" eyebrow="Review queue" className={motionRevealClass()} style={motionRevealDensityStyle(6)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No confirmation items" message="No open review or readiness confirmation items were returned." />
       ) : (
@@ -277,7 +277,7 @@ function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] })
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.label}</p>
@@ -295,7 +295,7 @@ function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] })
 
 function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] }) {
   return (
-    <BriefPanel title="Avoid Conditions" eyebrow="Constraints" className={motionRevealClass()} style={motionRevealStyle(7, 45)}>
+    <BriefPanel title="Avoid Conditions" eyebrow="Constraints" className={motionRevealClass()} style={motionRevealDensityStyle(7)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No avoid conditions" message="No stale, conflicting, low-quality, or unresolved review constraints were returned." />
       ) : (
@@ -309,7 +309,7 @@ function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] })
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -329,7 +329,7 @@ function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] })
 
 function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
   return (
-    <BriefPanel title="Outcomes Ready" eyebrow="Observed behavior" className={motionRevealClass()} style={motionRevealStyle(8, 45)}>
+    <BriefPanel title="Outcomes Ready" eyebrow="Observed behavior" className={motionRevealClass()} style={motionRevealDensityStyle(8)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No outcomes ready" message="No recent observed outcome horizons were returned for the current brief." />
       ) : (
@@ -343,7 +343,7 @@ function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -363,7 +363,7 @@ function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
 
 function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
   return (
-    <BriefPanel title="Watch Next" eyebrow="Observation zones" className={motionRevealClass()} style={motionRevealStyle(9, 45)}>
+    <BriefPanel title="Watch Next" eyebrow="Observation zones" className={motionRevealClass()} style={motionRevealDensityStyle(9)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No watch-next rows" message="Setup context did not return next observations or observation zones." />
       ) : (
@@ -377,7 +377,7 @@ function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.symbol} {item.timeframe}</p>
@@ -395,7 +395,12 @@ function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
 
 function PendingActionsSection({ items }: { items: BriefPendingActionItem[] }) {
   return (
-    <BriefPanel title="Pending Backend-Safe Actions" eyebrow="Follow-up" className={motionRevealClass()} style={motionRevealStyle(10, 45)}>
+    <BriefPanel
+      title="Pending Backend-Safe Actions"
+      eyebrow="Follow-up"
+      className={motionRevealClass()}
+      style={motionRevealDensityStyle(10)}
+    >
       {items.length === 0 ? (
         <BriefEmptyBlock title="No pending actions" message="No due backend-safe action items were returned." />
       ) : (
@@ -408,7 +413,7 @@ function PendingActionsSection({ items }: { items: BriefPendingActionItem[] }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.safeLabel}</p>
@@ -432,7 +437,7 @@ function DataQualitySection({ items, workspaceId }: { items: BriefDataQualityIss
       title="Data Quality and Recovery Context"
       eyebrow="Reliability"
       className={motionRevealClass()}
-      style={motionRevealStyle(11, 45)}
+      style={motionRevealDensityStyle(11)}
     >
       {items.length === 0 ? (
         <BriefEmptyBlock title="No data-quality issues" message="No freshness, gap, provider, or setup-quality issues were returned." />
@@ -447,7 +452,7 @@ function DataQualitySection({ items, workspaceId }: { items: BriefDataQualityIss
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

@@ -14,13 +14,13 @@ import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { safeTriageText, shortReason } from "@/lib/triage/labels";
 import type { TriageCandidate } from "@/lib/triage/types";
-import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { TriageReasonBadges } from "./TriageReasonBadges";
 
 export function SignalTriageCard({
   candidate,
   className = "",
-  style = motionRevealStyle(),
+  style = motionRevealDensityStyle(),
 }: {
   candidate: TriageCandidate;
   className?: string;

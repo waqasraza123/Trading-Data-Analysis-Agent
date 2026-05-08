@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, primaryNavigationTargets, navigationItems } from "@/lib/ui/navigation";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
-import { AnimatedSection, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import { AnimatedSection, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 type MobileNavProps = {
   appName: string;
@@ -50,7 +50,7 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
                 active ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "bg-[var(--surface-muted)] text-[var(--text-muted)]",
               )}
               href={navigationHref(item.key, workspaceId)}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               {item.shortLabel || item.label}
             </Link>

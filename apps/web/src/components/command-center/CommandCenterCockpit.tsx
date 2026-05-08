@@ -8,7 +8,7 @@ import { CommandCenterReadinessGate } from "./CommandCenterReadinessGate";
 import { CommandCenterOverview } from "./CommandCenterOverview";
 import { CommandCenterDailyScanButton } from "./CommandCenterDailyScanButton";
 import { cn } from "@/lib/ui/cn";
-import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import {
   CockpitActionLink,
   CockpitBadge,
@@ -30,7 +30,7 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
         />
       )}
       <CommandCenterBackendState data={data} />
-      <div style={motionRevealStyle(9, 45)}>
+      <div style={motionRevealDensityStyle(9)}>
         <CommandCenterOverview data={data} />
       </div>
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.7fr)]">
@@ -54,7 +54,7 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
           "rounded-3xl border border-slate-200/80 bg-slate-950 p-5 text-slate-100 shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:border-slate-800",
           motionRevealClass(),
         )}
-        style={motionRevealStyle(10, 45)}
+        style={motionRevealDensityStyle(10)}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -139,7 +139,7 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
       title="Review First"
       eyebrow="Priority setups"
       className={motionRevealClass()}
-      style={motionRevealStyle(0, 45)}
+      style={motionRevealDensityStyle(0)}
     >
       {data.reviewFirst.length === 0 ? (
         <CockpitEmptyState title="No review-first setups" message={data.sectionStatuses.reviewFirst.message} />
@@ -164,7 +164,7 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
                   motionCardClass,
                   motionRevealClass(),
                 )}
-                style={motionRevealStyle(index, 45)}
+                style={motionRevealDensityStyle(index, "compact")}
               >
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol}</p>
@@ -194,7 +194,7 @@ function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
       title="Needs Confirmation"
       eyebrow="Pending review context"
       className={motionRevealClass()}
-      style={motionRevealStyle(1, 45)}
+      style={motionRevealDensityStyle(1)}
     >
       {data.needsConfirmation.length === 0 ? (
         <CockpitEmptyState title="No confirmation queue" message={data.sectionStatuses.needsConfirmation.message} />
@@ -209,7 +209,7 @@ function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -233,7 +233,7 @@ function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
       title="Avoid Conditions"
       eyebrow="Risk filters"
       className={motionRevealClass()}
-      style={motionRevealStyle(2, 45)}
+      style={motionRevealDensityStyle(2)}
     >
       {data.avoidItems.length === 0 ? (
         <CockpitEmptyState title="No avoid conditions" message={data.sectionStatuses.avoidItems.message} />
@@ -248,7 +248,7 @@ function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -273,7 +273,7 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
       title="Data Reliability"
       eyebrow="Freshness and providers"
       className={motionRevealClass()}
-      style={motionRevealStyle(3, 45)}
+      style={motionRevealDensityStyle(3)}
     >
       <div className="grid grid-cols-2 gap-3">
         <CockpitMetric label="Fresh" value={formatInteger(data.summary.freshSymbolCount)} tone="good" />
@@ -302,7 +302,7 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
@@ -329,7 +329,7 @@ function OutcomeReviewPanel({ data }: { data: CommandCenterData }) {
       title="Outcome Review"
       eyebrow="Observed horizons"
       className={motionRevealClass()}
-      style={motionRevealStyle(4, 45)}
+      style={motionRevealDensityStyle(4)}
     >
       {data.outcomeReview.length === 0 ? (
         <CockpitEmptyState title="No outcomes ready" message={data.sectionStatuses.outcomeReview.message} />
@@ -344,7 +344,7 @@ function OutcomeReviewPanel({ data }: { data: CommandCenterData }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -373,7 +373,7 @@ function WorkflowProgressPanel({ data }: { data: CommandCenterData }) {
       title="Workflow Progress"
       eyebrow="Latest daily run"
       className={motionRevealClass()}
-      style={motionRevealStyle(5, 45)}
+      style={motionRevealDensityStyle(5)}
       action={<CommandCenterDailyScanButton workspaceId={data.workspace?.id || null} watchlistId={data.dailyWorkflowDefaultWatchlistId} preferenceProfileId={data.selectedPreferenceProfile?.id || null} />}
     >
       {!run ? (
@@ -407,7 +407,7 @@ function WorkflowProgressPanel({ data }: { data: CommandCenterData }) {
                   motionCardClass,
                   motionRevealClass(),
                 )}
-                style={motionRevealStyle(index, 45)}
+                style={motionRevealDensityStyle(index, "compact")}
               >
                 <div>
                   <p className="text-sm font-semibold text-[var(--strong)]">{humanizeLabel(step.step_key)}</p>
@@ -437,7 +437,7 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
       title="Notifications / Review Items"
       eyebrow="Inbox and readiness"
       className={motionRevealClass()}
-      style={motionRevealStyle(6, 45)}
+      style={motionRevealDensityStyle(6)}
     >
       <div className="grid grid-cols-2 gap-3">
         <CockpitMetric label="Unread inbox" value={formatInteger(data.notificationUnreadCount)} tone={data.notificationUnreadCount ? "info" : "neutral"} />
@@ -455,7 +455,7 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="font-semibold text-[var(--strong)]">{item.title}</p>
@@ -482,7 +482,7 @@ function DailyIntelligenceMap({ data }: { data: CommandCenterData }) {
       title="Daily Intelligence Map"
       eyebrow="Navigation"
       className={motionRevealClass()}
-      style={motionRevealStyle(7, 45)}
+      style={motionRevealDensityStyle(7)}
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {data.navigationItems.slice(0, 8).map((item, index) => (
@@ -494,7 +494,7 @@ function DailyIntelligenceMap({ data }: { data: CommandCenterData }) {
               motionCardClass,
               motionRevealClass(),
             )}
-            style={motionRevealStyle(index, 45)}
+            style={motionRevealDensityStyle(index, "compact")}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="font-semibold text-[var(--strong)]">{item.label}</p>
@@ -518,7 +518,7 @@ function CommandCenterBackendState({ data }: { data: CommandCenterData }) {
       title="Backend State"
       eyebrow="Availability"
       className={motionRevealClass()}
-      style={motionRevealStyle(8, 45)}
+      style={motionRevealDensityStyle(8)}
     >
       <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900 dark:bg-amber-950/35">
         <div className="flex flex-wrap items-center gap-2">
@@ -541,7 +541,7 @@ function CommandCenterBackendState({ data }: { data: CommandCenterData }) {
                 motionCardClass,
                 motionRevealClass(),
               )}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{failure.label}</p>

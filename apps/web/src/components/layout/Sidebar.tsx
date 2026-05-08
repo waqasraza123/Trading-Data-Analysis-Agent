@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, navigationItems, navigationSections } from "@/lib/ui/navigation";
-import { AnimatedSection, motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import { AnimatedSection, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type SidebarProps = {
@@ -58,7 +58,7 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
                             ? "bg-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
                             : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--strong)]",
                         )}
-                        style={motionRevealStyle(index, 45)}
+                        style={motionRevealDensityStyle(index, "compact")}
                         href={navigationHref(item.key, workspaceId)}
                       >
                         <span className="min-w-0 truncate">{item.label}</span>

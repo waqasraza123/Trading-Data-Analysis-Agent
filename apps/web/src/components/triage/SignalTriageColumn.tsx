@@ -1,7 +1,7 @@
 import { Badge } from "@/components/status/badge";
 import type { TriageCandidate, TriageColumnKey } from "@/lib/triage/types";
 import { cn } from "@/lib/ui/cn";
-import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { CSSProperties } from "react";
 import { SignalTriageCard } from "./SignalTriageCard";
 
@@ -39,7 +39,7 @@ export function SignalTriageColumn({ column, candidates, style }: SignalTriageCo
               key={candidate.id}
               candidate={candidate}
               className={motionCardClass}
-              style={motionRevealStyle(index, 45)}
+              style={motionRevealDensityStyle(index, "compact")}
             />
           ))}
         </div>
