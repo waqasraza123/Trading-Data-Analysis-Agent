@@ -3,7 +3,7 @@ import { DemoModeHeader } from "@/components/demo/DemoModeHeader";
 import { DemoRunButton } from "@/components/demo/DemoRunButton";
 import { Panel } from "@/components/layout/panel";
 import { AppShell } from "@/components/layout/AppShell";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getPublicEnv } from "@/config/env";
 import { getDemoModeStatus } from "@/lib/api/demoMode";
 import type { DemoModeStatus } from "@/lib/demo-mode/types";
@@ -16,10 +16,20 @@ export default async function DemoPage() {
   return (
     <AppShell appName={env.appName}>
       <AnimatedSection as="section" className="space-y-6">
-        <DemoModeHeader status={status} />
-        {!status?.enabled && <DemoDisabledState status={status} />}
-        <DemoSafetyPanel status={status} />
-        <DemoRunButton enabled={Boolean(status?.enabled)} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <DemoModeHeader status={status} />
+        </AnimatedListItem>
+        {!status?.enabled && (
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "regular")}>
+            <DemoDisabledState status={status} />
+          </AnimatedListItem>
+        )}
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "compact")}>
+          <DemoSafetyPanel status={status} />
+        </AnimatedListItem>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "regular")}>
+          <DemoRunButton enabled={Boolean(status?.enabled)} />
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );

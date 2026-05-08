@@ -15,7 +15,7 @@ import {
   listProductReadinessRuns,
 } from "@/lib/api/productReadiness";
 import { listWorkspaces } from "@/lib/api/market";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { ApiFailure, ApiResult } from "@/lib/api/types";
 import type { ProductReadinessPageData, ProductReadinessRun, ReadinessFailure } from "@/lib/readiness/types";
 
@@ -33,40 +33,56 @@ export default async function ReadinessPage({ searchParams }: ReadinessPageProps
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section" className="space-y-6">
-        <ReadinessHeader data={data} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <ReadinessHeader data={data} />
+        </AnimatedListItem>
         {!data.workspace && (
-          <EmptyState
-            title="No workspace available"
-            message="Seed or create a workspace in the API before workspace-scoped readiness can validate daily-use setup."
-          />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "comfortable")}>
+            <EmptyState
+              title="No workspace available"
+              message="Seed or create a workspace in the API before workspace-scoped readiness can validate daily-use setup."
+            />
+          </AnimatedListItem>
         )}
-        <ReadinessFailures failures={data.failures} />
-        <Panel
-          title="Run checklist"
-          eyebrow="Explicit validation"
-          action={<ReadinessRunButton workspaceId={data.workspace?.id || null} />}
-        >
-          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-            The checklist reads current product state and saves an auditable readiness run. It does not seed data, run daily workflows, start workers, send notifications, fetch providers, execute broker actions, auto-trade, or produce financial advice.
-          </p>
-        </Panel>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "regular")}>
+          <ReadinessFailures failures={data.failures} />
+        </AnimatedListItem>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "regular")}>
+          <Panel
+            title="Run checklist"
+            eyebrow="Explicit validation"
+            action={<ReadinessRunButton workspaceId={data.workspace?.id || null} />}
+          >
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+              The checklist reads current product state and saves an auditable readiness run. It does not seed data, run daily workflows, start workers, send notifications, fetch providers, execute broker actions, auto-trade, or produce financial advice.
+            </p>
+          </Panel>
+        </AnimatedListItem>
         {data.selectedRun ? (
           <>
-            <ReadinessScoreCard run={data.selectedRun} />
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+              <ReadinessScoreCard run={data.selectedRun} />
+            </AnimatedListItem>
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-              <ReadinessChecklist run={data.selectedRun} workspaceId={data.workspace?.id} />
-              <div className="space-y-6">
-                <ReadinessBlockers
-                  blockers={data.selectedRun.blockers_json}
-                  warnings={data.selectedRun.warnings_json}
-                  workspaceId={data.workspace?.id}
-                />
-                <ReadinessRemediationPanel run={data.selectedRun} workspaceId={data.workspace?.id} />
-              </div>
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+                <ReadinessChecklist run={data.selectedRun} workspaceId={data.workspace?.id} />
+              </AnimatedListItem>
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
+                <div className="space-y-6">
+                  <ReadinessBlockers
+                    blockers={data.selectedRun.blockers_json}
+                    warnings={data.selectedRun.warnings_json}
+                    workspaceId={data.workspace?.id}
+                  />
+                  <ReadinessRemediationPanel run={data.selectedRun} workspaceId={data.workspace?.id} />
+                </div>
+              </AnimatedListItem>
             </div>
           </>
         ) : (
-          <ReadinessEmptyState workspaceId={data.workspace?.id} />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(7, "comfortable")}>
+            <ReadinessEmptyState workspaceId={data.workspace?.id} />
+          </AnimatedListItem>
         )}
       </AnimatedSection>
     </AppShell>

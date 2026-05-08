@@ -235,6 +235,24 @@ Keep the manifest in sync when adding new routes:
 - Motion core bug fix: `AnimatedSection` and `AnimatedListItem` now apply `motion-no-motion` for `preset="none"`, preserving existing animation settings while explicitly disabling reveal movement when callers opt out.
 - This pass does not change route behavior, backend composition, or advisory/safety copy.
 
+## Detailed rollout notes (Production step: full route reveal parity)
+
+- Completed the next production-grade sweep across remaining product entry surfaces without changing data flow, API contracts, or advisory posture.
+- Route-level wrappers now cover all listed product paths for section/page entry reveals:
+  - `command-center`, `dashboard`, `triage`, `brief`, `scanner`, `quality`, `notifications`, `journal`, `review/outcomes`, `readiness`, `onboarding`, `setup`, `signals/[signalId]`, `symbols/[symbolId]`, `data/onboarding`, `equity-research`, `preferences/strategy`, `demo`.
+- High-value panels and lists were staggered in:
+  - `command-center`, `brief`, `triage`, `setup`, `signals/[signalId]`, and `symbols/[symbolId]`.
+- Remaining route-level motion surfaces use profile-based density so large hero-first pages stay readable while dense tables retain calm pacing:
+  - `comfortable` for hero and narrative pages, `compact` for dense rows, and `regular` for mixed layouts.
+- Reduced-motion behavior and safe focus/hover semantics remain explicit in unchanged components while motion wrappers are added through reusable API surfaces from `@/lib/ui/motion`.
+
+## Verification (manual, production-safe)
+
+- Confirm route entry still lands with existing Suspense/load fallback behavior.
+- Confirm no advisory/trading-action language changes were introduced.
+- Confirm reduced-motion mode suppresses reveal, shimmer, and pulse movement.
+- Confirm no additional data fetches or fallback behavior were introduced by animation wiring.
+
 ## Governance checklist
 
 Use this as the PR-ready gate for any additional route.

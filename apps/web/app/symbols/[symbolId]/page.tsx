@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { SymbolDetailView } from "@/components/market/symbol-detail-view";
 import { getPublicEnv } from "@/config/env";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { listAnalysisRuns, listMarketMemorySnapshots, listWorkspaces, getSymbol } from "@/lib/api/market";
 import { listSignalOutcomes } from "@/lib/api/outcomes";
 import { listDashboardSymbolReadModels } from "@/lib/api/readModels";
@@ -48,21 +48,23 @@ export default async function SymbolPage({ params, searchParams }: SymbolPagePro
   return (
     <AppShell appName={env.appName} workspaceId={workspace?.id} workspaceName={workspace?.name}>
       <AnimatedSection as="section">
-        <SymbolDetailView
-        symbol={symbolResult.ok ? symbolResult.data : null}
-        workspace={workspace}
-        memorySnapshots={
-          symbolReadModelsResult?.ok && symbolReadModelsResult.data.length > 0
-            ? symbolReadModelsResult.data.map(memoryFromSymbolReadModel)
-            : memoryResult?.ok
-            ? memoryResult.data
-            : []
-        }
-        analysisRuns={analysisRuns}
-        signals={signals}
-        outcomes={outcomes}
-        scheduledScans={scheduledScans}
-        />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <SymbolDetailView
+            symbol={symbolResult.ok ? symbolResult.data : null}
+            workspace={workspace}
+            memorySnapshots={
+              symbolReadModelsResult?.ok && symbolReadModelsResult.data.length > 0
+                ? symbolReadModelsResult.data.map(memoryFromSymbolReadModel)
+                : memoryResult?.ok
+                ? memoryResult.data
+                : []
+            }
+            analysisRuns={analysisRuns}
+            signals={signals}
+            outcomes={outcomes}
+            scheduledScans={scheduledScans}
+          />
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );

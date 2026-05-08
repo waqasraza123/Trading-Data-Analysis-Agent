@@ -18,7 +18,7 @@ import { EquityUniversePanel } from "@/components/equity-research/EquityUniverse
 import { SwingCandidateDetail } from "@/components/equity-research/SwingCandidateDetail";
 import { SwingCandidateTable } from "@/components/equity-research/SwingCandidateTable";
 import { SwingScanForm } from "@/components/equity-research/SwingScanForm";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getEquityResearchData } from "@/lib/api/equityResearch";
 
 type EquityResearchPageProps = {
@@ -37,36 +37,74 @@ export default async function EquityResearchPage({ searchParams }: EquityResearc
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section" className="space-y-6">
-        <EquityResearchHeader data={data} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <EquityResearchHeader data={data} />
+        </AnimatedListItem>
         {!data.workspace && (
-          <EquityResearchEmptyState
-            title="No workspace available"
-            message="Seed or create a workspace before equity research universes and scan runs can be created."
-          />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "comfortable")}>
+            <EquityResearchEmptyState
+              title="No workspace available"
+              message="Seed or create a workspace before equity research universes and scan runs can be created."
+            />
+          </AnimatedListItem>
         )}
         <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_440px]">
           <div className="space-y-6">
-            <EquityDataReadinessPanel data={data} />
-            <EquityDataProviderPanel data={data} />
-            <EquityUniversePanel data={data} />
-            <EquityUniverseImportPanel data={data} />
-            <EquityUniverseFileImportPanel data={data} />
-            <EquityUniverseMembers data={data} />
-            <SwingScanForm data={data} />
-            <SwingCandidateTable data={data} />
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "compact")}>
+              <EquityDataReadinessPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "compact")}>
+              <EquityDataProviderPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+              <EquityUniversePanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+              <EquityUniverseImportPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
+              <EquityUniverseFileImportPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(7, "compact")}>
+              <EquityUniverseMembers data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(8, "compact")}>
+              <SwingScanForm data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(9, "compact")}>
+              <SwingCandidateTable data={data} />
+            </AnimatedListItem>
           </div>
           <div className="space-y-6">
-            <EquityDataOperationsPanel data={data} />
-            <EquityEnrichmentJobsPanel data={data} />
-            <SwingCandidateDetail data={data} />
-            <EquityMetadataPanel data={data} />
-            <EquityFundamentalsPanel data={data} />
-            <EquityEarningsPanel data={data} />
-            <CatalystContextPanel data={data} />
-            <EquityProviderRequestHistory data={data} />
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(10, "compact")}>
+              <EquityDataOperationsPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(11, "compact")}>
+              <EquityEnrichmentJobsPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(12, "compact")}>
+              <SwingCandidateDetail data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(13, "compact")}>
+              <EquityMetadataPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(14, "compact")}>
+              <EquityFundamentalsPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(15, "compact")}>
+              <EquityEarningsPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(16, "compact")}>
+              <CatalystContextPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(17, "compact")}>
+              <EquityProviderRequestHistory data={data} />
+            </AnimatedListItem>
           </div>
         </div>
-        <EquityResearchErrorState failures={data.failures} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(18, "regular")}>
+          <EquityResearchErrorState failures={data.failures} />
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );

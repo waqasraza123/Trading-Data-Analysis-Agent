@@ -9,7 +9,7 @@ import {
   ReviewMetricGrid,
   ReviewSurfaceMetric,
 } from "@/components/review-surfaces/ReviewSurface";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getNotificationInboxData } from "@/lib/api/notifications";
 
 type NotificationsPageProps = {
@@ -23,25 +23,39 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section" className="space-y-6">
-        <NotificationInboxHeader data={data} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <NotificationInboxHeader data={data} />
+        </AnimatedListItem>
         {!data.workspace ? (
-          <EmptyState
-            title="No workspace available"
-            message="Seed or create a workspace in the API before notification events can load."
-          />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "comfortable")}>
+            <EmptyState
+              title="No workspace available"
+              message="Seed or create a workspace in the API before notification events can load."
+            />
+          </AnimatedListItem>
         ) : (
           <>
-            <ReviewMetricGrid>
-              <ReviewSurfaceMetric label="Visible events" value={data.events.length} detail="After current filters" tone="info" />
-              <ReviewSurfaceMetric label="Unread" value={data.unreadCount} detail="Open inbox items" tone={data.unreadCount > 0 ? "warning" : "good"} />
-              <ReviewSurfaceMetric label="Delivery attempts" value={data.attempts.length} detail="For selected event" />
-              <ReviewSurfaceMetric label="Workspace" value={data.workspace.name} detail="Current inbox scope" />
-            </ReviewMetricGrid>
-            <NotificationFilterBar data={data} />
-            <NotificationErrorState failures={data.failures} />
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "regular")}>
+              <ReviewMetricGrid>
+                <ReviewSurfaceMetric label="Visible events" value={data.events.length} detail="After current filters" tone="info" />
+                <ReviewSurfaceMetric label="Unread" value={data.unreadCount} detail="Open inbox items" tone={data.unreadCount > 0 ? "warning" : "good"} />
+                <ReviewSurfaceMetric label="Delivery attempts" value={data.attempts.length} detail="For selected event" />
+                <ReviewSurfaceMetric label="Workspace" value={data.workspace.name} detail="Current inbox scope" />
+              </ReviewMetricGrid>
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "compact")}>
+              <NotificationFilterBar data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "compact")}>
+              <NotificationErrorState failures={data.failures} />
+            </AnimatedListItem>
             <div className="grid gap-5 xl:grid-cols-[minmax(340px,460px)_minmax(0,1fr)]">
-              <NotificationList data={data} />
-              <NotificationDetailPanel data={data} />
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+                <NotificationList data={data} />
+              </AnimatedListItem>
+              <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+                <NotificationDetailPanel data={data} />
+              </AnimatedListItem>
             </div>
           </>
         )}

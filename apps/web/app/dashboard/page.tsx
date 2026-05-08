@@ -11,7 +11,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getDashboardData } from "@/lib/api/dashboard";
 
 type DashboardPageProps = {
@@ -28,37 +28,64 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section" className="space-y-6">
-        <PageHeader
-          eyebrow="Operator cockpit"
-          title="Daily market intelligence"
-          description="Read-only deterministic analysis across watchlists, signals, context, outcomes, and backend follow-up items."
-          actions={
-            <>
-            <Metric label="Workspace" value={data.workspace?.name || "Not selected"} />
-            <WorkflowLinks workspaceId={data.workspace?.id} targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "preferences", "review", "journal"]} />
-          </>
-          }
-        />
-        {!data.workspace && (
-          <EmptyState
-            title="No workspace available"
-            message="Seed or create a workspace in the API before workspace-scoped dashboard sections can load."
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <PageHeader
+            eyebrow="Operator cockpit"
+            title="Daily market intelligence"
+            description="Read-only deterministic analysis across watchlists, signals, context, outcomes, and backend follow-up items."
+            actions={
+              <>
+                <Metric label="Workspace" value={data.workspace?.name || "Not selected"} />
+                <WorkflowLinks
+                  workspaceId={data.workspace?.id}
+                  targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "preferences", "review", "journal"]}
+                />
+              </>
+            }
           />
+        </AnimatedListItem>
+        {!data.workspace && (
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "comfortable")}>
+            <EmptyState
+              title="No workspace available"
+              message="Seed or create a workspace in the API before workspace-scoped dashboard sections can load."
+            />
+          </AnimatedListItem>
         )}
-        <TopSummaryRail data={data} />
-        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6">
-            <MarketBoard data={data} />
-            <SignalFocusPanel data={data} />
-          </div>
-          <div className="space-y-6">
-            <AvoidConditions data={data} />
-            <SignalDigestPanel data={data} />
-            <WatchlistPanel data={data} />
-            <FollowUpPanel data={data} />
-          </div>
-        </div>
-        <BackendStatePanel data={data} />
+        {data.workspace && (
+          <>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "regular")}>
+              <TopSummaryRail data={data} />
+            </AnimatedListItem>
+            <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="space-y-6">
+                <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "compact")}>
+                  <MarketBoard data={data} />
+                </AnimatedListItem>
+                <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+                  <SignalFocusPanel data={data} />
+                </AnimatedListItem>
+              </div>
+              <div className="space-y-6">
+                <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+                  <AvoidConditions data={data} />
+                </AnimatedListItem>
+                <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
+                  <SignalDigestPanel data={data} />
+                </AnimatedListItem>
+                <AnimatedListItem as="section" style={motionRevealDensityStyle(7, "compact")}>
+                  <WatchlistPanel data={data} />
+                </AnimatedListItem>
+                <AnimatedListItem as="section" style={motionRevealDensityStyle(8, "compact")}>
+                  <FollowUpPanel data={data} />
+                </AnimatedListItem>
+              </div>
+            </div>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(9, "regular")}>
+              <BackendStatePanel data={data} />
+            </AnimatedListItem>
+          </>
+        )}
       </AnimatedSection>
     </AppShell>
   );

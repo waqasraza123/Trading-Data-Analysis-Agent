@@ -8,7 +8,7 @@ import {
   listProviderHealthSnapshots,
 } from "@/lib/api/providerHealth";
 import { listProviderCredentialRefs } from "@/lib/api/providerCredentials";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { ApiFailure, ApiResult } from "@/lib/api/types";
 import type { OnboardingFailure, OnboardingInitialData } from "@/lib/data-onboarding/types";
 
@@ -25,7 +25,9 @@ export default async function DataOnboardingPage({ searchParams }: DataOnboardin
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section">
-        <OnboardingWorkflow initialData={data} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <OnboardingWorkflow initialData={data} />
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );

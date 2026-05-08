@@ -1,6 +1,6 @@
 import { CommandCenterCockpit } from "@/components/command-center/CommandCenterCockpit";
 import { AppShell } from "@/components/layout/AppShell";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getCommandCenterData } from "@/lib/api/commandCenter";
 
 type CommandCenterPageProps = {
@@ -19,7 +19,9 @@ export default async function CommandCenterPage({ searchParams }: CommandCenterP
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section" className="space-y-6">
-        <CommandCenterCockpit data={data} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <CommandCenterCockpit data={data} />
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );

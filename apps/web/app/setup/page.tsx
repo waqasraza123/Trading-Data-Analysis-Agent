@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { SetupWizardLayout } from "@/components/setup-wizard/SetupWizardLayout";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getSetupWizardInitialData } from "@/lib/api/workspaceSetup";
 
 type SetupPageProps = {
@@ -17,7 +17,9 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
   return (
     <AppShell appName={data.appName} workspaceId={selectedWorkspace?.id} workspaceName={selectedWorkspace?.name}>
       <AnimatedSection as="section">
-        <SetupWizardLayout initialData={data} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <SetupWizardLayout initialData={data} />
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );

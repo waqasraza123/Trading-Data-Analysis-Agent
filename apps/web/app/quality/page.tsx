@@ -11,7 +11,7 @@ import { QualitySummaryCards } from "@/components/quality/QualitySummaryCards";
 import { QualityWarningsPanel } from "@/components/quality/QualityWarningsPanel";
 import { SymbolTimeframeQualityGrid } from "@/components/quality/SymbolTimeframeQualityGrid";
 import { WalkForwardPanel } from "@/components/quality/WalkForwardPanel";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getQualityScoreboardData } from "@/lib/api/quality";
 
 type QualityPageProps = {
@@ -25,21 +25,45 @@ export default async function QualityPage({ searchParams }: QualityPageProps) {
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
       <AnimatedSection as="section" className="space-y-6">
-        <QualityScoreboardHeader data={data} />
-        <QualityErrorState failures={data.failures} />
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+          <QualityScoreboardHeader data={data} />
+        </AnimatedListItem>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "regular")}>
+          <QualityErrorState failures={data.failures} />
+        </AnimatedListItem>
         {!data.workspace || !data.hasAnyQualityData ? (
-          <QualityEmptyState />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "comfortable")}>
+            <QualityEmptyState />
+          </AnimatedListItem>
         ) : (
           <>
-            <QualitySummaryCards data={data} />
-            <QualityReviewFocusPanel data={data} />
-            <QualityWarningsPanel data={data} />
-            <ProfileReliabilityTable data={data} />
-            <PatternAttributionPanel data={data} />
-            <ConfidenceCalibrationPanel data={data} />
-            <WalkForwardPanel data={data} />
-            <CohortDriftPanel data={data} />
-            <SymbolTimeframeQualityGrid data={data} />
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "compact")}>
+              <QualitySummaryCards data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+              <QualityReviewFocusPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+              <QualityWarningsPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
+              <ProfileReliabilityTable data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(7, "compact")}>
+              <PatternAttributionPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(8, "compact")}>
+              <ConfidenceCalibrationPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(9, "compact")}>
+              <WalkForwardPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(10, "compact")}>
+              <CohortDriftPanel data={data} />
+            </AnimatedListItem>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(11, "compact")}>
+              <SymbolTimeframeQualityGrid data={data} />
+            </AnimatedListItem>
           </>
         )}
       </AnimatedSection>
