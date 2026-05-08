@@ -299,6 +299,8 @@ Keep the manifest in sync when adding new routes:
   - Replaced duplicated inline `focus-visible` utilities with shared token usage while keeping active-state styles intact.
 - Updated `apps/web/src/components/layout/MobileNav.tsx`:
   - Replaced duplicated inline `focus-visible` utilities with shared token usage for route pills.
+- Added shared interactive class usage for workspace context controls:
+  - Updated `apps/web/src/components/workspace/WorkspaceSelector.tsx` so the workspace picker input now uses `MOTION_INTERACTIVE_CLASS` for explicit focus-visible + motion-hover behavior.
 - No API contracts, route semantics, payload shape, or safety posture changes.
 
 ## Verification (manual, production-safe)

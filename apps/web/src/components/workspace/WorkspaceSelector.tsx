@@ -11,6 +11,7 @@ import {
   writeSelectedWorkspaceId,
 } from "@/lib/workspace/selectedWorkspace";
 import { WorkspaceMissingState } from "./WorkspaceMissingState";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 
 type WorkspaceSelectorProps = {
   workspaceId?: string | null;
@@ -66,7 +67,7 @@ export function WorkspaceSelector({ workspaceId, workspaceName }: WorkspaceSelec
       </label>
       <select
         id="workspace-selector"
-        className="mt-2 w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--strong)]"
+        className={`mt-2 w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--strong)] transition ${MOTION_INTERACTIVE_CLASS}`}
         value={selected?.id || ""}
         onChange={(event) => selectWorkspace(event.target.value)}
       >
