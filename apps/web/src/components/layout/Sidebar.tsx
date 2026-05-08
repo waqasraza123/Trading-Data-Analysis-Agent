@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, navigationItems, navigationSections } from "@/lib/ui/navigation";
-import { AnimatedSection, MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { AnimatedSection, MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type SidebarProps = {
@@ -53,7 +53,7 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
                         className={cn(
                           "group flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition",
                           motionCardClass,
-                          motionRevealClass(),
+                          motionRevealPresetClass(),
                           MOTION_INTERACTIVE_CLASS,
                           active
                             ? "bg-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { triageColumns } from "@/lib/triage/labels";
 import type { TriageBoardData } from "@/lib/triage/types";
 import { cn } from "@/lib/ui/cn";
-import { motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SignalTriageColumn } from "./SignalTriageColumn";
 import { TriageEmptyState } from "./TriageEmptyState";
 import { TriageErrorState } from "./TriageErrorState";
@@ -14,10 +14,10 @@ import { TriageSummary } from "./TriageSummary";
 
 export function SignalTriageBoard({ data }: { data: TriageBoardData }) {
   return (
-    <div className={cn("space-y-6", motionRevealClass())}>
+    <div className={cn("space-y-6", motionRevealPresetClass())}>
       <div style={motionRevealDensityStyle(0)}>
         <PageHeader
-          className={motionRevealClass()}
+          className={motionRevealPresetClass()}
           eyebrow="Premium review workflow"
           title="Setup triage"
           description="Review stored deterministic setups by priority, freshness, evidence quality, unresolved context, and observed behavior."

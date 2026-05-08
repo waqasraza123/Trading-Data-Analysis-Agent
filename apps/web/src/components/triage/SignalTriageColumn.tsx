@@ -1,7 +1,7 @@
 import { Badge } from "@/components/status/badge";
 import type { TriageCandidate, TriageColumnKey } from "@/lib/triage/types";
 import { cn } from "@/lib/ui/cn";
-import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { motionCardClass, motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { CSSProperties } from "react";
 import { SignalTriageCard } from "./SignalTriageCard";
 
@@ -19,7 +19,7 @@ export function SignalTriageColumn({ column, candidates, style }: SignalTriageCo
   return (
     <section
       style={style}
-      className={cn("flex max-h-[calc(100vh-13rem)] min-h-96 min-w-[320px] flex-col rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-muted)_88%,transparent)] p-3 shadow-soft", motionRevealClass())}
+      className={cn("flex max-h-[calc(100vh-13rem)] min-h-96 min-w-[320px] flex-col rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-muted)_88%,transparent)] p-3 shadow-soft", motionRevealPresetClass())}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>

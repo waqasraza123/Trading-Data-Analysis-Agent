@@ -8,7 +8,7 @@ import { CommandCenterReadinessGate } from "./CommandCenterReadinessGate";
 import { CommandCenterOverview } from "./CommandCenterOverview";
 import { CommandCenterDailyScanButton } from "./CommandCenterDailyScanButton";
 import { cn } from "@/lib/ui/cn";
-import { MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import {
   CockpitActionLink,
   CockpitBadge,
@@ -20,7 +20,7 @@ import {
 export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
   const workspaceId = data.workspace?.id || null;
   return (
-    <div className={cn("space-y-6", motionRevealClass("scale"))}>
+    <div className={cn("space-y-6", motionRevealPresetClass("scale-subtle"))}>
       <CommandCenterHero data={data} />
       <CommandCenterReadinessGate data={data} />
       {!data.workspace && (
@@ -52,7 +52,7 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
       <section
         className={cn(
           "rounded-3xl border border-slate-200/80 bg-slate-950 p-5 text-slate-100 shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:border-slate-800",
-          motionRevealClass(),
+          motionRevealPresetClass(),
         )}
         style={motionRevealDensityStyle(10)}
       >
@@ -83,7 +83,7 @@ function CommandCenterHero({ data }: { data: CommandCenterData }) {
     <section
       className={cn(
         "overflow-hidden rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.20),transparent_34%),linear-gradient(135deg,#ffffff,rgba(240,249,255,0.95)_46%,rgba(236,253,245,0.92))] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.11)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.18),transparent_34%),linear-gradient(135deg,#020617,#0f172a_52%,#0b2f2a)] sm:p-7",
-        motionRevealClass("scale"),
+        motionRevealPresetClass("scale-subtle"),
       )}
     >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -138,7 +138,7 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Review First"
       eyebrow="Priority setups"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(0)}
     >
       {data.reviewFirst.length === 0 ? (
@@ -163,7 +163,7 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
                   "grid gap-3 px-4 py-4 transition hover:bg-teal-50/60 dark:hover:bg-teal-950/20 lg:grid-cols-[1.1fr_0.8fr_0.8fr_0.8fr_0.9fr_1.4fr_110px] lg:items-center",
                   motionCardClass,
                   MOTION_INTERACTIVE_CLASS,
-                  motionRevealClass(),
+                  motionRevealPresetClass(),
                 )}
                 style={motionRevealDensityStyle(index, "compact")}
               >
@@ -194,7 +194,7 @@ function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Needs Confirmation"
       eyebrow="Pending review context"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(1)}
     >
       {data.needsConfirmation.length === 0 ? (
@@ -208,7 +208,7 @@ function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
                 className={cn(
                   `rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition hover:shadow-sm dark:border-amber-900 dark:bg-amber-950/35 ${MOTION_INTERACTIVE_CLASS}`,
                   motionCardClass,
-                  motionRevealClass(),
+                  motionRevealPresetClass(),
                 )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -233,7 +233,7 @@ function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Avoid Conditions"
       eyebrow="Risk filters"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(2)}
     >
       {data.avoidItems.length === 0 ? (
@@ -247,7 +247,7 @@ function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
                 className={cn(
                   `block rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/55 dark:hover:bg-slate-900 ${MOTION_INTERACTIVE_CLASS}`,
                   motionCardClass,
-                  motionRevealClass(),
+                  motionRevealPresetClass(),
                 )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -273,7 +273,7 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Data Reliability"
       eyebrow="Freshness and providers"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(3)}
     >
       <div className="grid grid-cols-2 gap-3">
@@ -301,7 +301,7 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
                 className={cn(
                   `rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50 ${MOTION_INTERACTIVE_CLASS}`,
                   motionCardClass,
-                  motionRevealClass(),
+                  motionRevealPresetClass(),
                 )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -329,7 +329,7 @@ function OutcomeReviewPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Outcome Review"
       eyebrow="Observed horizons"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(4)}
     >
       {data.outcomeReview.length === 0 ? (
@@ -343,7 +343,7 @@ function OutcomeReviewPanel({ data }: { data: CommandCenterData }) {
                 className={cn(
                   `block rounded-2xl border border-sky-200 bg-sky-50/70 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/30 ${MOTION_INTERACTIVE_CLASS}`,
                   motionCardClass,
-                  motionRevealClass(),
+                  motionRevealPresetClass(),
                 )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -373,7 +373,7 @@ function WorkflowProgressPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Workflow Progress"
       eyebrow="Latest daily run"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(5)}
       action={<CommandCenterDailyScanButton workspaceId={data.workspace?.id || null} watchlistId={data.dailyWorkflowDefaultWatchlistId} preferenceProfileId={data.selectedPreferenceProfile?.id || null} />}
     >
@@ -406,7 +406,7 @@ function WorkflowProgressPanel({ data }: { data: CommandCenterData }) {
                 className={cn(
                   "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/50",
                   motionCardClass,
-                  motionRevealClass(),
+                  motionRevealPresetClass(),
                 )}
                 style={motionRevealDensityStyle(index, "compact")}
               >
@@ -437,7 +437,7 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Notifications / Review Items"
       eyebrow="Inbox and readiness"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(6)}
     >
       <div className="grid grid-cols-2 gap-3">
@@ -454,7 +454,7 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
               className={cn(
                   `block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50 ${MOTION_INTERACTIVE_CLASS}`,
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -482,7 +482,7 @@ function DailyIntelligenceMap({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Daily Intelligence Map"
       eyebrow="Navigation"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(7)}
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -493,7 +493,7 @@ function DailyIntelligenceMap({ data }: { data: CommandCenterData }) {
               className={cn(
                 `rounded-2xl border border-slate-200 bg-white/65 p-4 transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/35 ${MOTION_INTERACTIVE_CLASS}`,
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
             style={motionRevealDensityStyle(index, "compact")}
           >
@@ -518,7 +518,7 @@ function CommandCenterBackendState({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Backend State"
       eyebrow="Availability"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(8)}
     >
       <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900 dark:bg-amber-950/35">
@@ -540,7 +540,7 @@ function CommandCenterBackendState({ data }: { data: CommandCenterData }) {
               className={cn(
                 "rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/35",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >

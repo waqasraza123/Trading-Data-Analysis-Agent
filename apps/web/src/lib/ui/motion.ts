@@ -20,6 +20,7 @@ export {
   MOTION_PRESETS,
   MOTION_VARIANTS,
   motionCardClass,
+  motionRevealPresetClass,
   motionRevealClass,
   motionRevealDensityStyle,
   motionRevealProfileStyle,

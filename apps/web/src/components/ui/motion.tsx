@@ -103,6 +103,10 @@ function motionClass(preset: MotionPreset): string {
   return cn("motion-reveal", presetClassName[preset]);
 }
 
+export function motionRevealPresetClass(preset: MotionPreset = DEFAULT_MOTION_PRESET): string {
+  return motionClass(preset);
+}
+
 function resolveTag(as: AnimatedElement): AnimatedElement {
   return as;
 }

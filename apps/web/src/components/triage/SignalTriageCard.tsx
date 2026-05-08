@@ -14,7 +14,7 @@ import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { safeTriageText, shortReason } from "@/lib/triage/labels";
 import type { TriageCandidate } from "@/lib/triage/types";
-import { MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { MOTION_INTERACTIVE_CLASS, motionCardClass, motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { TriageReasonBadges } from "./TriageReasonBadges";
 
 export function SignalTriageCard({
@@ -46,7 +46,7 @@ export function SignalTriageCard({
       className={cn(
         "group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:border-[var(--accent)] hover:shadow-soft",
         motionCardClass,
-        motionRevealClass(),
+        motionRevealPresetClass(),
         MOTION_INTERACTIVE_CLASS,
         className,
       )}

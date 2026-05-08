@@ -110,12 +110,13 @@ function SignalList({ items }: { items: { id: string }[] }) {
 }
 ```
 
-### Class/style helpers (legacy utility path)
+### Class/style helpers (public API + migration posture)
 
-- `motionRevealClass("up" | "scale" | "fade")`
+- `motionRevealPresetClass("fade-up" | "fade-in" | "scale-subtle" | "none")`
 - `motionRevealDensityStyle(index, density?, durationMs?)`
 - `motionRevealProfileStyle(index, profile?)`
 - `motionCardClass`
+- `motionRevealClass("up" | "scale" | "fade")` remains available for compatibility only.
 
 ## Defaults and tuning
 

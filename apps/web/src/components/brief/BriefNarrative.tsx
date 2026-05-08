@@ -4,7 +4,7 @@ import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { navigationHref } from "@/lib/ui/navigation";
 import { toneForBias, toneForDataQuality, toneForOutcome, toneForPriority } from "@/lib/ui/statusStyles";
 import { cn } from "@/lib/ui/cn";
-import { motionCardClass, motionRevealClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { motionCardClass, motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type {
   BriefActiveSetupItem,
   BriefAvoidConditionItem,
@@ -25,13 +25,13 @@ import {
 
 export function BriefNarrative({ brief }: { brief: WorkspaceBrief }) {
   return (
-    <div className={cn("space-y-6", motionRevealClass("scale"))}>
+    <div className={cn("space-y-6", motionRevealPresetClass("scale-subtle"))}>
       <BriefHero brief={brief} />
       {brief.backendUnavailable && (
         <BriefPanel
           title="Backend unavailable"
           eyebrow="Brief state"
-          className={motionRevealClass()}
+          className={motionRevealPresetClass()}
           style={motionRevealDensityStyle(1)}
         >
           <BriefEmptyBlock
@@ -44,7 +44,7 @@ export function BriefNarrative({ brief }: { brief: WorkspaceBrief }) {
         <BriefPanel
           title="No workspace available"
           eyebrow="Empty state"
-          className={motionRevealClass()}
+          className={motionRevealPresetClass()}
           style={motionRevealDensityStyle(2)}
         >
           <BriefEmptyBlock
@@ -79,7 +79,7 @@ function BriefHero({ brief }: { brief: WorkspaceBrief }) {
     <section
       className={cn(
         "rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_34%),linear-gradient(135deg,#ffffff,rgba(240,253,250,0.95)_46%,rgba(239,246,255,0.95))] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_34%),linear-gradient(135deg,#020617,#0f172a_52%,#082f49)] sm:p-7",
-        motionRevealClass(),
+        motionRevealPresetClass(),
       )}
     >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -148,7 +148,7 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
     })),
   ].slice(0, 8);
   return (
-    <BriefPanel title="What Changed" eyebrow="Digest" className={motionRevealClass()} style={motionRevealDensityStyle(3)}>
+    <BriefPanel title="What Changed" eyebrow="Digest" className={motionRevealPresetClass()} style={motionRevealDensityStyle(3)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No brief generated" message="No backend brief items or fallback digest rows were returned for this workspace." />
       ) : (
@@ -160,7 +160,7 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
               className={cn(
                 "block rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/45",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -180,7 +180,7 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
 function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
   const freshItems = brief.marketFocus.filter((item) => item.freshnessLabel === "fresh").slice(0, 8);
   return (
-    <BriefPanel title="Fresh Symbols" eyebrow="Data fresh" className={motionRevealClass()} style={motionRevealDensityStyle(4)}>
+    <BriefPanel title="Fresh Symbols" eyebrow="Data fresh" className={motionRevealPresetClass()} style={motionRevealDensityStyle(4)}>
       {freshItems.length === 0 ? (
         <BriefEmptyBlock title="No fresh data" message="No fresh market-memory rows were returned for the current brief scope." />
       ) : (
@@ -192,7 +192,7 @@ function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
               className={cn(
                 "rounded-2xl border border-emerald-200 bg-emerald-50/65 p-4 transition hover:bg-white dark:border-emerald-900 dark:bg-emerald-950/25",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -218,7 +218,7 @@ function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
 
 function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
   return (
-    <BriefPanel title="Review-First Setups" eyebrow="Setup context" className={motionRevealClass()} style={motionRevealDensityStyle(5)}>
+    <BriefPanel title="Review-First Setups" eyebrow="Setup context" className={motionRevealPresetClass()} style={motionRevealDensityStyle(5)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No setups" message="No directional setup context was available in the current brief." />
       ) : (
@@ -230,7 +230,7 @@ function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
               className={cn(
                 "block rounded-2xl border border-slate-200 bg-white/70 p-4 transition hover:bg-teal-50/70 dark:border-slate-800 dark:bg-slate-950/45 dark:hover:bg-teal-950/20",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -263,7 +263,7 @@ function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
 
 function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] }) {
   return (
-    <BriefPanel title="Needs Confirmation" eyebrow="Review queue" className={motionRevealClass()} style={motionRevealDensityStyle(6)}>
+    <BriefPanel title="Needs Confirmation" eyebrow="Review queue" className={motionRevealPresetClass()} style={motionRevealDensityStyle(6)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No confirmation items" message="No open review or readiness confirmation items were returned." />
       ) : (
@@ -275,7 +275,7 @@ function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] })
               className={cn(
                 "block rounded-2xl border border-amber-200 bg-amber-50/65 p-4 dark:border-amber-900 dark:bg-amber-950/25",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -295,7 +295,7 @@ function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] })
 
 function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] }) {
   return (
-    <BriefPanel title="Avoid Conditions" eyebrow="Constraints" className={motionRevealClass()} style={motionRevealDensityStyle(7)}>
+    <BriefPanel title="Avoid Conditions" eyebrow="Constraints" className={motionRevealPresetClass()} style={motionRevealDensityStyle(7)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No avoid conditions" message="No stale, conflicting, low-quality, or unresolved review constraints were returned." />
       ) : (
@@ -307,7 +307,7 @@ function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] })
               className={cn(
                 "block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/50",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -329,7 +329,7 @@ function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] })
 
 function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
   return (
-    <BriefPanel title="Outcomes Ready" eyebrow="Observed behavior" className={motionRevealClass()} style={motionRevealDensityStyle(8)}>
+    <BriefPanel title="Outcomes Ready" eyebrow="Observed behavior" className={motionRevealPresetClass()} style={motionRevealDensityStyle(8)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No outcomes ready" message="No recent observed outcome horizons were returned for the current brief." />
       ) : (
@@ -341,7 +341,7 @@ function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
               className={cn(
                 "rounded-2xl border border-sky-200 bg-sky-50/65 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/25",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -363,7 +363,7 @@ function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
 
 function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
   return (
-    <BriefPanel title="Watch Next" eyebrow="Observation zones" className={motionRevealClass()} style={motionRevealDensityStyle(9)}>
+    <BriefPanel title="Watch Next" eyebrow="Observation zones" className={motionRevealPresetClass()} style={motionRevealDensityStyle(9)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No watch-next rows" message="Setup context did not return next observations or observation zones." />
       ) : (
@@ -375,7 +375,7 @@ function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
               className={cn(
                 "block rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/45",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -398,7 +398,7 @@ function PendingActionsSection({ items }: { items: BriefPendingActionItem[] }) {
     <BriefPanel
       title="Pending Backend-Safe Actions"
       eyebrow="Follow-up"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(10)}
     >
       {items.length === 0 ? (
@@ -411,7 +411,7 @@ function PendingActionsSection({ items }: { items: BriefPendingActionItem[] }) {
               className={cn(
                 "rounded-2xl border border-slate-200 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/50",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
@@ -436,7 +436,7 @@ function DataQualitySection({ items, workspaceId }: { items: BriefDataQualityIss
     <BriefPanel
       title="Data Quality and Recovery Context"
       eyebrow="Reliability"
-      className={motionRevealClass()}
+      className={motionRevealPresetClass()}
       style={motionRevealDensityStyle(11)}
     >
       {items.length === 0 ? (
@@ -450,7 +450,7 @@ function DataQualitySection({ items, workspaceId }: { items: BriefDataQualityIss
               className={cn(
                 "rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50",
                 motionCardClass,
-                motionRevealClass(),
+                motionRevealPresetClass(),
               )}
               style={motionRevealDensityStyle(index, "compact")}
             >
