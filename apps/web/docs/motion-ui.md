@@ -152,6 +152,7 @@ When introducing new routes/panels, prefer:
 - Shared page surfaces in `src/components/ui/*` (e.g., `PageHeader`, `Section`, `Card`, `MetricCard`, `Skeleton`, `Badge`) include motion-safe defaults.
 - Route-level entry wrappers are applied across primary product routes.
 - Route-level loading skeletons are now co-located in `app/*/loading.tsx` for major data-heavy surfaces.
+- Added global fallback route loading at `app/loading.tsx` for any Next route without a route-specific loading boundary, ensuring consistent shell + shimmer behavior during Suspense transitions.
 - Panel/list-level staggering is applied to high-density surfaces:
   - `command-center`
   - `brief`
