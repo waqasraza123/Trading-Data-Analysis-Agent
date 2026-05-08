@@ -7,7 +7,7 @@
 ![Web](https://img.shields.io/badge/Web-Next.js%2015%20%2B%20React%2019-111111)
 ![Worker](https://img.shields.io/badge/Worker-Go%20market%20data%20sidecar-00ADD8)
 
-## Candles
+## Candles Don't Lie
 
 ![Trading Candles](https://png.pngtree.com/png-clipart/20250227/original/pngtree-trading-candlestick-chart-pattern-with-sell-buy-indicator-in-red-green-png-image_20522223.png)
 

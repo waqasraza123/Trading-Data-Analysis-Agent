@@ -52,7 +52,7 @@ Defaults and helpers:
   - `regular`
   - `comfortable`
 - `MotionRevealProfile`
-- `MotionVariant` values (legacy mapping preserved):
+- `MotionVariant` values (legacy migration path preserved):
   - `up` → `fade-up`
   - `scale` → `scale-subtle`
   - `fade` → `fade-in`
@@ -117,6 +117,15 @@ function SignalList({ items }: { items: { id: string }[] }) {
 - `motionRevealProfileStyle(index, profile?)`
 - `motionCardClass`
 - `motionRevealClass("up" | "scale" | "fade")` remains available for compatibility only.
+
+### Migration gate for production work
+
+- New components must not introduce new `motionRevealClass` calls.
+- New components should prefer preset + density/profile style helpers:
+  - `motionRevealPresetClass` for class-level motion class selection
+  - `motionRevealDensityStyle` for list/grid density
+  - `motionRevealProfileStyle` for tuned per-surface profiles
+- `motionRevealClass` and `motionRevealStyle` are retained as compatibility APIs and must only be used when migrating older surfaces.
 
 ## Defaults and tuning
 

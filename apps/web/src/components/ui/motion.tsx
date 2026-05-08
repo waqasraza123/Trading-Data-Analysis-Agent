@@ -12,9 +12,14 @@ export const COMFORT_MOTION_REVEAL_STEP_MS = 60;
 export const MOTION_INTERACTIVE_CLASS =
   "motion-hover-lift focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
 
-export type MotionVariant = (typeof MOTION_VARIANTS)[number];
 export type MotionPreset = (typeof MOTION_PRESETS)[number];
 export type MotionRevealDensity = "compact" | "regular" | "comfortable";
+
+/**
+ * @deprecated Use `MotionPreset` values directly with `motionRevealPresetClass`, `AnimatedSection`,
+ * or `AnimatedListItem`. This compatibility variant API remains for migration only.
+ */
+export type MotionVariant = (typeof MOTION_VARIANTS)[number];
 
 export type MotionStyleVariables = CSSProperties & {
   "--motion-delay"?: string;
@@ -181,10 +186,16 @@ export function PulseDot({ className }: { className?: string }): JSX.Element {
   return <span aria-hidden="true" className={cn("motion-pulse-dot inline-block rounded-full", className)} />;
 }
 
+/**
+ * @deprecated Use `motionRevealPresetClass` with explicit `MotionPreset` values.
+ */
 export function motionRevealClass(variant: MotionVariant = "up"): string {
   return motionClass(legacyVariantToPreset[variant]);
 }
 
+/**
+ * @deprecated Use `motionRevealProfileStyle` or `motionRevealDensityStyle` to express delay policy.
+ */
 export function motionRevealStyle(index = 0, stepMs = DEFAULT_MOTION_REVEAL_STEP_MS, durationMs?: number): MotionRevealStyle {
   const normalizedIndex = clampMotionNumber(index, 0);
   const normalizedStep = clampMotionNumber(stepMs, BASE_MOTION_DELAY_MS);
