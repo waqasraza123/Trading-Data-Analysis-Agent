@@ -5,97 +5,116 @@
     {
       "route": "command-center",
       "page": "app/command-center/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "dashboard",
       "page": "app/dashboard/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "triage",
       "page": "app/triage/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "compact"
     },
     {
       "route": "brief",
       "page": "app/brief/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "scanner",
       "page": "app/scanner/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "comfortable"
     },
     {
       "route": "quality",
       "page": "app/quality/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "notifications",
       "page": "app/notifications/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "journal",
       "page": "app/journal/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "review/outcomes",
       "page": "app/review/outcomes/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "readiness",
       "page": "app/readiness/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "onboarding",
       "page": "app/onboarding/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "setup",
       "page": "app/setup/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "compact"
     },
     {
       "route": "signals/[signalId]",
       "page": "app/signals/[signalId]/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "compact"
     },
     {
       "route": "symbols/[symbolId]",
       "page": "app/symbols/[symbolId]/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "compact"
     },
     {
       "route": "data/onboarding",
       "page": "app/data/onboarding/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "equity-research",
       "page": "app/equity-research/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "preferences/strategy",
       "page": "app/preferences/strategy/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "demo",
       "page": "app/demo/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     },
     {
       "route": "journal/[entryId]",
       "page": "app/journal/[entryId]/page.tsx",
-      "requires": ["AnimatedSection"]
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
     }
   ]
 }

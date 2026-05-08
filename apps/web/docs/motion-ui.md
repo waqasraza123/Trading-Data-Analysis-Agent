@@ -264,11 +264,16 @@ Keep the manifest in sync when adding new routes:
 - Added scripts:
   - `npm run motion:rollout-audit` (default gate mode)
   - `npm run motion:rollout-audit:json` (machine-readable JSON report)
+  - `npm run motion:rollout-audit:strict` (alias for strict JSON contract-mode; no legacy/coverage overrides)
 - The gate validates each listed route by:
   - requiring expected motion entry tokens (for example `AnimatedSection`)
   - requiring motion helper usage (`motionRevealDensityStyle`, `motionRevealPresetClass`, `motionRevealProfileStyle`, etc.)
   - rejecting direct imports from the legacy path `@/components/ui/motion` (enforcing the public `@/lib/ui/motion` API boundary)
   - rejecting `motionRevealClass` and `motionRevealStyle` usage by default, with a controlled opt-out flag `--allow-legacy`
+- The manifest schema is now versioned and validated:
+  - required fields: `route`, `page`, `requires`
+  - optional `revealDensity` for page-level cadence metadata (`compact`, `regular`, `comfortable`)
+  - manifest entry validation is included in JSON output and fails strict mode
 - This check is intended as the motion rollout contract guard before PR merge and keeps implementation intent tied to the manifest.
 - The script now also performs a route-coverage gate by scanning `apps/web/app/*/page.tsx` and verifying manifest parity.
   - `app/page.tsx` is intentionally exempt in `motion-rollout-manifest.json` via `exemptRoutes`.
@@ -278,6 +283,7 @@ Keep the manifest in sync when adding new routes:
   - `npm run motion:rollout-audit -- --allow-legacy` (use only for legacy migration windows)
   - `npm run motion:rollout-audit:json`
   - `npm run motion:rollout-audit -- --allow-coverage-gaps` (for temporary unblock during phased migration)
+  - `npm run motion:rollout-audit:strict`
 
 ## Detailed rollout notes (Production step: shell + primitive hardening)
 

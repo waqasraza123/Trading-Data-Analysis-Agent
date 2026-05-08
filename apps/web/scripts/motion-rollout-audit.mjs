@@ -9,8 +9,9 @@ const appRoot = path.resolve(repoRoot, "apps/web");
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const manifestPath = path.resolve(scriptDir, "motion-rollout-manifest.json");
 const isJsonOutput = process.argv.includes("--json");
-const failOnLegacyHelpers = !process.argv.includes("--allow-legacy");
-const failOnCoverageGaps = !process.argv.includes("--allow-coverage-gaps");
+const strictMode = process.argv.includes("--strict");
+const failOnLegacyHelpers = strictMode ? true : !process.argv.includes("--allow-legacy");
+const failOnCoverageGaps = strictMode ? true : !process.argv.includes("--allow-coverage-gaps");
 
 const motionRevealTokenPatterns = [
   /motionRevealDensityStyle\(/,
@@ -23,9 +24,11 @@ const motionRevealTokenPatterns = [
 
 const legacyHelperPatterns = [/motionRevealClass\(/, /motionRevealStyle\(/];
 const privateImportPattern = /from\s+["']@\/components\/ui\/motion["']/;
+const revealDensityValues = new Set(["compact", "regular", "comfortable"]);
 
 const ignoredPathSegment = (segment) =>
   segment.startsWith(".") || (segment.startsWith("(") && segment.endsWith(")"));
+const isString = (value) => typeof value === "string";
 
 function hasMotionRevealToken(contents) {
   return motionRevealTokenPatterns.some((pattern) => pattern.test(contents));
@@ -52,6 +55,41 @@ function normalizeRouteForManifest(route) {
   return String(route || "").replace(/^\/+/, "");
 }
 
+function isArrayOfStrings(value) {
+  return Array.isArray(value) && value.every((item) => isString(item));
+}
+
+function collectManifestIssues(entry) {
+  const issues = [];
+  if (!entry || typeof entry !== "object") {
+    return ["manifest entry must be an object"];
+  }
+
+  if (!isString(entry.route) || entry.route.trim().length === 0) {
+    issues.push("route must be a non-empty string");
+  }
+
+  if (!isString(entry.page) || entry.page.trim().length === 0) {
+    issues.push("page must be a non-empty string");
+  } else if (!entry.page.endsWith("/page.tsx")) {
+    issues.push("page must end with /page.tsx");
+  } else if (!entry.page.startsWith("app/")) {
+    issues.push("page must be under app/");
+  }
+
+  if (entry.requires === undefined) {
+    issues.push("requires is required");
+  } else if (!isArrayOfStrings(entry.requires)) {
+    issues.push("requires must be an array of strings");
+  }
+
+  if (entry.revealDensity !== undefined && !revealDensityValues.has(entry.revealDensity)) {
+    issues.push(`revealDensity must be one of ${Array.from(revealDensityValues).join(", ")}`);
+  }
+
+  return issues;
+}
+
 async function collectManifest() {
   const rawManifest = await fs.readFile(manifestPath, "utf8");
   const parsedManifest = JSON.parse(rawManifest);
@@ -63,9 +101,26 @@ async function collectManifest() {
   return {
     version: parsedManifest.version || "1.0",
     exemptRoutes: new Set(Array.isArray(parsedManifest.exemptRoutes) ? parsedManifest.exemptRoutes : []),
+    validationIssues: routes.flatMap((entry, index) => {
+      const route = normalizeRouteForManifest(entry?.route);
+      const normalizedPath = isString(entry?.page) ? entry.page : "";
+      const issues = collectManifestIssues(entry);
+      return issues.map((issue) => ({
+        route: route || `unavailable_${index}`,
+        index,
+        issue,
+        manifestPath: normalizedPath,
+      }));
+    }),
     routes: routes.map((entry) => ({
       ...entry,
-      route: normalizeRouteForManifest(entry.route),
+      route: normalizeRouteForManifest(entry?.route),
+      page: isString(entry?.page) ? entry.page : "",
+      requires: isArrayOfStrings(entry?.requires) ? entry.requires : [],
+      revealDensity: entry?.revealDensity,
+      expectedPage: normalizeRouteForManifest(entry?.route)
+        ? `app/${normalizeRouteForManifest(entry?.route)}/page.tsx`
+        : "app/page.tsx",
     })),
   };
 }
@@ -105,10 +160,6 @@ function makeFailure(route, reason) {
   return { route, reason, status: "fail" };
 }
 
-function routeHasPathManifestMismatch(route, manifestEntry) {
-  return manifestEntry?.page && manifestEntry.page !== `app/${route}/page.tsx`;
-}
-
 async function checkRoutes() {
   const manifest = await collectManifest();
   const checks = manifest.routes;
@@ -119,6 +170,19 @@ async function checkRoutes() {
   const summaries = [];
   const report = [];
   const routeNames = new Set();
+
+  for (const issue of manifest.validationIssues) {
+    const route = issue.route;
+    const reason = `manifest issue (${issue.index}): ${issue.issue}`;
+    failures.push(makeFailure(route, reason));
+    summaries.push(`✗ manifest route '${route}': ${issue.issue}`);
+    report.push({
+      route,
+      path: issue.manifestPath || "unknown",
+      status: "fail",
+      reason,
+    });
+  }
 
   for (const check of checks) {
     if (routeNames.has(check.route)) {
@@ -196,7 +260,7 @@ async function checkRoutes() {
         });
       }
 
-      if (routeHasPathManifestMismatch(check.route, checks.find((entry) => entry.route === check.route))) {
+      if (check.expectedPage && check.page !== check.expectedPage) {
         summaries.push(`! ${check.route}: manifest page path likely outdated`);
         report.push({
           route: check.route,
@@ -210,6 +274,7 @@ async function checkRoutes() {
       report.push({
         route: check.route,
         path: check.page,
+        revealDensity: check.revealDensity || "regular",
         status: "pass",
       });
     } catch (error) {
@@ -279,6 +344,7 @@ async function checkRoutes() {
         {
           totalManifestRoutes: checks.length,
           manifestVersion: manifest.version,
+          strictMode,
           coverage: {
             discoveredRoutes: Array.from(discoveredNonExempt).sort(),
             manifestRoutes: Array.from(manifestRoutes).sort(),
@@ -287,6 +353,7 @@ async function checkRoutes() {
             exemptRoutes: Array.from(manifest.exemptRoutes).sort(),
             discoveredCount,
           },
+          manifestValidationIssues: manifest.validationIssues,
           summary: {
             pass: report.filter((item) => item.status === "pass").length,
             warn: report.filter((item) => item.status === "warn").length,
