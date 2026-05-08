@@ -257,6 +257,20 @@ Keep the manifest in sync when adding new routes:
   - `comfortable` for hero and narrative pages, `compact` for dense rows, and `regular` for mixed layouts.
 - Reduced-motion behavior and safe focus/hover semantics remain explicit in unchanged components while motion wrappers are added through reusable API surfaces from `@/lib/ui/motion`.
 
+## Detailed rollout notes (Production step: component reveal depth)
+
+- Added panel and row-level reveal polish in `/symbols/[symbolId]` without altering endpoint composition:
+  - `SymbolDetailView` now staggers:
+    - header block entry
+    - each snapshot card under market-memory
+    - each signal row
+    - scan and run rows in the secondary column
+- Added staged workflow-level reveals in `/data/onboarding`:
+  - hero and header surfaces now animate in sequence
+  - step sidebar and active step panel are staged
+  - error and bottom action controls reuse density-aware sequencing
+- No backend/API contract changes were introduced; only presentation sequencing and `@/lib/ui/motion` usage.
+
 ## Detailed rollout notes (Production step: rollout governance automation)
 
 - Added `apps/web/scripts/motion-rollout-audit.mjs` plus manifest source-of-truth file:

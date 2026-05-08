@@ -32,6 +32,11 @@ import type {
   RecoveryPreparationRow,
 } from "@/lib/data-onboarding/types";
 import { onboardingTimeframes } from "@/lib/data-onboarding/types";
+import {
+  AnimatedListItem,
+  AnimatedSection,
+  motionRevealDensityStyle,
+} from "@/lib/ui/motion";
 import { CredentialConfigStep } from "./CredentialConfigStep";
 import { DataOnboardingHero } from "./DataOnboardingHero";
 import { DataOnboardingHeader } from "./DataOnboardingHeader";
@@ -322,163 +327,180 @@ export function OnboardingWorkflow({ initialData }: OnboardingWorkflowProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <DataOnboardingHero initialData={initialData} selection={selection} />
-      <DataOnboardingHeader
-        apiBaseUrl={initialData.apiBaseUrl}
-        workspace={selectedWorkspace}
-        workspaces={initialData.workspaces}
-        selection={selection}
-        steps={steps}
-        activeStep={activeStep}
-        onStepChange={setActiveStep}
-        onWorkspaceChange={(workspaceId) =>
-          setSelection({
-            workspaceId,
-            sourceId: null,
-            symbolIds: [],
-            timeframes: selection.timeframes,
-          })
-        }
-      />
-      {(workflowError || initialData.failures.length > 0) && (
-        <OnboardingErrorState
-          title="Backend state needs attention"
-          message={workflowError || initialData.failures[0]?.message || "Some onboarding endpoints did not respond."}
-          failures={initialData.failures}
+    <AnimatedSection as="section" className="space-y-6">
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(0, "comfortable")}>
+        <DataOnboardingHero initialData={initialData} selection={selection} />
+      </AnimatedListItem>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(1, "comfortable")}>
+        <DataOnboardingHeader
+          apiBaseUrl={initialData.apiBaseUrl}
+          workspace={selectedWorkspace}
+          workspaces={initialData.workspaces}
+          selection={selection}
+          steps={steps}
+          activeStep={activeStep}
+          onStepChange={setActiveStep}
+          onWorkspaceChange={(workspaceId) =>
+            setSelection({
+              workspaceId,
+              sourceId: null,
+              symbolIds: [],
+              timeframes: selection.timeframes,
+            })
+          }
         />
+      </AnimatedListItem>
+      {(workflowError || initialData.failures.length > 0) && (
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(2, "regular")}>
+          <OnboardingErrorState
+            title="Backend state needs attention"
+            message={workflowError || initialData.failures[0]?.message || "Some onboarding endpoints did not respond."}
+            failures={initialData.failures}
+          />
+        </AnimatedListItem>
       )}
-      <ProviderHealthDashboard
-        workspace={selectedWorkspace}
-        symbols={initialData.symbols}
-        dataSources={dataSources}
-        initialSnapshots={initialData.providerHealthSnapshots}
-        initialSummary={initialData.providerHealthSummary}
-        initialError={
-          providerHealthFailure
-            ? {
-                status: providerHealthFailure.status,
-                code: "provider_health_unavailable",
-                message: providerHealthFailure.message || "Provider health unavailable",
-                url: "",
-                missing: providerHealthFailure.missing,
-              }
-            : null
-        }
-      />
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "regular")}>
+        <ProviderHealthDashboard
+          workspace={selectedWorkspace}
+          symbols={initialData.symbols}
+          dataSources={dataSources}
+          initialSnapshots={initialData.providerHealthSnapshots}
+          initialSummary={initialData.providerHealthSummary}
+          initialError={
+            providerHealthFailure
+              ? {
+                  status: providerHealthFailure.status,
+                  code: "provider_health_unavailable",
+                  message: providerHealthFailure.message || "Provider health unavailable",
+                  url: "",
+                  missing: providerHealthFailure.missing,
+                }
+              : null
+          }
+        />
+      </AnimatedListItem>
       <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="surface h-fit rounded-lg p-4">
+        <AnimatedListItem
+          as="aside"
+          className="surface h-fit rounded-lg p-4"
+          style={motionRevealDensityStyle(4, "compact")}
+        >
           <div className="space-y-2">
             {steps.map((step, index) => (
-              <button
-                key={step.key}
-                type="button"
-                onClick={() => setActiveStep(step.key)}
-                className={`w-full rounded-md px-3 py-2 text-left text-sm font-medium ${
-                  step.key === activeStep
-                    ? "bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-100"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                }`}
-              >
-                <span className="mr-2 text-xs text-slate-500">{index + 1}</span>
-                {step.label}
-              </button>
+              <AnimatedListItem as="div" key={step.key} style={motionRevealDensityStyle(index, "compact")}>
+                <button
+                  type="button"
+                  onClick={() => setActiveStep(step.key)}
+                  className={`w-full rounded-md px-3 py-2 text-left text-sm font-medium ${
+                    step.key === activeStep
+                      ? "bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-100"
+                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="mr-2 text-xs text-slate-500">{index + 1}</span>
+                  {step.label}
+                </button>
+              </AnimatedListItem>
             ))}
           </div>
-        </aside>
+        </AnimatedListItem>
         <div className="space-y-6">
-          {activeStep === "data_source" && (
-            <DataSourceStep
-              dataSources={dataSources}
-              providerCredentialRefs={providerCredentialRefs}
-              credentialTests={credentialTests}
-              credentialTestState={credentialTestState}
-              selectedSourceId={selection.sourceId}
-              loadState={sourceLoadState}
-              onSourceChange={(sourceId) => setSelection((current) => ({ ...current, sourceId }))}
-              onCreateSource={handleCreateSource}
-              onTestSourceCredential={handleTestSourceCredential}
-            />
-          )}
-          {activeStep === "credentials" && (
-            <CredentialConfigStep
-              dataSources={dataSources}
-              providerCredentialRefs={providerCredentialRefs}
-              credentialTests={credentialTests}
-              credentialTestState={credentialTestState}
-              selectedSourceId={selection.sourceId}
-              onTestSourceCredential={handleTestSourceCredential}
-            />
-          )}
-          {activeStep === "symbols_timeframes" && (
-            <div className="grid gap-6">
-              <SymbolSelectionStep
-                symbols={initialData.symbols}
-                selectedSymbolIds={selection.symbolIds}
-                onChange={(symbolIds) => setSelection((current) => ({ ...current, symbolIds }))}
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "regular")} preset="scale-subtle">
+            {activeStep === "data_source" && (
+              <DataSourceStep
+                dataSources={dataSources}
+                providerCredentialRefs={providerCredentialRefs}
+                credentialTests={credentialTests}
+                credentialTestState={credentialTestState}
+                selectedSourceId={selection.sourceId}
+                loadState={sourceLoadState}
+                onSourceChange={(sourceId) => setSelection((current) => ({ ...current, sourceId }))}
+                onCreateSource={handleCreateSource}
+                onTestSourceCredential={handleTestSourceCredential}
               />
-              <TimeframeSelectionStep
-                timeframes={[...onboardingTimeframes]}
-                selectedTimeframes={selection.timeframes}
-                onChange={(timeframes) => setSelection((current) => ({ ...current, timeframes }))}
+            )}
+            {activeStep === "credentials" && (
+              <CredentialConfigStep
+                dataSources={dataSources}
+                providerCredentialRefs={providerCredentialRefs}
+                credentialTests={credentialTests}
+                credentialTestState={credentialTestState}
+                selectedSourceId={selection.sourceId}
+                onTestSourceCredential={handleTestSourceCredential}
               />
+            )}
+            {activeStep === "symbols_timeframes" && (
+              <div className="grid gap-6">
+                <SymbolSelectionStep
+                  symbols={initialData.symbols}
+                  selectedSymbolIds={selection.symbolIds}
+                  onChange={(symbolIds) => setSelection((current) => ({ ...current, symbolIds }))}
+                />
+                <TimeframeSelectionStep
+                  timeframes={[...onboardingTimeframes]}
+                  selectedTimeframes={selection.timeframes}
+                  onChange={(timeframes) => setSelection((current) => ({ ...current, timeframes }))}
+                />
+              </div>
+            )}
+            {activeStep === "freshness" && (
+              <FreshnessCheckStep
+                rows={healthRows}
+                validation={validation}
+                loadState={freshnessState}
+                selectedSource={selectedSource}
+                onRunFreshnessCheck={handleRunFreshnessCheck}
+                canRun={canRunFreshness}
+              />
+            )}
+            {activeStep === "gaps" && (
+              <GapDetectionStep
+                rows={gapRows}
+                healthRows={healthRows}
+                loadState={gapState}
+                onDetectGaps={handleDetectGaps}
+              />
+            )}
+            {activeStep === "recovery" && (
+              <RecoveryPlanStep
+                rows={recoveryRows}
+                gapRows={gapRows}
+                loadState={recoveryState}
+                onPrepareRecovery={handlePrepareRecovery}
+              />
+            )}
+            {activeStep === "summary" && (
+              <OnboardingSummary
+                healthRows={healthRows}
+                gapRows={gapRows}
+                recoveryRows={recoveryRows}
+                nextBackendActions={safeNextSteps}
+              />
+            )}
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "regular")}>
+            <div className="flex flex-wrap justify-between gap-3">
+              <button
+                type="button"
+                className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-medium text-slate-600 disabled:opacity-40 dark:text-slate-300"
+                disabled={stepIndex <= 0}
+                onClick={() => setActiveStep(steps[Math.max(stepIndex - 1, 0)].key)}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                disabled={stepIndex >= steps.length - 1}
+                onClick={() => setActiveStep(steps[Math.min(stepIndex + 1, steps.length - 1)].key)}
+              >
+                Next
+              </button>
             </div>
-          )}
-          {activeStep === "freshness" && (
-            <FreshnessCheckStep
-              rows={healthRows}
-              validation={validation}
-              loadState={freshnessState}
-              selectedSource={selectedSource}
-              onRunFreshnessCheck={handleRunFreshnessCheck}
-              canRun={canRunFreshness}
-            />
-          )}
-          {activeStep === "gaps" && (
-            <GapDetectionStep
-              rows={gapRows}
-              healthRows={healthRows}
-              loadState={gapState}
-              onDetectGaps={handleDetectGaps}
-            />
-          )}
-          {activeStep === "recovery" && (
-            <RecoveryPlanStep
-              rows={recoveryRows}
-              gapRows={gapRows}
-              loadState={recoveryState}
-              onPrepareRecovery={handlePrepareRecovery}
-            />
-          )}
-          {activeStep === "summary" && (
-            <OnboardingSummary
-              healthRows={healthRows}
-              gapRows={gapRows}
-              recoveryRows={recoveryRows}
-              nextBackendActions={safeNextSteps}
-            />
-          )}
-          <div className="flex flex-wrap justify-between gap-3">
-            <button
-              type="button"
-              className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-medium text-slate-600 disabled:opacity-40 dark:text-slate-300"
-              disabled={stepIndex <= 0}
-              onClick={() => setActiveStep(steps[Math.max(stepIndex - 1, 0)].key)}
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
-              disabled={stepIndex >= steps.length - 1}
-              onClick={() => setActiveStep(steps[Math.min(stepIndex + 1, steps.length - 1)].key)}
-            >
-              Next
-            </button>
-          </div>
+          </AnimatedListItem>
         </div>
       </div>
-    </div>
+    </AnimatedSection>
   );
 }
 
