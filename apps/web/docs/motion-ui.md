@@ -215,6 +215,7 @@ Keep the manifest in sync when adding new routes:
   - `app/signals/[signalId]/loading.tsx`
   - `app/symbols/[symbolId]/loading.tsx`
   - `app/triage/loading.tsx`
+  - `app/scanner/loading.tsx`
 - Added production loading shell coverage for additional routes with app-level suspense states:
   - `journal`
   - `notifications`
@@ -229,6 +230,7 @@ Keep the manifest in sync when adding new routes:
   - `signals/[signalId]`
   - `symbols/[symbolId]`
   - `journal/[entryId]`
+  - `scanner`
 - Motion core bug fix: `AnimatedSection` and `AnimatedListItem` now apply `motion-no-motion` for `preset="none"`, preserving existing animation settings while explicitly disabling reveal movement when callers opt out.
 - This pass does not change route behavior, backend composition, or advisory/safety copy.
 
