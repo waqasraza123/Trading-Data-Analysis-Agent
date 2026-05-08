@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "motion:rollout-audit": "node scripts/motion-rollout-audit.mjs",
+    "motion:rollout-audit:json": "node scripts/motion-rollout-audit.mjs --json",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"

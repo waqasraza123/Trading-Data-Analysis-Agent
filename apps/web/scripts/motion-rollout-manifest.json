@@ -1,0 +1,99 @@
+{
+  "routes": [
+    {
+      "route": "command-center",
+      "page": "app/command-center/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "dashboard",
+      "page": "app/dashboard/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "triage",
+      "page": "app/triage/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "brief",
+      "page": "app/brief/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "scanner",
+      "page": "app/scanner/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "quality",
+      "page": "app/quality/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "notifications",
+      "page": "app/notifications/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "journal",
+      "page": "app/journal/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "review/outcomes",
+      "page": "app/review/outcomes/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "readiness",
+      "page": "app/readiness/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "onboarding",
+      "page": "app/onboarding/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "setup",
+      "page": "app/setup/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "signals/[signalId]",
+      "page": "app/signals/[signalId]/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "symbols/[symbolId]",
+      "page": "app/symbols/[symbolId]/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "data/onboarding",
+      "page": "app/data/onboarding/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "equity-research",
+      "page": "app/equity-research/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "preferences/strategy",
+      "page": "app/preferences/strategy/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "demo",
+      "page": "app/demo/page.tsx",
+      "requires": ["AnimatedSection"]
+    },
+    {
+      "route": "journal/[entryId]",
+      "page": "app/journal/[entryId]/page.tsx",
+      "requires": ["AnimatedSection"]
+    }
+  ]
+}

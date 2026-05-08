@@ -259,10 +259,21 @@ Keep the manifest in sync when adding new routes:
 
 ## Detailed rollout notes (Production step: rollout governance automation)
 
-- Added `apps/web/scripts/motion-rollout-audit.mjs` and `apps/web/package.json` script `motion:rollout-audit`.
-- The script validates that each rollout route keeps required `AnimatedSection` motion entry wrappers and at least one motion helper token.
-- This check is intended as an implementation-level guard for future rollout edits and helps keep `Motion UI Rollout` manifest coverage synchronized with route-level implementation.
-- Run `npm run motion:rollout-audit` from `apps/web` before merging route-level motion or layout edits.
+- Added `apps/web/scripts/motion-rollout-audit.mjs` plus manifest source-of-truth file:
+  - `apps/web/scripts/motion-rollout-manifest.json`
+- Added scripts:
+  - `npm run motion:rollout-audit` (default gate mode)
+  - `npm run motion:rollout-audit:json` (machine-readable JSON report)
+- The gate validates each listed route by:
+  - requiring expected motion entry tokens (for example `AnimatedSection`)
+  - requiring motion helper usage (`motionRevealDensityStyle`, `motionRevealPresetClass`, `motionRevealProfileStyle`, etc.)
+  - rejecting direct imports from the legacy path `@/components/ui/motion` (enforcing the public `@/lib/ui/motion` API boundary)
+  - rejecting `motionRevealClass` and `motionRevealStyle` usage by default, with a controlled opt-out flag `--allow-legacy`
+- This check is intended as the motion rollout contract guard before PR merge and keeps implementation intent tied to the manifest.
+- Recommended run from `apps/web` before merging route-level motion/layout edits:
+  - `npm run motion:rollout-audit`
+  - `npm run motion:rollout-audit -- --allow-legacy` (use only for legacy migration windows)
+  - `npm run motion:rollout-audit:json`
 
 ## Detailed rollout notes (Production step: shell + primitive hardening)
 
