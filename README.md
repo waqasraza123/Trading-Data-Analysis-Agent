@@ -7,6 +7,24 @@
 ![Web](https://img.shields.io/badge/Web-Next.js%2015%20%2B%20React%2019-111111)
 ![Worker](https://img.shields.io/badge/Worker-Go%20market%20data%20sidecar-00ADD8)
 
+## Candles
+
+The platform normalizes all candle inputs (CSV/JSON imports, mock/live feed, provider polling,
+and Go-sidecar polling) into one shared OHLCV model before downstream review surfaces consume them.
+
+```mermaid
+flowchart LR
+  A["CSV / JSON Import"] --> C["candle_ingest"]
+  B["Live / Provider Feed"] --> C
+  D["Go Market Worker"] --> C
+  C --> E["Shared Validation"]
+  E --> F["Candle Storage"]
+  F --> G["Quality + Conflict Checks"]
+  G --> H["Read Models"]
+  H --> I["Review UI"]
+  H --> J["Signals / Digests / Briefs"]
+```
+
 AI Trading Intelligence Agent is a read-only market intelligence product for daily review of
 market data, deterministic signal context, data readiness, quality diagnostics, equity research,
 and observed outcomes.

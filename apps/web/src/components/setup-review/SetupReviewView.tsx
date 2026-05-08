@@ -4,7 +4,7 @@ import { SetupErrorSection } from "@/components/setup-detail/SetupErrorSection";
 import { SetupVisualPanel } from "@/components/setup-detail/SetupVisualPanel";
 import { composeSetupReview } from "@/lib/setup-review/composeSetupReview";
 import type { SetupDetailData } from "@/lib/setup-detail/types";
-import { AnimatedListItem, AnimatedSection, motionRevealStyle } from "@/lib/ui/motion";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { SetupAuditReviewPanel } from "./SetupAuditReviewPanel";
 import { SetupContextReviewPanel } from "./SetupContextReviewPanel";
 import { SetupEvidenceReviewPanel } from "./SetupEvidenceReviewPanel";
@@ -27,10 +27,10 @@ export function SetupReviewView({ data }: SetupReviewViewProps) {
   if (!model.signal && !model.report && !model.setupContext) {
     return (
       <AnimatedSection as="section" className="space-y-6">
-        <AnimatedListItem as="section" style={motionRevealStyle(0, 45)}>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0)}>
           <SetupEmptySection title="Setup not available" message="No setup, signal, or report payload was returned for this identifier." />
         </AnimatedListItem>
-        <AnimatedListItem as="section" style={motionRevealStyle(1, 45)}>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(1)}>
           <SetupErrorSection failures={model.failures} />
         </AnimatedListItem>
       </AnimatedSection>
@@ -39,44 +39,44 @@ export function SetupReviewView({ data }: SetupReviewViewProps) {
 
   return (
     <AnimatedSection as="section" className="space-y-6">
-      <AnimatedListItem as="section" style={motionRevealStyle(0, 45)}>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(0)}>
         <SetupReviewHeader model={model} />
       </AnimatedListItem>
-      <AnimatedListItem as="section" style={motionRevealStyle(1, 45)}>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(1)}>
         <WorkflowLinks
           workspaceId={workspaceId}
           targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review", "journal"]}
         />
       </AnimatedListItem>
-      <AnimatedListItem as="section" style={motionRevealStyle(2, 45)}>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(2)}>
         <SetupErrorSection failures={model.failures.filter((failure) => !failure.missing)} />
       </AnimatedListItem>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <main className="space-y-6">
-          <AnimatedListItem as="section" style={motionRevealStyle(3, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(3)}>
             <SetupVisualPanel model={model} />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(4, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(4)}>
             <SetupContextReviewPanel model={model} />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(5, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(5)}>
             <SetupEvidenceReviewPanel model={model} />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(6, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(6)}>
             <SetupWaitAvoidReviewPanel model={model} />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(7, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(7)}>
             <SetupHistoricalReviewPanel model={model} />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(8, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(8)}>
             <SetupReasoningReviewPanel model={model} />
           </AnimatedListItem>
         </main>
         <aside className="space-y-6 xl:sticky xl:top-56 xl:self-start">
-          <AnimatedListItem as="section" style={motionRevealStyle(3, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(3)}>
             <SetupIntelligenceContextPanel model={model} />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(4, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(4)}>
             <SetupJournalReviewPanel
               apiBaseUrl={data.apiBaseUrl}
               workspaceId={workspaceId}
@@ -84,7 +84,7 @@ export function SetupReviewView({ data }: SetupReviewViewProps) {
               model={model}
             />
           </AnimatedListItem>
-          <AnimatedListItem as="section" style={motionRevealStyle(5, 45)}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(5)}>
             <SetupAuditReviewPanel model={model} />
           </AnimatedListItem>
         </aside>

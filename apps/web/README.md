@@ -292,6 +292,7 @@ Use `/data/onboarding?workspaceId=<workspace-id>` for the data-source onboarding
 The integrated product UI uses one Tailwind-native shell from `src/components/layout/AppShell.tsx`.
 Desktop navigation is grouped by workflow area, mobile navigation exposes the primary product map,
 and all shell links preserve `workspaceId` when a workspace is selected.
+Motion polish follows `apps/web/docs/motion-ui.md` (compact/regular/comfortable reveal profiles, route manifest, and rollout checklist).
 
 Shared primitives live under `src/components/ui`, status-specific badges live under
 `src/components/status`, and safe labels/formatters/navigation helpers live under `src/lib/ui`.

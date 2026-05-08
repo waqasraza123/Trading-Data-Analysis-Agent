@@ -18,6 +18,22 @@ This document defines the conservative animation layer used by the web product a
 - Optional animation utilities: `tailwind.config.ts`
 - Route entry usage: all product routes under `app/*/page.tsx` and major route components in `src/components`
 
+## Production Motion Profiles
+
+The motion system now exposes compact/default/comfortable density profiles so teams can keep cadence consistent across high-density lists and heavier layouts.
+
+- `compact`: `scale-subtle`, 30ms stagger
+- `regular`: `fade-up`, 45ms stagger
+- `comfortable`: `fade-up`, 60ms stagger
+
+Defaults and helpers:
+
+- `DEFAULT_MOTION_REVEAL_STEP_MS = 45`
+- `COMFORT_MOTION_REVEAL_STEP_MS = 60`
+- `MOTION_REVEAL_PROFILES`
+- `motionRevealProfileStyle(index, profile?)`
+- `motionRevealDensityStyle(index, "compact" | "regular" | "comfortable", durationMs?)`
+
 ## Import policy
 
 - Use only `@/lib/ui/motion` for callsites.
@@ -31,6 +47,11 @@ This document defines the conservative animation layer used by the web product a
   - `fade-in`
   - `scale-subtle`
   - `none`
+- `MotionRevealDensity` values:
+  - `compact`
+  - `regular`
+  - `comfortable`
+- `MotionRevealProfile`
 - `MotionVariant` values (legacy mapping preserved):
   - `up` → `fade-up`
   - `scale` → `scale-subtle`
@@ -38,6 +59,8 @@ This document defines the conservative animation layer used by the web product a
 - `AnimateChildrenProps`
 - `AnimateListItemProps`
 - `MotionRevealStyle`
+- `MotionRevealDensity`
+- `MotionRevealProfile`
 
 `AnimateChildrenProps` and `AnimateListItemProps` support:
 
@@ -91,6 +114,8 @@ function SignalList({ items }: { items: { id: string }[] }) {
 
 - `motionRevealClass("up" | "scale" | "fade")`
 - `motionRevealStyle(index, stepMs, durationMs?)`
+- `motionRevealDensityStyle(index, density?, durationMs?)`
+- `motionRevealProfileStyle(index, profile?)`
 - `motionCardClass`
 
 ## Defaults and tuning
@@ -100,6 +125,9 @@ function SignalList({ items }: { items: { id: string }[] }) {
 - `DEFAULT_MOTION_PRESET = "fade-up"`
 - `MOTION_PRESETS = ["fade-up", "fade-in", "scale-subtle", "none"]`
 - `MOTION_VARIANTS = ["up", "scale", "fade"]`
+- `DEFAULT_MOTION_REVEAL_STEP_MS = 45`
+- `COMFORT_MOTION_REVEAL_STEP_MS = 60`
+- `MOTION_REVEAL_PROFILES`
 
 When introducing new routes/panels, prefer:
 
@@ -129,6 +157,47 @@ When introducing new routes/panels, prefer:
   - `brief`
   - `triage`
   - setup and signal detail pages through `SetupReviewView`
+
+## Route-level rollout manifest
+
+The following routes are included in the current motion rollout and should continue to preserve this sequence:
+
+- `command-center` → full section entry + panel reveals on badge strip, panel grid, and list rows
+- `dashboard` → metric and top-card reveal, key list transitions
+- `triage` → column container and card-row reveal cadence
+- `brief` → section entry + narrative/list block reveal sequence
+- `scanner` → hero and panel reveals
+- `quality` → header and dashboard metric list reveals
+- `notifications` → list row and panel reveal
+- `journal` → header + metric + journal row reveals
+- `review/outcomes` → metric and outcome row reveals
+- `readiness` → readiness panel reveal
+- `onboarding` → onboarding step reveal and detail panels
+- `setup` → checklist/list row reveal
+- `signals/[signalId]` → setup review section and staggered section layout
+- `symbols/[symbolId]` → symbol detail block and list reveals
+- `data/onboarding` → workflow step panel reveals
+- `equity-research` → panel row reveals for universe/scope data
+- `preferences/strategy` → form and card reveals
+- `demo` → action card and status block reveal
+
+Keep the manifest in sync when adding new routes:
+
+- Add a route entry to this list before shipping.
+- Define the route's reveal density (`compact` for dense repeated rows, `comfortable` for large hero-first layouts, otherwise `regular`).
+- Add an integration note under "Detailed rollout notes".
+
+## Governance checklist
+
+Use this as the PR-ready gate for any additional route.
+
+- [ ] Route wrapped with `AnimatedSection` (or equivalent stable entry surface).
+- [ ] High-density list or row blocks use `AnimatedListItem` + reusable reveal style helpers.
+- [ ] Reduced-motion behavior verified by reading and confirming `prefers-reduced-motion: reduce` path in `app/globals.css`.
+- [ ] Focus and hover states remain unchanged and explicit.
+- [ ] No advisory copy changes introduced as part of rollout.
+- [ ] New motion usage stays in `@/lib/ui/motion` (public API).
+- [ ] Existing optional-endpoint fallback and data composition logic untouched.
 
 ## Governance
 
