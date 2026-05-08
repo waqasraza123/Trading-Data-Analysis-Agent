@@ -126,6 +126,7 @@ function SignalList({ items }: { items: { id: string }[] }) {
   - `motionRevealDensityStyle` for list/grid density
   - `motionRevealProfileStyle` for tuned per-surface profiles
 - `motionRevealClass` and `motionRevealStyle` are retained as compatibility APIs and must only be used when migrating older surfaces.
+- Production runtime now emits a one-time dev warning when compatibility APIs are used, helping teams migrate existing surfaces without behavior changes while preventing silent reversion.
 
 ## Defaults and tuning
 
