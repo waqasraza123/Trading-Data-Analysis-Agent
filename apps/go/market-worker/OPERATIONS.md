@@ -83,6 +83,7 @@ Operational defaults:
 - `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS` (lease ownership TTL, default `90s`)
 - `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` (reconnect backoff, default `5s`)
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` (websocket read deadline, default `30s`)
+- `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` (max `last_message_at` age to allow claim, default `180s`)
 
 Operational checks in serve mode:
 

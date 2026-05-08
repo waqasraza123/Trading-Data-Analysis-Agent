@@ -15,12 +15,14 @@ import (
 type Repository struct {
 	pool         *pgxpool.Pool
 	capabilities workerdb.Capabilities
+	staleAfter   time.Duration
 }
 
-func NewRepository(pool *pgxpool.Pool, capabilities workerdb.Capabilities) *Repository {
+func NewRepository(pool *pgxpool.Pool, capabilities workerdb.Capabilities, staleAfter time.Duration) *Repository {
 	return &Repository{
 		pool:         pool,
 		capabilities: capabilities,
+		staleAfter:   staleAfter,
 	}
 }
 
@@ -40,9 +42,10 @@ from live_feed_subscriptions lfs
 join symbols on symbols.id = lfs.symbol_id
 where lfs.status = 'active'
 	and (lfs.worker_id is null or lfs.lease_expires_at is null or lfs.lease_expires_at <= now())
+	and ($2 <= 0 or lfs.last_message_at is null or lfs.last_message_at >= now() - $2)
 order by lfs.created_at asc
 limit $1
-`, limit)
+`, limit, r.staleAfter)
 	if err != nil {
 		return nil, err
 	}

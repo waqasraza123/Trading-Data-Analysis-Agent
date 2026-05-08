@@ -32,7 +32,7 @@ type Service struct {
 func NewService(pool *pgxpool.Pool, capabilities db.Capabilities, cfg config.Config, logger *slog.Logger, metrics *health.Metrics) *Service {
 	return &Service{
 		cfg:       cfg,
-		repo:      NewRepository(pool, capabilities),
+		repo:      NewRepository(pool, capabilities, cfg.LiveStreamStaleAfter),
 		validator: candles.NewSymbolSourceValidator(pool),
 		writer:    candles.NewBatchWriter(pool, capabilities),
 		logger:    logger,

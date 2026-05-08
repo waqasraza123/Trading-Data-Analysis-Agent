@@ -27,6 +27,8 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   `provider_polling_requests`, fetch mock or Binance public REST candles, validate/normalize OHLC
   rows, preserve existing final/partial candle write semantics, record optional provider health,
   ingestion performance/conflict diagnostics, runtime heartbeats, and expose local health/metrics.
+  Runtime live-stream candidate claiming now excludes subscriptions with stale `last_message_at` heartbeats
+  when configured through `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`.
   It supports `serve`, `once`, and `inspect` run modes, explicit terminal versus retryable failure
   handling, bounded parallel execution, provider backpressure controls, per-provider circuit
   breaking, claimed job lock renewal, bounded job/request execution timeouts, direct request stale

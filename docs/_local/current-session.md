@@ -7,6 +7,8 @@
   shutdown behavior in `apps/go/market-worker/internal/worker/runner.go`.
 - `cmd/market-worker/main.go` now wires live service creation into `worker.NewRunner` and exposes live
   stream settings in inspect mode for operational verification.
+- Added `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` handling in live runtime candidate selection to skip
+  stale websocket subscriptions without fresh `last_message_at` heartbeats during claim cycles.
 - `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md` were updated with live
   run-time settings, tuning guidance, and metrics/log checks.
 - Scope remains code and documentation only. No tests/builds executed.
