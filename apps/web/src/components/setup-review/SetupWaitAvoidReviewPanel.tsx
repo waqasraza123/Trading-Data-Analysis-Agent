@@ -1,5 +1,6 @@
 import type { JsonRecord } from "@/lib/api/types";
 import { setupRecordDetail, setupRecordText } from "@/lib/setup-detail/labels";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { SetupReviewModel } from "@/lib/setup-review/types";
 import { SetupReviewCard, SetupReviewEmpty, SetupReviewSection } from "./SetupReviewSection";
 
@@ -31,10 +32,12 @@ function ContextList({ title, items, empty }: { title: string; items: JsonRecord
         <SetupReviewEmpty title={title} message={empty} />
       ) : (
         items.slice(0, 6).map((item, index) => (
-          <SetupReviewCard key={`${title}-${index}`}>
-            <p className="text-sm leading-6 text-[var(--strong)]">{setupRecordText(item)}</p>
-            {setupRecordDetail(item) && <p className="mt-2 text-xs text-slate-500">{setupRecordDetail(item)}</p>}
-          </SetupReviewCard>
+          <AnimatedListItem as="article" key={`${title}-${index}`} style={motionRevealDensityStyle(index, "compact")}>
+            <SetupReviewCard>
+              <p className="text-sm leading-6 text-[var(--strong)]">{setupRecordText(item)}</p>
+              {setupRecordDetail(item) && <p className="mt-2 text-xs text-slate-500">{setupRecordDetail(item)}</p>}
+            </SetupReviewCard>
+          </AnimatedListItem>
         ))
       )}
     </div>

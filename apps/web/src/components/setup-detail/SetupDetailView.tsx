@@ -18,6 +18,7 @@ import { SetupZonesPanel } from "@/components/setup-detail/SetupZonesPanel";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { composeSetupDetail } from "@/lib/setup-detail/composeSetupDetail";
 import type { SetupDetailData } from "@/lib/setup-detail/types";
+import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 type SetupDetailViewProps = {
   data: SetupDetailData;
@@ -30,45 +31,86 @@ export function SetupDetailView({ data }: SetupDetailViewProps) {
 
   if (!model.signal && !model.report && !model.setupContext) {
     return (
-      <div className="space-y-6">
-        <SetupEmptySection title="Signal not available" message="No setup, signal, or report payload was returned for this identifier." />
-        <SetupErrorSection failures={model.failures} />
-      </div>
+      <AnimatedSection as="section" className="space-y-6">
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(0)}>
+          <SetupEmptySection title="Signal not available" message="No setup, signal, or report payload was returned for this identifier." />
+        </AnimatedListItem>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(1)}>
+          <SetupErrorSection failures={model.failures} />
+        </AnimatedListItem>
+      </AnimatedSection>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <SetupDetailHeader header={model.header} />
-      <WorkflowLinks workspaceId={workspaceId} targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review", "journal"]} />
-      <SetupErrorSection failures={model.failures.filter((failure) => !failure.missing)} />
-      <SetupVisualPanel model={model} />
+    <AnimatedSection as="section" className="space-y-6">
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(0)}>
+        <SetupDetailHeader header={model.header} />
+      </AnimatedListItem>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(1)}>
+        <WorkflowLinks
+          workspaceId={workspaceId}
+          targets={["commandCenter", "brief", "triage", "scanner", "dataOnboarding", "review", "journal"]}
+        />
+      </AnimatedListItem>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(2)}>
+        <SetupErrorSection failures={model.failures.filter((failure) => !failure.missing)} />
+      </AnimatedListItem>
+      <AnimatedListItem as="section" style={motionRevealDensityStyle(3)}>
+        <SetupVisualPanel model={model} />
+      </AnimatedListItem>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <main className="space-y-6">
-          <SetupBiasSummary model={model} />
-          <SetupZonesPanel model={model} />
-          <SetupEvidencePanel model={model} />
-          <SetupConflictPanel model={model} />
-          <SetupWaitAvoidPanel model={model} />
-          <SetupOutcomeHistoryPanel model={model} />
-          <SetupHistoricalCasesPanel model={model} />
-          <SetupReasoningPanel model={model} />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(4)}>
+            <SetupBiasSummary model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(5)}>
+            <SetupZonesPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(6)}>
+            <SetupEvidencePanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(7)}>
+            <SetupConflictPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(8)}>
+            <SetupWaitAvoidPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(9)}>
+            <SetupOutcomeHistoryPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(10)}>
+            <SetupHistoricalCasesPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(11)}>
+            <SetupReasoningPanel model={model} />
+          </AnimatedListItem>
         </main>
         <aside className="space-y-6">
-          <SetupQualityPanel model={model} />
-          <SetupDataQualityPanel model={model} />
-          <SetupActionPlanPanel model={model} />
-          <SetupAuditPanel model={model} />
-          <SetupJournalPanel
-            apiBaseUrl={data.apiBaseUrl}
-            workspaceId={workspaceId}
-            signalId={data.signalId}
-            analysisRunId={signal?.analysis_run_id || model.setupContext?.analysis_run_id || null}
-            setupContextId={model.setupContext?.id || null}
-            entries={model.journalEntries}
-          />
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(4)}>
+            <SetupQualityPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(5)}>
+            <SetupDataQualityPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(6)}>
+            <SetupActionPlanPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(7)}>
+            <SetupAuditPanel model={model} />
+          </AnimatedListItem>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(8)}>
+            <SetupJournalPanel
+              apiBaseUrl={data.apiBaseUrl}
+              workspaceId={workspaceId}
+              signalId={data.signalId}
+              analysisRunId={signal?.analysis_run_id || model.setupContext?.analysis_run_id || null}
+              setupContextId={model.setupContext?.id || null}
+              entries={model.journalEntries}
+            />
+          </AnimatedListItem>
         </aside>
       </div>
-    </div>
+    </AnimatedSection>
   );
 }

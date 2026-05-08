@@ -2,6 +2,7 @@ import { Badge } from "@/components/status/badge";
 import { formatDateTime } from "@/lib/formatting/dates";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { setupRecordText } from "@/lib/setup-detail/labels";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { SetupReviewModel } from "@/lib/setup-review/types";
 import { SetupReviewCard, SetupReviewEmpty, SetupReviewSection } from "./SetupReviewSection";
 
@@ -21,10 +22,12 @@ export function SetupAuditReviewPanel({ model }: { model: SetupReviewModel }) {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {timeline.events.slice(0, 8).map((event, index) => (
-              <SetupReviewCard key={`timeline-${index}`}>
-                <p className="text-sm font-medium text-[var(--strong)]">{setupRecordText(event)}</p>
-                <p className="mt-2 text-xs text-slate-500">{formatDateTime(String(event.occurred_at || event.created_at || ""))}</p>
-              </SetupReviewCard>
+              <AnimatedListItem as="article" key={`timeline-${index}`} style={motionRevealDensityStyle(index, "compact")}>
+                <SetupReviewCard>
+                  <p className="text-sm font-medium text-[var(--strong)]">{setupRecordText(event)}</p>
+                  <p className="mt-2 text-xs text-slate-500">{formatDateTime(String(event.occurred_at || event.created_at || ""))}</p>
+                </SetupReviewCard>
+              </AnimatedListItem>
             ))}
           </div>
           {timeline.warnings.length > 0 && (

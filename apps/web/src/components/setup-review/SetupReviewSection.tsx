@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { motionCardClass } from "@/lib/ui/motion";
+
 type SetupReviewSectionProps = {
   id?: string;
   eyebrow: string;
@@ -11,7 +13,7 @@ type SetupReviewSectionProps = {
 
 export function SetupReviewSection({ id, eyebrow, title, action, children, className = "" }: SetupReviewSectionProps) {
   return (
-    <section id={id} className={`surface rounded-lg p-5 ${className}`}>
+    <section id={id} className={`surface ${motionCardClass} rounded-lg p-5 ${className}`}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase text-slate-500">{eyebrow}</p>
@@ -26,7 +28,7 @@ export function SetupReviewSection({ id, eyebrow, title, action, children, class
 
 export function SetupReviewEmpty({ title, message }: { title: string; message: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-[var(--line)] bg-[var(--panel-muted)] p-4">
+    <div className={`rounded-lg border border-dashed border-[var(--line)] bg-[var(--panel-muted)] p-4 ${motionCardClass}`}>
       <p className="text-sm font-semibold text-[var(--strong)]">{title}</p>
       <p className="mt-1 text-sm leading-6 text-slate-500">{message}</p>
     </div>
@@ -34,5 +36,5 @@ export function SetupReviewEmpty({ title, message }: { title: string; message: s
 }
 
 export function SetupReviewCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`muted-surface rounded-lg p-4 ${className}`}>{children}</div>;
+  return <div className={`muted-surface ${motionCardClass} rounded-lg p-4 ${className}`}>{children}</div>;
 }

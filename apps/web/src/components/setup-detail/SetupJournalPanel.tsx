@@ -5,6 +5,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge, toneForQuality } from "@/components/status/badge";
 import type { JournalEntry, UUID } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/formatting/dates";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { setupLabel, sanitizeSetupText } from "@/lib/setup-detail/labels";
 import { SetupEmptySection } from "./SetupEmptySection";
 
@@ -136,15 +137,17 @@ export function SetupJournalPanel({
           <SetupEmptySection title="No journal entries" message="No journal notes were returned for this signal." />
         ) : (
           <div className="space-y-3">
-            {entries.map((entry) => (
-              <div key={entry.id} className="muted-surface rounded-lg p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-[var(--strong)]">{sanitizeSetupText(entry.title)}</h3>
-                  <Badge value={entry.decision_type} tone={toneForQuality(entry.status)} />
+            {entries.map((entry, index) => (
+              <AnimatedListItem as="article" key={entry.id} style={motionRevealDensityStyle(index, "compact")}>
+                <div className="muted-surface rounded-lg p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-[var(--strong)]">{sanitizeSetupText(entry.title)}</h3>
+                    <Badge value={entry.decision_type} tone={toneForQuality(entry.status)} />
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(entry.user_notes)}</p>
+                  <p className="mt-2 text-xs text-slate-500">Saved {formatDateTime(entry.created_at)}</p>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(entry.user_notes)}</p>
-                <p className="mt-2 text-xs text-slate-500">Saved {formatDateTime(entry.created_at)}</p>
-              </div>
+              </AnimatedListItem>
             ))}
           </div>
         )}

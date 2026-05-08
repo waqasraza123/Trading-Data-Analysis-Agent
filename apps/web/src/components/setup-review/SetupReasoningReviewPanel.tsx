@@ -1,5 +1,6 @@
 import { Badge, toneForQuality } from "@/components/status/badge";
 import { setupLabel, sanitizeSetupText } from "@/lib/setup-detail/labels";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { SetupReviewModel } from "@/lib/setup-review/types";
 import { SetupReviewCard, SetupReviewEmpty, SetupReviewSection } from "./SetupReviewSection";
 
@@ -22,17 +23,19 @@ export function SetupReasoningReviewPanel({ model }: { model: SetupReviewModel }
           </div>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(reasoning.summary)}</p>
           <div className="grid gap-4 lg:grid-cols-2">
-            {reasoning.scenarios.map((scenario) => (
-              <SetupReviewCard key={`${scenario.scenario_type}-${scenario.scenario_label}`}>
-                <div className="flex flex-wrap gap-2">
-                  <Badge value={scenario.scenario_type} tone="info" />
-                  <Badge value={scenario.possibility_label} tone={toneForQuality(scenario.possibility_label)} />
-                </div>
-                <h3 className="mt-3 text-sm font-semibold text-[var(--strong)]">{sanitizeSetupText(scenario.scenario_label)}</h3>
-                <ScenarioList title="Supporting evidence" items={scenario.supporting_evidence} />
-                <ScenarioList title="Conflicting evidence" items={scenario.conflicting_evidence} />
-                <ScenarioList title="Backend-safe suggested actions" items={scenario.suggested_backend_actions.map(setupLabel)} />
-              </SetupReviewCard>
+            {reasoning.scenarios.map((scenario, index) => (
+              <AnimatedListItem as="article" key={`${scenario.scenario_type}-${scenario.scenario_label}`} style={motionRevealDensityStyle(index, "compact")}>
+                <SetupReviewCard>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge value={scenario.scenario_type} tone="info" />
+                    <Badge value={scenario.possibility_label} tone={toneForQuality(scenario.possibility_label)} />
+                  </div>
+                  <h3 className="mt-3 text-sm font-semibold text-[var(--strong)]">{sanitizeSetupText(scenario.scenario_label)}</h3>
+                  <ScenarioList title="Supporting evidence" items={scenario.supporting_evidence} />
+                  <ScenarioList title="Conflicting evidence" items={scenario.conflicting_evidence} />
+                  <ScenarioList title="Backend-safe suggested actions" items={scenario.suggested_backend_actions.map(setupLabel)} />
+                </SetupReviewCard>
+              </AnimatedListItem>
             ))}
           </div>
           {reasoning.limitations.length > 0 && (

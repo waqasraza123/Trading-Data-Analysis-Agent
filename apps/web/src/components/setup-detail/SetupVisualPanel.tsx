@@ -6,6 +6,7 @@ import { Badge } from "@/components/status/badge";
 import { chartLabel } from "@/lib/charts/labels";
 import type { ChartZone } from "@/lib/charts/types";
 import { formatDateTime } from "@/lib/formatting/dates";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { SetupDetailViewModel } from "@/lib/setup-detail/types";
 
 export function SetupVisualPanel({ model }: { model: SetupDetailViewModel }) {
@@ -41,8 +42,14 @@ export function SetupVisualPanel({ model }: { model: SetupDetailViewModel }) {
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
             <p className="font-semibold">Data quality warnings</p>
             <ul className="mt-2 space-y-1">
-              {chart.warnings.slice(0, 5).map((warning) => (
-                <li key={`${warning.code}-${warning.message}`}>{warning.message}</li>
+              {chart.warnings.slice(0, 5).map((warning, index) => (
+                <AnimatedListItem
+                  as="li"
+                  key={`${warning.code}-${warning.message}`}
+                  style={motionRevealDensityStyle(index, "compact")}
+                >
+                  {warning.message}
+                </AnimatedListItem>
               ))}
             </ul>
           </div>
@@ -64,12 +71,18 @@ function ZoneSummary({ zones }: { zones: ChartZone[] }) {
   }
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {visibleZones.map((zone) => (
-        <div key={zone.id} className="muted-surface rounded-lg p-3">
-          <p className="text-xs font-semibold uppercase text-slate-500">{chartLabel(zone.kind)}</p>
-          <p className="mt-1 text-sm font-medium text-[var(--strong)]">{zone.label}</p>
-          <p className="mt-1 text-xs text-slate-500">{zoneValue(zone)}</p>
-        </div>
+      {visibleZones.map((zone, index) => (
+        <AnimatedListItem
+          as="article"
+          key={zone.id}
+          style={motionRevealDensityStyle(index, "compact")}
+        >
+          <div className="muted-surface rounded-lg p-3">
+            <p className="text-xs font-semibold uppercase text-slate-500">{chartLabel(zone.kind)}</p>
+            <p className="mt-1 text-sm font-medium text-[var(--strong)]">{zone.label}</p>
+            <p className="mt-1 text-xs text-slate-500">{zoneValue(zone)}</p>
+          </div>
+        </AnimatedListItem>
       ))}
     </div>
   );

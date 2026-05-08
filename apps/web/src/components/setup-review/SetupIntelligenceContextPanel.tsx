@@ -1,6 +1,7 @@
 import { Badge, toneForQuality } from "@/components/status/badge";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { setupLabel, setupRecordText, sanitizeSetupText } from "@/lib/setup-detail/labels";
+import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { SetupReviewModel } from "@/lib/setup-review/types";
 import { SetupReviewCard, SetupReviewEmpty, SetupReviewSection } from "./SetupReviewSection";
 
@@ -23,7 +24,7 @@ export function SetupIntelligenceContextPanel({ model }: { model: SetupReviewMod
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(model.quality.quality_run.summary)}</p>
               {model.quality.findings.length > 0 && (
-                <p className="mt-2 text-xs text-slate-500">{model.quality.findings.length} quality findings returned for review.</p>
+              <p className="mt-2 text-xs text-slate-500">{model.quality.findings.length} quality findings returned for review.</p>
               )}
             </SetupReviewCard>
           )}
@@ -36,7 +37,14 @@ export function SetupIntelligenceContextPanel({ model }: { model: SetupReviewMod
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(model.multiTimeframeContext.context_summary)}</p>
               {model.multiTimeframeContext.warnings_json.slice(0, 2).map((warning, index) => (
-                <p key={`mtf-warning-${index}`} className="mt-2 text-xs text-slate-500">{setupRecordText(warning)}</p>
+                <AnimatedListItem
+                  as="p"
+                  key={`mtf-warning-${index}`}
+                  style={motionRevealDensityStyle(index, "compact")}
+                  className="mt-2 text-xs text-slate-500"
+                >
+                  {setupRecordText(warning)}
+                </AnimatedListItem>
               ))}
             </SetupReviewCard>
           )}
@@ -47,14 +55,16 @@ export function SetupIntelligenceContextPanel({ model }: { model: SetupReviewMod
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{sanitizeSetupText(model.crossAssetContext.summary)}</p>
               )}
               <div className="mt-3 space-y-2">
-                {model.crossAssetResults.slice(0, 4).map((result) => (
-                  <div key={result.id} className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-3">
+                {model.crossAssetResults.slice(0, 4).map((result, index) => (
+                  <AnimatedListItem as="article" key={result.id} style={motionRevealDensityStyle(index, "compact")}>
+                    <div className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-3">
                     <div className="flex flex-wrap gap-2">
                       <Badge value={setupLabel(result.alignment_label)} tone={toneForQuality(result.alignment_label)} />
                       <Badge value={setupLabel(result.lead_lag_label)} tone="info" />
                       <Badge value={setupLabel(result.data_quality_label)} tone={toneForQuality(result.data_quality_label)} />
                     </div>
-                  </div>
+                    </div>
+                  </AnimatedListItem>
                 ))}
               </div>
             </SetupReviewCard>

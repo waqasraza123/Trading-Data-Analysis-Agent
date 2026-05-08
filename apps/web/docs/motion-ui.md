@@ -522,6 +522,25 @@ Keep the manifest in sync when adding new routes:
 - Repeated rows and card blocks now use `AnimatedListItem`, `motionCardClass`, and density-aware `motionRevealDensityStyle(index, "compact")` where motion is visually appropriate.
 - Safety posture remains unchanged: read-only review interfaces only, no backend actions, no advisory/trading execution language.
 
+## Detailed rollout notes (Production step: setup review/detail reveal hardening)
+
+- Completed a deeper row/section motion pass focused on setup review/detail surfaces for read-only route consistency:
+  - `apps/web/src/components/setup-review/SetupReviewHeader.tsx`
+  - `apps/web/src/components/setup-review/SetupReviewSection.tsx`
+  - `apps/web/src/components/setup-review/SetupContextReviewPanel.tsx`
+  - `apps/web/src/components/setup-review/SetupEvidenceReviewPanel.tsx`
+  - `apps/web/src/components/setup-review/SetupHistoricalReviewPanel.tsx`
+  - `apps/web/src/components/setup-review/SetupWaitAvoidReviewPanel.tsx`
+  - `apps/web/src/components/setup-review/SetupIntelligenceContextPanel.tsx`
+  - `apps/web/src/components/setup-review/SetupReasoningReviewPanel.tsx`
+  - `apps/web/src/components/setup-review/SetupAuditReviewPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupDetailView.tsx`
+  - `apps/web/src/components/setup-detail/SetupVisualPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupConflictPanel.tsx`
+  - `apps/web/src/components/setup-detail/SetupJournalPanel.tsx`
+- `Signal detail` pages now use `AnimatedSection` plus section-level `AnimatedListItem` wrappers in `SetupDetailView`, with compact-staggered row motion in detail panels where existing density warrants motion.
+- Setup review and setup-detail card-level motion uses shared preset/profile helpers only (`@/lib/ui/motion`) and keeps read-only route behavior unchanged.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.
