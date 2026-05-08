@@ -191,6 +191,8 @@ Keep the manifest in sync when adding new routes:
 - `Sidebar` and `MobileNav` migrated high-density navigation reveal timing to `motionRevealDensityStyle(index, "compact")`.
 - `SignalTriageBoard`, `SignalTriageColumn`, `SignalTriageCard`, `CommandCenterCockpit`, and `BriefNarrative` now consume density-aware reveal styles for section/panel ordering and dense row reveals.
 - Default section/panel reveals use `motionRevealDensityStyle(index)` to preserve baseline 45ms behavior while removing inline `motionRevealStyle(..., 45)` usage in active rollout surfaces.
+- Shared loading placeholders now use `ShimmerSkeleton` across command-center, brief, triage, dashboard, chart, and onboarding loading surfaces to keep shimmer/pulse behavior centralized.
+- Motion core bug fix: `AnimatedSection` and `AnimatedListItem` now apply `motion-no-motion` for `preset="none"`, preserving existing animation settings while explicitly disabling reveal movement when callers opt out.
 - This pass does not change route behavior, backend composition, or advisory/safety copy.
 
 ## Governance checklist

@@ -98,7 +98,7 @@ const withMotionDefaults = (
 };
 
 function motionClass(preset: MotionPreset): string {
-  return cn("motion-reveal", preset !== "none" && presetClassName[preset]);
+  return cn("motion-reveal", presetClassName[preset]);
 }
 
 function resolveTag(as: AnimatedElement): AnimatedElement {
