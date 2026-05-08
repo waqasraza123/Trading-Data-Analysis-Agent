@@ -3,6 +3,7 @@ import { Badge, toneForQuality } from "@/components/status/badge";
 import { OutcomeLabelBadge } from "@/components/status/OutcomeLabelBadge";
 import type { SignalOutcome } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/formatting/dates";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 
 export function OutcomeList({ outcomes }: { outcomes: SignalOutcome[] }) {
   if (outcomes.length === 0) {
@@ -17,13 +18,18 @@ export function OutcomeList({ outcomes }: { outcomes: SignalOutcome[] }) {
         <span>Observation</span>
         <span>Window end</span>
       </div>
-      {outcomes.map((outcome) => (
-        <div key={outcome.id} className="grid grid-cols-4 gap-3 border-t border-[var(--line)] px-4 py-3 text-sm">
+      {outcomes.map((outcome, index) => (
+        <AnimatedListItem
+          as="div"
+          key={outcome.id}
+          className={`${motionCardClass} ${motionRevealPresetClass("scale-subtle")} grid grid-cols-4 gap-3 border-t border-[var(--line)] px-4 py-3 text-sm`}
+          style={motionRevealDensityStyle(index, "compact")}
+        >
           <span className="font-medium">{outcome.horizon_minutes}m</span>
           <Badge value={outcome.evaluation_status} tone={toneForQuality(outcome.evaluation_status)} />
           <OutcomeLabelBadge value={outcome.outcome_label} />
           <span className="text-slate-500">{formatDateTime(outcome.future_window_end)}</span>
-        </div>
+        </AnimatedListItem>
       ))}
     </div>
   );

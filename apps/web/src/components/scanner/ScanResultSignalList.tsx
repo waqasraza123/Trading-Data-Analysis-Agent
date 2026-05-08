@@ -3,6 +3,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge, toneForBias, toneForQuality } from "@/components/status/badge";
 import { compactSymbolLabel, safeScannerText } from "@/lib/scanner/labels";
 import type { ScannerData } from "@/lib/scanner/types";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 
 export function ScanResultSignalList({ data }: { data: ScannerData }) {
   return (
@@ -13,11 +14,16 @@ export function ScanResultSignalList({ data }: { data: ScannerData }) {
         <div className="muted-surface rounded-lg p-5 text-sm text-slate-500">No signal records were returned for this scan run.</div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {data.selectedRunSignals.map((classification) => {
+          {data.selectedRunSignals.map((classification, index) => {
             const signal = classification.signal;
             const dataQuality = classification.confidence_components.find((component) => component.component_name === "data_quality");
             return (
-              <div key={signal.id} className="muted-surface rounded-lg p-4">
+              <AnimatedListItem
+                as="article"
+                key={signal.id}
+                className={`${motionCardClass} ${motionRevealPresetClass("scale-subtle")} muted-surface rounded-lg p-4`}
+                style={motionRevealDensityStyle(index, "compact")}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="font-semibold text-[var(--strong)]">{compactSymbolLabel(data.symbols, signal.symbol_id)} {signal.timeframe}</h3>
@@ -34,7 +40,7 @@ export function ScanResultSignalList({ data }: { data: ScannerData }) {
                   <Link className="text-[var(--info)]" href={`/signals/${signal.id}`}>Review result</Link>
                   <Link className="text-[var(--info)]" href={`/signals/${signal.id}#setup-context`}>Setup context</Link>
                 </div>
-              </div>
+              </AnimatedListItem>
             );
           })}
         </div>

@@ -13,6 +13,7 @@ import { formatDateTime } from "@/lib/formatting/dates";
 import { shortIdentifier } from "@/lib/formatting/labels";
 import type { JournalEntryContext } from "@/lib/journal/types";
 import { reviewLabel } from "@/lib/review/labels";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { JournalReflectionBadge } from "./JournalReflectionBadge";
 
 export function JournalEntryList({
@@ -59,8 +60,13 @@ export function JournalEntryList({
       action={message ? <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">{message}</p> : null}
     >
       <div className="space-y-3">
-        {entries.map((entry) => (
-          <article key={entry.id} className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--accent)]">
+        {entries.map((entry, index) => (
+          <AnimatedListItem
+            as="article"
+            key={entry.id}
+            className={`${motionCardClass} ${motionRevealPresetClass("scale-subtle")} rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--accent)]`}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-[var(--strong)]">{entry.title}</h3>
@@ -98,7 +104,7 @@ export function JournalEntryList({
                 </button>
               )}
             </div>
-          </article>
+          </AnimatedListItem>
         ))}
       </div>
     </ReviewSurfacePanel>
