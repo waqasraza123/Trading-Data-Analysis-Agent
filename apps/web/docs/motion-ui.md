@@ -560,6 +560,21 @@ Keep the manifest in sync when adding new routes:
 - Motion implementation remains constrained to public helpers from `@/lib/ui/motion`: `AnimatedListItem`, `motionRevealDensityStyle`, and `motionCardClass` where panel-level motion tokens are needed.
 - No API contract, safety, or data-flow changes were introduced in this pass.
 
+## Detailed rollout notes (Production step: command-center panel reveal depth)
+
+- Deepened motion polish on command-center high-value surface modules to add section and row-level cadence while preserving explicit safety posture and fallback behavior:
+  - `apps/web/src/components/command-center/CommandCenterHeader.tsx`
+  - `apps/web/src/components/command-center/CommandCenterMorningBrief.tsx`
+  - `apps/web/src/components/command-center/CommandCenterReadinessStrip.tsx`
+  - `apps/web/src/components/command-center/CommandCenterNavigationGrid.tsx`
+  - `apps/web/src/components/command-center/CommandCenterQuickActions.tsx`
+  - `apps/web/src/components/command-center/CommandCenterPrioritySetups.tsx`
+  - `apps/web/src/components/command-center/CommandCenterAvoidPanel.tsx`
+  - `apps/web/src/components/command-center/CommandCenterOutcomeReview.tsx`
+  - `apps/web/src/components/command-center/CommandCenterWorkflowStatus.tsx`
+- Motion now uses shared public API only (`AnimatedListItem`, `motionCardClass`, `motionRevealPresetClass`, and `motionRevealDensityStyle`) and retains `motion-reduced-motion` expectations with non-invasive class-only changes.
+- No backend endpoints, data composition, or workflow execution semantics were changed.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

@@ -1,5 +1,19 @@
 # Current Session
 
+## Modern Motion UI Rollout – Command Center Deepening
+
+- Production motion pass added to command-center high-value surfaces without contract or behavior changes:
+  - `apps/web/src/components/command-center/CommandCenterHeader.tsx`
+  - `apps/web/src/components/command-center/CommandCenterMorningBrief.tsx`
+  - `apps/web/src/components/command-center/CommandCenterReadinessStrip.tsx`
+  - `apps/web/src/components/command-center/CommandCenterNavigationGrid.tsx`
+  - `apps/web/src/components/command-center/CommandCenterQuickActions.tsx`
+  - `apps/web/src/components/command-center/CommandCenterPrioritySetups.tsx`
+  - `apps/web/src/components/command-center/CommandCenterAvoidPanel.tsx`
+  - `apps/web/src/components/command-center/CommandCenterOutcomeReview.tsx`
+  - `apps/web/src/components/command-center/CommandCenterWorkflowStatus.tsx`
+- Updated `apps/web/docs/motion-ui.md` with this production step and kept this commit scoped to code + docs only (no tests/builds run), as requested.
+
 ## Modern Motion UI Rollout – Setup Detail Reveal Deepening
 
 - Completed production-grade staging motion pass for setup detail surfaces with existing shared primitives and no API/behavior contract changes:
