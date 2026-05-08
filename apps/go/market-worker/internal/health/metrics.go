@@ -20,6 +20,7 @@ type Metrics struct {
 	CandlesSkipped            int        `json:"candlesSkipped"`
 	CandlesConflicted         int        `json:"candlesConflicted"`
 	LiveSubscriptionsClaimed   int        `json:"liveSubscriptionsClaimed"`
+	LiveSubscriptionsStale     int        `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
 	LiveReconnects            int        `json:"liveReconnects"`
 	LiveMessagesReceived      int        `json:"liveMessagesReceived"`
@@ -50,6 +51,7 @@ type Snapshot struct {
 	CandlesSkipped            int                   `json:"candlesSkipped"`
 	CandlesConflicted         int                   `json:"candlesConflicted"`
 	LiveSubscriptionsClaimed   int                   `json:"liveSubscriptionsClaimed"`
+	LiveSubscriptionsStale     int                   `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
 	LiveReconnects            int                   `json:"liveReconnects"`
 	LiveMessagesReceived      int                   `json:"liveMessagesReceived"`
@@ -105,6 +107,15 @@ func (m *Metrics) RecordLiveSubscriptionClaimed() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveSubscriptionsClaimed++
+}
+
+func (m *Metrics) RecordLiveSubscriptionStale(count int) {
+	if count <= 0 {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionsStale += count
 }
 
 func (m *Metrics) RecordLiveSubscriptionStarted() {
@@ -217,6 +228,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		CandlesSkipped:           m.CandlesSkipped,
 		CandlesConflicted:        m.CandlesConflicted,
 		LiveSubscriptionsClaimed:  m.LiveSubscriptionsClaimed,
+		LiveSubscriptionsStale:    m.LiveSubscriptionsStale,
 		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
 		LiveReconnects:           m.LiveReconnects,
 		LiveMessagesReceived:     m.LiveMessagesReceived,

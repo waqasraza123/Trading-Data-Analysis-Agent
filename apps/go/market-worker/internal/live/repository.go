@@ -82,6 +82,30 @@ limit $1
 	return subscriptions, rows.Err()
 }
 
+func (r *Repository) MarkStaleCandidates(ctx context.Context, staleAfter time.Duration) (int, error) {
+	if !r.hasLiveSubscriptions() || staleAfter <= 0 {
+		return 0, nil
+	}
+	result, err := r.pool.Exec(ctx, `
+update live_feed_subscriptions
+set status = 'stale',
+	last_error = left('live stream heartbeat stale', 1000),
+	updated_at = now()
+where status = 'active'
+	and last_message_at is not null
+	and last_message_at < now() - $1
+	and (
+		worker_id is null
+		or lease_expires_at is null
+		or lease_expires_at <= now()
+	)
+`, staleAfter)
+	if err != nil {
+		return 0, err
+	}
+	return int(result.RowsAffected()), nil
+}
+
 func (r *Repository) LoadSubscription(ctx context.Context, subscriptionID uuid.UUID) (Subscription, error) {
 	if !r.hasLiveSubscriptions() {
 		return Subscription{}, ErrSubscriptionDisabled

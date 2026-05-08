@@ -91,6 +91,7 @@ Operational checks in serve mode:
 - `/metrics.json` should show live counters increasing for active streams:
   - `liveSubscriptionsClaimed`
   - `liveSubscriptionsStarted`
+  - `liveSubscriptionsStale`
   - `liveReconnects`
   - `liveMessagesReceived`
   - `liveCandlesWritten`
@@ -100,6 +101,11 @@ Operational checks in serve mode:
   - `market_worker_live_lease_lost`
   - `market_worker_live_lease_release_failed`
   - `market_worker_live_subscription_stream_reconnect`
+  - `market_worker_live_subscriptions_stale`
+- Any subscription with repeated stale transitions without resume should be investigated:
+  - check `live_feed_subscriptions.last_message_at` drift versus exchange heartbeat expectations;
+  - verify websocket stability and DNS/network health in the same worker pod;
+  - confirm `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` aligns with deploy-level message cadence.
 
 ## Concurrency And Locks
 

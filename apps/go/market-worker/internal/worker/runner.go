@@ -189,6 +189,14 @@ func (r *Runner) processLiveCandidates(ctx context.Context) (int, error) {
 	if !r.live.Enabled() {
 		return 0, nil
 	}
+	staleCount, err := r.live.MarkStaleCandidates(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if staleCount > 0 && r.metrics != nil {
+		r.metrics.RecordLiveSubscriptionStale(staleCount)
+		r.logger.Info("market_worker_live_subscriptions_stale", "count", staleCount)
+	}
 	subscriptions, err := r.live.RuntimeCandidates(ctx, r.config.LiveStreamClaimBatchSize)
 	if err != nil {
 		return 0, err

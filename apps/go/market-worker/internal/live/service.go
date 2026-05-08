@@ -51,6 +51,13 @@ func (s *Service) RuntimeCandidates(ctx context.Context, limit int) ([]Subscript
 	return s.repo.RuntimeCandidates(ctx, limit)
 }
 
+func (s *Service) MarkStaleCandidates(ctx context.Context) (int, error) {
+	if !s.Enabled() {
+		return 0, nil
+	}
+	return s.repo.MarkStaleCandidates(ctx, s.cfg.LiveStreamStaleAfter)
+}
+
 func (s *Service) AcquireLease(ctx context.Context, subscription Subscription) bool {
 	if !s.Enabled() {
 		return false

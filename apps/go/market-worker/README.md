@@ -116,8 +116,9 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   reconnect behavior.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
-- `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls claim gating: subscriptions without fresh
-  heartbeat (greater than the configured age since `last_message_at`) are skipped from new claim cycles.
+- `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:
+  subscriptions with `last_message_at` older than this threshold and no active lease are marked `stale`
+  before each claim attempt. Stale rows are intentionally skipped from active workclaim.
 
 `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits in-flight fetches per provider key. `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`
 adds optional provider-key pacing before each fetch. These controls are independent from database

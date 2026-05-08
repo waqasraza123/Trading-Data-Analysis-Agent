@@ -28,7 +28,8 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   rows, preserve existing final/partial candle write semantics, record optional provider health,
   ingestion performance/conflict diagnostics, runtime heartbeats, and expose local health/metrics.
   Runtime live-stream candidate claiming now excludes subscriptions with stale `last_message_at` heartbeats
-  when configured through `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`.
+  when configured through `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`; runtime sweeps also mark
+  eligible rows as `stale` for operator visibility before skipping them from claim cycles.
   It supports `serve`, `once`, and `inspect` run modes, explicit terminal versus retryable failure
   handling, bounded parallel execution, provider backpressure controls, per-provider circuit
   breaking, claimed job lock renewal, bounded job/request execution timeouts, direct request stale
