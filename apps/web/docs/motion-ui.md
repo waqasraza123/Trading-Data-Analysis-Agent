@@ -195,6 +195,7 @@ Keep the manifest in sync when adding new routes:
 - `SignalTriageBoard`, `SignalTriageColumn`, `SignalTriageCard`, `CommandCenterCockpit`, and `BriefNarrative` now consume density-aware reveal styles for section/panel ordering and dense row reveals.
 - Default section/panel reveals use `motionRevealDensityStyle(index)` to preserve baseline 45ms behavior while removing inline `motionRevealStyle(..., 45)` usage in active rollout surfaces.
 - Shared loading placeholders now use `ShimmerSkeleton` across command-center, brief, triage, dashboard, chart, and onboarding loading surfaces to keep shimmer/pulse behavior centralized.
+- `scanner/page.tsx` now applies staged `AnimatedListItem` reveals across hero, preset/workflow controls, right-column panels, and result/error blocks using compact/comfortable density for transition consistency.
 - Added `RouteLoadingShell` under `src/components/layout/RouteLoadingShell.tsx` to centralize `AppShell` + route loading scaffolding, and migrated the full route loading matrix to this shared primitive:
   - `app/loading.tsx`
   - `app/brief/loading.tsx`
