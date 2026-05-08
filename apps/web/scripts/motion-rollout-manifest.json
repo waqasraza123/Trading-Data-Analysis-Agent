@@ -1,4 +1,6 @@
 {
+  "version": "1.0",
+  "exemptRoutes": [""],
   "routes": [
     {
       "route": "command-center",

@@ -270,10 +270,14 @@ Keep the manifest in sync when adding new routes:
   - rejecting direct imports from the legacy path `@/components/ui/motion` (enforcing the public `@/lib/ui/motion` API boundary)
   - rejecting `motionRevealClass` and `motionRevealStyle` usage by default, with a controlled opt-out flag `--allow-legacy`
 - This check is intended as the motion rollout contract guard before PR merge and keeps implementation intent tied to the manifest.
+- The script now also performs a route-coverage gate by scanning `apps/web/app/*/page.tsx` and verifying manifest parity.
+  - `app/page.tsx` is intentionally exempt in `motion-rollout-manifest.json` via `exemptRoutes`.
+  - If a new user-facing page is added, add it to the manifest and docs rollout map before merge.
 - Recommended run from `apps/web` before merging route-level motion/layout edits:
   - `npm run motion:rollout-audit`
   - `npm run motion:rollout-audit -- --allow-legacy` (use only for legacy migration windows)
   - `npm run motion:rollout-audit:json`
+  - `npm run motion:rollout-audit -- --allow-coverage-gaps` (for temporary unblock during phased migration)
 
 ## Detailed rollout notes (Production step: shell + primitive hardening)
 

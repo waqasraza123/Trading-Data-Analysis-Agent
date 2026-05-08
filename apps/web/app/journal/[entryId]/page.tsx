@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { JournalEntryDetail } from "@/components/journal/JournalEntryDetail";
-import { AnimatedSection } from "@/lib/ui/motion";
+import { AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 import { getJournalData } from "@/lib/api/journal";
 
 type JournalEntryPageProps = {
@@ -16,7 +16,11 @@ export default async function JournalEntryPage({ params, searchParams }: Journal
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <AnimatedSection as="section" className="space-y-6">
+      <AnimatedSection
+        as="section"
+        className="space-y-6"
+        style={motionRevealDensityStyle(0)}
+      >
         {data.selectedEntry ? (
           <JournalEntryDetail data={data} selectedEntry={data.selectedEntry} />
         ) : (
