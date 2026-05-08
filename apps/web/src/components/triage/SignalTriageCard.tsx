@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { cn } from "@/lib/ui/cn";
 import { Badge } from "@/components/status/badge";
 import { BiasBadge } from "@/components/status/BiasBadge";
 import { ConfidenceBadge } from "@/components/status/ConfidenceBadge";
@@ -13,9 +14,18 @@ import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { formatPercent } from "@/lib/formatting/numbers";
 import { safeTriageText, shortReason } from "@/lib/triage/labels";
 import type { TriageCandidate } from "@/lib/triage/types";
+import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
 import { TriageReasonBadges } from "./TriageReasonBadges";
 
-export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) {
+export function SignalTriageCard({
+  candidate,
+  className = "",
+  style = motionRevealStyle(),
+}: {
+  candidate: TriageCandidate;
+  className?: string;
+  style?: CSSProperties;
+}) {
   const signal = candidate.signal.signal;
   const symbolLabel = candidate.symbol?.symbol || shortIdentifier(signal.symbol_id);
   const evidenceCount = candidate.signal.evidence.length;
@@ -31,7 +41,15 @@ export function SignalTriageCard({ candidate }: { candidate: TriageCandidate }) 
   const dataOnboardingHref = `${dataOnboardingBaseHref}${dataOnboardingBaseHref.includes("?") ? "&" : "?"}symbolIds=${signal.symbol_id}&timeframes=${encodeURIComponent(signal.timeframe)}`;
 
   return (
-    <article className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-soft">
+    <article
+      style={style}
+      className={cn(
+        "group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-soft",
+        motionCardClass,
+        motionRevealClass(),
+        className,
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-lg font-semibold text-[var(--strong)]">{symbolLabel}</h3>

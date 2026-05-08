@@ -11,7 +11,12 @@ type MetricCardProps = {
 
 export function MetricCard({ label, value, detail, trend, className }: MetricCardProps) {
   return (
-    <div className={cn("muted-surface min-w-0 rounded-2xl p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]", className)}>
+    <div
+      className={cn(
+        "muted-surface motion-card motion-hover-lift min-w-0 rounded-2xl p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <p className="min-w-0 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{label}</p>
         {trend}

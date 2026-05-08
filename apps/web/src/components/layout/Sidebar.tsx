@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, navigationItems, navigationSections } from "@/lib/ui/navigation";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { AnimatedSection, motionCardClass, motionRevealStyle, motionRevealClass } from "@/components/ui/motion";
 
 type SidebarProps = {
   appName: string;
@@ -17,7 +18,13 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] p-4 shadow-panel backdrop-blur-xl">
+    <AnimatedSection
+      as="aside"
+      preset="scale-subtle"
+      className={cn(
+        "flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] p-4 shadow-panel backdrop-blur-xl",
+      )}
+    >
       <Link href={navigationHref("commandCenter", workspaceId)} className="group flex items-center gap-3 rounded-2xl p-2 transition hover:bg-[var(--surface-muted)]">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--accent)_0%,var(--info)_100%)] text-sm font-black text-white shadow-glow">
           TI
@@ -38,17 +45,20 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
               <div key={section}>
                 <p className="px-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">{section}</p>
                 <div className="mt-2 space-y-1">
-                  {items.map((item) => {
+                  {items.map((item, index) => {
                     const active = isActiveNavigationPath(pathname, item.href);
                     return (
                       <Link
                         key={item.key}
                         className={cn(
                           "group flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition",
+                          motionCardClass,
+                          motionRevealClass(),
                           active
                             ? "bg-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
                             : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--strong)]",
                         )}
+                        style={motionRevealStyle(index, 45)}
                         href={navigationHref(item.key, workspaceId)}
                       >
                         <span className="min-w-0 truncate">{item.label}</span>
@@ -62,6 +72,6 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
           })}
         </div>
       </nav>
-    </aside>
+    </AnimatedSection>
   );
 }

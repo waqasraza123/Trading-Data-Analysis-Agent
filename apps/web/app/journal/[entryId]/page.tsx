@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState } from "@/components/empty-states/empty-state";
 import { JournalEntryDetail } from "@/components/journal/JournalEntryDetail";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getJournalData } from "@/lib/api/journal";
 
 type JournalEntryPageProps = {
@@ -15,7 +16,7 @@ export default async function JournalEntryPage({ params, searchParams }: Journal
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         {data.selectedEntry ? (
           <JournalEntryDetail data={data} selectedEntry={data.selectedEntry} />
         ) : (
@@ -24,7 +25,7 @@ export default async function JournalEntryPage({ params, searchParams }: Journal
             message="The backend did not return this journal entry, or the journal endpoint is unavailable."
           />
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

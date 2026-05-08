@@ -11,6 +11,7 @@ import { QualitySummaryCards } from "@/components/quality/QualitySummaryCards";
 import { QualityWarningsPanel } from "@/components/quality/QualityWarningsPanel";
 import { SymbolTimeframeQualityGrid } from "@/components/quality/SymbolTimeframeQualityGrid";
 import { WalkForwardPanel } from "@/components/quality/WalkForwardPanel";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getQualityScoreboardData } from "@/lib/api/quality";
 
 type QualityPageProps = {
@@ -23,7 +24,7 @@ export default async function QualityPage({ searchParams }: QualityPageProps) {
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <QualityScoreboardHeader data={data} />
         <QualityErrorState failures={data.failures} />
         {!data.workspace || !data.hasAnyQualityData ? (
@@ -41,7 +42,7 @@ export default async function QualityPage({ searchParams }: QualityPageProps) {
             <SymbolTimeframeQualityGrid data={data} />
           </>
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

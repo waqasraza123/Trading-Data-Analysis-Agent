@@ -15,6 +15,7 @@ import {
   listProductReadinessRuns,
 } from "@/lib/api/productReadiness";
 import { listWorkspaces } from "@/lib/api/market";
+import { AnimatedSection } from "@/components/ui/motion";
 import type { ApiFailure, ApiResult } from "@/lib/api/types";
 import type { ProductReadinessPageData, ProductReadinessRun, ReadinessFailure } from "@/lib/readiness/types";
 
@@ -31,7 +32,7 @@ export default async function ReadinessPage({ searchParams }: ReadinessPageProps
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <ReadinessHeader data={data} />
         {!data.workspace && (
           <EmptyState
@@ -67,7 +68,7 @@ export default async function ReadinessPage({ searchParams }: ReadinessPageProps
         ) : (
           <ReadinessEmptyState workspaceId={data.workspace?.id} />
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

@@ -13,8 +13,9 @@ export function Surface({ children, className, muted = false, interactive = fals
     <div
       className={cn(
         muted ? "muted-surface" : "surface",
-        "rounded-2xl",
+        "motion-card rounded-2xl",
         interactive && "transition duration-200 hover:-translate-y-0.5 hover:shadow-glow",
+        interactive && "motion-hover-lift",
         className,
       )}
     >

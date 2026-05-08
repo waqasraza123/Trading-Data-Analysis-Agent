@@ -9,6 +9,7 @@ import {
   ReviewMetricGrid,
   ReviewSurfaceMetric,
 } from "@/components/review-surfaces/ReviewSurface";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getNotificationInboxData } from "@/lib/api/notifications";
 
 type NotificationsPageProps = {
@@ -21,7 +22,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <NotificationInboxHeader data={data} />
         {!data.workspace ? (
           <EmptyState
@@ -44,7 +45,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
             </div>
           </>
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, primaryNavigationTargets, navigationItems } from "@/lib/ui/navigation";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
+import { AnimatedSection, motionRevealClass, motionRevealStyle } from "@/components/ui/motion";
 
 type MobileNavProps = {
   appName: string;
@@ -21,7 +22,11 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return (
-    <header className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-4 py-3 shadow-soft backdrop-blur-xl">
+    <AnimatedSection
+      as="header"
+      preset="fade-up"
+      className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-4 py-3 shadow-soft backdrop-blur-xl"
+    >
       <div className="flex items-center justify-between gap-3">
         <Link href={navigationHref("commandCenter", workspaceId)} className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Market intelligence</p>
@@ -34,22 +39,24 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
         <ApiStatusIndicator apiBaseUrl={apiBaseUrl} />
       </div>
       <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const active = isActiveNavigationPath(pathname, item.href);
           return (
             <Link
               key={item.key}
               className={cn(
                 "shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition",
+                motionRevealClass(),
                 active ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "bg-[var(--surface-muted)] text-[var(--text-muted)]",
               )}
               href={navigationHref(item.key, workspaceId)}
+              style={motionRevealStyle(index, 45)}
             >
               {item.shortLabel || item.label}
             </Link>
           );
         })}
       </nav>
-    </header>
+    </AnimatedSection>
   );
 }

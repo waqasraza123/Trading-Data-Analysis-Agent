@@ -3,6 +3,8 @@ import { formatInteger } from "@/lib/formatting/numbers";
 import { humanizeLabel, shortIdentifier } from "@/lib/formatting/labels";
 import { navigationHref } from "@/lib/ui/navigation";
 import { toneForBias, toneForDataQuality, toneForOutcome, toneForPriority } from "@/lib/ui/statusStyles";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
 import type {
   BriefActiveSetupItem,
   BriefAvoidConditionItem,
@@ -23,10 +25,15 @@ import {
 
 export function BriefNarrative({ brief }: { brief: WorkspaceBrief }) {
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", motionRevealClass("scale"))}>
       <BriefHero brief={brief} />
       {brief.backendUnavailable && (
-        <BriefPanel title="Backend unavailable" eyebrow="Brief state">
+        <BriefPanel
+          title="Backend unavailable"
+          eyebrow="Brief state"
+          className={motionRevealClass()}
+          style={motionRevealStyle(1, 45)}
+        >
           <BriefEmptyBlock
             title="Backend unavailable"
             message="The brief is limited to any optional endpoint responses that were returned before the backend became unavailable."
@@ -34,7 +41,12 @@ export function BriefNarrative({ brief }: { brief: WorkspaceBrief }) {
         </BriefPanel>
       )}
       {!brief.workspace && (
-        <BriefPanel title="No workspace available" eyebrow="Empty state">
+        <BriefPanel
+          title="No workspace available"
+          eyebrow="Empty state"
+          className={motionRevealClass()}
+          style={motionRevealStyle(2, 45)}
+        >
           <BriefEmptyBlock
             title="No workspace available"
             message="Create or seed a workspace before a structured daily brief can be generated."
@@ -64,7 +76,12 @@ function BriefHero({ brief }: { brief: WorkspaceBrief }) {
   const period = periodLabel(brief);
   const watchlist = brief.watchlistId ? `Watchlist ${shortIdentifier(brief.watchlistId)}` : "Workspace filter";
   return (
-    <section className="rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_34%),linear-gradient(135deg,#ffffff,rgba(240,253,250,0.95)_46%,rgba(239,246,255,0.95))] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_34%),linear-gradient(135deg,#020617,#0f172a_52%,#082f49)] sm:p-7">
+    <section
+      className={cn(
+        "rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_34%),linear-gradient(135deg,#ffffff,rgba(240,253,250,0.95)_46%,rgba(239,246,255,0.95))] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_34%),linear-gradient(135deg,#020617,#0f172a_52%,#082f49)] sm:p-7",
+        motionRevealClass(),
+      )}
+    >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-4xl">
           <div className="flex flex-wrap gap-2">
@@ -131,13 +148,22 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
     })),
   ].slice(0, 8);
   return (
-    <BriefPanel title="What Changed" eyebrow="Digest">
+    <BriefPanel title="What Changed" eyebrow="Digest" className={motionRevealClass()} style={motionRevealStyle(3, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No brief generated" message="No backend brief items or fallback digest rows were returned for this workspace." />
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
-            <a key={item.id} href={item.href} className="block rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/45">
+          {items.map((item, index) => (
+            <a
+              key={item.id}
+              href={item.href}
+              className={cn(
+                "block rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/45",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.title}</p>
                 <BriefBadge tone={item.tone}>{item.label}</BriefBadge>
@@ -154,13 +180,22 @@ function WhatChangedSection({ brief }: { brief: WorkspaceBrief }) {
 function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
   const freshItems = brief.marketFocus.filter((item) => item.freshnessLabel === "fresh").slice(0, 8);
   return (
-    <BriefPanel title="Fresh Symbols" eyebrow="Data fresh">
+    <BriefPanel title="Fresh Symbols" eyebrow="Data fresh" className={motionRevealClass()} style={motionRevealStyle(4, 45)}>
       {freshItems.length === 0 ? (
         <BriefEmptyBlock title="No fresh data" message="No fresh market-memory rows were returned for the current brief scope." />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
-          {freshItems.map((item) => (
-            <a key={item.id} href={`/symbols/${item.symbolId}`} className="rounded-2xl border border-emerald-200 bg-emerald-50/65 p-4 transition hover:bg-white dark:border-emerald-900 dark:bg-emerald-950/25">
+          {freshItems.map((item, index) => (
+            <a
+              key={item.id}
+              href={`/symbols/${item.symbolId}`}
+              className={cn(
+                "rounded-2xl border border-emerald-200 bg-emerald-50/65 p-4 transition hover:bg-white dark:border-emerald-900 dark:bg-emerald-950/25",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol}</p>
@@ -183,13 +218,22 @@ function FreshSymbolsSection({ brief }: { brief: WorkspaceBrief }) {
 
 function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
   return (
-    <BriefPanel title="Review-First Setups" eyebrow="Setup context">
+    <BriefPanel title="Review-First Setups" eyebrow="Setup context" className={motionRevealClass()} style={motionRevealStyle(5, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No setups" message="No directional setup context was available in the current brief." />
       ) : (
         <div className="space-y-3">
-          {items.slice(0, 8).map((item) => (
-            <a key={item.signalId} href={item.reviewLink} className="block rounded-2xl border border-slate-200 bg-white/70 p-4 transition hover:bg-teal-50/70 dark:border-slate-800 dark:bg-slate-950/45 dark:hover:bg-teal-950/20">
+          {items.slice(0, 8).map((item, index) => (
+            <a
+              key={item.signalId}
+              href={item.reviewLink}
+              className={cn(
+                "block rounded-2xl border border-slate-200 bg-white/70 p-4 transition hover:bg-teal-50/70 dark:border-slate-800 dark:bg-slate-950/45 dark:hover:bg-teal-950/20",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol} {item.timeframe}</p>
@@ -219,13 +263,22 @@ function ReviewFirstSection({ items }: { items: BriefActiveSetupItem[] }) {
 
 function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] }) {
   return (
-    <BriefPanel title="Needs Confirmation" eyebrow="Review queue">
+    <BriefPanel title="Needs Confirmation" eyebrow="Review queue" className={motionRevealClass()} style={motionRevealStyle(6, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No confirmation items" message="No open review or readiness confirmation items were returned." />
       ) : (
         <div className="space-y-3">
-          {items.slice(0, 8).map((item) => (
-            <a key={item.id} href={item.signalId ? `/signals/${item.signalId}` : "#"} className="block rounded-2xl border border-amber-200 bg-amber-50/65 p-4 dark:border-amber-900 dark:bg-amber-950/25">
+          {items.slice(0, 8).map((item, index) => (
+            <a
+              key={item.id}
+              href={item.signalId ? `/signals/${item.signalId}` : "#"}
+              className={cn(
+                "block rounded-2xl border border-amber-200 bg-amber-50/65 p-4 dark:border-amber-900 dark:bg-amber-950/25",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.label}</p>
                 <BriefBadge tone={toneForPriority(item.priority)}>{humanizeLabel(item.priority)}</BriefBadge>
@@ -242,13 +295,22 @@ function NeedsConfirmationSection({ items }: { items: BriefReviewNeededItem[] })
 
 function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] }) {
   return (
-    <BriefPanel title="Avoid Conditions" eyebrow="Constraints">
+    <BriefPanel title="Avoid Conditions" eyebrow="Constraints" className={motionRevealClass()} style={motionRevealStyle(7, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No avoid conditions" message="No stale, conflicting, low-quality, or unresolved review constraints were returned." />
       ) : (
         <div className="space-y-3">
-          {items.slice(0, 8).map((item) => (
-            <a key={item.id} href={item.signalId ? `/signals/${item.signalId}` : "#"} className="block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          {items.slice(0, 8).map((item, index) => (
+            <a
+              key={item.id}
+              href={item.signalId ? `/signals/${item.signalId}` : "#"}
+              className={cn(
+                "block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/50",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.condition}</p>
@@ -267,13 +329,22 @@ function AvoidConditionsSection({ items }: { items: BriefAvoidConditionItem[] })
 
 function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
   return (
-    <BriefPanel title="Outcomes Ready" eyebrow="Observed behavior">
+    <BriefPanel title="Outcomes Ready" eyebrow="Observed behavior" className={motionRevealClass()} style={motionRevealStyle(8, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No outcomes ready" message="No recent observed outcome horizons were returned for the current brief." />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
-          {items.slice(0, 8).map((item) => (
-            <a key={item.id} href={`/signals/${item.signalId}`} className="rounded-2xl border border-sky-200 bg-sky-50/65 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/25">
+          {items.slice(0, 8).map((item, index) => (
+            <a
+              key={item.id}
+              href={`/signals/${item.signalId}`}
+              className={cn(
+                "rounded-2xl border border-sky-200 bg-sky-50/65 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/25",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol} {item.timeframe}</p>
@@ -292,13 +363,22 @@ function OutcomeReadySection({ items }: { items: BriefOutcomeUpdateItem[] }) {
 
 function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
   return (
-    <BriefPanel title="Watch Next" eyebrow="Observation zones">
+    <BriefPanel title="Watch Next" eyebrow="Observation zones" className={motionRevealClass()} style={motionRevealStyle(9, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No watch-next rows" message="Setup context did not return next observations or observation zones." />
       ) : (
         <div className="space-y-3">
-          {items.slice(0, 8).map((item) => (
-            <a key={item.id} href={item.signalId ? `/signals/${item.signalId}` : "#"} className="block rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/45">
+          {items.slice(0, 8).map((item, index) => (
+            <a
+              key={item.id}
+              href={item.signalId ? `/signals/${item.signalId}` : "#"}
+              className={cn(
+                "block rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/45",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.symbol} {item.timeframe}</p>
                 <BriefBadge tone="info">Observation zone</BriefBadge>
@@ -315,13 +395,21 @@ function WatchNextSection({ items }: { items: BriefWatchNextItem[] }) {
 
 function PendingActionsSection({ items }: { items: BriefPendingActionItem[] }) {
   return (
-    <BriefPanel title="Pending Backend-Safe Actions" eyebrow="Follow-up">
+    <BriefPanel title="Pending Backend-Safe Actions" eyebrow="Follow-up" className={motionRevealClass()} style={motionRevealStyle(10, 45)}>
       {items.length === 0 ? (
         <BriefEmptyBlock title="No pending actions" message="No due backend-safe action items were returned." />
       ) : (
         <div className="space-y-3">
-          {items.slice(0, 8).map((item) => (
-            <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          {items.slice(0, 8).map((item, index) => (
+            <div
+              key={item.id}
+              className={cn(
+                "rounded-2xl border border-slate-200 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/50",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{item.safeLabel}</p>
                 <BriefBadge tone={toneForDataQuality(item.status)}>{humanizeLabel(item.status)}</BriefBadge>
@@ -340,13 +428,27 @@ function PendingActionsSection({ items }: { items: BriefPendingActionItem[] }) {
 
 function DataQualitySection({ items, workspaceId }: { items: BriefDataQualityIssue[]; workspaceId: string | null }) {
   return (
-    <BriefPanel title="Data Quality and Recovery Context" eyebrow="Reliability">
+    <BriefPanel
+      title="Data Quality and Recovery Context"
+      eyebrow="Reliability"
+      className={motionRevealClass()}
+      style={motionRevealStyle(11, 45)}
+    >
       {items.length === 0 ? (
         <BriefEmptyBlock title="No data-quality issues" message="No freshness, gap, provider, or setup-quality issues were returned." />
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {items.slice(0, 9).map((item) => (
-            <a key={item.id} href={navigationHref("dataOnboarding", workspaceId)} className="rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50">
+          {items.slice(0, 9).map((item, index) => (
+            <a
+              key={item.id}
+              href={navigationHref("dataOnboarding", workspaceId)}
+              className={cn(
+                "rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{humanizeLabel(item.label)}</p>

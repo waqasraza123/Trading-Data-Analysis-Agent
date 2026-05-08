@@ -18,6 +18,7 @@ import { EquityUniversePanel } from "@/components/equity-research/EquityUniverse
 import { SwingCandidateDetail } from "@/components/equity-research/SwingCandidateDetail";
 import { SwingCandidateTable } from "@/components/equity-research/SwingCandidateTable";
 import { SwingScanForm } from "@/components/equity-research/SwingScanForm";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getEquityResearchData } from "@/lib/api/equityResearch";
 
 type EquityResearchPageProps = {
@@ -35,7 +36,7 @@ export default async function EquityResearchPage({ searchParams }: EquityResearc
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <EquityResearchHeader data={data} />
         {!data.workspace && (
           <EquityResearchEmptyState
@@ -66,7 +67,7 @@ export default async function EquityResearchPage({ searchParams }: EquityResearc
           </div>
         </div>
         <EquityResearchErrorState failures={data.failures} />
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

@@ -11,6 +11,7 @@ import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
 import { ReviewSurfaceHero } from "@/components/review-surfaces/ReviewSurface";
 import { OutcomeReviewErrorState } from "@/components/review/OutcomeReviewErrorState";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getOutcomeReviewData } from "@/lib/api/outcomeReview";
 
 type OutcomeReviewPageProps = {
@@ -23,7 +24,7 @@ export default async function OutcomeReviewPage({ searchParams }: OutcomeReviewP
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <ReviewSurfaceHero
           eyebrow="Daily outcome review"
           title="Observed outcomes"
@@ -50,7 +51,7 @@ export default async function OutcomeReviewPage({ searchParams }: OutcomeReviewP
             <OutcomeReviewQueueTable data={data} />
           </>
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

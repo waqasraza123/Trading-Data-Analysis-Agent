@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { SetupReviewView } from "@/components/setup-review/SetupReviewView";
 import { getPublicEnv } from "@/config/env";
 import { getSetupReview } from "@/lib/api/setupReview";
+import { AnimatedSection } from "@/components/ui/motion";
 
 type SignalPageProps = {
   params: Promise<{
@@ -21,7 +22,9 @@ export default async function SignalPage({ params }: SignalPageProps) {
 
   return (
     <AppShell appName={env.appName} workspaceId={workspaceId}>
-      <SetupReviewView data={setupReview} />
+      <AnimatedSection as="section">
+        <SetupReviewView data={setupReview} />
+      </AnimatedSection>
     </AppShell>
   );
 }

@@ -11,6 +11,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { WorkflowLinks } from "@/components/layout/workflow-links";
 import { Metric } from "@/components/ui/Metric";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getDashboardData } from "@/lib/api/dashboard";
 
 type DashboardPageProps = {
@@ -26,7 +27,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <PageHeader
           eyebrow="Operator cockpit"
           title="Daily market intelligence"
@@ -58,7 +59,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
         </div>
         <BackendStatePanel data={data} />
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

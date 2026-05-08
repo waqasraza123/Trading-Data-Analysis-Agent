@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { CommandCenterTone } from "@/lib/command-center/types";
 
 type CockpitPanelProps = {
@@ -8,6 +8,7 @@ type CockpitPanelProps = {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 };
 
 type CockpitMetricProps = {
@@ -48,9 +49,9 @@ const metricAccentClassName: Record<CommandCenterTone, string> = {
   info: "from-sky-50 to-white dark:from-sky-950/60 dark:to-slate-950",
 };
 
-export function CockpitPanel({ title, eyebrow, action, children, className = "" }: CockpitPanelProps) {
+export function CockpitPanel({ title, eyebrow, action, children, className = "", style }: CockpitPanelProps) {
   return (
-    <section className={`${panelClassName} rounded-3xl p-5 sm:p-6 ${className}`}>
+    <section style={style} className={`${panelClassName} rounded-3xl p-5 sm:p-6 ${className}`}>
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           {eyebrow && <p className="text-xs font-semibold uppercase text-slate-500">{eyebrow}</p>}

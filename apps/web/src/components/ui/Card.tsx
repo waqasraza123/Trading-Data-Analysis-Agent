@@ -11,8 +11,9 @@ export function Card({ children, className, interactive = false }: CardProps) {
   return (
     <div
       className={cn(
-        "surface rounded-2xl p-5 transition duration-200",
+        "surface motion-card rounded-2xl p-5 transition duration-200",
         interactive && "hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--border))] hover:shadow-glow",
+        interactive && "motion-hover-lift",
         className,
       )}
     >
@@ -25,8 +26,9 @@ export function MutedCard({ children, className, interactive = false }: CardProp
   return (
     <div
       className={cn(
-        "muted-surface rounded-2xl p-4 transition duration-200",
+        "muted-surface motion-card rounded-2xl p-4 transition duration-200",
         interactive && "hover:border-[color-mix(in_srgb,var(--accent)_30%,var(--border))] hover:bg-[var(--surface-elevated)]",
+        interactive && "motion-hover-lift",
         className,
       )}
     >

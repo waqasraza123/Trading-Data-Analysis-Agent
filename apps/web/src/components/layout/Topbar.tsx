@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/Badge";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { AnimatedSection } from "@/components/ui/motion";
+import { cn } from "@/lib/ui/cn";
 
 type TopbarProps = {
   apiBaseUrl: string;
@@ -10,7 +12,13 @@ type TopbarProps = {
 
 export function Topbar({ apiBaseUrl, workspaceName, workspaceId }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-20 hidden border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-8 py-4 backdrop-blur-xl lg:block">
+    <AnimatedSection
+      as="header"
+      preset="fade-up"
+      className={cn(
+        "sticky top-0 z-20 hidden border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-8 py-4 backdrop-blur-xl lg:block",
+      )}
+    >
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Trading intelligence cockpit</p>
@@ -24,6 +32,6 @@ export function Topbar({ apiBaseUrl, workspaceName, workspaceId }: TopbarProps) 
           </div>
         </div>
       </div>
-    </header>
+    </AnimatedSection>
   );
 }

@@ -1,5 +1,6 @@
 import { BriefNarrative } from "@/components/brief/BriefNarrative";
 import { AppShell } from "@/components/layout/AppShell";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getWorkspaceBrief } from "@/lib/api/brief";
 
 type BriefPageProps = {
@@ -14,7 +15,9 @@ export default async function BriefPage({ searchParams }: BriefPageProps) {
 
   return (
     <AppShell appName={brief.appName} workspaceId={brief.workspace?.id} workspaceName={brief.workspace?.name}>
-      <BriefNarrative brief={brief} />
+      <AnimatedSection as="section">
+        <BriefNarrative brief={brief} />
+      </AnimatedSection>
     </AppShell>
   );
 }

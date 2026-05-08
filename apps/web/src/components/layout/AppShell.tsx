@@ -4,6 +4,7 @@ import { PageContainer } from "./PageContainer";
 import { MobileNav } from "./MobileNav";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { cn } from "@/lib/ui/cn";
 
 type AppShellProps = {
   appName: string;
@@ -16,7 +17,7 @@ export function AppShell({ appName, children, workspaceName, workspaceId }: AppS
   const env = getPublicEnv();
 
   return (
-    <div className="min-h-screen bg-transparent text-[var(--foreground)]">
+    <div className={cn("min-h-screen bg-transparent text-[var(--foreground)]")}>
       <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
         <MobileNav appName={appName} workspaceId={workspaceId} workspaceName={workspaceName} apiBaseUrl={env.apiBaseUrl} />
       </div>

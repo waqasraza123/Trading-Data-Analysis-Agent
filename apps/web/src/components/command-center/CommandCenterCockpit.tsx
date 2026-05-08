@@ -7,6 +7,8 @@ import type { CommandCenterData, CommandCenterTone } from "@/lib/command-center/
 import { CommandCenterReadinessGate } from "./CommandCenterReadinessGate";
 import { CommandCenterOverview } from "./CommandCenterOverview";
 import { CommandCenterDailyScanButton } from "./CommandCenterDailyScanButton";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
 import {
   CockpitActionLink,
   CockpitBadge,
@@ -18,7 +20,7 @@ import {
 export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
   const workspaceId = data.workspace?.id || null;
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", motionRevealClass("scale"))}>
       <CommandCenterHero data={data} />
       <CommandCenterReadinessGate data={data} />
       {!data.workspace && (
@@ -28,7 +30,9 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
         />
       )}
       <CommandCenterBackendState data={data} />
-      <CommandCenterOverview data={data} />
+      <div style={motionRevealStyle(9, 45)}>
+        <CommandCenterOverview data={data} />
+      </div>
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.7fr)]">
         <div className="space-y-6">
           <ReviewFirstPanel data={data} />
@@ -45,7 +49,13 @@ export function CommandCenterCockpit({ data }: { data: CommandCenterData }) {
         </aside>
       </section>
       <DailyIntelligenceMap data={data} />
-      <section className="rounded-3xl border border-slate-200/80 bg-slate-950 p-5 text-slate-100 shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:border-slate-800">
+      <section
+        className={cn(
+          "rounded-3xl border border-slate-200/80 bg-slate-950 p-5 text-slate-100 shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:border-slate-800",
+          motionRevealClass(),
+        )}
+        style={motionRevealStyle(10, 45)}
+      >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase text-slate-400">Daily workflow</p>
@@ -70,7 +80,12 @@ function CommandCenterHero({ data }: { data: CommandCenterData }) {
   const readiness = readinessLabel(data);
   const healthTone: CommandCenterTone = data.backendUnavailable ? "danger" : data.failures.length ? "warning" : "good";
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.20),transparent_34%),linear-gradient(135deg,#ffffff,rgba(240,249,255,0.95)_46%,rgba(236,253,245,0.92))] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.11)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.18),transparent_34%),linear-gradient(135deg,#020617,#0f172a_52%,#0b2f2a)] sm:p-7">
+    <section
+      className={cn(
+        "overflow-hidden rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.20),transparent_34%),linear-gradient(135deg,#ffffff,rgba(240,249,255,0.95)_46%,rgba(236,253,245,0.92))] p-5 shadow-[0_30px_100px_rgba(15,23,42,0.11)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.18),transparent_34%),linear-gradient(135deg,#020617,#0f172a_52%,#0b2f2a)] sm:p-7",
+        motionRevealClass("scale"),
+      )}
+    >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-4xl">
           <div className="flex flex-wrap gap-2">
@@ -120,7 +135,12 @@ function CommandCenterHero({ data }: { data: CommandCenterData }) {
 
 function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
   return (
-    <CockpitPanel title="Review First" eyebrow="Priority setups">
+    <CockpitPanel
+      title="Review First"
+      eyebrow="Priority setups"
+      className={motionRevealClass()}
+      style={motionRevealStyle(0, 45)}
+    >
       {data.reviewFirst.length === 0 ? (
         <CockpitEmptyState title="No review-first setups" message={data.sectionStatuses.reviewFirst.message} />
       ) : (
@@ -135,11 +155,16 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
             <span>Detail</span>
           </div>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
-            {data.reviewFirst.map((item) => (
+            {data.reviewFirst.map((item, index) => (
               <Link
                 key={item.signalId}
                 href={item.href}
-                className="grid gap-3 px-4 py-4 transition hover:bg-teal-50/60 dark:hover:bg-teal-950/20 lg:grid-cols-[1.1fr_0.8fr_0.8fr_0.8fr_0.9fr_1.4fr_110px] lg:items-center"
+                className={cn(
+                  "grid gap-3 px-4 py-4 transition hover:bg-teal-50/60 dark:hover:bg-teal-950/20 lg:grid-cols-[1.1fr_0.8fr_0.8fr_0.8fr_0.9fr_1.4fr_110px] lg:items-center",
+                  motionCardClass,
+                  motionRevealClass(),
+                )}
+                style={motionRevealStyle(index, 45)}
               >
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol}</p>
@@ -165,13 +190,27 @@ function ReviewFirstPanel({ data }: { data: CommandCenterData }) {
 
 function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
   return (
-    <CockpitPanel title="Needs Confirmation" eyebrow="Pending review context">
+    <CockpitPanel
+      title="Needs Confirmation"
+      eyebrow="Pending review context"
+      className={motionRevealClass()}
+      style={motionRevealStyle(1, 45)}
+    >
       {data.needsConfirmation.length === 0 ? (
         <CockpitEmptyState title="No confirmation queue" message={data.sectionStatuses.needsConfirmation.message} />
       ) : (
         <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
-          {data.needsConfirmation.slice(0, 8).map((item) => (
-            <Link key={item.id} href={item.href} className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-amber-900 dark:bg-amber-950/35">
+          {data.needsConfirmation.slice(0, 8).map((item, index) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={cn(
+                "rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-amber-900 dark:bg-amber-950/35",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol}</p>
@@ -190,13 +229,27 @@ function NeedsConfirmationStrip({ data }: { data: CommandCenterData }) {
 
 function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
   return (
-    <CockpitPanel title="Avoid Conditions" eyebrow="Risk filters">
+    <CockpitPanel
+      title="Avoid Conditions"
+      eyebrow="Risk filters"
+      className={motionRevealClass()}
+      style={motionRevealStyle(2, 45)}
+    >
       {data.avoidItems.length === 0 ? (
         <CockpitEmptyState title="No avoid conditions" message={data.sectionStatuses.avoidItems.message} />
       ) : (
         <div className="space-y-3">
-          {data.avoidItems.slice(0, 6).map((item) => (
-            <Link key={item.id} href={item.href} className="block rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/55 dark:hover:bg-slate-900">
+          {data.avoidItems.slice(0, 6).map((item, index) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={cn(
+                "block rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/55 dark:hover:bg-slate-900",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol}</p>
@@ -216,7 +269,12 @@ function AvoidConditionsPanel({ data }: { data: CommandCenterData }) {
 function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
   const pollingSummary = providerPollingSummary(data);
   return (
-    <CockpitPanel title="Data Reliability" eyebrow="Freshness and providers">
+    <CockpitPanel
+      title="Data Reliability"
+      eyebrow="Freshness and providers"
+      className={motionRevealClass()}
+      style={motionRevealStyle(3, 45)}
+    >
       <div className="grid grid-cols-2 gap-3">
         <CockpitMetric label="Fresh" value={formatInteger(data.summary.freshSymbolCount)} tone="good" />
         <CockpitMetric label="Stale" value={formatInteger(data.summary.staleOrDegradedCount)} tone="warning" />
@@ -235,8 +293,17 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
         </p>
       </div>
       <div className="mt-4 grid gap-3">
-        {data.dataReadiness.slice(0, 4).map((item) => (
-          <Link key={item.id} href={item.href} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50">
+          {data.dataReadiness.slice(0, 4).map((item, index) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={cn(
+                "rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <p className="text-sm font-semibold text-[var(--strong)]">{item.symbol}</p>
@@ -258,13 +325,27 @@ function DataReliabilityPanel({ data }: { data: CommandCenterData }) {
 
 function OutcomeReviewPanel({ data }: { data: CommandCenterData }) {
   return (
-    <CockpitPanel title="Outcome Review" eyebrow="Observed horizons">
+    <CockpitPanel
+      title="Outcome Review"
+      eyebrow="Observed horizons"
+      className={motionRevealClass()}
+      style={motionRevealStyle(4, 45)}
+    >
       {data.outcomeReview.length === 0 ? (
         <CockpitEmptyState title="No outcomes ready" message={data.sectionStatuses.outcomeReview.message} />
       ) : (
         <div className="space-y-3">
-          {data.outcomeReview.slice(0, 6).map((item) => (
-            <Link key={item.id} href={item.href} className="block rounded-2xl border border-sky-200 bg-sky-50/70 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/30">
+          {data.outcomeReview.slice(0, 6).map((item, index) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={cn(
+                "block rounded-2xl border border-sky-200 bg-sky-50/70 p-4 transition hover:bg-white dark:border-sky-900 dark:bg-sky-950/30",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-[var(--strong)]">{item.symbol} {item.timeframe}</p>
@@ -291,6 +372,8 @@ function WorkflowProgressPanel({ data }: { data: CommandCenterData }) {
     <CockpitPanel
       title="Workflow Progress"
       eyebrow="Latest daily run"
+      className={motionRevealClass()}
+      style={motionRevealStyle(5, 45)}
       action={<CommandCenterDailyScanButton workspaceId={data.workspace?.id || null} watchlistId={data.dailyWorkflowDefaultWatchlistId} preferenceProfileId={data.selectedPreferenceProfile?.id || null} />}
     >
       {!run ? (
@@ -316,8 +399,16 @@ function WorkflowProgressPanel({ data }: { data: CommandCenterData }) {
             <CockpitMetric label="Failed" value={formatInteger(failed)} tone={failed ? "danger" : "neutral"} />
           </div>
           <div className="space-y-2">
-            {steps.slice(0, 6).map((step) => (
-              <div key={step.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+            {steps.slice(0, 6).map((step, index) => (
+              <div
+                key={step.id}
+                className={cn(
+                  "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/50",
+                  motionCardClass,
+                  motionRevealClass(),
+                )}
+                style={motionRevealStyle(index, 45)}
+              >
                 <div>
                   <p className="text-sm font-semibold text-[var(--strong)]">{humanizeLabel(step.step_key)}</p>
                   <p className="mt-1 text-xs text-slate-500">{commandCenterText(step.skipped_reason || step.error_message, "Step output recorded")}</p>
@@ -342,7 +433,12 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
   const warnings = data.latestProductReadiness?.warnings_json || [];
   const workspaceId = data.workspace?.id || null;
   return (
-    <CockpitPanel title="Notifications / Review Items" eyebrow="Inbox and readiness">
+    <CockpitPanel
+      title="Notifications / Review Items"
+      eyebrow="Inbox and readiness"
+      className={motionRevealClass()}
+      style={motionRevealStyle(6, 45)}
+    >
       <div className="grid grid-cols-2 gap-3">
         <CockpitMetric label="Unread inbox" value={formatInteger(data.notificationUnreadCount)} tone={data.notificationUnreadCount ? "info" : "neutral"} />
         <CockpitMetric label="Review items" value={formatInteger(data.notificationReviewCount)} tone={data.notificationReviewCount ? "warning" : "neutral"} />
@@ -350,8 +446,17 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
         <CockpitMetric label="Pending actions" value={formatInteger(data.summary.backendActionCount)} tone={data.summary.backendActionCount ? "warning" : "neutral"} />
       </div>
       <div className="mt-4 space-y-3">
-        {[...blockers, ...warnings].slice(0, 4).map((item) => (
-          <Link key={`${item.key}:${item.title}`} href={item.related_route || commandCenterHref("/readiness", workspaceId)} className="block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50">
+          {[...blockers, ...warnings].slice(0, 4).map((item, index) => (
+            <Link
+              key={`${item.key}:${item.title}`}
+              href={item.related_route || commandCenterHref("/readiness", workspaceId)}
+              className={cn(
+                "block rounded-2xl border border-slate-200 bg-slate-50/75 p-4 transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/50",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="font-semibold text-[var(--strong)]">{item.title}</p>
               <CockpitBadge tone={toneForState(item.status)}>{commandCenterLabel(item.status)}</CockpitBadge>
@@ -373,10 +478,24 @@ function NotificationsReviewPanel({ data }: { data: CommandCenterData }) {
 
 function DailyIntelligenceMap({ data }: { data: CommandCenterData }) {
   return (
-    <CockpitPanel title="Daily Intelligence Map" eyebrow="Navigation">
+    <CockpitPanel
+      title="Daily Intelligence Map"
+      eyebrow="Navigation"
+      className={motionRevealClass()}
+      style={motionRevealStyle(7, 45)}
+    >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {data.navigationItems.slice(0, 8).map((item) => (
-          <Link key={item.id} href={item.href} className="rounded-2xl border border-slate-200 bg-white/65 p-4 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/35">
+        {data.navigationItems.slice(0, 8).map((item, index) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={cn(
+              "rounded-2xl border border-slate-200 bg-white/65 p-4 transition hover:-translate-y-0.5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/35",
+              motionCardClass,
+              motionRevealClass(),
+            )}
+            style={motionRevealStyle(index, 45)}
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="font-semibold text-[var(--strong)]">{item.label}</p>
               <CockpitBadge tone={item.tone}>Open</CockpitBadge>
@@ -395,7 +514,12 @@ function CommandCenterBackendState({ data }: { data: CommandCenterData }) {
     return null;
   }
   return (
-    <CockpitPanel title="Backend State" eyebrow="Availability">
+    <CockpitPanel
+      title="Backend State"
+      eyebrow="Availability"
+      className={motionRevealClass()}
+      style={motionRevealStyle(8, 45)}
+    >
       <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900 dark:bg-amber-950/35">
         <div className="flex flex-wrap items-center gap-2">
           <CockpitBadge tone={data.backendUnavailable ? "danger" : "warning"}>
@@ -409,8 +533,16 @@ function CommandCenterBackendState({ data }: { data: CommandCenterData }) {
       </div>
       {visibleFailures.length > 0 && (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {visibleFailures.map((failure) => (
-            <div key={`${failure.label}:${failure.status}:${failure.message}`} className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/35">
+          {visibleFailures.map((failure, index) => (
+            <div
+              key={`${failure.label}:${failure.status}:${failure.message}`}
+              className={cn(
+                "rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/35",
+                motionCardClass,
+                motionRevealClass(),
+              )}
+              style={motionRevealStyle(index, 45)}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-[var(--strong)]">{failure.label}</p>
                 <CockpitBadge tone={failure.status === 0 ? "danger" : "warning"}>{failure.status === 0 ? "Network" : failure.status}</CockpitBadge>

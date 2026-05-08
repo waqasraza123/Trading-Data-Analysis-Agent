@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { SignalTriageBoard } from "@/components/triage/SignalTriageBoard";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getSignalTriageBoard } from "@/lib/api/triage";
 
 type TriagePageProps = {
@@ -12,7 +13,9 @@ export default async function TriagePage({ searchParams }: TriagePageProps) {
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <SignalTriageBoard data={data} />
+      <AnimatedSection as="section">
+        <SignalTriageBoard data={data} />
+      </AnimatedSection>
     </AppShell>
   );
 }

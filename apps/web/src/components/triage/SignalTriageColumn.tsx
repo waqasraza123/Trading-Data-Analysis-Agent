@@ -1,5 +1,8 @@
 import { Badge } from "@/components/status/badge";
 import type { TriageCandidate, TriageColumnKey } from "@/lib/triage/types";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealClass, motionRevealStyle } from "@/lib/ui/motion";
+import type { CSSProperties } from "react";
 import { SignalTriageCard } from "./SignalTriageCard";
 
 type SignalTriageColumnProps = {
@@ -9,11 +12,15 @@ type SignalTriageColumnProps = {
     description: string;
   };
   candidates: TriageCandidate[];
+  style?: CSSProperties;
 };
 
-export function SignalTriageColumn({ column, candidates }: SignalTriageColumnProps) {
+export function SignalTriageColumn({ column, candidates, style }: SignalTriageColumnProps) {
   return (
-    <section className="flex max-h-[calc(100vh-13rem)] min-h-96 min-w-[320px] flex-col rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-muted)_88%,transparent)] p-3 shadow-soft">
+    <section
+      style={style}
+      className={cn("flex max-h-[calc(100vh-13rem)] min-h-96 min-w-[320px] flex-col rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-muted)_88%,transparent)] p-3 shadow-soft", motionRevealClass())}
+    >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-[var(--strong)]">{column.title}</h2>
@@ -27,8 +34,13 @@ export function SignalTriageColumn({ column, candidates }: SignalTriageColumnPro
         </div>
       ) : (
         <div className="space-y-3 overflow-y-auto pr-1">
-          {candidates.map((candidate) => (
-            <SignalTriageCard key={candidate.id} candidate={candidate} />
+          {candidates.map((candidate, index) => (
+            <SignalTriageCard
+              key={candidate.id}
+              candidate={candidate}
+              className={motionCardClass}
+              style={motionRevealStyle(index, 45)}
+            />
           ))}
         </div>
       )}

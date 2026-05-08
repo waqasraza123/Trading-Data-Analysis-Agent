@@ -7,6 +7,7 @@ import { Badge } from "@/components/status/badge";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Section } from "@/components/ui/Section";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getPreferenceProfilesPageData } from "@/lib/api/preferenceProfiles";
 import { formatDateTime } from "@/lib/formatting/dates";
 
@@ -25,7 +26,7 @@ export default async function StrategyPreferencesPage({
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <PageHeader
           eyebrow="Personal review preferences"
           title="Strategy preference profiles"
@@ -77,7 +78,7 @@ export default async function StrategyPreferencesPage({
             )}
           </>
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

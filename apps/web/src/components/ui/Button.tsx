@@ -56,6 +56,7 @@ export function ButtonLink({ href, children, variant = "secondary", size = "md",
 function buttonClassName(variant: ButtonVariant, size: ButtonSize, className?: string): string {
   return cn(
     "inline-flex items-center justify-center gap-2 rounded-xl border font-semibold transition duration-200 focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60",
+    "motion-hover-lift",
     sizeClassName[size],
     variantClassName[variant],
     className,

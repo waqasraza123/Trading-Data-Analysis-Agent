@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getOnboardingPageData } from "@/lib/api/onboarding";
 
 type OnboardingPageProps = {
@@ -19,7 +20,9 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
       workspaceId={data.status?.workspace.workspace_id || data.selectedWorkspaceId}
       workspaceName={data.status?.workspace.name}
     >
-      <OnboardingShell initialData={data} />
+      <AnimatedSection as="section">
+        <OnboardingShell initialData={data} />
+      </AnimatedSection>
     </AppShell>
   );
 }

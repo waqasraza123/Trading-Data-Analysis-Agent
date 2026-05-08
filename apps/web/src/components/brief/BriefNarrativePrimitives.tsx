@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { StatusTone } from "@/lib/ui/statusStyles";
 
 type BriefPanelProps = {
@@ -7,6 +7,7 @@ type BriefPanelProps = {
   eyebrow?: string;
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 };
 
 type BriefBadgeProps = {
@@ -22,9 +23,12 @@ const toneClassName: Record<StatusTone, string> = {
   info: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-100",
 };
 
-export function BriefPanel({ title, eyebrow, children, className = "" }: BriefPanelProps) {
+export function BriefPanel({ title, eyebrow, children, className = "", style }: BriefPanelProps) {
   return (
-    <section className={`rounded-3xl border border-white/70 bg-white/86 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 sm:p-6 ${className}`}>
+    <section
+      style={style}
+      className={`rounded-3xl border border-white/70 bg-white/86 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 sm:p-6 ${className}`}
+    >
       <div className="mb-5">
         {eyebrow && <p className="text-xs font-semibold uppercase text-slate-500">{eyebrow}</p>}
         <h2 className="mt-1 text-xl font-semibold text-[var(--strong)]">{title}</h2>

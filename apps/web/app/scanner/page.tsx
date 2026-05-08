@@ -12,6 +12,7 @@ import { WatchlistManager } from "@/components/scanner/WatchlistManager";
 import { DailyWorkflowPanel } from "@/components/daily-workflows/DailyWorkflowPanel";
 import { RunScanNowPanel } from "@/components/scanner/RunScanNowPanel";
 import { getScannerData } from "@/lib/api/scanner";
+import { AnimatedSection } from "@/components/ui/motion";
 
 type ScannerPageProps = {
   searchParams: Promise<{
@@ -27,7 +28,7 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <ScannerHero data={data} />
         {!data.workspace && (
           <ScannerEmptyState
@@ -58,7 +59,7 @@ export default async function ScannerPage({ searchParams }: ScannerPageProps) {
         </div>
         <ScanResultSignalList data={data} />
         <ScannerErrorState failures={data.failures} />
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AnimatedSection } from "@/components/ui/motion";
 import { cn } from "@/lib/ui/cn";
 
 type PageHeaderProps = {
@@ -12,7 +13,15 @@ type PageHeaderProps = {
 
 export function PageHeader({ eyebrow, title, description, meta, actions, className }: PageHeaderProps) {
   return (
-    <section className={cn("relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--accent-soft)_28%,var(--surface)))] p-5 shadow-panel sm:p-6 lg:p-7", className)}>
+    <AnimatedSection
+      as="section"
+      preset="fade-up"
+      className={cn(
+        "relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--accent-soft)_28%,var(--surface)))] p-5 shadow-panel sm:p-6 lg:p-7",
+        "motion-hover-lift",
+        className,
+      )}
+    >
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20" />
       <div className="relative flex flex-wrap items-end justify-between gap-5">
         <div className="min-w-0">
@@ -25,6 +34,6 @@ export function PageHeader({ eyebrow, title, description, meta, actions, classNa
       <div className="relative">
         {meta && <div className="mt-4 flex flex-wrap gap-2">{meta}</div>}
       </div>
-    </section>
+    </AnimatedSection>
   );
 }

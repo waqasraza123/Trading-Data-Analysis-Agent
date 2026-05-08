@@ -11,6 +11,7 @@ import {
   ReviewSurfaceHero,
   ReviewSurfaceMetric,
 } from "@/components/review-surfaces/ReviewSurface";
+import { AnimatedSection } from "@/components/ui/motion";
 import { getJournalData } from "@/lib/api/journal";
 
 type JournalPageProps = {
@@ -23,7 +24,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
 
   return (
     <AppShell appName={data.appName} workspaceId={data.workspace?.id} workspaceName={data.workspace?.name}>
-      <div className="space-y-6">
+      <AnimatedSection as="section" className="space-y-6">
         <ReviewSurfaceHero
           eyebrow="Daily journal"
           title="Reflection notes"
@@ -75,7 +76,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
             </div>
           </>
         )}
-      </div>
+      </AnimatedSection>
     </AppShell>
   );
 }

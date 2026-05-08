@@ -2,6 +2,8 @@ import Link from "next/link";
 import { commandCenterGateMessage, withWorkspace } from "@/lib/onboarding/nextStep";
 import { onboardingReadinessLabel, onboardingTone } from "@/lib/onboarding/labels";
 import type { CommandCenterData } from "@/lib/command-center/types";
+import { cn } from "@/lib/ui/cn";
+import { motionRevealClass } from "@/lib/ui/motion";
 
 export function CommandCenterReadinessGate({ data }: { data: CommandCenterData }) {
   const status = data.onboardingStatus;
@@ -9,7 +11,7 @@ export function CommandCenterReadinessGate({ data }: { data: CommandCenterData }
   const workspaceId = status?.workspace.workspace_id || data.workspace?.id || null;
   if (status?.next_step.key === "open_command_center") {
     return (
-      <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
+      <section className={cn("rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950", motionRevealClass())}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold">Command center ready</p>
@@ -23,7 +25,7 @@ export function CommandCenterReadinessGate({ data }: { data: CommandCenterData }
     );
   }
   return (
-    <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950">
+    <section className={cn("rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950", motionRevealClass())}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
