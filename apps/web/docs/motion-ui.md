@@ -152,6 +152,7 @@ When introducing new routes/panels, prefer:
 - Shared page surfaces in `src/components/ui/*` (e.g., `PageHeader`, `Section`, `Card`, `MetricCard`, `Skeleton`, `Badge`) include motion-safe defaults.
 - Route-level entry wrappers are applied across primary product routes.
 - Route-level loading skeletons are now co-located in `app/*/loading.tsx` for major data-heavy surfaces.
+- A shared `RouteLoadingShell` now centralizes shell + AppShell composition for all route loading boundaries.
 - Added global fallback route loading at `app/loading.tsx` for any Next route without a route-specific loading boundary, ensuring consistent shell + shimmer behavior during Suspense transitions.
 - Panel/list-level staggering is applied to high-density surfaces:
   - `command-center`
@@ -188,12 +189,32 @@ Keep the manifest in sync when adding new routes:
 - Define the route's reveal density (`compact` for dense repeated rows, `comfortable` for large hero-first layouts, otherwise `regular`).
 - Add an integration note under "Detailed rollout notes".
 
-## Detailed rollout notes (Production step: density migration)
+## Detailed rollout notes (Production step: loading shell consolidation)
 
 - `Sidebar` and `MobileNav` migrated high-density navigation reveal timing to `motionRevealDensityStyle(index, "compact")`.
 - `SignalTriageBoard`, `SignalTriageColumn`, `SignalTriageCard`, `CommandCenterCockpit`, and `BriefNarrative` now consume density-aware reveal styles for section/panel ordering and dense row reveals.
 - Default section/panel reveals use `motionRevealDensityStyle(index)` to preserve baseline 45ms behavior while removing inline `motionRevealStyle(..., 45)` usage in active rollout surfaces.
 - Shared loading placeholders now use `ShimmerSkeleton` across command-center, brief, triage, dashboard, chart, and onboarding loading surfaces to keep shimmer/pulse behavior centralized.
+- Added `RouteLoadingShell` under `src/components/layout/RouteLoadingShell.tsx` to centralize `AppShell` + route loading scaffolding, and migrated the full route loading matrix to this shared primitive:
+  - `app/loading.tsx`
+  - `app/brief/loading.tsx`
+  - `app/command-center/loading.tsx`
+  - `app/dashboard/loading.tsx`
+  - `app/data/onboarding/loading.tsx`
+  - `app/demo/loading.tsx`
+  - `app/equity-research/loading.tsx`
+  - `app/journal/loading.tsx`
+  - `app/journal/[entryId]/loading.tsx`
+  - `app/notifications/loading.tsx`
+  - `app/onboarding/loading.tsx`
+  - `app/preferences/strategy/loading.tsx`
+  - `app/quality/loading.tsx`
+  - `app/readiness/loading.tsx`
+  - `app/review/outcomes/loading.tsx`
+  - `app/setup/loading.tsx`
+  - `app/signals/[signalId]/loading.tsx`
+  - `app/symbols/[symbolId]/loading.tsx`
+  - `app/triage/loading.tsx`
 - Added production loading shell coverage for additional routes with app-level suspense states:
   - `journal`
   - `notifications`

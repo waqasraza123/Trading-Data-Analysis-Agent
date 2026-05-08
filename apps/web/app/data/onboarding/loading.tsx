@@ -1,12 +1,9 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { getPublicEnv } from "@/config/env";
+import { RouteLoadingShell } from "@/components/layout/RouteLoadingShell";
 import { ShimmerSkeleton } from "@/lib/ui/motion";
 
 export default function DataOnboardingLoading() {
-  const env = getPublicEnv();
-
   return (
-    <AppShell appName={env.appName}>
+    <RouteLoadingShell>
       <section className="space-y-6">
         <div className="space-y-3">
           <ShimmerSkeleton className="h-8 w-72 rounded-md" />
@@ -15,6 +12,6 @@ export default function DataOnboardingLoading() {
         <ShimmerSkeleton className="h-14 w-40 rounded-md" />
         <ShimmerSkeleton className="h-[520px] rounded-xl" />
       </section>
-    </AppShell>
+    </RouteLoadingShell>
   );
 }

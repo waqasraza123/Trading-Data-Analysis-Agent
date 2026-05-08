@@ -1,13 +1,10 @@
-import { AppShell } from "@/components/layout/AppShell";
+import { RouteLoadingShell } from "@/components/layout/RouteLoadingShell";
 import { TriageSkeleton } from "@/components/triage/TriageSkeleton";
-import { getPublicEnv } from "@/config/env";
 
 export default function TriageLoading() {
-  const env = getPublicEnv();
-
   return (
-    <AppShell appName={env.appName}>
+    <RouteLoadingShell>
       <TriageSkeleton />
-    </AppShell>
+    </RouteLoadingShell>
   );
 }

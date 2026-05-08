@@ -1,12 +1,9 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { getPublicEnv } from "@/config/env";
+import { RouteLoadingShell } from "@/components/layout/RouteLoadingShell";
 import { ShimmerSkeleton } from "@/lib/ui/motion";
 
 export default function StrategyPreferenceLoading() {
-  const env = getPublicEnv();
-
   return (
-    <AppShell appName={env.appName}>
+    <RouteLoadingShell>
       <section className="space-y-6">
         <div className="space-y-3">
           <ShimmerSkeleton className="h-8 w-72 rounded-md" />
@@ -23,6 +20,6 @@ export default function StrategyPreferenceLoading() {
           <ShimmerSkeleton className="h-72 rounded-xl" />
         </div>
       </section>
-    </AppShell>
+    </RouteLoadingShell>
   );
 }

@@ -1,12 +1,10 @@
 import { CommandCenterSkeleton } from "@/components/command-center/CommandCenterSkeleton";
-import { AppShell } from "@/components/layout/AppShell";
-import { getPublicEnv } from "@/config/env";
+import { RouteLoadingShell } from "@/components/layout/RouteLoadingShell";
 
 export default function CommandCenterLoading() {
-  const env = getPublicEnv();
   return (
-    <AppShell appName={env.appName}>
+    <RouteLoadingShell>
       <CommandCenterSkeleton />
-    </AppShell>
+    </RouteLoadingShell>
   );
 }

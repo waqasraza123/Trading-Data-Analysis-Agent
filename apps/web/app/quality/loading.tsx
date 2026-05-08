@@ -1,12 +1,9 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { getPublicEnv } from "@/config/env";
+import { RouteLoadingShell } from "@/components/layout/RouteLoadingShell";
 import { ShimmerSkeleton } from "@/lib/ui/motion";
 
 export default function QualityLoading() {
-  const env = getPublicEnv();
-
   return (
-    <AppShell appName={env.appName}>
+    <RouteLoadingShell>
       <section className="space-y-6">
         <div className="space-y-3">
           <ShimmerSkeleton className="h-8 w-72 rounded-md" />
@@ -26,6 +23,6 @@ export default function QualityLoading() {
         <ShimmerSkeleton className="h-20 rounded-lg" />
         <ShimmerSkeleton className="h-40 rounded-lg" />
       </section>
-    </AppShell>
+    </RouteLoadingShell>
   );
 }

@@ -1,12 +1,9 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { getPublicEnv } from "@/config/env";
+import { RouteLoadingShell } from "@/components/layout/RouteLoadingShell";
 import { ShimmerSkeleton } from "@/lib/ui/motion";
 
 export default function JournalEntryLoading() {
-  const env = getPublicEnv();
-
   return (
-    <AppShell appName={env.appName}>
+    <RouteLoadingShell>
       <section className="space-y-6">
         <ShimmerSkeleton className="h-8 w-64 rounded-md" />
         <div className="grid gap-5 xl:grid-cols-[minmax(380px,460px)_minmax(0,1fr)]">
@@ -21,6 +18,6 @@ export default function JournalEntryLoading() {
           </section>
         </div>
       </section>
-    </AppShell>
+    </RouteLoadingShell>
   );
 }
