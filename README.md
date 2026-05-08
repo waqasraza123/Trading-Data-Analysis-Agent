@@ -12,18 +12,57 @@
 The platform normalizes all candle inputs (CSV/JSON imports, mock/live feed, provider polling,
 and Go-sidecar polling) into one shared OHLCV model before downstream review surfaces consume them.
 
-```mermaid
-flowchart LR
-  A["CSV / JSON Import"] --> C["candle_ingest"]
-  B["Live / Provider Feed"] --> C
-  D["Go Market Worker"] --> C
-  C --> E["Shared Validation"]
-  E --> F["Candle Storage"]
-  F --> G["Quality + Conflict Checks"]
-  G --> H["Read Models"]
-  H --> I["Review UI"]
-  H --> J["Signals / Digests / Briefs"]
-```
+<svg width="760" height="240" viewBox="0 0 760 240" role="img" aria-labelledby="candlesTitle candlesDesc">
+  <title id="candlesTitle">Trading Candles</title>
+  <desc id="candlesDesc">Three example OHLCV candles with wicks and body colors.</desc>
+  <rect x="0" y="0" width="760" height="240" fill="#0b1220"/>
+  <line x1="40" y1="30" x2="40" y2="200" stroke="#334155" stroke-width="2"/>
+  <line x1="40" y1="30" x2="720" y2="30" stroke="#334155" stroke-width="2"/>
+  <line x1="720" y1="200" x2="720" y2="205" stroke="#334155" stroke-width="2"/>
+  <g font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" fill="#94a3b8" font-size="11">
+    <text x="120" y="225">00:00</text>
+    <text x="260" y="225">01:00</text>
+    <text x="400" y="225">02:00</text>
+    <text x="540" y="225">03:00</text>
+  </g>
+
+  <text x="48" y="28" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">160</text>
+  <text x="48" y="54" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">140</text>
+  <text x="48" y="80" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">120</text>
+  <text x="48" y="106" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">100</text>
+  <text x="48" y="132" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">80</text>
+  <text x="48" y="158" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">60</text>
+  <text x="48" y="184" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="11" fill="#94a3b8">40</text>
+
+  <g stroke-width="2" stroke-linecap="round" fill="none">
+    <line x1="150" y1="52" x2="150" y2="170" stroke="#f43f5e"/>
+    <rect x="130" y="80" width="40" height="82" fill="#f43f5e" stroke="#f43f5e"/>
+    <line x1="150" y1="82" x2="150" y2="58" stroke="#f43f5e"/>
+    <line x1="150" y1="164" x2="150" y2="170" stroke="#f43f5e"/>
+
+    <line x1="280" y1="38" x2="280" y2="160" stroke="#22c55e"/>
+    <rect x="260" y="70" width="40" height="50" fill="#22c55e" stroke="#22c55e"/>
+    <line x1="280" y1="38" x2="280" y2="58" stroke="#22c55e"/>
+    <line x1="280" y1="124" x2="280" y2="160" stroke="#22c55e"/>
+
+    <line x1="410" y1="72" x2="410" y2="186" stroke="#f43f5e"/>
+    <rect x="390" y="112" width="40" height="72" fill="#f43f5e" stroke="#f43f5e"/>
+    <line x1="410" y1="112" x2="410" y2="86" stroke="#f43f5e"/>
+    <line x1="410" y1="184" x2="410" y2="186" stroke="#f43f5e"/>
+
+    <line x1="540" y1="40" x2="540" y2="180" stroke="#22c55e"/>
+    <rect x="520" y="96" width="40" height="56" fill="#22c55e" stroke="#22c55e"/>
+    <line x1="540" y1="40" x2="540" y2="64" stroke="#22c55e"/>
+    <line x1="540" y1="152" x2="540" y2="180" stroke="#22c55e"/>
+  </g>
+
+  <g font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" fill="#cbd5e1" font-size="10">
+    <text x="110" y="194">O 120 C 40</text>
+    <text x="240" y="194">O 95 C 145</text>
+    <text x="370" y="194">O 130 C 60</text>
+    <text x="500" y="194">O 80 C 136</text>
+  </g>
+</svg>
 
 AI Trading Intelligence Agent is a read-only market intelligence product for daily review of
 market data, deterministic signal context, data readiness, quality diagnostics, equity research,

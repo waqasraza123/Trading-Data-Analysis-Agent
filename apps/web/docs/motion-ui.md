@@ -151,6 +151,7 @@ When introducing new routes/panels, prefer:
 - `AppShell`, `PageContainer`, `Topbar`, `MobileNav`, `Sidebar` now share standard reveal surfaces.
 - Shared page surfaces in `src/components/ui/*` (e.g., `PageHeader`, `Section`, `Card`, `MetricCard`, `Skeleton`, `Badge`) include motion-safe defaults.
 - Route-level entry wrappers are applied across primary product routes.
+- Route-level loading skeletons are now co-located in `app/*/loading.tsx` for major data-heavy surfaces.
 - Panel/list-level staggering is applied to high-density surfaces:
   - `command-center`
   - `brief`
@@ -192,6 +193,20 @@ Keep the manifest in sync when adding new routes:
 - `SignalTriageBoard`, `SignalTriageColumn`, `SignalTriageCard`, `CommandCenterCockpit`, and `BriefNarrative` now consume density-aware reveal styles for section/panel ordering and dense row reveals.
 - Default section/panel reveals use `motionRevealDensityStyle(index)` to preserve baseline 45ms behavior while removing inline `motionRevealStyle(..., 45)` usage in active rollout surfaces.
 - Shared loading placeholders now use `ShimmerSkeleton` across command-center, brief, triage, dashboard, chart, and onboarding loading surfaces to keep shimmer/pulse behavior centralized.
+- Added production loading shell coverage for additional routes with app-level suspense states:
+  - `journal`
+  - `notifications`
+  - `review/outcomes`
+  - `quality`
+  - `readiness`
+  - `setup`
+  - `data/onboarding`
+  - `equity-research`
+  - `preferences/strategy`
+  - `demo`
+  - `signals/[signalId]`
+  - `symbols/[symbolId]`
+  - `journal/[entryId]`
 - Motion core bug fix: `AnimatedSection` and `AnimatedListItem` now apply `motion-no-motion` for `preset="none"`, preserving existing animation settings while explicitly disabling reveal movement when callers opt out.
 - This pass does not change route behavior, backend composition, or advisory/safety copy.
 
