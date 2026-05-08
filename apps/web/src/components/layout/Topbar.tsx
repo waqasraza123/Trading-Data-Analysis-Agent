@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { AnimatedSection } from "@/lib/ui/motion";
+import { motionRevealDensityStyle } from "@/lib/ui/motion";
 import { cn } from "@/lib/ui/cn";
 
 type TopbarProps = {
@@ -15,6 +16,7 @@ export function Topbar({ apiBaseUrl, workspaceName, workspaceId }: TopbarProps) 
     <AnimatedSection
       as="header"
       preset="fade-up"
+      style={motionRevealDensityStyle(0, "regular")}
       className={cn(
         "sticky top-0 z-20 hidden border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-8 py-4 backdrop-blur-xl lg:block",
       )}

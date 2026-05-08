@@ -5,6 +5,7 @@ import { MobileNav } from "./MobileNav";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { cn } from "@/lib/ui/cn";
+import { AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
 
 type AppShellProps = {
   appName: string;
@@ -17,7 +18,12 @@ export function AppShell({ appName, children, workspaceName, workspaceId }: AppS
   const env = getPublicEnv();
 
   return (
-    <div className={cn("min-h-screen bg-transparent text-[var(--foreground)]")}>
+    <AnimatedSection
+      as="div"
+      preset="fade-up"
+      className={cn("min-h-screen bg-transparent text-[var(--foreground)]")}
+      style={motionRevealDensityStyle(0, "regular")}
+    >
       <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
         <MobileNav appName={appName} workspaceId={workspaceId} workspaceName={workspaceName} apiBaseUrl={env.apiBaseUrl} />
       </div>
@@ -28,6 +34,6 @@ export function AppShell({ appName, children, workspaceName, workspaceId }: AppS
         <Topbar apiBaseUrl={env.apiBaseUrl} workspaceId={workspaceId} workspaceName={workspaceName} />
         <PageContainer>{children}</PageContainer>
       </div>
-    </div>
+    </AnimatedSection>
   );
 }

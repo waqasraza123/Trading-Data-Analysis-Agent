@@ -246,6 +246,16 @@ Keep the manifest in sync when adding new routes:
   - `comfortable` for hero and narrative pages, `compact` for dense rows, and `regular` for mixed layouts.
 - Reduced-motion behavior and safe focus/hover semantics remain explicit in unchanged components while motion wrappers are added through reusable API surfaces from `@/lib/ui/motion`.
 
+## Detailed rollout notes (Production step: shell + primitive hardening)
+
+- Completed the shell-level hardening pass for shared layout and control surfaces:
+  - `AppShell` now applies a stable root reveal using shared density defaults.
+  - `PageContainer` now composes section-level reveal behavior through profile-driven delay presets.
+  - `Topbar`, `MobileNav`, and `Sidebar` receive explicit density-aware entry presets plus focused keyboard-safe ring treatment.
+- Strengthened shared interactive primitives without changing behavior contracts:
+  - `Button` now includes explicit focus-visible ring-offset treatment plus shared hover-lift motion token in the base class composition.
+  - Existing hover and focus-visible patterns remain explicit and non-semantic for state signaling.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

@@ -48,12 +48,13 @@ export function Sidebar({ appName, workspaceName, workspaceId }: SidebarProps) {
                   {items.map((item, index) => {
                     const active = isActiveNavigationPath(pathname, item.href);
                     return (
-                      <Link
+                    <Link
                         key={item.key}
                         className={cn(
                           "group flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition",
                           motionCardClass,
                           motionRevealClass(),
+                          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2",
                           active
                             ? "bg-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
                             : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--strong)]",

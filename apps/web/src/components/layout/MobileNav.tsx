@@ -25,6 +25,7 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
     <AnimatedSection
       as="header"
       preset="fade-up"
+      style={motionRevealDensityStyle(0, "regular")}
       className="border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] px-4 py-3 shadow-soft backdrop-blur-xl"
     >
       <div className="flex items-center justify-between gap-3">
@@ -47,6 +48,7 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
               className={cn(
                 "shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition",
                 motionRevealClass(),
+                "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2",
                 active ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "bg-[var(--surface-muted)] text-[var(--text-muted)]",
               )}
               href={navigationHref(item.key, workspaceId)}
