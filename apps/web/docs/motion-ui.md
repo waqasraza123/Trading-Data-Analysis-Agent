@@ -303,6 +303,20 @@ Keep the manifest in sync when adding new routes:
   - Updated `apps/web/src/components/workspace/WorkspaceSelector.tsx` so the workspace picker input now uses `MOTION_INTERACTIVE_CLASS` for explicit focus-visible + motion-hover behavior.
 - No API contracts, route semantics, payload shape, or safety posture changes.
 
+## Detailed rollout notes (Production step: shared primitive interaction consolidation)
+
+- Consolidated core interactive utility classes in shared primitives to remove remaining ad-hoc focus-visible definitions while preserving existing hover behavior:
+  - `apps/web/src/components/ui/Card.tsx`:
+    - Replaced local focus-visible string constants with `MOTION_INTERACTIVE_CLASS` when `interactive={true}`.
+  - `apps/web/src/components/ui/Surface.tsx`:
+    - Replaced local focus-visible string constants with `MOTION_INTERACTIVE_CLASS` when `interactive={true}`.
+  - `apps/web/src/components/ui/Badge.tsx`:
+    - Replaced inline focus-visible utilities in interactive badge state with `MOTION_INTERACTIVE_CLASS`.
+  - `apps/web/src/components/ui/Button.tsx`:
+    - Replaced base button focus-visible utilities with `MOTION_INTERACTIVE_CLASS` in the shared class composition.
+- `MOTION_INTERACTIVE_CLASS` remains the single shared interaction source for hover/focus motion-safe polish in interactive primitives.
+- No API contracts, data flow, or safety posture changes.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

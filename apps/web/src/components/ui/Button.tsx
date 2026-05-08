@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 import { cn } from "@/lib/ui/cn";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "quiet";
@@ -55,8 +56,8 @@ export function ButtonLink({ href, children, variant = "secondary", size = "md",
 
 function buttonClassName(variant: ButtonVariant, size: ButtonSize, className?: string): string {
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-xl border font-semibold transition duration-200 focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60",
-    "focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] motion-hover-lift",
+    "inline-flex items-center justify-center gap-2 rounded-xl border font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
+    MOTION_INTERACTIVE_CLASS,
     sizeClassName[size],
     variantClassName[variant],
     className,

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/ui/cn";
 import { uiLabel } from "@/lib/ui/labels";
 import { statusDotClassName, statusToneClassName, type StatusTone } from "@/lib/ui/statusStyles";
+import { MOTION_INTERACTIVE_CLASS } from "@/lib/ui/motion";
 
 export type BadgeProps = {
   value?: string | null;
@@ -18,8 +19,7 @@ export function Badge({ value, tone = "neutral", children, className, dot = fals
       className={cn(
         "motion-hover-lift inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold leading-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]",
         statusToneClassName[tone],
-        interactive &&
-          "cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+        interactive && MOTION_INTERACTIVE_CLASS,
         className,
       )}
     >
