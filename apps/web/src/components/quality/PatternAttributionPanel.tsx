@@ -2,6 +2,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import { formatPercent, qualityLabel, qualityTone } from "@/lib/quality/labels";
 import type { QualityScoreboardData } from "@/lib/quality/types";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 
 export function PatternAttributionPanel({ data }: { data: QualityScoreboardData }) {
   if (data.patternRows.length === 0) {
@@ -10,8 +11,13 @@ export function PatternAttributionPanel({ data }: { data: QualityScoreboardData 
   return (
     <Panel title="Pattern attribution" eyebrow="Selected, rejected, and blocking behavior">
       <div className="grid gap-4 lg:grid-cols-2">
-        {data.patternRows.map((row) => (
-          <div key={row.patternType} className="muted-surface rounded-lg p-4">
+        {data.patternRows.map((row, index) => (
+          <AnimatedListItem
+            as="article"
+            key={row.patternType}
+            className={`${motionCardClass} ${motionRevealPresetClass("scale-subtle")} muted-surface rounded-lg p-4`}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-[var(--strong)]">{qualityLabel(row.patternType)}</h3>
               <Badge value={qualityLabel(row.diagnosticLabel)} tone={qualityTone(row.diagnosticLabel)} />
@@ -26,7 +32,7 @@ export function PatternAttributionPanel({ data }: { data: QualityScoreboardData 
               <Metric label="No follow-through" value={formatPercent(row.noFollowThroughRate)} />
             </div>
             <p className="mt-3 text-xs text-slate-500">{row.observedOutcomes}</p>
-          </div>
+          </AnimatedListItem>
         ))}
       </div>
     </Panel>

@@ -2,6 +2,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import { formatPercent, qualityLabel, qualityTone } from "@/lib/quality/labels";
 import type { QualityScoreboardData } from "@/lib/quality/types";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 
 export function ConfidenceCalibrationPanel({ data }: { data: QualityScoreboardData }) {
   if (data.calibrationRows.length === 0) {
@@ -10,8 +11,13 @@ export function ConfidenceCalibrationPanel({ data }: { data: QualityScoreboardDa
   return (
     <Panel title="Confidence calibration" eyebrow="Alignment by confidence bin">
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {data.calibrationRows.map((row) => (
-          <div key={row.id} className="muted-surface rounded-lg p-4">
+        {data.calibrationRows.map((row, index) => (
+          <AnimatedListItem
+            as="article"
+            key={row.id}
+            className={`${motionCardClass} ${motionRevealPresetClass("scale-subtle")} muted-surface rounded-lg p-4`}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-[var(--strong)]">{row.binLabel}</h3>
               <Badge value={qualityLabel(row.calibrationLabel)} tone={qualityTone(row.calibrationLabel)} />
@@ -24,7 +30,7 @@ export function ConfidenceCalibrationPanel({ data }: { data: QualityScoreboardDa
               <Metric label="Continuation" value={formatPercent(row.continuationRate)} />
               <Metric label="Reversal" value={formatPercent(row.reversalRate)} />
             </div>
-          </div>
+          </AnimatedListItem>
         ))}
       </div>
     </Panel>

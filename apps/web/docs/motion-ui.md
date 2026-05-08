@@ -401,6 +401,19 @@ Keep the manifest in sync when adding new routes:
 - Added explicit accessibility defaults to `ShimmerSkeleton` (`aria-hidden` enabled by default) so loading placeholders remain decorative while still exposing an optional `ariaLabel`.
 - Left route loading surfaces unchanged, preserving existing Suspense boundaries and fallback timing.
 
+## Detailed rollout notes (Production step: quality route row reveal deepening)
+
+- Applied compact staggered reveal polish to the high-density `/quality` panel family using the shared motion API without changing any data composition or API behavior:
+  - `apps/web/src/components/quality/CohortDriftPanel.tsx`
+  - `apps/web/src/components/quality/ConfidenceCalibrationPanel.tsx`
+  - `apps/web/src/components/quality/PatternAttributionPanel.tsx`
+  - `apps/web/src/components/quality/ProfileReliabilityTable.tsx`
+  - `apps/web/src/components/quality/QualityWarningsPanel.tsx`
+  - `apps/web/src/components/quality/SymbolTimeframeQualityGrid.tsx`
+  - `apps/web/src/components/quality/WalkForwardPanel.tsx`
+- Repeated rows and card blocks now use `AnimatedListItem`, `motionCardClass`, and density-aware `motionRevealDensityStyle(index, "compact")` where motion is visually appropriate.
+- Safety posture remains unchanged: read-only review interfaces only, no backend actions, no advisory/trading execution language.
+
 ## Verification (manual, production-safe)
 
 - Confirm route entry still lands with existing Suspense/load fallback behavior.

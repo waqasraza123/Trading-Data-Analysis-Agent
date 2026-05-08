@@ -2,6 +2,7 @@ import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import { formatPercent, qualityLabel, qualityTone } from "@/lib/quality/labels";
 import type { QualityScoreboardData } from "@/lib/quality/types";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 
 export function WalkForwardPanel({ data }: { data: QualityScoreboardData }) {
   if (data.walkForwardRows.length === 0) {
@@ -10,8 +11,13 @@ export function WalkForwardPanel({ data }: { data: QualityScoreboardData }) {
   return (
     <Panel title="Walk-forward validation" eyebrow="Window stability">
       <div className="space-y-3">
-        {data.walkForwardRows.map((row) => (
-          <div key={row.id} className="muted-surface rounded-lg p-4">
+        {data.walkForwardRows.map((row, index) => (
+          <AnimatedListItem
+            as="article"
+            key={row.id}
+            className={`${motionCardClass} ${motionRevealPresetClass("scale-subtle")} muted-surface rounded-lg p-4`}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-[var(--strong)]">{row.windowLabel}</h3>
@@ -27,7 +33,7 @@ export function WalkForwardPanel({ data }: { data: QualityScoreboardData }) {
               <span>Continuation {formatPercent(row.continuationRate)}</span>
               <span>Reversal {formatPercent(row.reversalRate)}</span>
             </div>
-          </div>
+          </AnimatedListItem>
         ))}
       </div>
     </Panel>
