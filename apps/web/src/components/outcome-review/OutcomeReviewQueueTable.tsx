@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cn } from "@/lib/ui/cn";
 import { Badge, toneForBias } from "@/components/status/badge";
 import {
   ReviewSurfaceEmptyState,
@@ -7,6 +8,7 @@ import {
 } from "@/components/review-surfaces/ReviewSurface";
 import { formatDateTime } from "@/lib/formatting/dates";
 import { shortIdentifier } from "@/lib/formatting/labels";
+import { motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { outcomeTone, reviewLabel } from "@/lib/review/labels";
 import type { OutcomeReviewData, OutcomeReviewQueueItem } from "@/lib/review/types";
 
@@ -37,8 +39,12 @@ export function OutcomeReviewQueueTable({ data }: { data: OutcomeReviewData }) {
           </tr>
         </thead>
         <tbody>
-          {data.queue.map((item) => (
-            <tr key={item.id} className="border-t border-[var(--line)] align-top">
+          {data.queue.map((item, index) => (
+            <tr
+              key={item.id}
+              className={cn("border-t border-[var(--line)] align-top", motionCardClass, motionRevealPresetClass("scale-subtle"))}
+              style={motionRevealDensityStyle(index, "compact")}
+            >
               <td className="px-3 py-4">
                 <div className="min-w-64">
                   <p className="font-medium text-[var(--strong)]">{item.symbol?.symbol || shortIdentifier(item.signal.signal.symbol_id)} · {item.signal.signal.timeframe}</p>

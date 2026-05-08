@@ -1,4 +1,5 @@
 import type { OutcomeReviewData } from "@/lib/review/types";
+import { AnimatedListItem, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import { OutcomeReviewCard } from "./OutcomeReviewCard";
 import { OutcomeReviewEmptyState } from "./OutcomeReviewEmptyState";
 
@@ -16,8 +17,15 @@ export function OutcomeReviewQueue({ data }: { data: OutcomeReviewData }) {
         <p className="text-sm text-slate-500">Loaded {data.queue.length} of {data.allQueue.length} recent outcome items</p>
       </div>
       <div className="space-y-4">
-        {data.queue.map((item) => (
-          <OutcomeReviewCard key={item.id} item={item} workspaceId={data.workspace?.id} />
+        {data.queue.map((item, index) => (
+          <AnimatedListItem
+            key={item.id}
+            as="section"
+            className={motionRevealPresetClass("scale-subtle")}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
+            <OutcomeReviewCard item={item} workspaceId={data.workspace?.id} />
+          </AnimatedListItem>
         ))}
       </div>
     </section>

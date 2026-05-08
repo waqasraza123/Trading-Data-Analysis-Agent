@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cn } from "@/lib/ui/cn";
 import { Badge } from "@/components/status/badge";
 import {
   ReviewMetricGrid,
@@ -7,6 +8,7 @@ import {
 } from "@/components/review-surfaces/ReviewSurface";
 import { formatPercent, qualityLabel, qualityTone } from "@/lib/quality/labels";
 import { diagnosticTone, reviewLabel } from "@/lib/review/labels";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import type { OutcomeReviewData } from "@/lib/review/types";
 
 export function OutcomeReviewSummary({ data }: { data: OutcomeReviewData }) {
@@ -32,8 +34,17 @@ export function OutcomeReviewJournalPrompts({ data }: { data: OutcomeReviewData 
       description="Add concise notes to close the loop between deterministic outcome data and operator reflection."
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {missingJournalItems.map((item) => (
-          <Link key={item.id} className="muted-surface rounded-lg p-4 transition hover:border-[var(--accent)]" href={journalHref(data.workspace?.id, item)}>
+        {missingJournalItems.map((item, index) => (
+          <Link
+            key={item.id}
+            className={cn(
+              "muted-surface rounded-lg p-4 transition hover:border-[var(--accent)]",
+              motionCardClass,
+              motionRevealPresetClass("scale-subtle"),
+            )}
+            style={motionRevealDensityStyle(index, "compact")}
+            href={journalHref(data.workspace?.id, item)}
+          >
             <p className="text-xs font-semibold uppercase text-slate-500">{item.symbol?.symbol || "Symbol"} · {item.latestOutcome.horizon_minutes}m</p>
             <h3 className="mt-2 text-sm font-semibold text-[var(--strong)]">{reviewLabel(item.latestOutcome.outcome_label)}</h3>
             <p className="mt-2 text-xs leading-5 text-slate-500">Create a reflection note linked to this setup and observed outcome.</p>
@@ -54,8 +65,14 @@ export function OutcomeReviewDiagnostics({ data }: { data: OutcomeReviewData }) 
           <p className="text-sm text-slate-500">No profile diagnostics returned for this review scope.</p>
         ) : (
           <div className="space-y-3">
-            {profileRows.map((item) => (
-              <div key={item.id} className="muted-surface rounded-lg p-4">
+            {profileRows.map((item, index) => (
+              <AnimatedListItem
+                as="article"
+                key={item.id}
+                className={cn("muted-surface rounded-lg p-4", motionCardClass)}
+                preset="scale-subtle"
+                style={motionRevealDensityStyle(index, "compact")}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-sm font-semibold text-[var(--strong)]">{qualityLabel(item.strategy_profile_key)}</h3>
                   <Badge value={reviewLabel(item.diagnostic_label)} tone={diagnosticTone(item.diagnostic_label)} />
@@ -66,7 +83,7 @@ export function OutcomeReviewDiagnostics({ data }: { data: OutcomeReviewData }) 
                   <span>Alignment {formatPercent(item.confidence_alignment_score)}</span>
                   <span>Reversal {formatPercent(item.reversal_rate)}</span>
                 </div>
-              </div>
+              </AnimatedListItem>
             ))}
           </div>
         )}
@@ -76,8 +93,14 @@ export function OutcomeReviewDiagnostics({ data }: { data: OutcomeReviewData }) 
           <p className="text-sm text-slate-500">No pattern diagnostics returned for this review scope.</p>
         ) : (
           <div className="space-y-3">
-            {patternRows.map((item) => (
-              <div key={item.id} className="muted-surface rounded-lg p-4">
+            {patternRows.map((item, index) => (
+              <AnimatedListItem
+                as="article"
+                key={item.id}
+                className={cn("muted-surface rounded-lg p-4", motionCardClass)}
+                preset="scale-subtle"
+                style={motionRevealDensityStyle(index, "compact")}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-sm font-semibold text-[var(--strong)]">{qualityLabel(item.pattern_type)}</h3>
                   <Badge value={reviewLabel(item.diagnostic_label)} tone={qualityTone(item.diagnostic_label)} />
@@ -88,7 +111,7 @@ export function OutcomeReviewDiagnostics({ data }: { data: OutcomeReviewData }) 
                   <span>No follow-through {formatPercent(item.no_follow_through_rate)}</span>
                   <span>Reversal {formatPercent(item.reversal_rate)}</span>
                 </div>
-              </div>
+              </AnimatedListItem>
             ))}
           </div>
         )}

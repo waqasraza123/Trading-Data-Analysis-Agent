@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Panel } from "@/components/layout/panel";
+import { cn } from "@/lib/ui/cn";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import type { OutcomeReviewQueueItem } from "@/lib/review/types";
 
 export function JournalPromptPanel({ items, workspaceId }: { items: OutcomeReviewQueueItem[]; workspaceId: string | null | undefined }) {
@@ -10,8 +12,17 @@ export function JournalPromptPanel({ items, workspaceId }: { items: OutcomeRevie
   return (
     <Panel title="Journal prompts" eyebrow="Reflection gaps">
       <div className="space-y-3">
-        {missingJournalItems.map((item) => (
-          <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-[var(--panel-muted)] p-3">
+        {missingJournalItems.map((item, index) => (
+          <AnimatedListItem
+            as="article"
+            key={item.id}
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-[var(--panel-muted)] p-3",
+              motionCardClass,
+              motionRevealPresetClass("scale-subtle"),
+            )}
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             <div>
               <p className="text-sm font-semibold text-[var(--strong)]">{item.symbol?.symbol || "Unknown symbol"} · {item.signal.signal.timeframe}</p>
               <p className="mt-1 text-sm text-slate-500">Add a note about what was observed and what needs follow-up review.</p>
@@ -22,7 +33,7 @@ export function JournalPromptPanel({ items, workspaceId }: { items: OutcomeRevie
             >
               Create note
             </Link>
-          </div>
+          </AnimatedListItem>
         ))}
       </div>
     </Panel>

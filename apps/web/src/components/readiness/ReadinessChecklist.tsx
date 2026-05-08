@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { cn } from "@/lib/ui/cn";
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import { checkStatusTone, remediationHref, remediationLabel } from "@/lib/readiness/labels";
+import { AnimatedListItem, motionCardClass, motionRevealDensityStyle } from "@/lib/ui/motion";
 import type { ProductReadinessRun } from "@/lib/readiness/types";
 
 export function ReadinessChecklist({
@@ -11,11 +13,17 @@ export function ReadinessChecklist({
   run: ProductReadinessRun;
   workspaceId?: string | null;
 }) {
-  return (
+    return (
     <Panel title="Checklist" eyebrow={`${run.checks_json.length} checks`}>
       <div className="grid gap-3">
-        {run.checks_json.map((check) => (
-          <div key={check.key} className="muted-surface rounded-lg p-4">
+        {run.checks_json.map((check, index) => (
+          <AnimatedListItem
+            as="article"
+            key={check.key}
+            className={cn("muted-surface rounded-lg p-4", motionCardClass)}
+            preset="scale-subtle"
+            style={motionRevealDensityStyle(index, "compact")}
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="font-semibold text-[var(--strong)]">{check.title}</h3>
@@ -32,7 +40,7 @@ export function ReadinessChecklist({
                 {remediationLabel(check)}
               </Link>
             </div>
-          </div>
+          </AnimatedListItem>
         ))}
       </div>
     </Panel>

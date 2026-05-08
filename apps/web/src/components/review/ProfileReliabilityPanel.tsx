@@ -1,6 +1,8 @@
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import { diagnosticTone, reviewLabel } from "@/lib/review/labels";
+import { cn } from "@/lib/ui/cn";
+import { motionCardClass, motionRevealDensityStyle, motionRevealPresetClass } from "@/lib/ui/motion";
 import type { OutcomeReviewData } from "@/lib/review/types";
 import type { ReactNode } from "react";
 
@@ -18,13 +20,14 @@ export function ProfileReliabilityPanel({ data }: { data: OutcomeReviewData }) {
           {profileDiagnostics.length === 0 ? (
             <EmptyLine message="No profile diagnostics returned." />
           ) : (
-            profileDiagnostics.map((item) => (
+            profileDiagnostics.map((item, index) => (
               <ReliabilityItem
                 key={item.id}
                 title={item.strategy_profile_key}
                 label={item.diagnostic_label}
                 detail={`${item.evaluated_count} evaluated outcomes · ${item.horizon_minutes} minute horizon`}
                 summary={item.diagnostic_summary}
+                revealIndex={index}
               />
             ))
           )}
@@ -33,13 +36,14 @@ export function ProfileReliabilityPanel({ data }: { data: OutcomeReviewData }) {
           {calibrationBins.length === 0 ? (
             <EmptyLine message={data.calibrationRun?.summary || "No calibration bins returned."} />
           ) : (
-            calibrationBins.map((item) => (
+            calibrationBins.map((item, index) => (
               <ReliabilityItem
                 key={item.id}
                 title={item.bin_label}
                 label={item.calibration_label}
                 detail={`${item.evaluated_count} evaluated outcomes · ${item.horizon_minutes} minute horizon`}
                 summary={`Average confidence ${formatPercent(item.average_confidence_score)} · alignment ${formatPercent(item.confidence_alignment_score)}`}
+                revealIndex={index}
               />
             ))
           )}
@@ -48,13 +52,14 @@ export function ProfileReliabilityPanel({ data }: { data: OutcomeReviewData }) {
           {driftResults.length === 0 ? (
             <EmptyLine message="No cohort drift results returned." />
           ) : (
-            driftResults.map((item) => (
+            driftResults.map((item, index) => (
               <ReliabilityItem
                 key={item.id}
                 title={reviewLabel(item.cohort_key)}
                 label={item.severity || item.drift_label}
                 detail={`${item.baseline_sample_size} baseline · ${item.comparison_sample_size} recent`}
                 summary={item.summary}
+                revealIndex={index}
               />
             ))
           )}
@@ -73,9 +78,24 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function ReliabilityItem({ title, label, detail, summary }: { title: string; label: string; detail: string; summary: string }) {
+function ReliabilityItem({
+  title,
+  label,
+  detail,
+  summary,
+  revealIndex = 0,
+}: {
+  title: string;
+  label: string;
+  detail: string;
+  summary: string;
+  revealIndex?: number;
+}) {
   return (
-    <div className="muted-surface rounded-lg p-4">
+    <div
+      className={cn("muted-surface rounded-lg p-4", motionCardClass, motionRevealPresetClass("scale-subtle"))}
+      style={motionRevealDensityStyle(revealIndex, "compact")}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h4 className="text-sm font-semibold text-[var(--strong)]">{title}</h4>
         <Badge value={label} tone={diagnosticTone(label)} />

@@ -289,6 +289,28 @@ Keep the manifest in sync when adding new routes:
   - shared `motionCardClass` where card borders/shadow feel require consistent hover micro-interaction timing
 - Kept section-level route wrappers and data contracts unchanged; no backend/API behavior changes introduced.
 
+## Detailed rollout notes (Production step: readiness and review-row completion)
+
+- Added compact reveal sequencing to readiness and outcome-review card/list surfaces with no business-logic changes.
+- Updated readiness-specific components:
+  - `apps/web/src/components/readiness/ReadinessChecklist.tsx`
+  - `apps/web/src/components/readiness/ReadinessRemediationPanel.tsx`
+  - `apps/web/src/components/readiness/ReadinessBlockers.tsx`
+- Updated outcome-review composites:
+  - `apps/web/src/components/review/OutcomeReviewQueue.tsx`
+  - `apps/web/src/components/review/OutcomeReviewErrorState.tsx`
+  - `apps/web/src/components/review/PatternDegradationPanel.tsx`
+  - `apps/web/src/components/review/ProfileReliabilityPanel.tsx`
+  - `apps/web/src/components/review/JournalPromptPanel.tsx`
+  - `apps/web/src/components/outcome-review/OutcomeReviewQueueTable.tsx`
+  - `apps/web/src/components/outcome-review/OutcomeReviewInsights.tsx`
+- Reuse choices were kept explicit:
+  - `AnimatedListItem` for compact row and card reveals
+  - `motionRevealDensityStyle(index, "compact")` for list pacing
+  - `motionRevealPresetClass("scale-subtle")` for card-like surfaces
+  - `motionCardClass` for hover/pulse consistency on interactive and elevated surfaces
+- Motion sequencing was intentionally kept on grouped/high-value rows only to avoid over-animating low-value static summary text.
+
 ## Detailed rollout notes (Production step: rollout governance automation)
 
 - Added `apps/web/scripts/motion-rollout-audit.mjs` plus manifest source-of-truth file:
