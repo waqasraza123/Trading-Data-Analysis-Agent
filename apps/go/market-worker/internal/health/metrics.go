@@ -23,6 +23,7 @@ type Metrics struct {
 	LiveSubscriptionsStale     int        `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsRevived   int        `json:"liveSubscriptionsRevived"`
 	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
+	LiveSubscriptionsStopped   int        `json:"liveSubscriptionsStopped"`
 	LiveLeaseRenewals          int        `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int        `json:"liveLeaseRenewalFailures"`
 	LiveLeaseLost              int        `json:"liveLeaseLost"`
@@ -63,6 +64,7 @@ type Snapshot struct {
 	LiveSubscriptionsStale     int                   `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsRevived   int                   `json:"liveSubscriptionsRevived"`
 	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
+	LiveSubscriptionsStopped   int                   `json:"liveSubscriptionsStopped"`
 	LiveLeaseRenewals          int                   `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int                   `json:"liveLeaseRenewalFailures"`
 	LiveLeaseLost              int                   `json:"liveLeaseLost"`
@@ -146,6 +148,12 @@ func (m *Metrics) RecordLiveSubscriptionRevived() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveSubscriptionsRevived++
+}
+
+func (m *Metrics) RecordLiveSubscriptionStopped() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionsStopped++
 }
 
 func (m *Metrics) RecordLiveLeaseRenewal(success bool) {
@@ -300,6 +308,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsStale:    m.LiveSubscriptionsStale,
 		LiveSubscriptionsRevived:  m.LiveSubscriptionsRevived,
 		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
+		LiveSubscriptionsStopped:  m.LiveSubscriptionsStopped,
 		LiveLeaseRenewals:        m.LiveLeaseRenewals,
 		LiveLeaseRenewalFailures: m.LiveLeaseRenewalFailures,
 		LiveLeaseLost:            m.LiveLeaseLost,

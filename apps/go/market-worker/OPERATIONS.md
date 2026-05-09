@@ -99,6 +99,7 @@ Operational checks in serve mode:
   - `liveSubscriptionsStarted`
   - `liveSubscriptionsStale`
   - `liveSubscriptionsRevived`
+  - `liveSubscriptionsStopped`
   - `liveLeaseRenewals`
   - `liveLeaseRenewalFailures`
   - `liveLeaseLost`
@@ -121,6 +122,7 @@ Operational checks in serve mode:
   - `market_worker_live_subscription_reconnect_budget_exceeded`
   - `market_worker_live_subscriptions_stale`
   - `market_worker_live_subscription_stale_recovered`
+  - `market_worker_live_subscription_status_stopped`
 - Any subscription with repeated stale transitions without resume should be investigated:
   - check `live_feed_subscriptions.last_message_at` drift versus exchange heartbeat expectations;
   - verify websocket stability and DNS/network health in the same worker pod;

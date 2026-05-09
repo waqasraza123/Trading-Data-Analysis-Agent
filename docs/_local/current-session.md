@@ -30,6 +30,17 @@
   `apps/go/market-worker/README.md`.
 - Scope remains code and documentation only. No tests/builds executed.
 
+## Go Market Worker Live Status Transition Hardening
+
+- Added runtime status refresh checks during live message consumption in
+  `apps/go/market-worker/internal/live/service.go` so paused/failed/stopped subscriptions stop promptly
+  after DB status transitions.
+- Added `liveSubscriptionsStopped` and log `live_subscription_status_stopped` to capture live stream
+  lifecycle stop events.
+- Updated `apps/go/market-worker/OPERATIONS.md` and `apps/go/market-worker/README.md` with stop-event
+  observability guidance.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Go Market Worker Live Stream Reconnect Budget
 
 - Added bounded reconnect attempt protection for live subscriptions in

@@ -121,6 +121,8 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   - `liveLeaseLost`
   - `liveLeaseAcquisitionMisses`
   - `liveLeaseReleaseFailures`
+  Status transitions are reflected by `liveSubscriptionsStopped` when an active subscription is
+  externally moved to `paused`, `failed`, or `stopped`.
 - `MARKET_WORKER_ENABLE_LIVE_BINANCE`, `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS`, and
   `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS` control websocket reconnect behavior.
   Reconnect delay uses exponential backoff in seconds from the base value up to the max cap and

@@ -476,7 +476,8 @@ func (s *Service) consume(
 			if recorded {
 				_ = s.repo.UpdateEventStatus(ctx, eventID, eventStatus, "")
 			}
-			if _, err := s.repo.LoadSubscription(ctx, subscription.ID); err != nil {
+			loadedSubscription, err := s.repo.LoadSubscription(ctx, subscription.ID)
+			if err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
 					if runInitialized {
 						_ = s.writer.FinishRun(ctx, run, runCounts, false)
@@ -488,10 +489,15 @@ func (s *Service) consume(
 				}
 				return err
 			}
+			subscription = loadedSubscription
 			if isLiveSubscriptionStopped(subscription.Status) {
 				if runInitialized {
 					_ = s.writer.FinishRun(ctx, run, runCounts, false)
 				}
+				if s.metrics != nil {
+					s.metrics.RecordLiveSubscriptionStopped()
+				}
+				s.logger.Info("live_subscription_status_stopped", "subscriptionId", subscription.ID.String(), "status", subscription.Status)
 				return errLiveSubscriptionStopped
 			}
 		}
