@@ -218,6 +218,7 @@ For live stream runtime paths, these terminal errors also force subscription sta
 - unsupported or invalid `timeframe`;
 - provider stream error frames;
 - startup symbol/source state issues (`symbol`/`source` missing, inactive, or non-live source type);
+- transient symbol/source lookup failures while validating startup state.
 - consecutive parse failure threshold exhaustion.
 
 Event recording in `live_feed_events` remains optional; when that table is missing, the worker still transitions

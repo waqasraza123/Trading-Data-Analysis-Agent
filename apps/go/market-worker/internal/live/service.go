@@ -123,12 +123,14 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if s.metrics != nil {
 			s.metrics.RecordLiveSubscriptionRunFailed()
 		}
-		s.failSubscription(
-			ctx,
-			subscription,
-			fmt.Sprintf("failed to load live stream symbol/source state: %v", err),
+		s.logger.Warn(
+			"live_subscription_symbol_source_load_failed",
+			"subscriptionId",
+			subscription.ID.String(),
+			"error",
+			err,
 		)
-		return nil
+		return err
 	}
 	if !state.SymbolActive || !state.SourceActive {
 		if s.metrics != nil {

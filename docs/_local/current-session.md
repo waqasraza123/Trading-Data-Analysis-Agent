@@ -1,5 +1,16 @@
 # Current Session
 
+## Go Market Worker Live Startup Validation Retryability
+
+- Updated `apps/go/market-worker/internal/live/service.go` so startup symbol/source lookup errors are retryable unless
+  the row is truly missing (`pgx.ErrNoRows`).
+- Missing/inactive symbol/source rows and non-live source types remain terminal hard-fail paths that mark subscriptions as
+  `failed` and return success for that subscription run.
+- Documented terminal-vs-retry classification in:
+  - `apps/go/market-worker/README.md`
+  - `apps/go/market-worker/OPERATIONS.md`
+- Scope remains code and documentation only; no tests/builds executed.
+
 ## Go Market Worker Live Subscription Failure Determinism
 
 - Added deterministic terminal failure handling in `apps/go/market-worker/internal/live/service.go` so live
