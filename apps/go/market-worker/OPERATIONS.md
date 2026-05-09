@@ -84,28 +84,32 @@ Operational defaults:
 - `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` (reconnect base, default `5s`)
 - `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS` (reconnect max cap, default `60s`)
 - `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` (reconnect jitter percent, default `20`)
+- `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS` (max consecutive reconnects before trip, default `12`, `0` for unlimited)
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` (websocket read deadline, default `30s`)
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` (max `last_message_at` age to allow claim, default `180s`)
 - `liveStreamMaxReconnectSeconds` in inspect output reflects the effective cap used by the running worker.
 - `liveStreamReconnectJitterPercent` in inspect output reflects the configured jitter percentage.
+- `liveStreamMaxReconnectAttempts` in inspect output reflects the configured reconnect budget.
 
 Operational checks in serve mode:
 
 - `/readyz` must remain green with `ready: true` after startup
 - `/metrics.json` should show live counters increasing for active streams:
-  - `liveSubscriptionsClaimed`
-  - `liveSubscriptionsStarted`
-  - `liveSubscriptionsStale`
-  - `liveReconnects`
-  - `liveMessagesReceived`
-  - `liveCandlesWritten`
-  - `liveGapRequests`
+- `liveSubscriptionsClaimed`
+- `liveSubscriptionsStarted`
+- `liveSubscriptionsStale`
+- `liveReconnects`
+- `liveReconnectBudgetExceeded`
+- `liveMessagesReceived`
+- `liveCandlesWritten`
+- `liveGapRequests`
 - Worker logs should show:
   - `market_worker_live_claim_failed`
-  - `market_worker_live_lease_lost`
-  - `market_worker_live_lease_release_failed`
-  - `market_worker_live_subscription_stream_reconnect`
-  - `market_worker_live_subscriptions_stale`
+- `market_worker_live_lease_lost`
+- `market_worker_live_lease_release_failed`
+- `market_worker_live_subscription_stream_reconnect`
+- `market_worker_live_subscription_reconnect_budget_exceeded`
+- `market_worker_live_subscriptions_stale`
 - Any subscription with repeated stale transitions without resume should be investigated:
   - check `live_feed_subscriptions.last_message_at` drift versus exchange heartbeat expectations;
   - verify websocket stability and DNS/network health in the same worker pod;

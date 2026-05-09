@@ -23,6 +23,7 @@ type Metrics struct {
 	LiveSubscriptionsStale     int        `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
 	LiveReconnects            int        `json:"liveReconnects"`
+	LiveReconnectBudgetExceeded int       `json:"liveReconnectBudgetExceeded"`
 	LiveMessagesReceived      int        `json:"liveMessagesReceived"`
 	LiveMessagesFailed        int        `json:"liveMessagesFailed"`
 	LiveCandlesWritten        int        `json:"liveCandlesWritten"`
@@ -54,6 +55,7 @@ type Snapshot struct {
 	LiveSubscriptionsStale     int                   `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
 	LiveReconnects            int                   `json:"liveReconnects"`
+	LiveReconnectBudgetExceeded int                 `json:"liveReconnectBudgetExceeded"`
 	LiveMessagesReceived      int                   `json:"liveMessagesReceived"`
 	LiveMessagesFailed        int                   `json:"liveMessagesFailed"`
 	LiveCandlesWritten        int                   `json:"liveCandlesWritten"`
@@ -128,6 +130,12 @@ func (m *Metrics) RecordLiveReconnect() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveReconnects++
+}
+
+func (m *Metrics) RecordLiveReconnectBudgetExceeded() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveReconnectBudgetExceeded++
 }
 
 func (m *Metrics) RecordLiveMessageReceived() {
@@ -231,6 +239,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsStale:    m.LiveSubscriptionsStale,
 		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
 		LiveReconnects:           m.LiveReconnects,
+		LiveReconnectBudgetExceeded: m.LiveReconnectBudgetExceeded,
 		LiveMessagesReceived:     m.LiveMessagesReceived,
 		LiveMessagesFailed:       m.LiveMessagesFailed,
 		LiveCandlesWritten:       m.LiveCandlesWritten,

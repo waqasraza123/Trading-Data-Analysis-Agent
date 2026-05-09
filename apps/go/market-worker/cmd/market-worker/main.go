@@ -128,6 +128,7 @@ func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, prov
 		"liveStreamLeaseSeconds":         int(cfg.LiveStreamLeaseDuration.Seconds()),
 		"liveStreamReconnectSeconds":      int(cfg.LiveStreamReconnectDelay.Seconds()),
 		"liveStreamMaxReconnectSeconds":  int(cfg.LiveStreamMaxReconnectDelay.Seconds()),
+		"liveStreamMaxReconnectAttempts":  cfg.LiveStreamMaxReconnectAttempts,
 		"liveStreamReconnectJitterPercent": cfg.LiveStreamReconnectJitterPercent,
 		"liveStreamReadTimeoutSeconds":    int(cfg.LiveStreamReadTimeout.Seconds()),
 		"liveStreamMessageBuffer":         cfg.LiveStreamMessageBuffer,

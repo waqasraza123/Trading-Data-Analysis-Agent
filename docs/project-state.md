@@ -41,8 +41,10 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   canonical API/product brain and no Python provider polling path is removed.
   Live websocket reconnection now uses bounded exponential backoff based on
   `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` and
-  `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS`, and optional jitter via
-  `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` to reduce thundering-herd effects.
+  `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS`, optional jitter via
+  `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT`, and bounded reconnect attempt
+  protection via `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS` to stop and fail subscriptions that
+  repeatedly re-fail, preventing hot reconnection loops.
 - Dashboard read model materialization exists under `apps/api/app/modules/read_models/` for rebuildable dashboard symbol, signal card, and command center snapshots. It reads existing deterministic artifacts only and does not mutate source artifacts, run scans/analysis/outcomes, call LLMs/providers, send notifications, execute broker workflows, auto-trade, or provide financial advice.
 
 - The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.

@@ -43,6 +43,7 @@ type Config struct {
 	LiveStreamReconnectDelay time.Duration
 	LiveStreamMaxReconnectDelay time.Duration
 	LiveStreamReconnectJitterPercent int
+	LiveStreamMaxReconnectAttempts int
 	LiveStreamReadTimeout    time.Duration
 	LiveStreamMessageBuffer  int
 	LiveStreamStaleAfter     time.Duration
@@ -87,6 +88,7 @@ func Load() (Config, error) {
 		LiveStreamReconnectDelay: time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS", 5)) * time.Second,
 		LiveStreamMaxReconnectDelay: time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS", 60)) * time.Second,
 		LiveStreamReconnectJitterPercent: envInt("MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT", 20),
+		LiveStreamMaxReconnectAttempts: envInt("MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS", 12),
 		LiveStreamReadTimeout:    time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS", 30)) * time.Second,
 		LiveStreamMessageBuffer:  envInt("MARKET_WORKER_LIVE_STREAM_MESSAGE_BUFFER", 64),
 		LiveStreamStaleAfter:     time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS", 180)) * time.Second,
@@ -143,6 +145,9 @@ func Load() (Config, error) {
 	}
 	if cfg.LiveStreamMaxReconnectDelay < cfg.LiveStreamReconnectDelay {
 		cfg.LiveStreamMaxReconnectDelay = cfg.LiveStreamReconnectDelay
+	}
+	if cfg.LiveStreamMaxReconnectAttempts < 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS must be zero or positive")
 	}
 	if cfg.LiveStreamReconnectJitterPercent < 0 || cfg.LiveStreamReconnectJitterPercent > 100 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT must be between 0 and 100")

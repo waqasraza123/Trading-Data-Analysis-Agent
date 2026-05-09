@@ -110,8 +110,15 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		streamURL := strings.TrimRight(s.cfg.BinanceLiveWebSocketBaseURL, "/")
 		conn, err := websocket.DefaultDialer.Dial(streamURL, nil)
 		if err != nil {
-			reconnectDelay := s.liveReconnectDelay(reconnectAttempts)
 			reconnectAttempts++
+			exceeded, err := s.reconnectBudgetExceeded(ctx, subscription, reconnectAttempts)
+			if err != nil {
+				return err
+			}
+			if exceeded {
+				return nil
+			}
+			reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
 			s.logger.Warn("live_subscription_connect_failed", "subscriptionId", subscription.ID.String(), "error", err)
 			if s.metrics != nil {
 				s.metrics.RecordLiveReconnect()
@@ -124,8 +131,15 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		}
 		if err := s.subscribeBinance(conn, provider, subscription.Timeframe); err != nil {
 			_ = conn.Close()
-			reconnectDelay := s.liveReconnectDelay(reconnectAttempts)
 			reconnectAttempts++
+			exceeded, err := s.reconnectBudgetExceeded(ctx, subscription, reconnectAttempts)
+			if err != nil {
+				return err
+			}
+			if exceeded {
+				return nil
+			}
+			reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
 			s.logger.Warn("live_subscription_subscribe_failed", "subscriptionId", subscription.ID.String(), "error", err)
 			if s.metrics != nil {
 				s.metrics.RecordLiveReconnect()
@@ -145,11 +159,18 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if streamErr == nil {
 			return nil
 		}
+		reconnectAttempts++
+		exceeded, err := s.reconnectBudgetExceeded(ctx, subscription, reconnectAttempts)
+		if err != nil {
+			return err
+		}
+		if exceeded {
+			return nil
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		reconnectDelay := s.liveReconnectDelay(reconnectAttempts)
-		reconnectAttempts++
+		reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
 		s.logger.Warn("live_subscription_stream_reconnect", "subscriptionId", subscription.ID.String(), "error", streamErr)
 		if s.metrics != nil {
 			s.metrics.RecordLiveReconnect()
@@ -186,6 +207,33 @@ func (s *Service) liveReconnectDelay(attempt int) time.Duration {
 		return maxDelay
 	}
 	return delay
+}
+
+func (s *Service) reconnectBudgetExceeded(ctx context.Context, subscription Subscription, reconnectAttempts int) (bool, error) {
+	maxAttempts := s.cfg.LiveStreamMaxReconnectAttempts
+	if maxAttempts <= 0 || reconnectAttempts <= maxAttempts {
+		return false, nil
+	}
+	failReason := fmt.Sprintf(
+		"live stream reconnect attempt budget exceeded after %d attempts",
+		reconnectAttempts,
+	)
+	if s.metrics != nil {
+		s.metrics.RecordLiveReconnectBudgetExceeded()
+	}
+	s.logger.Warn(
+		"live_subscription_reconnect_budget_exceeded",
+		"subscriptionId",
+		subscription.ID.String(),
+		"attempt",
+		reconnectAttempts,
+		"maxAttempts",
+		maxAttempts,
+	)
+	if err := s.repo.MarkFailed(ctx, subscription.ID, failReason); err != nil {
+		return true, err
+	}
+	return true, nil
 }
 
 func (s *Service) waitForLiveReconnect(ctx context.Context, delay time.Duration) error {
