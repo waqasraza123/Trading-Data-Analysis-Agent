@@ -41,6 +41,7 @@ type Config struct {
 	LiveStreamClaimBatchSize int
 	LiveStreamLeaseDuration  time.Duration
 	LiveStreamReconnectDelay time.Duration
+	LiveStreamMaxReconnectDelay time.Duration
 	LiveStreamReadTimeout    time.Duration
 	LiveStreamMessageBuffer  int
 	LiveStreamStaleAfter     time.Duration
@@ -83,6 +84,7 @@ func Load() (Config, error) {
 		LiveStreamClaimBatchSize: envInt("MARKET_WORKER_LIVE_STREAM_CLAIM_BATCH_SIZE", batchSize),
 		LiveStreamLeaseDuration:  time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS", 90)) * time.Second,
 		LiveStreamReconnectDelay: time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS", 5)) * time.Second,
+		LiveStreamMaxReconnectDelay: time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS", 60)) * time.Second,
 		LiveStreamReadTimeout:    time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS", 30)) * time.Second,
 		LiveStreamMessageBuffer:  envInt("MARKET_WORKER_LIVE_STREAM_MESSAGE_BUFFER", 64),
 		LiveStreamStaleAfter:     time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS", 180)) * time.Second,
@@ -133,6 +135,12 @@ func Load() (Config, error) {
 	}
 	if cfg.LiveStreamReconnectDelay <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS must be positive")
+	}
+	if cfg.LiveStreamMaxReconnectDelay <= 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS must be positive")
+	}
+	if cfg.LiveStreamMaxReconnectDelay < cfg.LiveStreamReconnectDelay {
+		cfg.LiveStreamMaxReconnectDelay = cfg.LiveStreamReconnectDelay
 	}
 	if cfg.LiveStreamReadTimeout <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS must be positive")

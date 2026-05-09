@@ -97,14 +97,11 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 	if err != nil {
 		return err
 	}
-	reconnectionDelay := s.cfg.LiveStreamReconnectDelay
 	readTimeout := s.cfg.LiveStreamReadTimeout
-	if reconnectionDelay <= 0 {
-		reconnectionDelay = 1 * time.Second
-	}
 	if readTimeout <= 0 {
 		readTimeout = 30 * time.Second
 	}
+	reconnectAttempts := 0
 	for {
 		if !isLiveSubscriptionActive(subscription.Status) {
 			return nil
@@ -112,30 +109,33 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		streamURL := strings.TrimRight(s.cfg.BinanceLiveWebSocketBaseURL, "/")
 		conn, err := websocket.DefaultDialer.Dial(streamURL, nil)
 		if err != nil {
+			reconnectDelay := s.liveReconnectDelay(reconnectAttempts)
+			reconnectAttempts++
 			s.logger.Warn("live_subscription_connect_failed", "subscriptionId", subscription.ID.String(), "error", err)
 			if s.metrics != nil {
 				s.metrics.RecordLiveReconnect()
 			}
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(reconnectionDelay):
+			s.logger.Info("live_subscription_reconnect_wait", "subscriptionId", subscription.ID.String(), "attempt", reconnectAttempts, "delaySeconds", int(reconnectDelay.Seconds()))
+			if err := s.waitForLiveReconnect(ctx, reconnectDelay); err != nil {
+				return err
 			}
 			continue
 		}
 		if err := s.subscribeBinance(conn, provider, subscription.Timeframe); err != nil {
 			_ = conn.Close()
+			reconnectDelay := s.liveReconnectDelay(reconnectAttempts)
+			reconnectAttempts++
 			s.logger.Warn("live_subscription_subscribe_failed", "subscriptionId", subscription.ID.String(), "error", err)
 			if s.metrics != nil {
 				s.metrics.RecordLiveReconnect()
 			}
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(reconnectionDelay):
+			s.logger.Info("live_subscription_reconnect_wait", "subscriptionId", subscription.ID.String(), "attempt", reconnectAttempts, "delaySeconds", int(reconnectDelay.Seconds()))
+			if err := s.waitForLiveReconnect(ctx, reconnectDelay); err != nil {
+				return err
 			}
 			continue
 		}
+		reconnectAttempts = 0
 		streamErr := s.consume(ctx, conn, subscription, provider, timeframe, readTimeout, state)
 		_ = conn.Close()
 		if errors.Is(streamErr, errLiveSubscriptionStopped) {
@@ -147,15 +147,47 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		reconnectDelay := s.liveReconnectDelay(reconnectAttempts)
+		reconnectAttempts++
 		s.logger.Warn("live_subscription_stream_reconnect", "subscriptionId", subscription.ID.String(), "error", streamErr)
 		if s.metrics != nil {
 			s.metrics.RecordLiveReconnect()
 		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(reconnectionDelay):
+		s.logger.Info("live_subscription_reconnect_wait", "subscriptionId", subscription.ID.String(), "attempt", reconnectAttempts, "delaySeconds", int(reconnectDelay.Seconds()))
+		if err := s.waitForLiveReconnect(ctx, reconnectDelay); err != nil {
+			return err
 		}
+	}
+}
+
+func (s *Service) liveReconnectDelay(attempt int) time.Duration {
+	delay := s.cfg.LiveStreamReconnectDelay
+	maxDelay := s.cfg.LiveStreamMaxReconnectDelay
+	if delay <= 0 {
+		delay = 1 * time.Second
+	}
+	if maxDelay <= 0 || maxDelay < delay {
+		maxDelay = delay
+	}
+	for attempt > 0 {
+		delay = delay * 2
+		attempt--
+		if delay >= maxDelay {
+			return maxDelay
+		}
+	}
+	return delay
+}
+
+func (s *Service) waitForLiveReconnect(ctx context.Context, delay time.Duration) error {
+	if delay <= 0 {
+		return nil
+	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(delay):
+		return nil
 	}
 }
 

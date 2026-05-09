@@ -9,6 +9,8 @@
   stream settings in inspect mode for operational verification.
 - Added `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` handling in live runtime candidate selection to skip
   stale websocket subscriptions without fresh `last_message_at` heartbeats during claim cycles.
+- Added explicit stale subscription marking for operational visibility:
+  each live claim cycle marks expired unleased subscriptions as `stale` and increments `liveSubscriptionsStale`.
 - `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md` were updated with live
   run-time settings, tuning guidance, and metrics/log checks.
 - Scope remains code and documentation only. No tests/builds executed.
@@ -903,3 +905,16 @@ changes. Preserve unrelated worktree changes unless explicitly asked.
 - Added compact list reveal sequencing in high-density content blocks and kept section-level staging in `SetupDetailView`.
 - Updated `apps/web/docs/motion-ui.md` with this production step and left backend/API/data composition untouched.
 - Scope remained code + documentation only; no test/build commands were run.
+
+## Go Market Worker – Live Websocket Reconnect Resilience
+
+- Added production-grade bounded exponential reconnect behavior in
+  `apps/go/market-worker/internal/live/service.go` for Binance websocket streaming failures.
+- Added new config knob:
+  `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS` in
+  `apps/go/market-worker/internal/config/config.go` and validated that it is a valid positive cap.
+- Updated inspect output in `apps/go/market-worker/cmd/market-worker/main.go` with
+  `liveStreamMaxReconnectSeconds` for live observability.
+- Documented the reconnection strategy and max cap behavior in
+  `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md`.
+- No test/build commands were run in this pass, per instruction.
