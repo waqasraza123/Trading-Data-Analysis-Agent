@@ -1,5 +1,19 @@
 # Current Session
 
+## Go Market Worker Live Subscription Failure Determinism
+
+- Added deterministic terminal failure handling in `apps/go/market-worker/internal/live/service.go` so live
+  subscriptions are marked `failed` even when optional `live_feed_events` persistence is unavailable.
+- Applied `failSubscription` helper in terminal paths:
+  - provider symbol resolution failure in `Process()`;
+  - timeframe validation failure in `Process()`;
+  - provider error messages in stream processing;
+  - message parse-threshold exhaustion in stream processing.
+- Updated
+  `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md` to document that these status
+  transitions are deterministic without `live_feed_events`.
+- Scope remains documentation and production code only; no tests/builds executed.
+
 ## Go Market Worker Live Stream Parse-Failure Circuit Breaker
 
 - Added bounded consecutive parse-failure hard-stop for live stream parsing in

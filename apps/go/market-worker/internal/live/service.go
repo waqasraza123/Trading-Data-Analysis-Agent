@@ -95,6 +95,7 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if s.metrics != nil {
 			s.metrics.RecordLiveSubscriptionRunFailed()
 		}
+		s.failSubscription(ctx, subscription, fmt.Sprintf("failed to resolve provider symbol: %v", err))
 		return err
 	}
 	timeframe, err := candles.ParseTimeframe(subscription.Timeframe)
@@ -102,6 +103,7 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if s.metrics != nil {
 			s.metrics.RecordLiveSubscriptionRunFailed()
 		}
+		s.failSubscription(ctx, subscription, fmt.Sprintf("unsupported timeframe %q: %v", subscription.Timeframe, err))
 		return err
 	}
 	state, err := s.validator.Load(ctx, subscription.WorkspaceID, subscription.SymbolID, subscription.SourceID)
@@ -242,6 +244,20 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			}
 			return err
 		}
+	}
+}
+
+func (s *Service) failSubscription(ctx context.Context, subscription Subscription, reason string) {
+	if err := s.repo.MarkFailed(ctx, subscription.ID, reason); err != nil {
+		s.logger.Warn(
+			"live_subscription_mark_failed",
+			"subscriptionId",
+			subscription.ID.String(),
+			"reason",
+			reason,
+			"markError",
+			err,
+		)
 	}
 }
 
@@ -408,8 +424,8 @@ func (s *Service) consume(
 				if errorMessage == "" {
 					errorMessage = "provider_error"
 				}
+				s.failSubscription(ctx, subscription, errorMessage)
 				if recorded {
-					_ = s.repo.MarkFailed(ctx, subscription.ID, errorMessage)
 					_ = s.repo.UpdateEventStatus(ctx, eventID, eventStatus, errorMessage)
 				}
 				if s.metrics != nil {
@@ -436,8 +452,8 @@ func (s *Service) consume(
 					if s.metrics != nil {
 						s.metrics.RecordLiveMessageParseThresholdExceeded()
 					}
+					s.failSubscription(ctx, subscription, failMessage)
 					if recorded {
-						_ = s.repo.MarkFailed(ctx, subscription.ID, failMessage)
 						_ = s.repo.UpdateEventStatus(ctx, eventID, eventStatus, failMessage)
 					}
 					s.logger.Warn(

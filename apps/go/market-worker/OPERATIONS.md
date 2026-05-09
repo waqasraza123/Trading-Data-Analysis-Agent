@@ -126,6 +126,7 @@ Operational checks in serve mode:
   - `market_worker_live_subscription_stream_reconnect`
   - `market_worker_live_subscription_stream_read_timeout`
   - `live_subscription_message_parse_failures_exceeded`
+  - `live_subscription_mark_failed`
   - `market_worker_live_subscription_reconnect_budget_exceeded`
   - `market_worker_live_subscriptions_stale`
   - `market_worker_live_subscription_stale_recovered`
@@ -207,6 +208,17 @@ Terminal failures are completed as failed or dead-lettered without scheduling Go
 - unsupported timeframe;
 - secret-looking metadata;
 - not-configured provider stub.
+
+For live stream runtime paths, these terminal errors also force subscription status to `failed` when possible:
+
+- provider symbol resolution issues (missing/invalid `providerSymbol`);
+- unsupported or invalid `timeframe`;
+- provider stream error frames;
+- consecutive parse failure threshold exhaustion.
+
+Event recording in `live_feed_events` remains optional; when that table is missing, the worker still transitions
+the subscription to `failed` for these paths through `live_feed_subscriptions` so operators can reliably
+resume remediation from the control plane status.
 
 Retryable failures use the existing job queue attempt policy and
 `MARKET_WORKER_RETRY_BACKOFF_SECONDS`:

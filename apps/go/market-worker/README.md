@@ -144,6 +144,10 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
 - `MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES` controls how many consecutive stream parse failures
   are tolerated before the worker marks a subscription as `failed` and ends the stream loop for that subscription.
   Set `0` to disable parse-based hard stop.
+- Terminal subscription failures (`provider errors`, `message parse threshold exhaustion`, and initial startup
+  configuration issues like missing/invalid provider symbol/timeframe) are marked `failed` even if
+  `live_feed_events` persistence is unavailable so status transitions remain deterministic in trimmed
+  compatibility schemas.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:
