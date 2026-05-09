@@ -12,6 +12,15 @@
   metric, and log guidance for parse-threshold tuning.
 - Scope remains code and documentation only. No tests/builds executed.
 
+## Go Market Worker Live Stream Parse Threshold Run Taxonomy
+
+- Added `LiveSubscriptionRunsParseThresholdExceeded` in
+  `apps/go/market-worker/internal/health/metrics.go` and wired it to increment when
+  `errLiveSubscriptionMessageParseThresholdExceeded` terminates a live run.
+- Updated docs to surface `liveSubscriptionRunsParseThresholdExceeded` in `/metrics.json` checks so operators can
+  triage malformed-message storms separately from transient parse noise and reconnect churn.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Go Market Worker Live Stream Runtime
 
 - Production-grade live stream runtime processing was reconnected in `apps/go/market-worker/internal/live` with

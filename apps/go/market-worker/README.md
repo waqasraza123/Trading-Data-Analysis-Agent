@@ -124,6 +124,7 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   - `liveLeaseReleaseFailures`
   - `liveSubscriptionRunsCompleted`
   - `liveSubscriptionRunsFailed`
+  - `liveSubscriptionRunsParseThresholdExceeded`
   - `liveMessageParseFailures`
   - `liveMessageParseThresholdExceeded`
   - `liveCandlesWritten`

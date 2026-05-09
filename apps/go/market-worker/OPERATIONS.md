@@ -112,6 +112,7 @@ Operational checks in serve mode:
   - `liveReconnectReadTimeouts`
   - `liveSubscriptionRunsCompleted`
   - `liveSubscriptionRunsFailed`
+  - `liveSubscriptionRunsParseThresholdExceeded`
   - `liveMessageParseFailures`
   - `liveMessageParseThresholdExceeded`
   - `liveMessagesReceived`

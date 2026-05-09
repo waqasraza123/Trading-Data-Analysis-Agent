@@ -26,6 +26,7 @@ type Metrics struct {
 	LiveSubscriptionsStopped   int        `json:"liveSubscriptionsStopped"`
 	LiveSubscriptionRunsCompleted int       `json:"liveSubscriptionRunsCompleted"`
 	LiveSubscriptionRunsFailed    int       `json:"liveSubscriptionRunsFailed"`
+	LiveSubscriptionRunsParseThresholdExceeded int `json:"liveSubscriptionRunsParseThresholdExceeded"`
 	LiveLeaseRenewals          int        `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int        `json:"liveLeaseRenewalFailures"`
 	LiveLeaseLost              int        `json:"liveLeaseLost"`
@@ -70,6 +71,7 @@ type Snapshot struct {
 	LiveSubscriptionsStopped   int                   `json:"liveSubscriptionsStopped"`
 	LiveSubscriptionRunsCompleted int                `json:"liveSubscriptionRunsCompleted"`
 	LiveSubscriptionRunsFailed    int                `json:"liveSubscriptionRunsFailed"`
+	LiveSubscriptionRunsParseThresholdExceeded int `json:"liveSubscriptionRunsParseThresholdExceeded"`
 	LiveLeaseRenewals          int                   `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int                   `json:"liveLeaseRenewalFailures"`
 	LiveLeaseLost              int                   `json:"liveLeaseLost"`
@@ -172,6 +174,13 @@ func (m *Metrics) RecordLiveSubscriptionRunFailed() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveSubscriptionRunsFailed++
+}
+
+func (m *Metrics) RecordLiveSubscriptionRunParseThresholdExceeded() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionRunsFailed++
+	m.LiveSubscriptionRunsParseThresholdExceeded++
 }
 
 func (m *Metrics) RecordLiveLeaseRenewal(success bool) {
@@ -335,6 +344,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsStopped:  m.LiveSubscriptionsStopped,
 		LiveSubscriptionRunsCompleted: m.LiveSubscriptionRunsCompleted,
 		LiveSubscriptionRunsFailed:    m.LiveSubscriptionRunsFailed,
+		LiveSubscriptionRunsParseThresholdExceeded: m.LiveSubscriptionRunsParseThresholdExceeded,
 		LiveLeaseRenewals:        m.LiveLeaseRenewals,
 		LiveLeaseRenewalFailures: m.LiveLeaseRenewalFailures,
 		LiveLeaseLost:            m.LiveLeaseLost,

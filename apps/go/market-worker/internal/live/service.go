@@ -189,7 +189,7 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		}
 		if errors.Is(streamErr, errLiveSubscriptionMessageParseThresholdExceeded) {
 			if s.metrics != nil {
-				s.metrics.RecordLiveSubscriptionRunFailed()
+				s.metrics.RecordLiveSubscriptionRunParseThresholdExceeded()
 			}
 			return nil
 		}
