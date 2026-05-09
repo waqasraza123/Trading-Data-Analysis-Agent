@@ -15,6 +15,10 @@
 - Added terminal-stream hard-stop for live provider error events in `apps/go/market-worker/internal/live/service.go` so
   terminal provider stream errors stop reconnect retries and directly classify the run as failed after failure
   marking.
+- Extended startup hard-stop behavior in `apps/go/market-worker/internal/live/service.go`:
+  - missing/invalid symbol/source state (`missing`, `inactive`, or non-`websocket_live`) now marks the subscription
+    as `failed` and returns terminally for that run without propagating an error that would fan out as a process-level
+    failure.
 - Scope remains documentation and production code only; no tests/builds executed.
 
 ## Go Market Worker Live Stream Parse-Failure Circuit Breaker

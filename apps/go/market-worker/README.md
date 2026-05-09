@@ -150,6 +150,9 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   configuration issues like missing/invalid provider symbol/timeframe) are marked `failed` even if
   `live_feed_events` persistence is unavailable so status transitions remain deterministic in trimmed
   compatibility schemas.
+- The worker now also hard-fails subscriptions during startup when symbol/source state is terminally invalid
+  (`symbol`/`source` missing, inactive, or non-live source type), then stops processing that subscription
+  immediately so it does not consume worker cycles with repeated reconnect attempts.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:

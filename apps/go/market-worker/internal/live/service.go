@@ -97,7 +97,7 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			s.metrics.RecordLiveSubscriptionRunFailed()
 		}
 		s.failSubscription(ctx, subscription, fmt.Sprintf("failed to resolve provider symbol: %v", err))
-		return err
+		return nil
 	}
 	timeframe, err := candles.ParseTimeframe(subscription.Timeframe)
 	if err != nil {
@@ -105,14 +105,48 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			s.metrics.RecordLiveSubscriptionRunFailed()
 		}
 		s.failSubscription(ctx, subscription, fmt.Sprintf("unsupported timeframe %q: %v", subscription.Timeframe, err))
-		return err
+		return nil
 	}
 	state, err := s.validator.Load(ctx, subscription.WorkspaceID, subscription.SymbolID, subscription.SourceID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunFailed()
+			}
+			s.failSubscription(
+				ctx,
+				subscription,
+				fmt.Sprintf("live stream symbol/source missing for subscription %s", subscription.ID),
+			)
+			return nil
+		}
 		if s.metrics != nil {
 			s.metrics.RecordLiveSubscriptionRunFailed()
 		}
-		return err
+		s.failSubscription(
+			ctx,
+			subscription,
+			fmt.Sprintf("failed to load live stream symbol/source state: %v", err),
+		)
+		return nil
+	}
+	if !state.SymbolActive || !state.SourceActive {
+		if s.metrics != nil {
+			s.metrics.RecordLiveSubscriptionRunFailed()
+		}
+		s.failSubscription(ctx, subscription, fmt.Sprintf("live stream symbol/source inactive for subscription %s", subscription.ID))
+		return nil
+	}
+	if state.SourceType != "websocket_live" {
+		if s.metrics != nil {
+			s.metrics.RecordLiveSubscriptionRunFailed()
+		}
+		s.failSubscription(
+			ctx,
+			subscription,
+			fmt.Sprintf("unsupported live source type %q for subscription %s", state.SourceType, subscription.ID),
+		)
+		return nil
 	}
 	readTimeout := s.cfg.LiveStreamReadTimeout
 	if readTimeout <= 0 {
