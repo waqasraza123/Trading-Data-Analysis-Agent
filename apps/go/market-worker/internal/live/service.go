@@ -89,14 +89,23 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 	}
 	provider, err := s.resolveProviderSymbol(subscription)
 	if err != nil {
+		if s.metrics != nil {
+			s.metrics.RecordLiveSubscriptionRunFailed()
+		}
 		return err
 	}
 	timeframe, err := candles.ParseTimeframe(subscription.Timeframe)
 	if err != nil {
+		if s.metrics != nil {
+			s.metrics.RecordLiveSubscriptionRunFailed()
+		}
 		return err
 	}
 	state, err := s.validator.Load(ctx, subscription.WorkspaceID, subscription.SymbolID, subscription.SourceID)
 	if err != nil {
+		if s.metrics != nil {
+			s.metrics.RecordLiveSubscriptionRunFailed()
+		}
 		return err
 	}
 	readTimeout := s.cfg.LiveStreamReadTimeout
@@ -106,6 +115,9 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 	reconnectAttempts := 0
 	for {
 		if !isLiveSubscriptionActive(subscription.Status) {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunCompleted()
+			}
 			return nil
 		}
 		streamURL := strings.TrimRight(s.cfg.BinanceLiveWebSocketBaseURL, "/")
@@ -114,9 +126,15 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			reconnectAttempts++
 			exceeded, err := s.reconnectBudgetExceeded(ctx, subscription, reconnectAttempts)
 			if err != nil {
+				if s.metrics != nil {
+					s.metrics.RecordLiveSubscriptionRunFailed()
+				}
 				return err
 			}
 			if exceeded {
+				if s.metrics != nil {
+					s.metrics.RecordLiveSubscriptionRunFailed()
+				}
 				return nil
 			}
 			reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
@@ -135,9 +153,15 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			reconnectAttempts++
 			exceeded, err := s.reconnectBudgetExceeded(ctx, subscription, reconnectAttempts)
 			if err != nil {
+				if s.metrics != nil {
+					s.metrics.RecordLiveSubscriptionRunFailed()
+				}
 				return err
 			}
 			if exceeded {
+				if s.metrics != nil {
+					s.metrics.RecordLiveSubscriptionRunFailed()
+				}
 				return nil
 			}
 			reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
@@ -155,20 +179,35 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		streamErr := s.consume(ctx, conn, subscription, provider, timeframe, readTimeout, state)
 		_ = conn.Close()
 		if errors.Is(streamErr, errLiveSubscriptionStopped) {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunCompleted()
+			}
 			return nil
 		}
 		if streamErr == nil {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunCompleted()
+			}
 			return nil
 		}
 		reconnectAttempts++
 		exceeded, err := s.reconnectBudgetExceeded(ctx, subscription, reconnectAttempts)
 		if err != nil {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunFailed()
+			}
 			return err
 		}
 		if exceeded {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunFailed()
+			}
 			return nil
 		}
 		if ctx.Err() != nil {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunCompleted()
+			}
 			return ctx.Err()
 		}
 		reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
@@ -185,6 +224,13 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		}
 		s.logger.Info("live_subscription_reconnect_wait", "subscriptionId", subscription.ID.String(), "attempt", reconnectAttempts, "delaySeconds", int(reconnectDelay.Seconds()))
 		if err := s.waitForLiveReconnect(ctx, reconnectDelay); err != nil {
+			if s.metrics != nil {
+				if errors.Is(err, context.Canceled) {
+					s.metrics.RecordLiveSubscriptionRunCompleted()
+				} else {
+					s.metrics.RecordLiveSubscriptionRunFailed()
+				}
+			}
 			return err
 		}
 	}

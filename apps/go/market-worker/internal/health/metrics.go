@@ -24,6 +24,8 @@ type Metrics struct {
 	LiveSubscriptionsRevived   int        `json:"liveSubscriptionsRevived"`
 	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
 	LiveSubscriptionsStopped   int        `json:"liveSubscriptionsStopped"`
+	LiveSubscriptionRunsCompleted int       `json:"liveSubscriptionRunsCompleted"`
+	LiveSubscriptionRunsFailed    int       `json:"liveSubscriptionRunsFailed"`
 	LiveLeaseRenewals          int        `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int        `json:"liveLeaseRenewalFailures"`
 	LiveLeaseLost              int        `json:"liveLeaseLost"`
@@ -65,6 +67,8 @@ type Snapshot struct {
 	LiveSubscriptionsRevived   int                   `json:"liveSubscriptionsRevived"`
 	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
 	LiveSubscriptionsStopped   int                   `json:"liveSubscriptionsStopped"`
+	LiveSubscriptionRunsCompleted int                `json:"liveSubscriptionRunsCompleted"`
+	LiveSubscriptionRunsFailed    int                `json:"liveSubscriptionRunsFailed"`
 	LiveLeaseRenewals          int                   `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int                   `json:"liveLeaseRenewalFailures"`
 	LiveLeaseLost              int                   `json:"liveLeaseLost"`
@@ -154,6 +158,18 @@ func (m *Metrics) RecordLiveSubscriptionStopped() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveSubscriptionsStopped++
+}
+
+func (m *Metrics) RecordLiveSubscriptionRunCompleted() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionRunsCompleted++
+}
+
+func (m *Metrics) RecordLiveSubscriptionRunFailed() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionRunsFailed++
 }
 
 func (m *Metrics) RecordLiveLeaseRenewal(success bool) {
@@ -309,6 +325,8 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsRevived:  m.LiveSubscriptionsRevived,
 		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
 		LiveSubscriptionsStopped:  m.LiveSubscriptionsStopped,
+		LiveSubscriptionRunsCompleted: m.LiveSubscriptionRunsCompleted,
+		LiveSubscriptionRunsFailed:    m.LiveSubscriptionRunsFailed,
 		LiveLeaseRenewals:        m.LiveLeaseRenewals,
 		LiveLeaseRenewalFailures: m.LiveLeaseRenewalFailures,
 		LiveLeaseLost:            m.LiveLeaseLost,

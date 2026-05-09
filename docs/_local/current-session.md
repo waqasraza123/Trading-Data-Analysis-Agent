@@ -41,6 +41,19 @@
   observability guidance.
 - Scope remains code and documentation only. No tests/builds executed.
 
+## Go Market Worker Live Subscription Run Lifecycle Telemetry
+
+- Added production-grade live stream run-lifecycle counters in `apps/go/market-worker/internal/health/metrics.go`:
+  - `liveSubscriptionRunsCompleted`
+  - `liveSubscriptionRunsFailed`
+- Wired run termination classification in `apps/go/market-worker/internal/live/service.go` so the worker distinguishes:
+  - completed runs from normal status stop, graceful context-driven shutdown, and reconnect-budget terminal exits;
+  - failed runs from terminal stream initialization/reconnect failures and unexpected terminal stream errors.
+- Updated runbook guidance so `/metrics.json` includes run completion/failure counters:
+  - `apps/go/market-worker/OPERATIONS.md`
+  - `apps/go/market-worker/README.md`
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Go Market Worker Live Stream Reconnect Budget
 
 - Added bounded reconnect attempt protection for live subscriptions in

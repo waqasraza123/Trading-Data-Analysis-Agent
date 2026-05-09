@@ -108,6 +108,8 @@ Operational checks in serve mode:
   - `liveReconnects`
   - `liveReconnectBudgetExceeded`
   - `liveReconnectReadTimeouts`
+  - `liveSubscriptionRunsCompleted`
+  - `liveSubscriptionRunsFailed`
   - `liveMessageParseFailures`
   - `liveMessagesReceived`
   - `liveCandlesWritten`
