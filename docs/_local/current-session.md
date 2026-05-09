@@ -12,6 +12,9 @@
 - Updated
   `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md` to document that these status
   transitions are deterministic without `live_feed_events`.
+- Added terminal-stream hard-stop for live provider error events in `apps/go/market-worker/internal/live/service.go` so
+  terminal provider stream errors stop reconnect retries and directly classify the run as failed after failure
+  marking.
 - Scope remains documentation and production code only; no tests/builds executed.
 
 ## Go Market Worker Live Stream Parse-Failure Circuit Breaker

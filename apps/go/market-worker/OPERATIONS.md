@@ -140,6 +140,9 @@ Operational checks in serve mode:
   - check `live_feed_subscriptions.last_message_at` drift versus exchange heartbeat expectations;
   - verify websocket stability and DNS/network health in the same worker pod;
   - confirm `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` aligns with deploy-level message cadence.
+- For provider error frames (stream-level `"error"` events), expected remediation is immediate terminal
+  stop for that stream after marking `failed`; investigate provider-side outage/channel issues before
+  re-enabling or restarting processing for the same subscription.
 
 ## Concurrency And Locks
 

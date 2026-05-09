@@ -23,6 +23,7 @@ import (
 var (
 	errLiveSubscriptionStopped                    = errors.New("live subscription stopped")
 	errLiveSubscriptionMessageParseThresholdExceeded = errors.New("live subscription message parse threshold exceeded")
+	errLiveSubscriptionProviderError              = errors.New("live subscription provider error")
 )
 
 type Service struct {
@@ -192,6 +193,12 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if errors.Is(streamErr, errLiveSubscriptionMessageParseThresholdExceeded) {
 			if s.metrics != nil {
 				s.metrics.RecordLiveSubscriptionRunParseThresholdExceeded()
+			}
+			return nil
+		}
+		if errors.Is(streamErr, errLiveSubscriptionProviderError) {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunFailed()
 			}
 			return nil
 		}
@@ -431,7 +438,7 @@ func (s *Service) consume(
 				if s.metrics != nil {
 					s.metrics.RecordLiveMessageFailed()
 				}
-				return errors.New(errorMessage)
+				return fmt.Errorf("%w: %s", errLiveSubscriptionProviderError, errorMessage)
 			}
 			if parseErr != nil {
 				eventStatus = EventStatusFailed
