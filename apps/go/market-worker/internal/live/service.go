@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"log/slog"
+	"math/rand"
+	"net"
 	"strings"
 	"time"
 
@@ -171,9 +172,16 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			return ctx.Err()
 		}
 		reconnectDelay := s.liveReconnectDelay(reconnectAttempts - 1)
-		s.logger.Warn("live_subscription_stream_reconnect", "subscriptionId", subscription.ID.String(), "error", streamErr)
 		if s.metrics != nil {
 			s.metrics.RecordLiveReconnect()
+			if isLiveStreamReadTimeout(streamErr) {
+				s.metrics.RecordLiveReconnectReadTimeout()
+			}
+		}
+		if isLiveStreamReadTimeout(streamErr) {
+			s.logger.Warn("live_subscription_stream_read_timeout", "subscriptionId", subscription.ID.String(), "error", streamErr)
+		} else {
+			s.logger.Warn("live_subscription_stream_reconnect", "subscriptionId", subscription.ID.String(), "error", streamErr)
 		}
 		s.logger.Info("live_subscription_reconnect_wait", "subscriptionId", subscription.ID.String(), "attempt", reconnectAttempts, "delaySeconds", int(reconnectDelay.Seconds()))
 		if err := s.waitForLiveReconnect(ctx, reconnectDelay); err != nil {
@@ -355,6 +363,9 @@ func (s *Service) consume(
 			}
 			if parseErr != nil {
 				eventStatus = EventStatusFailed
+				if s.metrics != nil {
+					s.metrics.RecordLiveMessageParseFailure()
+				}
 				if recorded {
 					_ = s.repo.UpdateEventStatus(ctx, eventID, eventStatus, parseErr.Error())
 				}
@@ -543,6 +554,17 @@ func (s *Service) isProviderError(event ParsedEvent, err error) bool {
 		return false
 	}
 	return !strings.EqualFold(event.ErrorMessage, "unsupported_live_event_type")
+}
+
+func isLiveStreamReadTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return netErr.Timeout()
+	}
+	return errors.Is(err, context.DeadlineExceeded)
 }
 
 func isLiveSubscriptionActive(status string) bool {

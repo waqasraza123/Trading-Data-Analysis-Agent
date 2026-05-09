@@ -15,6 +15,27 @@
   run-time settings, tuning guidance, and metrics/log checks.
 - Scope remains code and documentation only. No tests/builds executed.
 
+## Go Market Worker Live Stream Reconnect Budget
+
+- Added bounded reconnect attempt protection for live subscriptions in
+  `apps/go/market-worker/internal/live/service.go` with new config `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS`.
+- Added explicit subscription failover metrics and logs when the reconnect budget is exceeded.
+- Updated inspect output to include `liveStreamMaxReconnectAttempts` and documented failure triage in
+  `apps/go/market-worker/OPERATIONS.md`.
+- Continued production scope with code/docs only and no test/build execution.
+
+## Go Market Worker Live Stream Read Stability Telemetry
+
+- Added production-grade live stream parse-failure and read-timeout visibility in
+  `apps/go/market-worker/internal/health/metrics.go` and
+  `apps/go/market-worker/internal/live/service.go`.
+- Added `liveReconnectReadTimeouts` and `liveMessageParseFailures` counters in
+  `/metrics.json` to distinguish websocket read stall behavior from generic reconnect churn.
+- Added dedicated stream-read-timeout logging with `live_subscription_stream_read_timeout`.
+- Updated `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md`
+  with the new failure-mode telemetry and triage checks.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Modern Motion UI Rollout – Command Center Row Deepening (Continuation)
 
 - Added the remaining production-grade command-center row-level motion polish without logic or safety changes:
@@ -905,6 +926,18 @@ changes. Preserve unrelated worktree changes unless explicitly asked.
 - Added compact list reveal sequencing in high-density content blocks and kept section-level staging in `SetupDetailView`.
 - Updated `apps/web/docs/motion-ui.md` with this production step and left backend/API/data composition untouched.
 - Scope remained code + documentation only; no test/build commands were run.
+
+## Go Market Worker – Live Reconnect Jitter Hardening
+
+- Added bounded reconnect jitter support to live websocket retry behavior in
+  `apps/go/market-worker/internal/live/service.go`.
+- Added config knob `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` in
+  `apps/go/market-worker/internal/config/config.go` with validation and defaults.
+- Added inspect visibility for `liveStreamReconnectJitterPercent` in
+  `apps/go/market-worker/cmd/market-worker/main.go`.
+- Documented jitter behavior in `apps/go/market-worker/README.md` and
+  `apps/go/market-worker/OPERATIONS.md`.
+- No tests/build commands were run in this pass, per instruction.
 
 ## Go Market Worker – Live Websocket Reconnect Resilience
 

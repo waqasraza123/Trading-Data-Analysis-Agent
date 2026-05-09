@@ -122,6 +122,9 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   synchronization across workers.
 - `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS` controls consecutive reconnect attempts before
   marking a subscription as `failed` to avoid unbounded reconnect storms.
+- `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` controls websocket read deadline behavior; repeated read
+  timeouts increment `liveReconnectReadTimeouts` in `/metrics.json` and trigger the same bounded
+  reconnect policy.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:

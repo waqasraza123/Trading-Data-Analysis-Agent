@@ -24,8 +24,10 @@ type Metrics struct {
 	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
 	LiveReconnects            int        `json:"liveReconnects"`
 	LiveReconnectBudgetExceeded int       `json:"liveReconnectBudgetExceeded"`
+	LiveReconnectReadTimeouts  int        `json:"liveReconnectReadTimeouts"`
 	LiveMessagesReceived      int        `json:"liveMessagesReceived"`
 	LiveMessagesFailed        int        `json:"liveMessagesFailed"`
+	LiveMessageParseFailures  int        `json:"liveMessageParseFailures"`
 	LiveCandlesWritten        int        `json:"liveCandlesWritten"`
 	LiveMessageDrops          int        `json:"liveMessageDrops"`
 	LiveGapRequests           int        `json:"liveGapRequests"`
@@ -56,8 +58,10 @@ type Snapshot struct {
 	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
 	LiveReconnects            int                   `json:"liveReconnects"`
 	LiveReconnectBudgetExceeded int                 `json:"liveReconnectBudgetExceeded"`
+	LiveReconnectReadTimeouts  int                  `json:"liveReconnectReadTimeouts"`
 	LiveMessagesReceived      int                   `json:"liveMessagesReceived"`
 	LiveMessagesFailed        int                   `json:"liveMessagesFailed"`
+	LiveMessageParseFailures  int                   `json:"liveMessageParseFailures"`
 	LiveCandlesWritten        int                   `json:"liveCandlesWritten"`
 	LiveMessageDrops          int                   `json:"liveMessageDrops"`
 	LiveGapRequests           int                   `json:"liveGapRequests"`
@@ -136,6 +140,18 @@ func (m *Metrics) RecordLiveReconnectBudgetExceeded() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveReconnectBudgetExceeded++
+}
+
+func (m *Metrics) RecordLiveReconnectReadTimeout() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveReconnectReadTimeouts++
+}
+
+func (m *Metrics) RecordLiveMessageParseFailure() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveMessageParseFailures++
 }
 
 func (m *Metrics) RecordLiveMessageReceived() {
@@ -240,8 +256,10 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
 		LiveReconnects:           m.LiveReconnects,
 		LiveReconnectBudgetExceeded: m.LiveReconnectBudgetExceeded,
+		LiveReconnectReadTimeouts:  m.LiveReconnectReadTimeouts,
 		LiveMessagesReceived:     m.LiveMessagesReceived,
 		LiveMessagesFailed:       m.LiveMessagesFailed,
+		LiveMessageParseFailures: m.LiveMessageParseFailures,
 		LiveCandlesWritten:       m.LiveCandlesWritten,
 		LiveMessageDrops:         m.LiveMessageDrops,
 		LiveGapRequests:          m.LiveGapRequests,
