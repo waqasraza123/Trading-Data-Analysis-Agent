@@ -15,6 +15,21 @@
   run-time settings, tuning guidance, and metrics/log checks.
 - Scope remains code and documentation only. No tests/builds executed.
 
+## Go Market Worker Live Lease Lifecycle Hardening
+
+- Added lease ownership loss handling in `apps/go/market-worker/internal/worker/runner.go` so a lost
+  websocket lease now cancels stream processing immediately and stops writing while ownership is no longer
+  held.
+- Added lease lifecycle counters in `apps/go/market-worker/internal/health/metrics.go`:
+  - `liveLeaseRenewals`
+  - `liveLeaseRenewalFailures`
+  - `liveLeaseLost`
+  - `liveLeaseAcquisitionMisses`
+  - `liveLeaseReleaseFailures`
+- Added lease-loss and failed-release observability in `apps/go/market-worker/OPERATIONS.md` and
+  `apps/go/market-worker/README.md`.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Go Market Worker Live Stream Reconnect Budget
 
 - Added bounded reconnect attempt protection for live subscriptions in

@@ -99,6 +99,11 @@ Operational checks in serve mode:
   - `liveSubscriptionsStarted`
   - `liveSubscriptionsStale`
   - `liveSubscriptionsRevived`
+  - `liveLeaseRenewals`
+  - `liveLeaseRenewalFailures`
+  - `liveLeaseLost`
+  - `liveLeaseAcquisitionMisses`
+  - `liveLeaseReleaseFailures`
   - `liveReconnects`
   - `liveReconnectBudgetExceeded`
   - `liveReconnectReadTimeouts`
@@ -110,6 +115,7 @@ Operational checks in serve mode:
   - `market_worker_live_claim_failed`
   - `market_worker_live_lease_lost`
   - `market_worker_live_lease_release_failed`
+  - `market_worker_live_lease_renewal_failed`
   - `market_worker_live_subscription_stream_reconnect`
   - `market_worker_live_subscription_stream_read_timeout`
   - `market_worker_live_subscription_reconnect_budget_exceeded`

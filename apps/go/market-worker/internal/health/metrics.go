@@ -23,6 +23,11 @@ type Metrics struct {
 	LiveSubscriptionsStale     int        `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsRevived   int        `json:"liveSubscriptionsRevived"`
 	LiveSubscriptionsStarted   int        `json:"liveSubscriptionsStarted"`
+	LiveLeaseRenewals          int        `json:"liveLeaseRenewals"`
+	LiveLeaseRenewalFailures   int        `json:"liveLeaseRenewalFailures"`
+	LiveLeaseLost              int        `json:"liveLeaseLost"`
+	LiveLeaseAcquisitionMisses int        `json:"liveLeaseAcquisitionMisses"`
+	LiveLeaseReleaseFailures   int        `json:"liveLeaseReleaseFailures"`
 	LiveReconnects            int        `json:"liveReconnects"`
 	LiveReconnectBudgetExceeded int       `json:"liveReconnectBudgetExceeded"`
 	LiveReconnectReadTimeouts  int        `json:"liveReconnectReadTimeouts"`
@@ -58,6 +63,11 @@ type Snapshot struct {
 	LiveSubscriptionsStale     int                   `json:"liveSubscriptionsStale"`
 	LiveSubscriptionsRevived   int                   `json:"liveSubscriptionsRevived"`
 	LiveSubscriptionsStarted   int                   `json:"liveSubscriptionsStarted"`
+	LiveLeaseRenewals          int                   `json:"liveLeaseRenewals"`
+	LiveLeaseRenewalFailures   int                   `json:"liveLeaseRenewalFailures"`
+	LiveLeaseLost              int                   `json:"liveLeaseLost"`
+	LiveLeaseAcquisitionMisses int                   `json:"liveLeaseAcquisitionMisses"`
+	LiveLeaseReleaseFailures   int                   `json:"liveLeaseReleaseFailures"`
 	LiveReconnects            int                   `json:"liveReconnects"`
 	LiveReconnectBudgetExceeded int                 `json:"liveReconnectBudgetExceeded"`
 	LiveReconnectReadTimeouts  int                  `json:"liveReconnectReadTimeouts"`
@@ -136,6 +146,33 @@ func (m *Metrics) RecordLiveSubscriptionRevived() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveSubscriptionsRevived++
+}
+
+func (m *Metrics) RecordLiveLeaseRenewal(success bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveLeaseRenewals++
+	if !success {
+		m.LiveLeaseRenewalFailures++
+	}
+}
+
+func (m *Metrics) RecordLiveLeaseLost() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveLeaseLost++
+}
+
+func (m *Metrics) RecordLiveLeaseAcquisitionMiss() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveLeaseAcquisitionMisses++
+}
+
+func (m *Metrics) RecordLiveLeaseReleaseFailed() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveLeaseReleaseFailures++
 }
 
 func (m *Metrics) RecordLiveReconnect() {
@@ -263,6 +300,11 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsStale:    m.LiveSubscriptionsStale,
 		LiveSubscriptionsRevived:  m.LiveSubscriptionsRevived,
 		LiveSubscriptionsStarted:  m.LiveSubscriptionsStarted,
+		LiveLeaseRenewals:        m.LiveLeaseRenewals,
+		LiveLeaseRenewalFailures: m.LiveLeaseRenewalFailures,
+		LiveLeaseLost:            m.LiveLeaseLost,
+		LiveLeaseAcquisitionMisses: m.LiveLeaseAcquisitionMisses,
+		LiveLeaseReleaseFailures:  m.LiveLeaseReleaseFailures,
 		LiveReconnects:           m.LiveReconnects,
 		LiveReconnectBudgetExceeded: m.LiveReconnectBudgetExceeded,
 		LiveReconnectReadTimeouts:  m.LiveReconnectReadTimeouts,

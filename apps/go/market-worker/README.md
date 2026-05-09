@@ -115,6 +115,12 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
 - `MARKET_WORKER_LIVE_STREAM_CLAIM_INTERVAL_SECONDS` controls claim polling frequency.
 - `MARKET_WORKER_LIVE_STREAM_CLAIM_BATCH_SIZE` controls max active subscriptions per claim cycle.
 - `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS` controls lease TTL and heartbeat cadence.
+  Lease renewal health is exposed in `/metrics.json`:
+  - `liveLeaseRenewals`
+  - `liveLeaseRenewalFailures`
+  - `liveLeaseLost`
+  - `liveLeaseAcquisitionMisses`
+  - `liveLeaseReleaseFailures`
 - `MARKET_WORKER_ENABLE_LIVE_BINANCE`, `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS`, and
   `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS` control websocket reconnect behavior.
   Reconnect delay uses exponential backoff in seconds from the base value up to the max cap and

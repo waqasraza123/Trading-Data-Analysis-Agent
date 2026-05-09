@@ -218,6 +218,9 @@ func (r *Runner) processLiveCandidates(ctx context.Context) (int, error) {
 			}
 			defer release(sem)
 			if !r.live.AcquireLease(ctx, item) {
+				if r.metrics != nil {
+					r.metrics.RecordLiveLeaseAcquisitionMiss()
+				}
 				return
 			}
 			claimedMu.Lock()
@@ -246,24 +249,27 @@ func (r *Runner) processLiveCandidates(ctx context.Context) (int, error) {
 }
 
 func (r *Runner) handleLiveWithLease(ctx context.Context, subscription live.Subscription) error {
-	leaseCtx, cancel := context.WithCancel(ctx)
+	leaseCtx, leaseCancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		r.renewLiveLease(leaseCtx, subscription)
+		r.renewLiveLease(leaseCtx, subscription, leaseCancel)
 	}()
 	err := r.live.Process(leaseCtx, subscription)
-	cancel()
+	leaseCancel()
 	<-done
 	releaseCtx, releaseCancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer releaseCancel()
 	if !r.live.ReleaseLease(releaseCtx, subscription) {
 		r.logger.Warn("market_worker_live_lease_release_failed", "subscriptionId", subscription.ID.String())
+		if r.metrics != nil {
+			r.metrics.RecordLiveLeaseReleaseFailed()
+		}
 	}
 	return err
 }
 
-func (r *Runner) renewLiveLease(ctx context.Context, subscription live.Subscription) {
+func (r *Runner) renewLiveLease(ctx context.Context, subscription live.Subscription, cancel context.CancelFunc) {
 	interval := r.config.LiveStreamLeaseDuration / 3
 	if interval < time.Second {
 		interval = time.Second
@@ -275,15 +281,26 @@ func (r *Runner) renewLiveLease(ctx context.Context, subscription live.Subscript
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			renewCtx, cancel := context.WithTimeout(ctx, renewalTimeout(interval))
+			renewCtx, renewCancel := context.WithTimeout(ctx, renewalTimeout(interval))
 			renewed, err := r.live.RefreshLease(renewCtx, subscription)
-			cancel()
+			renewCancel()
 			if err != nil {
 				r.logger.Warn("market_worker_live_lease_renewal_failed", "subscriptionId", subscription.ID.String(), "error", err)
+				if r.metrics != nil {
+					r.metrics.RecordLiveLeaseRenewal(false)
+				}
 				continue
+			}
+			if r.metrics != nil {
+				r.metrics.RecordLiveLeaseRenewal(true)
 			}
 			if !renewed {
 				r.logger.Warn("market_worker_live_lease_lost", "subscriptionId", subscription.ID.String())
+				if r.metrics != nil {
+					r.metrics.RecordLiveLeaseRenewal(false)
+					r.metrics.RecordLiveLeaseLost()
+				}
+				cancel()
 				return
 			}
 		}
