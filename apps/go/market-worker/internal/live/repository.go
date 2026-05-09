@@ -201,19 +201,35 @@ where id = $1
 	return result.RowsAffected() == 1
 }
 
-func (r *Repository) RecordHeartbeat(ctx context.Context, subscriptionID uuid.UUID, providerTimestamp *time.Time) error {
+func (r *Repository) RecordHeartbeat(ctx context.Context, subscriptionID uuid.UUID, providerTimestamp *time.Time) (bool, error) {
 	if !r.hasLiveSubscriptions() {
-		return nil
+		return false, nil
 	}
-	_, err := r.pool.Exec(ctx, `
-update live_feed_subscriptions
-set last_message_at = now(),
-	status = case when status = 'stale' then 'active' else status end,
-	last_error = case when status = 'stale' then null else last_error end,
-	updated_at = now()
-where id = $1
-`, subscriptionID)
-	return err
+	var wasStale bool
+	err := r.pool.QueryRow(ctx, `
+with revived as (
+	update live_feed_subscriptions
+	set last_message_at = now(),
+		status = 'active',
+		last_error = null,
+		updated_at = now()
+	where id = $1
+		and status = 'stale'
+	returning true
+),
+refreshed as (
+	update live_feed_subscriptions
+	set last_message_at = now(),
+		status = case when status = 'stale' then 'active' else status end,
+		last_error = case when status = 'stale' then null else last_error end,
+		updated_at = now()
+	where id = $1
+		and not exists (select 1 from revived)
+	returning true
+)
+select exists (select 1 from revived)
+`, subscriptionID).Scan(&wasStale)
+	return wasStale, err
 }
 
 func (r *Repository) RecordFinalCandle(ctx context.Context, subscriptionID uuid.UUID, finalCandleAt time.Time) error {

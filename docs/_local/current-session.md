@@ -36,6 +36,18 @@
   with the new failure-mode telemetry and triage checks.
 - Scope remains code and documentation only. No tests/builds executed.
 
+## Go Market Worker Live Stream Recovery Telemetry
+
+- Added explicit stale-state recovery telemetry in `apps/go/market-worker/internal/live/repository.go`
+  and `apps/go/market-worker/internal/live/service.go`.
+- `RecordHeartbeat` now reports whether an active stream recovered from `stale` and emits
+  `live_subscription_stale_recovered` with an operational counter and docs updates.
+- Added `liveSubscriptionsRevived` in `/metrics.json` to surface how many subscriptions recovered
+  from stale heartbeat misses.
+- Updated `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md`
+  to document revival behavior and triage checks.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Modern Motion UI Rollout – Command Center Row Deepening (Continuation)
 
 - Added the remaining production-grade command-center row-level motion polish without logic or safety changes:

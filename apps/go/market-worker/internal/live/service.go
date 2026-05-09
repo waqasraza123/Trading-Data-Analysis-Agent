@@ -375,8 +375,15 @@ func (s *Service) consume(
 				continue
 			}
 			if len(parsedEvent.Payload) > 0 {
-				if err := s.repo.RecordHeartbeat(ctx, subscription.ID, parsedEvent.ProviderTimestamp); err != nil {
+				wasStale, err := s.repo.RecordHeartbeat(ctx, subscription.ID, parsedEvent.ProviderTimestamp)
+				if err != nil {
 					s.logger.Warn("live_subscription_heartbeat_failed", "subscriptionId", subscription.ID.String(), "error", err)
+				}
+				if wasStale {
+					s.logger.Info("live_subscription_stale_recovered", "subscriptionId", subscription.ID.String(), "eventType", parsedEvent.Type)
+					if s.metrics != nil {
+						s.metrics.RecordLiveSubscriptionRevived()
+					}
 				}
 			}
 			if parsedEvent.Candle != nil {

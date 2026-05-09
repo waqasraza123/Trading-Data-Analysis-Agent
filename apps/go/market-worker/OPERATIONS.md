@@ -95,24 +95,26 @@ Operational checks in serve mode:
 
 - `/readyz` must remain green with `ready: true` after startup
 - `/metrics.json` should show live counters increasing for active streams:
-- `liveSubscriptionsClaimed`
-- `liveSubscriptionsStarted`
-- `liveSubscriptionsStale`
-- `liveReconnects`
-- `liveReconnectBudgetExceeded`
-- `liveReconnectReadTimeouts`
-- `liveMessageParseFailures`
-- `liveMessagesReceived`
-- `liveCandlesWritten`
-- `liveGapRequests`
+  - `liveSubscriptionsClaimed`
+  - `liveSubscriptionsStarted`
+  - `liveSubscriptionsStale`
+  - `liveSubscriptionsRevived`
+  - `liveReconnects`
+  - `liveReconnectBudgetExceeded`
+  - `liveReconnectReadTimeouts`
+  - `liveMessageParseFailures`
+  - `liveMessagesReceived`
+  - `liveCandlesWritten`
+  - `liveGapRequests`
 - Worker logs should show:
   - `market_worker_live_claim_failed`
-- `market_worker_live_lease_lost`
-- `market_worker_live_lease_release_failed`
-- `market_worker_live_subscription_stream_reconnect`
-- `market_worker_live_subscription_stream_read_timeout`
-- `market_worker_live_subscription_reconnect_budget_exceeded`
-- `market_worker_live_subscriptions_stale`
+  - `market_worker_live_lease_lost`
+  - `market_worker_live_lease_release_failed`
+  - `market_worker_live_subscription_stream_reconnect`
+  - `market_worker_live_subscription_stream_read_timeout`
+  - `market_worker_live_subscription_reconnect_budget_exceeded`
+  - `market_worker_live_subscriptions_stale`
+  - `market_worker_live_subscription_stale_recovered`
 - Any subscription with repeated stale transitions without resume should be investigated:
   - check `live_feed_subscriptions.last_message_at` drift versus exchange heartbeat expectations;
   - verify websocket stability and DNS/network health in the same worker pod;

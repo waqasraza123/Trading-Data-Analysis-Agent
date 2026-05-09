@@ -129,7 +129,9 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:
   subscriptions with `last_message_at` older than this threshold and no active lease are marked `stale`
-  before each claim attempt. Stale rows are intentionally skipped from active workclaim.
+  before each claim attempt. Stale rows are intentionally skipped from active workclaim. When a new valid
+  websocket message arrives, `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`-exceeded rows are restored
+  to `active`, and `liveSubscriptionsRevived` increments in `/metrics.json`.
 
 `MARKET_WORKER_PROVIDER_MAX_CONCURRENCY` limits in-flight fetches per provider key. `MARKET_WORKER_PROVIDER_MIN_INTERVAL_MS`
 adds optional provider-key pacing before each fetch. These controls are independent from database
