@@ -113,6 +113,7 @@ Operational checks in serve mode:
   - `liveSubscriptionRunsCompleted`
   - `liveSubscriptionRunsFailed`
   - `liveSubscriptionRunsParseThresholdExceeded`
+  - `liveSubscriptionStartupLoadFailures`
   - `liveMessageParseFailures`
   - `liveMessageParseThresholdExceeded`
   - `liveMessagesReceived`
@@ -127,6 +128,7 @@ Operational checks in serve mode:
   - `market_worker_live_subscription_stream_read_timeout`
   - `live_subscription_message_parse_failures_exceeded`
   - `live_subscription_mark_failed`
+  - `live_subscription_symbol_source_load_retryable`
   - `market_worker_live_subscription_reconnect_budget_exceeded`
   - `market_worker_live_subscriptions_stale`
   - `market_worker_live_subscription_stale_recovered`
@@ -218,7 +220,6 @@ For live stream runtime paths, these terminal errors also force subscription sta
 - unsupported or invalid `timeframe`;
 - provider stream error frames;
 - startup symbol/source state issues (`symbol`/`source` missing, inactive, or non-live source type);
-- transient symbol/source lookup failures while validating startup state.
 - consecutive parse failure threshold exhaustion.
 
 Event recording in `live_feed_events` remains optional; when that table is missing, the worker still transitions
@@ -229,6 +230,7 @@ Retryable failures use the existing job queue attempt policy and
 `MARKET_WORKER_RETRY_BACKOFF_SECONDS`:
 
 - provider network or timeout failures;
+- transient startup symbol/source lookup failures during validation (logged as `live_subscription_symbol_source_load_retryable`);
 - job timeout failures;
 - public provider HTTP failures;
 - provider circuit-open responses;

@@ -125,6 +125,7 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   - `liveSubscriptionRunsCompleted`
   - `liveSubscriptionRunsFailed`
   - `liveSubscriptionRunsParseThresholdExceeded`
+  - `liveSubscriptionStartupLoadFailures`
   - `liveMessageParseFailures`
   - `liveMessageParseThresholdExceeded`
   - `liveCandlesWritten`
@@ -155,6 +156,8 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   immediately so it does not consume worker cycles with repeated reconnect attempts.
 - Only missing/inactive/non-live source lookups are terminal; transient symbol/source lookup errors remain
   retryable and continue through normal stream startup retry handling.
+- Transient startup lookups that fail after initial missing-row classification increment
+  `liveSubscriptionStartupLoadFailures` and emit `live_subscription_symbol_source_load_retryable`.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:

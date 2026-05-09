@@ -26,6 +26,7 @@ type Metrics struct {
 	LiveSubscriptionsStopped   int        `json:"liveSubscriptionsStopped"`
 	LiveSubscriptionRunsCompleted int       `json:"liveSubscriptionRunsCompleted"`
 	LiveSubscriptionRunsFailed    int       `json:"liveSubscriptionRunsFailed"`
+	LiveSubscriptionStartupLoadFailures int `json:"liveSubscriptionStartupLoadFailures"`
 	LiveSubscriptionRunsParseThresholdExceeded int `json:"liveSubscriptionRunsParseThresholdExceeded"`
 	LiveLeaseRenewals          int        `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int        `json:"liveLeaseRenewalFailures"`
@@ -71,6 +72,7 @@ type Snapshot struct {
 	LiveSubscriptionsStopped   int                   `json:"liveSubscriptionsStopped"`
 	LiveSubscriptionRunsCompleted int                `json:"liveSubscriptionRunsCompleted"`
 	LiveSubscriptionRunsFailed    int                `json:"liveSubscriptionRunsFailed"`
+	LiveSubscriptionStartupLoadFailures int           `json:"liveSubscriptionStartupLoadFailures"`
 	LiveSubscriptionRunsParseThresholdExceeded int `json:"liveSubscriptionRunsParseThresholdExceeded"`
 	LiveLeaseRenewals          int                   `json:"liveLeaseRenewals"`
 	LiveLeaseRenewalFailures   int                   `json:"liveLeaseRenewalFailures"`
@@ -174,6 +176,13 @@ func (m *Metrics) RecordLiveSubscriptionRunFailed() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.LiveSubscriptionRunsFailed++
+}
+
+func (m *Metrics) RecordLiveSubscriptionStartupLoadFailure() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveSubscriptionRunsFailed++
+	m.LiveSubscriptionStartupLoadFailures++
 }
 
 func (m *Metrics) RecordLiveSubscriptionRunParseThresholdExceeded() {
@@ -344,6 +353,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveSubscriptionsStopped:  m.LiveSubscriptionsStopped,
 		LiveSubscriptionRunsCompleted: m.LiveSubscriptionRunsCompleted,
 		LiveSubscriptionRunsFailed:    m.LiveSubscriptionRunsFailed,
+		LiveSubscriptionStartupLoadFailures: m.LiveSubscriptionStartupLoadFailures,
 		LiveSubscriptionRunsParseThresholdExceeded: m.LiveSubscriptionRunsParseThresholdExceeded,
 		LiveLeaseRenewals:        m.LiveLeaseRenewals,
 		LiveLeaseRenewalFailures: m.LiveLeaseRenewalFailures,

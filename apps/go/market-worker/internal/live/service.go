@@ -121,10 +121,10 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 			return nil
 		}
 		if s.metrics != nil {
-			s.metrics.RecordLiveSubscriptionRunFailed()
+			s.metrics.RecordLiveSubscriptionStartupLoadFailure()
 		}
 		s.logger.Warn(
-			"live_subscription_symbol_source_load_failed",
+			"live_subscription_symbol_source_load_retryable",
 			"subscriptionId",
 			subscription.ID.String(),
 			"error",
