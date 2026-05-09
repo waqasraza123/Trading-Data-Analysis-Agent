@@ -50,6 +50,7 @@ type Config struct {
 	LiveStreamGapAfter       time.Duration
 	LiveStreamGapRecovery    bool
 	LiveStreamGapRequestLimit int
+	LiveStreamMaxMessageParseFailures int
 	BinanceLiveWebSocketBaseURL string
 	EnableLiveBinance        bool
 }
@@ -95,6 +96,7 @@ func Load() (Config, error) {
 		LiveStreamGapAfter:       time.Duration(envInt("MARKET_WORKER_LIVE_STREAM_FINAL_STALE_SECONDS", 300)) * time.Second,
 		LiveStreamGapRecovery:    envBool("MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY", true),
 		LiveStreamGapRequestLimit: envInt("MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT", 1000),
+		LiveStreamMaxMessageParseFailures: envInt("MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES", 0),
 		BinanceLiveWebSocketBaseURL: envString("MARKET_WORKER_BINANCE_LIVE_WS_BASE_URL", "wss://stream.binance.com:9443/ws"),
 		EnableLiveBinance:        envBool("MARKET_WORKER_ENABLE_LIVE_BINANCE", true),
 	}
@@ -166,6 +168,9 @@ func Load() (Config, error) {
 	}
 	if cfg.LiveStreamGapRequestLimit <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT must be positive")
+	}
+	if cfg.LiveStreamMaxMessageParseFailures < 0 {
+		return Config{}, fmt.Errorf("MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES must be zero or positive")
 	}
 	if cfg.MaxCandlesPerRequest <= 0 {
 		return Config{}, fmt.Errorf("MARKET_WORKER_MAX_CANDLES_PER_REQUEST must be positive")

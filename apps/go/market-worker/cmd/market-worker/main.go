@@ -63,6 +63,7 @@ func run() error {
 		"jobTimeoutSeconds", int(cfg.JobTimeout.Seconds()),
 		"dbWriteTimeoutSeconds", int(cfg.DBWriteTimeout.Seconds()),
 		"providerRequestStaleSeconds", int(cfg.ProviderRequestStaleAfter.Seconds()),
+		"liveStreamMaxMessageParseFailures", cfg.LiveStreamMaxMessageParseFailures,
 		"databaseUrl", safety.RedactDatabaseURL(cfg.DatabaseURL),
 		"healthAddr", cfg.HealthAddr,
 	)
@@ -132,6 +133,7 @@ func writeInspection(cfg config.Config, capabilities workerdb.Capabilities, prov
 		"liveStreamReconnectJitterPercent": cfg.LiveStreamReconnectJitterPercent,
 		"liveStreamReadTimeoutSeconds":    int(cfg.LiveStreamReadTimeout.Seconds()),
 		"liveStreamMessageBuffer":         cfg.LiveStreamMessageBuffer,
+		"liveStreamMaxMessageParseFailures": cfg.LiveStreamMaxMessageParseFailures,
 		"liveStreamGapRecoveryEnabled":    cfg.LiveStreamGapRecovery,
 		"liveStreamStaleAfterSeconds":     int(cfg.LiveStreamStaleAfter.Seconds()),
 		"liveStreamGapAfterSeconds":       int(cfg.LiveStreamGapAfter.Seconds()),

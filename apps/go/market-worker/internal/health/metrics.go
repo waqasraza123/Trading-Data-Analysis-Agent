@@ -37,6 +37,7 @@ type Metrics struct {
 	LiveMessagesReceived      int        `json:"liveMessagesReceived"`
 	LiveMessagesFailed        int        `json:"liveMessagesFailed"`
 	LiveMessageParseFailures  int        `json:"liveMessageParseFailures"`
+	LiveMessageParseThresholdExceeded int `json:"liveMessageParseThresholdExceeded"`
 	LiveCandlesWritten        int        `json:"liveCandlesWritten"`
 	LiveMessageDrops          int        `json:"liveMessageDrops"`
 	LiveGapRequests           int        `json:"liveGapRequests"`
@@ -80,6 +81,7 @@ type Snapshot struct {
 	LiveMessagesReceived      int                   `json:"liveMessagesReceived"`
 	LiveMessagesFailed        int                   `json:"liveMessagesFailed"`
 	LiveMessageParseFailures  int                   `json:"liveMessageParseFailures"`
+	LiveMessageParseThresholdExceeded int           `json:"liveMessageParseThresholdExceeded"`
 	LiveCandlesWritten        int                   `json:"liveCandlesWritten"`
 	LiveMessageDrops          int                   `json:"liveMessageDrops"`
 	LiveGapRequests           int                   `json:"liveGapRequests"`
@@ -223,6 +225,12 @@ func (m *Metrics) RecordLiveMessageParseFailure() {
 	m.LiveMessageParseFailures++
 }
 
+func (m *Metrics) RecordLiveMessageParseThresholdExceeded() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.LiveMessageParseThresholdExceeded++
+}
+
 func (m *Metrics) RecordLiveMessageReceived() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -338,6 +346,7 @@ func (m *Metrics) Snapshot(capabilities workerdb.Capabilities) Snapshot {
 		LiveMessagesReceived:     m.LiveMessagesReceived,
 		LiveMessagesFailed:       m.LiveMessagesFailed,
 		LiveMessageParseFailures: m.LiveMessageParseFailures,
+		LiveMessageParseThresholdExceeded: m.LiveMessageParseThresholdExceeded,
 		LiveCandlesWritten:       m.LiveCandlesWritten,
 		LiveMessageDrops:         m.LiveMessageDrops,
 		LiveGapRequests:          m.LiveGapRequests,

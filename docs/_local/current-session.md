@@ -1,5 +1,17 @@
 # Current Session
 
+## Go Market Worker Live Stream Parse-Failure Circuit Breaker
+
+- Added bounded consecutive parse-failure hard-stop for live stream parsing in
+  `apps/go/market-worker/internal/live/service.go`.
+- `MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES` was added to `apps/go/market-worker/internal/config/config.go`
+  and exposed in startup/inspect output in `apps/go/market-worker/cmd/market-worker/main.go`.
+- Added new metric `liveMessageParseThresholdExceeded` in `apps/go/market-worker/internal/health/metrics.go` to
+  distinguish schema/stream corruption events from isolated parse retries.
+- `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md` were updated with config,
+  metric, and log guidance for parse-threshold tuning.
+- Scope remains code and documentation only. No tests/builds executed.
+
 ## Go Market Worker Live Stream Runtime
 
 - Production-grade live stream runtime processing was reconnected in `apps/go/market-worker/internal/live` with

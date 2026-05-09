@@ -86,10 +86,12 @@ Operational defaults:
 - `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` (reconnect jitter percent, default `20`)
 - `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS` (max consecutive reconnects before trip, default `12`, `0` for unlimited)
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` (websocket read deadline, default `30s`)
+- `MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES` (max consecutive parse failures before marking a subscription as failed, default `0` for unlimited)
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` (max `last_message_at` age to allow claim, default `180s`)
 - `liveStreamMaxReconnectSeconds` in inspect output reflects the effective cap used by the running worker.
 - `liveStreamReconnectJitterPercent` in inspect output reflects the configured jitter percentage.
 - `liveStreamMaxReconnectAttempts` in inspect output reflects the configured reconnect budget.
+- `liveStreamMaxMessageParseFailures` in inspect output reflects the configured parse failure hard-stop.
 
 Operational checks in serve mode:
 
@@ -111,6 +113,7 @@ Operational checks in serve mode:
   - `liveSubscriptionRunsCompleted`
   - `liveSubscriptionRunsFailed`
   - `liveMessageParseFailures`
+  - `liveMessageParseThresholdExceeded`
   - `liveMessagesReceived`
   - `liveCandlesWritten`
   - `liveGapRequests`
@@ -121,10 +124,16 @@ Operational checks in serve mode:
   - `market_worker_live_lease_renewal_failed`
   - `market_worker_live_subscription_stream_reconnect`
   - `market_worker_live_subscription_stream_read_timeout`
+  - `live_subscription_message_parse_failures_exceeded`
   - `market_worker_live_subscription_reconnect_budget_exceeded`
   - `market_worker_live_subscriptions_stale`
   - `market_worker_live_subscription_stale_recovered`
   - `market_worker_live_subscription_status_stopped`
+- Any subscription that exceeds parse failures should be investigated immediately:
+  - check for upstream message-shape changes or protocol regressions from the exchange feed endpoint;
+  - confirm the worker image and websocket URL are current for the deployed Binance stream environment;
+  - if messages are intermittently malformed due transient upstream instability, increase
+    `MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES` and re-evaluate reconnect/backoff.
 - Any subscription with repeated stale transitions without resume should be investigated:
   - check `live_feed_subscriptions.last_message_at` drift versus exchange heartbeat expectations;
   - verify websocket stability and DNS/network health in the same worker pod;

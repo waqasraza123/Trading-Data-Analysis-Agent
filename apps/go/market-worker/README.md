@@ -87,6 +87,7 @@ Optional:
 - `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_ATTEMPTS`, default `12`
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS`, default `30`
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_BUFFER`, default `64`
+- `MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES`, default `0` (unbounded)
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`, default `180`
 - `MARKET_WORKER_LIVE_STREAM_FINAL_STALE_SECONDS`, default `300`
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY`, default `true`
@@ -123,6 +124,10 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
   - `liveLeaseReleaseFailures`
   - `liveSubscriptionRunsCompleted`
   - `liveSubscriptionRunsFailed`
+  - `liveMessageParseFailures`
+  - `liveMessageParseThresholdExceeded`
+  - `liveCandlesWritten`
+  - `liveMessageDrops`
   Status transitions are reflected by `liveSubscriptionsStopped` when an active subscription is
   externally moved to `paused`, `failed`, or `stopped`.
 - `MARKET_WORKER_ENABLE_LIVE_BINANCE`, `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS`, and
@@ -135,6 +140,9 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` controls websocket read deadline behavior; repeated read
   timeouts increment `liveReconnectReadTimeouts` in `/metrics.json` and trigger the same bounded
   reconnect policy.
+- `MARKET_WORKER_LIVE_STREAM_MAX_MESSAGE_PARSE_FAILURES` controls how many consecutive stream parse failures
+  are tolerated before the worker marks a subscription as `failed` and ends the stream loop for that subscription.
+  Set `0` to disable parse-based hard stop.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:

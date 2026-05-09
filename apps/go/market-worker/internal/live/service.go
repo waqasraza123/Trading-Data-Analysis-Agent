@@ -20,7 +20,10 @@ import (
 	"github.com/waqasraza123/trading-data-analysis-agent/apps/go/market-worker/internal/health"
 )
 
-var errLiveSubscriptionStopped = errors.New("live subscription stopped")
+var (
+	errLiveSubscriptionStopped                    = errors.New("live subscription stopped")
+	errLiveSubscriptionMessageParseThresholdExceeded = errors.New("live subscription message parse threshold exceeded")
+)
 
 type Service struct {
 	cfg       config.Config
@@ -181,6 +184,12 @@ func (s *Service) Process(ctx context.Context, subscription Subscription) error 
 		if errors.Is(streamErr, errLiveSubscriptionStopped) {
 			if s.metrics != nil {
 				s.metrics.RecordLiveSubscriptionRunCompleted()
+			}
+			return nil
+		}
+		if errors.Is(streamErr, errLiveSubscriptionMessageParseThresholdExceeded) {
+			if s.metrics != nil {
+				s.metrics.RecordLiveSubscriptionRunFailed()
 			}
 			return nil
 		}
@@ -358,6 +367,7 @@ func (s *Service) consume(
 	var run = candles.RunContext{}
 	runInitialized := false
 	runCounts := candles.WriteCounts{}
+	parseFailureCount := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -411,15 +421,44 @@ func (s *Service) consume(
 				eventStatus = EventStatusFailed
 				if s.metrics != nil {
 					s.metrics.RecordLiveMessageParseFailure()
+					s.metrics.RecordLiveMessageFailed()
 				}
 				if recorded {
 					_ = s.repo.UpdateEventStatus(ctx, eventID, eventStatus, parseErr.Error())
 				}
-				if s.metrics != nil {
-					s.metrics.RecordLiveMessageFailed()
+				parseFailureCount++
+				if s.cfg.LiveStreamMaxMessageParseFailures > 0 && parseFailureCount >= s.cfg.LiveStreamMaxMessageParseFailures {
+					failMessage := fmt.Sprintf(
+						"max message parse failures exceeded (%d >= %d)",
+						parseFailureCount,
+						s.cfg.LiveStreamMaxMessageParseFailures,
+					)
+					if s.metrics != nil {
+						s.metrics.RecordLiveMessageParseThresholdExceeded()
+					}
+					if recorded {
+						_ = s.repo.MarkFailed(ctx, subscription.ID, failMessage)
+						_ = s.repo.UpdateEventStatus(ctx, eventID, eventStatus, failMessage)
+					}
+					s.logger.Warn(
+						"live_subscription_message_parse_failures_exceeded",
+						"subscriptionId",
+						subscription.ID.String(),
+						"parseFailures",
+						parseFailureCount,
+						"maxAllowed",
+						s.cfg.LiveStreamMaxMessageParseFailures,
+						"error",
+						failMessage,
+					)
+					if runInitialized {
+						_ = s.writer.FinishRun(ctx, run, runCounts, false)
+					}
+					return errLiveSubscriptionMessageParseThresholdExceeded
 				}
 				continue
 			}
+			parseFailureCount = 0
 			if len(parsedEvent.Payload) > 0 {
 				wasStale, err := s.repo.RecordHeartbeat(ctx, subscription.ID, parsedEvent.ProviderTimestamp)
 				if err != nil {
