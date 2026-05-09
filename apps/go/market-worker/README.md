@@ -83,6 +83,7 @@ Optional:
 - `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS`, default `90`
 - `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS`, default `5`
 - `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS`, default `60`
+- `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT`, default `20`
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS`, default `30`
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_BUFFER`, default `64`
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS`, default `180`
@@ -115,7 +116,9 @@ Live processing is optional in `jobs` mode and requires compatible `live_feed_su
 - `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS` controls lease TTL and heartbeat cadence.
 - `MARKET_WORKER_ENABLE_LIVE_BINANCE`, `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS`, and
   `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS` control websocket reconnect behavior.
-  Reconnect delay uses exponential backoff in seconds from the base value up to the max cap.
+  Reconnect delay uses exponential backoff in seconds from the base value up to the max cap and
+  optional jitter through `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` to reduce retry
+  synchronization across workers.
 - `MARKET_WORKER_LIVE_STREAM_GAP_RECOVERY` plus `MARKET_WORKER_LIVE_STREAM_GAP_REQUEST_LIMIT` controls
   missing-final-candle recovery request creation.
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` controls stale heartbeat handling:

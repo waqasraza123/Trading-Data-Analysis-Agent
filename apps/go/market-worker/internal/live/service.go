@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"log/slog"
 	"strings"
 	"time"
@@ -173,8 +174,16 @@ func (s *Service) liveReconnectDelay(attempt int) time.Duration {
 		delay = delay * 2
 		attempt--
 		if delay >= maxDelay {
-			return maxDelay
+			delay = maxDelay
+			break
 		}
+	}
+	delay = s.applyReconnectJitter(delay)
+	if delay < s.cfg.LiveStreamReconnectDelay {
+		return s.cfg.LiveStreamReconnectDelay
+	}
+	if delay > maxDelay {
+		return maxDelay
 	}
 	return delay
 }
@@ -189,6 +198,23 @@ func (s *Service) waitForLiveReconnect(ctx context.Context, delay time.Duration)
 	case <-time.After(delay):
 		return nil
 	}
+}
+
+func (s *Service) applyReconnectJitter(baseDelay time.Duration) time.Duration {
+	if baseDelay <= 0 {
+		return baseDelay
+	}
+	if s.cfg.LiveStreamReconnectJitterPercent <= 0 {
+		return baseDelay
+	}
+	jitterWindow := baseDelay * time.Duration(s.cfg.LiveStreamReconnectJitterPercent) / 100
+	if jitterWindow <= 0 {
+		return baseDelay
+	}
+	windowNanoseconds := int64(jitterWindow)
+	delta := rand.Int63n(windowNanoseconds*2+1) - windowNanoseconds
+	delay := time.Duration(int64(baseDelay) + delta)
+	return delay
 }
 
 func (s *Service) consume(

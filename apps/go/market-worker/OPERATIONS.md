@@ -83,9 +83,11 @@ Operational defaults:
 - `MARKET_WORKER_LIVE_STREAM_LEASE_SECONDS` (lease ownership TTL, default `90s`)
 - `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` (reconnect base, default `5s`)
 - `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS` (reconnect max cap, default `60s`)
+- `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` (reconnect jitter percent, default `20`)
 - `MARKET_WORKER_LIVE_STREAM_READ_TIMEOUT_SECONDS` (websocket read deadline, default `30s`)
 - `MARKET_WORKER_LIVE_STREAM_MESSAGE_STALE_SECONDS` (max `last_message_at` age to allow claim, default `180s`)
 - `liveStreamMaxReconnectSeconds` in inspect output reflects the effective cap used by the running worker.
+- `liveStreamReconnectJitterPercent` in inspect output reflects the configured jitter percentage.
 
 Operational checks in serve mode:
 

@@ -41,7 +41,8 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   canonical API/product brain and no Python provider polling path is removed.
   Live websocket reconnection now uses bounded exponential backoff based on
   `MARKET_WORKER_LIVE_STREAM_RECONNECT_SECONDS` and
-  `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS`.
+  `MARKET_WORKER_LIVE_STREAM_MAX_RECONNECT_SECONDS`, and optional jitter via
+  `MARKET_WORKER_LIVE_STREAM_RECONNECT_JITTER_PERCENT` to reduce thundering-herd effects.
 - Dashboard read model materialization exists under `apps/api/app/modules/read_models/` for rebuildable dashboard symbol, signal card, and command center snapshots. It reads existing deterministic artifacts only and does not mutate source artifacts, run scans/analysis/outcomes, call LLMs/providers, send notifications, execute broker workflows, auto-trade, or provide financial advice.
 
 - The first frontend product surface exists under `apps/web` as a standalone Next.js App Router, TypeScript, Tailwind CSS dashboard. It is read-only, composes optional FastAPI endpoints through a typed client, tolerates missing backend modules with safe empty states, and does not implement broker execution, auto-trading, alerts, or financial-advice language.
@@ -259,7 +260,9 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 - Implemented shared candle normalization, validation, quality calculation, repository upsert rules, and internal service documentation.
 - Implemented historical CSV/JSON import routes, parsing, batch/error persistence, candle storage wiring, and documentation.
 - Implemented live feed provider abstraction, mock/Binance normalizers, subscription lifecycle routes, raw live event audit persistence, stale checks, live candle storage wiring, and documentation.
-- Implemented production-grade Go market worker live websocket runtime controls with bounded exponential reconnect, capped delays, and inspect-mode visibility of reconnect caps to reduce reconnect storm risk.
+- Implemented production-grade Go market worker live websocket runtime controls with bounded exponential
+  reconnect, capped delays, inspect-mode visibility of reconnect caps, and configurable reconnect jitter
+  to reduce thundering-herd effects.
 - Implemented candle query, count, latest, quality APIs, final-by-default read policy, warmup/baseline service helpers, and documentation.
 - Implemented analysis run lifecycle routes, historical/live-window preflight, data sufficiency handling, retry policy, audit logs, and documentation.
 - Implemented feature_snapshots migration/model, deterministic movement/candle-shape/range/volatility/trend feature engines, feature persistence wiring, feature retrieval route, and documentation.
