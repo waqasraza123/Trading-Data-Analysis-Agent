@@ -182,6 +182,7 @@ The following routes are included in the current motion rollout and should conti
 - `scanner` → hero and panel reveals
 - `quality` → header and dashboard metric list reveals
 - `notifications` → list row and panel reveal
+- `account` → identity metrics and session table reveal
 - `journal` → header + metric + journal row reveals
 - `review/outcomes` → metric and outcome row reveals
 - `readiness` → readiness panel reveal
@@ -202,6 +203,8 @@ Keep the manifest in sync when adding new routes:
 
 ## Detailed rollout notes (Production step: loading shell consolidation)
 
+- Added `/account` to the route manifest with regular reveal density and a matching route loading boundary. The page follows the review-surface metric/table cadence used by notification and journal routes while keeping session actions explicit and compact.
+
 - `Sidebar` and `MobileNav` migrated high-density navigation reveal timing to `motionRevealDensityStyle(index, "compact")`.
 - `SignalTriageBoard`, `SignalTriageColumn`, `SignalTriageCard`, `CommandCenterCockpit`, and `BriefNarrative` now consume density-aware reveal styles for section/panel ordering and dense row reveals.
 - Default section/panel reveals use `motionRevealDensityStyle(index)` to preserve baseline 45ms behavior while removing inline `motionRevealStyle(..., 45)` usage in active rollout surfaces.
@@ -218,6 +221,7 @@ Keep the manifest in sync when adding new routes:
   - `app/journal/loading.tsx`
   - `app/journal/[entryId]/loading.tsx`
   - `app/notifications/loading.tsx`
+  - `app/account/loading.tsx`
   - `app/onboarding/loading.tsx`
   - `app/preferences/strategy/loading.tsx`
   - `app/quality/loading.tsx`

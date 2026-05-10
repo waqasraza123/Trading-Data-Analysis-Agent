@@ -39,6 +39,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Visual setup chart panels for compact final-candle, zone, signal-window, and observed-outcome context on signal detail pages.
 - Command center overview integration for one daily workspace payload, explicit backend-safe quick actions, missing-section fallback, and safe-copy labels.
 - First-run onboarding at `/onboarding` with product readiness gate, exact next step guidance, safe setup actions, demo workspace option, command center readiness banner, and workspace selector support.
+- Account session management at `/account` for reviewing first-party password-session inventory and revoking current or other active sessions.
 
 ## Backend Endpoints Used
 
@@ -49,6 +50,10 @@ The client composes data from optional backend APIs:
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
+- `GET /auth/context`
+- `GET /auth/sessions`
+- `POST /auth/sessions/{session_id}/revoke`
+- `POST /auth/sessions/revoke-other`
 - `GET /demo-mode/status`
 - `POST /demo-mode/run-full-flow`
 - `GET /health/workers`
@@ -379,6 +384,7 @@ The onboarding workflow does not run hidden external calls, execute broker workf
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
 - `/quality` renders the read-only signal quality scoreboard over stored diagnostics, observed behavior, calibration, validation, drift, attribution, and backtest cohorts.
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
+- `/account` renders first-party password-session inventory, current identity context, and safe session revocation controls.
 - `/preferences/strategy` renders personal strategy preference profiles for review filtering only.
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/brief` renders the workspace daily brief, preferring the backend daily brief endpoint and falling back to web client composition from existing optional backend endpoints.
@@ -403,7 +409,7 @@ The integrated web surface is arranged for a deterministic daily review loop:
 
 The “Run daily scan” control does not execute notifications, broker actions, or external provider polling by default. It shows completed, skipped, and failed workflow steps and links to produced brief, scan run, and signal records.
 
-The shared navigation links Command Center, Readiness, Brief, Scanner, Triage, Quality, Notifications, Data, Journal, and Preferences. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; readiness blockers link to their owning setup surfaces; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to notification events and the quality scoreboard.
+The shared navigation links Command Center, Readiness, Brief, Scanner, Triage, Quality, Notifications, Data, Journal, Account, and Preferences. Workspace-aware links preserve `workspaceId` where the source page knows it. Stale-data and data-quality sections link back to onboarding; readiness blockers link to their owning setup surfaces; scan-result and triage cards link to setup detail; outcome cards link to journal prompts; symbol pages link back into scanner and onboarding; command center links to notification events and the quality scoreboard.
 
 The merged workflow contract is documented in `docs/daily-use-workflow.md`.
 

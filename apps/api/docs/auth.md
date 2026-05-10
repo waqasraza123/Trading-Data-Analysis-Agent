@@ -39,6 +39,14 @@ JWT verification currently supports RS256 with a configured PEM public key. OAut
 
 Password credentials are stored in `auth_password_credentials` with PBKDF2-SHA256 hashes and never return raw passwords. Sessions are stored in `auth_sessions` as SHA-256 token hashes with expiry and revocation state. `POST /auth/register` creates a workspace, admin user, password credential, and session. `POST /auth/login` creates a new session for an existing credential. `POST /auth/logout` revokes the supplied bearer token.
 
+Session management endpoints are available for first-party password sessions:
+
+- `GET /auth/sessions` lists up to 100 authenticated-user session records by default, with `limit` bounded to 200, without exposing token hashes.
+- `POST /auth/sessions/{session_id}/revoke` revokes one session owned by the authenticated user.
+- `POST /auth/sessions/revoke-other` revokes the authenticated user's other active sessions while preserving the current bearer session when it can be resolved.
+
+These endpoints require a password-session identity. API keys and legacy admin keys are intentionally not a substitute for user-session management.
+
 Use a Neon Postgres `DATABASE_URL` and run Alembic migrations before enabling `AUTH_MODE=session` in deployed environments.
 
 ## API Keys

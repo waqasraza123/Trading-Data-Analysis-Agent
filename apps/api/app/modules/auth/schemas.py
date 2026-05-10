@@ -30,6 +30,12 @@ class AuthApiKeyStatusRead(StrEnum):
     EXPIRED = "expired"
 
 
+class AuthSessionStatusRead(StrEnum):
+    ACTIVE = "active"
+    REVOKED = "revoked"
+    EXPIRED = "expired"
+
+
 class AuthUserRead(ApiSchema):
     id: UUID
     workspace_id: UUID
@@ -119,3 +125,19 @@ class AuthSessionCreated(ApiSchema):
     token_type: str = "bearer"
     expires_at: datetime
     identity: CurrentIdentityRead
+
+
+class AuthSessionRead(ApiReadSchema):
+    id: UUID
+    user_id: UUID
+    workspace_id: UUID
+    status: AuthSessionStatusRead
+    expires_at: datetime
+    last_seen_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    current: bool = False
+
+
+class AuthSessionBulkRevokeRead(ApiSchema):
+    revoked_count: int

@@ -45,6 +45,12 @@
       "revealDensity": "regular"
     },
     {
+      "route": "account",
+      "page": "app/account/page.tsx",
+      "requires": ["AnimatedSection"],
+      "revealDensity": "regular"
+    },
+    {
       "route": "journal",
       "page": "app/journal/page.tsx",
       "requires": ["AnimatedSection"],

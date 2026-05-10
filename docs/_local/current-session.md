@@ -1,5 +1,32 @@
 # Current Session
 
+## First-Party Session Management
+
+- Committed and pushed the existing session-memory update first:
+  - commit `eeec520` (`Update session memory`) on `main`.
+- Implemented production-grade first-party session management:
+  - backend `GET /auth/sessions` with bounded user-owned session inventory;
+  - backend `POST /auth/sessions/{session_id}/revoke` for one owned session;
+  - backend `POST /auth/sessions/revoke-other` for revoking other active owned sessions while preserving the current bearer token;
+  - response schemas avoid raw token/token-hash exposure and mark the current session from the bearer token hash;
+  - expired active sessions are normalized to `expired` during inventory/revocation operations.
+- Added web `/account` route with:
+  - server-side session-cookie-aware account data fetch;
+  - identity/workspace/session metrics;
+  - session table with current-session sign-out and other-session revocation controls;
+  - route loading skeleton and shared navigation/auth-status links.
+- Updated docs and durable memory:
+  - `apps/api/docs/auth.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/motion-ui.md`;
+  - `apps/web/scripts/motion-rollout-manifest.json`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passes;
+  - safe-language scan over changed auth/account docs and code found only existing safety-boundary language;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## First-Party Auth UI And Sessions
 
 - Added first-party password registration/login/logout to the FastAPI auth module:

@@ -9,8 +9,8 @@ from app.dependencies import database_session
 from app.modules.auth.api_keys import ApiKeyService
 from app.modules.auth.dependencies import optional_identity, require_admin
 from app.modules.auth.identity import IdentityContext, identity_to_read
-from app.modules.auth.models import AuthApiKey
-from app.modules.auth.passwords import PasswordAuthService
+from app.modules.auth.models import AuthApiKey, AuthSession
+from app.modules.auth.passwords import PasswordAuthService, hash_session_token
 from app.modules.auth.schemas import (
     AuthApiKeyCreate,
     AuthApiKeyCreated,
@@ -21,9 +21,14 @@ from app.modules.auth.schemas import (
     AuthLogoutRequest,
     AuthRegisterRequest,
     AuthSessionCreated,
+    AuthSessionBulkRevokeRead,
+    AuthSessionRead,
+    AuthSessionStatusRead,
     CurrentIdentityRead,
+    IdentitySource,
 )
 from app.modules.auth.settings import auth_is_enforced, effective_auth_mode
+from app.modules.users.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -79,6 +84,61 @@ async def logout(
             session=session,
             settings=request.app.state.settings,
         ).revoke_session(token)
+
+
+@router.get("/sessions", response_model=list[AuthSessionRead])
+async def list_sessions(
+    request: Request,
+    identity: Annotated[IdentityContext, Depends(require_session_user_identity)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
+) -> list[AuthSessionRead]:
+    user = session_identity_user(identity)
+    service = PasswordAuthService(session=session, settings=request.app.state.settings)
+    sessions = await service.list_user_sessions(
+        user_id=user.id,
+        workspace_id=user.workspace_id,
+        limit=limit,
+    )
+    current_token_hash = current_session_token_hash(request)
+    return [session_to_read(auth_session, current_token_hash) for auth_session in sessions]
+
+
+@router.post("/sessions/revoke-other", response_model=AuthSessionBulkRevokeRead)
+async def revoke_other_sessions(
+    request: Request,
+    identity: Annotated[IdentityContext, Depends(require_session_user_identity)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> AuthSessionBulkRevokeRead:
+    user = session_identity_user(identity)
+    revoked_count = await PasswordAuthService(
+        session=session,
+        settings=request.app.state.settings,
+    ).revoke_other_user_sessions(
+        user_id=user.id,
+        workspace_id=user.workspace_id,
+        current_token=bearer_token(request),
+    )
+    return AuthSessionBulkRevokeRead(revoked_count=revoked_count)
+
+
+@router.post("/sessions/{session_id}/revoke", response_model=AuthSessionRead)
+async def revoke_session_by_id(
+    session_id: UUID,
+    request: Request,
+    identity: Annotated[IdentityContext, Depends(require_session_user_identity)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> AuthSessionRead:
+    user = session_identity_user(identity)
+    auth_session = await PasswordAuthService(
+        session=session,
+        settings=request.app.state.settings,
+    ).revoke_user_session(
+        session_id=session_id,
+        user_id=user.id,
+        workspace_id=user.workspace_id,
+    )
+    return session_to_read(auth_session, current_session_token_hash(request))
 
 
 @router.get("/me", response_model=CurrentIdentityRead)
@@ -184,6 +244,42 @@ def api_key_to_read(api_key: AuthApiKey) -> AuthApiKeyRead:
         created_at=api_key.created_at,
         updated_at=api_key.updated_at,
     )
+
+
+def session_to_read(
+    auth_session: AuthSession,
+    current_token_hash: str | None,
+) -> AuthSessionRead:
+    return AuthSessionRead(
+        id=auth_session.id,
+        user_id=auth_session.user_id,
+        workspace_id=auth_session.workspace_id,
+        status=AuthSessionStatusRead(auth_session.status),
+        expires_at=auth_session.expires_at,
+        last_seen_at=auth_session.last_seen_at,
+        created_at=auth_session.created_at,
+        updated_at=auth_session.updated_at,
+        current=current_token_hash is not None and auth_session.token_hash == current_token_hash,
+    )
+
+
+async def require_session_user_identity(
+    identity: Annotated[IdentityContext | None, Depends(optional_identity)],
+) -> IdentityContext:
+    if identity is None or identity.user is None or identity.source != IdentitySource.SESSION:
+        raise AppError(401, "session_auth_required", "Session authentication is required")
+    return identity
+
+
+def session_identity_user(identity: IdentityContext) -> User:
+    if identity.user is None:
+        raise AppError(401, "session_auth_required", "Session authentication is required")
+    return identity.user
+
+
+def current_session_token_hash(request: Request) -> str | None:
+    token = bearer_token(request)
+    return hash_session_token(token) if token is not None else None
 
 
 def bearer_token(request: Request) -> str | None:

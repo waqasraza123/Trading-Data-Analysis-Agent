@@ -4,7 +4,7 @@ import hmac
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -155,6 +155,75 @@ class PasswordAuthService:
         auth_session.status = AuthSessionStatus.REVOKED.value
         await self.session.commit()
 
+    async def list_user_sessions(
+        self,
+        *,
+        user_id: UUID,
+        workspace_id: UUID,
+        limit: int,
+    ) -> list[AuthSession]:
+        await self.expire_stale_user_sessions(user_id=user_id, workspace_id=workspace_id)
+        result = await self.session.execute(
+            select(AuthSession)
+            .where(
+                AuthSession.user_id == user_id,
+                AuthSession.workspace_id == workspace_id,
+            )
+            .order_by(AuthSession.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def revoke_user_session(
+        self,
+        *,
+        session_id: UUID,
+        user_id: UUID,
+        workspace_id: UUID,
+    ) -> AuthSession:
+        await self.expire_stale_user_sessions(user_id=user_id, workspace_id=workspace_id)
+        result = await self.session.execute(
+            select(AuthSession).where(
+                AuthSession.id == session_id,
+                AuthSession.user_id == user_id,
+                AuthSession.workspace_id == workspace_id,
+            )
+        )
+        auth_session = result.scalar_one_or_none()
+        if auth_session is None:
+            raise AppError(404, "session_not_found", "Session was not found")
+        if auth_session.status == AuthSessionStatus.ACTIVE.value:
+            auth_session.status = AuthSessionStatus.REVOKED.value
+            await self.session.commit()
+            await self.session.refresh(auth_session)
+        return auth_session
+
+    async def revoke_other_user_sessions(
+        self,
+        *,
+        user_id: UUID,
+        workspace_id: UUID,
+        current_token: str | None,
+    ) -> int:
+        await self.expire_stale_user_sessions(user_id=user_id, workspace_id=workspace_id)
+        current_token_hash = hash_session_token(current_token) if current_token else None
+        result = await self.session.execute(
+            select(AuthSession).where(
+                AuthSession.user_id == user_id,
+                AuthSession.workspace_id == workspace_id,
+                AuthSession.status == AuthSessionStatus.ACTIVE.value,
+            )
+        )
+        revoked_count = 0
+        for auth_session in result.scalars().all():
+            if current_token_hash is not None and auth_session.token_hash == current_token_hash:
+                continue
+            auth_session.status = AuthSessionStatus.REVOKED.value
+            revoked_count += 1
+        if revoked_count > 0:
+            await self.session.commit()
+        return revoked_count
+
     async def create_session(self, *, user: User, workspace: Workspace) -> CreatedSession:
         now = datetime.now(UTC)
         expires_at = now + timedelta(minutes=self.settings.auth_session_ttl_minutes)
@@ -197,6 +266,29 @@ class PasswordAuthService:
                 minutes=self.settings.auth_password_lockout_minutes
             )
         await self.session.commit()
+
+    async def expire_stale_user_sessions(
+        self,
+        *,
+        user_id: UUID,
+        workspace_id: UUID,
+    ) -> int:
+        now = datetime.now(UTC)
+        result = await self.session.execute(
+            select(AuthSession).where(
+                AuthSession.user_id == user_id,
+                AuthSession.workspace_id == workspace_id,
+                AuthSession.status == AuthSessionStatus.ACTIVE.value,
+                AuthSession.expires_at <= now,
+            )
+        )
+        expired_count = 0
+        for auth_session in result.scalars().all():
+            auth_session.status = AuthSessionStatus.EXPIRED.value
+            expired_count += 1
+        if expired_count > 0:
+            await self.session.commit()
+        return expired_count
 
 
 def normalize_email(value: str) -> str:

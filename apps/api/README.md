@@ -800,6 +800,8 @@ BACKFILL_PLAN_MAX_LIMIT=10000
 `AUTH_MODE=session`, `AUTH_MODE=jwt`, `AUTH_MODE=api_key`, or `AUTH_MODE=mixed`; protected routes resolve an identity
 before applying workspace membership and permission checks. For first-party UI login, set `DATABASE_URL`
 to a migrated Neon Postgres database, use `AUTH_MODE=session`, and keep `AUTH_PASSWORD_ENABLED=true`.
+Password sessions support `/auth/sessions` inventory plus user-owned revoke-one and revoke-other
+operations without exposing raw token hashes.
 The legacy `ADMIN_API_KEY` remains supported for compatibility. Health endpoints stay public. Rate limiting is disabled by default,
 uses an in-memory fallback for local/test when Redis is not configured, and requires `REDIS_URL`
 when enabled in staging or production.

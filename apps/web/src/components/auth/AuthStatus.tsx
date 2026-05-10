@@ -46,6 +46,7 @@ export function AuthStatus() {
           {identity.workspace?.name || "Workspace"}
         </p>
       </div>
+      <ButtonLink href="/account" size="sm" variant="quiet">Account</ButtonLink>
       <Button size="sm" variant="quiet" onClick={handleLogout}>Sign out</Button>
     </div>
   );
