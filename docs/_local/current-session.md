@@ -1,5 +1,23 @@
 # Current Session
 
+## GitHub Issue #12 Daily Dashboard E2E Smoke
+
+- Addressed GitHub issue #12 (`Add end-to-end smoke coverage for the daily dashboard workflow`).
+- Added `apps/web/tests/e2e/daily-dashboard-workflow.spec.ts` covering:
+  - populated demo workflow rendering across command center, brief, data onboarding, scanner, triage, setup detail,
+    journal, outcome review, notifications, and quality routes;
+  - non-crashing states when optional dashboard backend modules are unavailable;
+  - visible safe-copy checks on the covered routes.
+- Added `daily-workflow-populated` to the E2E mock API scenario list and extended
+  `apps/web/tests/e2e/helpers/mockApiServer.mjs` with populated signal, setup context, report, quality, reasoning,
+  candle, and outcome artifacts for setup-detail and daily dashboard routes.
+- Updated `.github/workflows/web-ci.yml` to install Chromium and run `npm run test:e2e` after lint, typecheck, and build.
+- Updated `apps/web/docs/e2e-smoke.md` to document CI execution and the expanded workflow coverage.
+- Verification:
+  - `cd apps/web && npm run typecheck` passes;
+  - `cd apps/web && npm run lint` passes with 4 pre-existing unused-symbol warnings;
+  - Playwright tests were not run per user instruction.
+
 ## GitHub Issue #11 API Docker Reproducibility
 
 - Addressed GitHub issue #11 (`Make the API Docker image production-oriented and reproducible`).

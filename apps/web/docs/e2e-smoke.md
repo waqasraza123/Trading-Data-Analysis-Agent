@@ -37,6 +37,8 @@ npm run test:e2e:headed
 npm run test:e2e:ui
 ```
 
+CI runs the same smoke suite in `.github/workflows/web-ci.yml` after lint, typecheck, and build.
+
 ## Fixtures
 
 Typed fixture payloads live in:
@@ -62,6 +64,8 @@ The smoke suite covers:
 - ready workspace overview payload rendering
 - backend-safe quick-action success and unsupported-action states
 - core daily route navigation
+- populated demo daily dashboard workflow routes, including setup detail
+- non-crashing states when optional dashboard modules are unavailable
 - visible copy safety checks for critical pages
 
 ## Safe Copy

@@ -4,6 +4,9 @@ const port = Number(process.env.E2E_MOCK_API_PORT || 4010);
 const demoWorkspaceId = "11111111-1111-4111-8111-111111111111";
 const demoUserId = "22222222-2222-4222-8222-222222222222";
 const overviewSignalId = "33333333-3333-4333-8333-333333333333";
+const demoAnalysisRunId = "66666666-6666-4666-8666-666666666666";
+const demoSetupContextId = "77777777-7777-4777-8777-777777777777";
+const demoSourceId = "88888888-8888-4888-8888-888888888888";
 let scenario = "ready-overview";
 
 const demoWorkspace = {
@@ -142,6 +145,98 @@ async function handleRequest(request, response) {
   }
   if (request.method === "GET" && url.pathname === "/symbols") {
     sendJson(response, 200, scenario === "navigation-empty" ? [] : [demoSymbol]);
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === "/read-models/signals") {
+    sendJson(response, 200, [signalCardReadModel()]);
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}`) {
+    sendJson(response, 200, signalClassification());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/analysis-runs/${demoAnalysisRunId}`) {
+    sendJson(response, 200, analysisRun());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/analysis-runs/${demoAnalysisRunId}/signal`) {
+    sendJson(response, 200, signalClassification());
+    return;
+  }
+  if (
+    scenario === "daily-workflow-populated" &&
+    request.method === "GET" &&
+    (url.pathname === `/signals/${overviewSignalId}/setup-context` || url.pathname === `/analysis-runs/${demoAnalysisRunId}/setup-context`)
+  ) {
+    sendJson(response, 200, setupContext());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}/outcomes`) {
+    sendJson(response, 200, [signalOutcome()]);
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/intelligence-reports/signals/${overviewSignalId}`) {
+    sendJson(response, 200, intelligenceReport());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/audit-timeline/signals/${overviewSignalId}`) {
+    sendJson(response, 200, auditTimeline());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}/market-regime`) {
+    sendJson(response, 200, {
+      id: "99999999-9999-4999-8999-999999999991",
+      signalId: overviewSignalId,
+      label: "Balanced range context",
+      regimeLabel: "range",
+      createdAt: "2026-05-06T08:00:00.000Z",
+    });
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}/market-session`) {
+    sendJson(response, 200, {
+      id: "99999999-9999-4999-8999-999999999992",
+      signalId: overviewSignalId,
+      label: "London handoff",
+      sessionLabel: "london",
+      createdAt: "2026-05-06T08:00:00.000Z",
+    });
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}/priority-score`) {
+    sendJson(response, 200, signalPriorityScore());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/intelligence-quality/signals/${overviewSignalId}/latest`) {
+    sendJson(response, 200, intelligenceQuality());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}/reasoning/scenarios/latest`) {
+    sendJson(response, 200, scenarioReasoning());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === `/signals/${overviewSignalId}/multi-timeframe-context`) {
+    sendJson(response, 200, multiTimeframeContext());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === "/candles") {
+    sendJson(response, 200, demoCandles());
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === "/candles/latest") {
+    sendJson(response, 200, demoCandles().at(-1));
+    return;
+  }
+  if (scenario === "daily-workflow-populated" && request.method === "GET" && url.pathname === "/candles/quality") {
+    sendJson(response, 200, {
+      expectedCandles: 3,
+      availableFinalCandles: 3,
+      availablePartialCandles: 0,
+      missingCandles: 0,
+      duplicateCandles: 0,
+      qualityScore: "1",
+      hasPartialLatestCandle: false,
+    });
     return;
   }
   if (request.method === "GET" && url.pathname === "/health/workers") {
@@ -331,6 +426,340 @@ function readyOverview() {
     missingSections: [],
     warnings: [],
   };
+}
+
+function signalClassification() {
+  return {
+    analysisRunId: demoAnalysisRunId,
+    signal: {
+      id: overviewSignalId,
+      analysisRunId: demoAnalysisRunId,
+      workspaceId: demoWorkspaceId,
+      symbolId: demoSymbol.id,
+      timeframe: "1m",
+      strategyProfileId: null,
+      strategyProfileKey: "demo_context",
+      strategyProfileVersion: "2026-05-06",
+      strategyProfileSnapshotJson: {},
+      bias: "no directional signal",
+      patternType: "range_context",
+      classificationStatus: "completed",
+      confidenceScore: "0.62",
+      confidenceLabel: "medium",
+      candidateStrength: "review recommended",
+      selectedPatternCandidateId: null,
+      pipsMoved: null,
+      tickMoved: null,
+      movementDirection: null,
+      movementQuality: "balanced",
+      volatilityState: "normal",
+      trendState: "range",
+      rangeState: "balanced",
+      summary: "Demo setup context is available for daily review.",
+      noSignalReason: "No directional signal.",
+      createdAt: "2026-05-06T08:00:00.000Z",
+    },
+    confidenceComponents: [
+      {
+        id: "99999999-9999-4999-8999-999999999981",
+        signalId: overviewSignalId,
+        componentName: "context_alignment",
+        componentScore: "0.62",
+        componentWeight: "1",
+        weightedScore: "0.62",
+        reason: "Multiple daily artifacts agree on review context.",
+        createdAt: "2026-05-06T08:00:00.000Z",
+      },
+    ],
+    evidence: [
+      {
+        id: "99999999-9999-4999-8999-999999999982",
+        signalId: overviewSignalId,
+        evidenceType: "range_context",
+        direction: "neutral",
+        message: "Range context remains balanced.",
+        numericValue: null,
+        weight: "0.6",
+        metadataJson: {},
+        createdAt: "2026-05-06T08:00:00.000Z",
+      },
+    ],
+    riskNotes: [
+      {
+        id: "99999999-9999-4999-8999-999999999983",
+        signalId: overviewSignalId,
+        code: "event_context",
+        message: "Review event context before further analysis.",
+        severity: "info",
+        metadataJson: {},
+        createdAt: "2026-05-06T08:00:00.000Z",
+      },
+    ],
+    deterministicExplanation: { summary: "Deterministic smoke fixture." },
+    newsCorrelations: [],
+    llmExplanation: null,
+  };
+}
+
+function signalCardReadModel() {
+  return {
+    id: "99999999-9999-4999-8999-999999999984",
+    workspaceId: demoWorkspaceId,
+    signalId: overviewSignalId,
+    analysisRunId: demoAnalysisRunId,
+    symbolId: demoSymbol.id,
+    timeframe: "1m",
+    readModelVersion: "e2e-smoke",
+    classificationStatus: "completed",
+    bias: "no directional signal",
+    patternType: "range_context",
+    confidenceScore: "0.62",
+    confidenceLabel: "medium",
+    priorityScore: "0.58",
+    priorityLabel: "review recommended",
+    reviewBucket: "review_first",
+    setupQualityLabel: "review recommended",
+    freshnessLabel: "data fresh",
+    dataQualityLabel: "outcome ready",
+    readinessLabel: "ready",
+    outcomeSummaryJson: { label: "outcome ready" },
+    evidenceSummaryJson: { summary: "Range context remains balanced." },
+    riskSummaryJson: { notes: 1 },
+    actionSummaryJson: { next: "review setup context" },
+    warningSummaryJson: {},
+    searchableText: "EURUSD review recommended setup context",
+    updatedAt: "2026-05-06T08:00:00.000Z",
+    createdAt: "2026-05-06T08:00:00.000Z",
+  };
+}
+
+function analysisRun() {
+  return {
+    id: demoAnalysisRunId,
+    workspaceId: demoWorkspaceId,
+    symbolId: demoSymbol.id,
+    sourceId: demoSourceId,
+    timeframe: "1m",
+    runType: "daily_scan",
+    status: "completed",
+    lookbackStart: "2026-05-06T07:57:00.000Z",
+    lookbackEnd: "2026-05-06T08:00:00.000Z",
+    startedAt: "2026-05-06T08:00:00.000Z",
+    completedAt: "2026-05-06T08:00:01.000Z",
+    createdAt: "2026-05-06T08:00:00.000Z",
+    updatedAt: "2026-05-06T08:00:01.000Z",
+  };
+}
+
+function setupContext() {
+  return {
+    id: demoSetupContextId,
+    workspaceId: demoWorkspaceId,
+    signalId: overviewSignalId,
+    analysisRunId: demoAnalysisRunId,
+    symbolId: demoSymbol.id,
+    timeframe: "1m",
+    contextVersion: "e2e-smoke",
+    status: "completed",
+    directionalBias: "no directional signal",
+    setupQualityLabel: "review recommended",
+    setupQualityScore: "0.64",
+    invalidationContextJson: [{ label: "Invalidation context", summary: "Review if range boundaries change." }],
+    observationZonesJson: [{ label: "Observation zone", summary: "Monitor range midpoint context." }],
+    targetContextZonesJson: [],
+    waitConditionsJson: [{ label: "Wait condition", summary: "Wait for clearer context." }],
+    avoidReasonsJson: [{ label: "Avoid reason", summary: "No directional signal." }],
+    timeframeAgreementJson: { label: "mixed" },
+    dataQualityWarningsJson: [],
+    riskNotesJson: [{ label: "Event context", summary: "Review scheduled event context." }],
+    nextObservationsJson: [{ label: "Next observation", summary: "Review next completed candle." }],
+    summary: "Demo setup context is populated for the daily dashboard smoke path.",
+    metadataJson: { latestFinalCandleTime: "2026-05-06T08:00:00.000Z" },
+    createdAt: "2026-05-06T08:00:00.000Z",
+    updatedAt: "2026-05-06T08:00:01.000Z",
+  };
+}
+
+function signalOutcome() {
+  return {
+    id: "99999999-9999-4999-8999-999999999985",
+    workspaceId: demoWorkspaceId,
+    analysisRunId: demoAnalysisRunId,
+    signalId: overviewSignalId,
+    symbolId: demoSymbol.id,
+    timeframe: "1m",
+    patternType: "range_context",
+    bias: "no directional signal",
+    classificationStatus: "completed",
+    horizonMinutes: 30,
+    evaluationStatus: "completed",
+    referenceTime: "2026-05-06T08:00:00.000Z",
+    futureWindowStart: "2026-05-06T08:01:00.000Z",
+    futureWindowEnd: "2026-05-06T08:30:00.000Z",
+    futureCandleCount: 30,
+    directionFollowed: null,
+    reversalDetected: false,
+    outcomeLabel: "outcome ready",
+    movementQuality: "balanced",
+    metadataJson: {},
+    createdAt: "2026-05-06T08:30:00.000Z",
+    updatedAt: "2026-05-06T08:30:00.000Z",
+  };
+}
+
+function signalPriorityScore() {
+  return {
+    id: "99999999-9999-4999-8999-999999999986",
+    workspaceId: demoWorkspaceId,
+    signalId: overviewSignalId,
+    analysisRunId: demoAnalysisRunId,
+    symbolId: demoSymbol.id,
+    timeframe: "1m",
+    priorityVersion: "e2e-smoke",
+    priorityScore: "0.58",
+    priorityLabel: "review recommended",
+    reviewBucket: "review_first",
+    componentScoresJson: {},
+    penaltiesJson: [],
+    boostersJson: [],
+    reasonsJson: [{ summary: "Demo artifact available for review." }],
+    warningsJson: [],
+    createdAt: "2026-05-06T08:00:00.000Z",
+    updatedAt: "2026-05-06T08:00:00.000Z",
+  };
+}
+
+function intelligenceReport() {
+  return {
+    reportType: "signal",
+    generatedAt: "2026-05-06T08:00:01.000Z",
+    workspaceId: demoWorkspaceId,
+    subject: { type: "signal", id: overviewSignalId },
+    sections: {
+      summary: "Daily smoke report is populated.",
+      setup_context: "Review setup context.",
+    },
+    warnings: [],
+    missingSections: [],
+  };
+}
+
+function auditTimeline() {
+  return {
+    subject: { type: "signal", id: overviewSignalId },
+    generatedAt: "2026-05-06T08:00:02.000Z",
+    completenessScore: 1,
+    events: [{ label: "Signal classified", created_at: "2026-05-06T08:00:00.000Z" }],
+    artifactGraph: null,
+    warnings: [],
+    missingSections: [],
+  };
+}
+
+function intelligenceQuality() {
+  return {
+    qualityRun: {
+      id: "99999999-9999-4999-8999-999999999987",
+      workspaceId: demoWorkspaceId,
+      analysisRunId: demoAnalysisRunId,
+      signalId: overviewSignalId,
+      sourceType: "signal",
+      status: "completed",
+      qualityScore: "0.91",
+      qualityLabel: "ready",
+      gateVersion: "e2e-smoke",
+      shadowVersion: "e2e-smoke",
+      checkedAt: "2026-05-06T08:00:02.000Z",
+      summary: "Quality context is available.",
+      metadataJson: {},
+      createdAt: "2026-05-06T08:00:02.000Z",
+      updatedAt: "2026-05-06T08:00:02.000Z",
+    },
+    findings: [],
+    shadowClassifications: [],
+  };
+}
+
+function scenarioReasoning() {
+  return {
+    reasoningRun: {
+      id: "99999999-9999-4999-8999-999999999988",
+      workspaceId: demoWorkspaceId,
+      analysisRunId: demoAnalysisRunId,
+      signalId: overviewSignalId,
+      outcomeId: null,
+      sourceType: "signal",
+      provider: "mock",
+      model: "mock",
+      promptVersion: "e2e-smoke",
+      reasoningType: "scenario",
+      status: "completed",
+      inputSnapshotJson: {},
+      outputJson: {},
+      outputText: "Review setup context.",
+      safetyStatus: "passed",
+      groundingStatus: "grounded",
+      blockedTermsJson: [],
+      groundingIssuesJson: [],
+      tokensInput: null,
+      tokensOutput: null,
+      estimatedCost: null,
+      latencyMs: null,
+      errorMessage: null,
+      createdAt: "2026-05-06T08:00:02.000Z",
+      updatedAt: "2026-05-06T08:00:02.000Z",
+    },
+    summary: "Scenario context is available for review.",
+    scenarios: [],
+    limitations: [],
+  };
+}
+
+function multiTimeframeContext() {
+  return {
+    id: "99999999-9999-4999-8999-999999999989",
+    workspaceId: demoWorkspaceId,
+    analysisRunId: demoAnalysisRunId,
+    signalId: overviewSignalId,
+    symbolId: demoSymbol.id,
+    sourceId: demoSourceId,
+    primaryTimeframe: "1m",
+    contextTimeframesJson: ["1m", "5m"],
+    contextVersion: "e2e-smoke",
+    trendAlignment: "mixed",
+    volatilityAlignment: "normal",
+    rangeAlignment: "balanced",
+    agreementScore: "0.57",
+    agreementLabel: "mixed",
+    contextSummary: "Mixed higher timeframe context.",
+    contextJson: {},
+    warningsJson: [],
+    createdAt: "2026-05-06T08:00:02.000Z",
+    updatedAt: "2026-05-06T08:00:02.000Z",
+  };
+}
+
+function demoCandles() {
+  return ["2026-05-06T07:58:00.000Z", "2026-05-06T07:59:00.000Z", "2026-05-06T08:00:00.000Z"].map((timestamp, index) => ({
+    id: `99999999-9999-4999-8999-99999999999${index}`,
+    workspaceId: demoWorkspaceId,
+    symbolId: demoSymbol.id,
+    sourceId: demoSourceId,
+    importBatchId: null,
+    liveFeedEventId: null,
+    chartScreenshotRunId: null,
+    timeframe: "1m",
+    timestamp,
+    open: "1.1000",
+    high: "1.1010",
+    low: "1.0990",
+    close: "1.1005",
+    volume: null,
+    isFinal: true,
+    qualityScore: "1",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }));
 }
 
 function overviewItem(id, title, summary, reason = "Review recommended.", href = `/signals/${overviewSignalId}`) {

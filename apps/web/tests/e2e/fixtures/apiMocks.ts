@@ -7,6 +7,7 @@ export type MockApiScenario =
   | "ready-overview"
   | "overview-missing-sections"
   | "overview-degraded"
+  | "daily-workflow-populated"
   | "quick-action-unsupported"
   | "navigation-empty"
   | "safe-copy";
