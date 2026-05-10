@@ -1,12 +1,12 @@
 from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
-from typing import Self
+from typing import Annotated, Self
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class AppEnvironment(StrEnum):
@@ -182,7 +182,7 @@ class Settings(BaseSettings):
     context_pack_max_news_correlations: int = Field(default=20, ge=1, le=500)
     context_pack_max_text_length: int = Field(default=4000, ge=100, le=20000)
     context_pack_schema_version: str = "v1"
-    cors_allowed_origins: list[str] = Field(default_factory=list)
+    cors_allowed_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
     cors_allow_credentials: bool = False
     auth_enabled: bool = False
     admin_api_key: SecretStr | None = None

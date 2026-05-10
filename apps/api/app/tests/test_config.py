@@ -133,6 +133,22 @@ def test_settings_parse_cors_allowed_origins() -> None:
     ]
 
 
+def test_settings_parse_cors_allowed_origins_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "CORS_ALLOWED_ORIGINS",
+        "https://frontend.example.com, https://admin.example.com",
+    )
+
+    settings = Settings(_env_file=None)
+
+    assert settings.cors_allowed_origins == [
+        "https://frontend.example.com",
+        "https://admin.example.com",
+    ]
+
+
 def test_auth_enabled_requires_admin_api_key() -> None:
     with pytest.raises(ValueError, match="ADMIN_API_KEY"):
         Settings(_env_file=None, app_env=AppEnvironment.PRODUCTION, auth_enabled=True)
