@@ -1,5 +1,62 @@
 # Current Session
 
+## First-Party Auth UI And Sessions
+
+- Added first-party password registration/login/logout to the FastAPI auth module:
+  - `auth_password_credentials` stores PBKDF2-SHA256 password hashes;
+  - `auth_sessions` stores hashed bearer session tokens with expiry/revocation state;
+  - `POST /auth/register`, `POST /auth/login`, and `POST /auth/logout` issue/revoke sessions;
+  - `AUTH_MODE=session` and mixed-mode session resolution are supported.
+- Added Alembic revision `202605101200_password_auth` for Neon/Postgres-compatible auth tables.
+- Added Next.js `/login` and `/register` UI, same-origin auth route handlers, HttpOnly session cookie storage,
+  middleware gating for `NEXT_PUBLIC_AUTH_MODE=session`, and auth status/sign-out controls in app navigation.
+- Updated web/backend env examples and auth docs for Neon/Postgres session mode.
+- Verification:
+  - `cd apps/api && .venv/bin/pytest app/tests/unit/test_auth.py app/tests/test_config.py -q` passes;
+  - `cd apps/api && .venv/bin/ruff check app/modules/auth app/db/models.py app/tests/unit/test_auth.py app/tests/conftest.py app/config.py alembic/versions/202605101200_add_password_auth_sessions.py` passes;
+  - `cd apps/api && .venv/bin/ruff format --check app/modules/auth app/db/models.py app/tests/unit/test_auth.py app/tests/conftest.py app/config.py alembic/versions/202605101200_add_password_auth_sessions.py` passes;
+  - `cd apps/api && .venv/bin/alembic heads` reports `202605101200_password_auth`;
+  - `cd apps/api && .venv/bin/python -c "from app.main import create_app; from app.config import Settings, AppEnvironment; app=create_app(Settings(_env_file=None, app_env=AppEnvironment.TEST, auth_mode='session')); print(app.title)"` passes;
+  - `cd apps/web && npm run typecheck` passes;
+  - `cd apps/web && npm run lint` passes with 4 pre-existing unused-symbol warnings;
+  - `cd apps/web && npm run build` passes;
+  - browser verification against `http://localhost:3000/login` and `/register` passes: pages render content,
+    show no Next.js error overlay, and expose expected form controls;
+  - `git diff --check` passes.
+
+## Web Favicon
+
+- Added a custom SVG favicon for the Next.js dashboard at `apps/web/app/icon.svg`.
+- Updated `apps/web/app/layout.tsx` metadata to point `icons.icon` at `/icon.svg`.
+- Verification:
+  - `cd apps/web && npm run typecheck` passes;
+  - `cd apps/web && npm run lint` passes with 4 pre-existing unused-symbol warnings;
+  - `cd apps/web && npm run build` passes and emits `/icon.svg`;
+  - `git diff --check` passes.
+
+## Vercel API CORS Env Parsing Fix
+
+- Fixed production startup failure on Vercel where `CORS_ALLOWED_ORIGINS` set as a comma-separated
+  string caused Pydantic Settings to JSON-decode `list[str]` before the existing validator could split it.
+- Updated `apps/api/app/config.py` to mark `cors_allowed_origins` with `NoDecode` so deploy dashboard values like
+  `https://frontend.vercel.app,https://preview.vercel.app` load correctly.
+- Added regression coverage in `apps/api/app/tests/test_config.py` for `CORS_ALLOWED_ORIGINS` from the actual
+  environment variable path.
+- Verification:
+  - `cd apps/api && .venv/bin/pytest app/tests/test_config.py -q` passes;
+  - `cd apps/api && .venv/bin/ruff check app/config.py app/tests/test_config.py` passes;
+  - `cd apps/api && .venv/bin/ruff format --check app/config.py app/tests/test_config.py` passes;
+  - `git diff --check` passes.
+
+## Deployment Guidance
+
+- Reviewed deployment shape for this repo:
+  - `apps/web` is a standalone Next.js 15 dashboard with an existing production Dockerfile.
+  - `apps/api` is the canonical FastAPI backend with an existing production Dockerfile and Alembic migrations.
+  - Production runtime also needs managed Postgres; Redis is optional but needed for Redis-backed job queue paths/workers.
+  - Recommended split is Vercel for `apps/web` and Render for `apps/api`, Postgres, Redis, and workers, or Render-only using Docker services.
+- No code changes, deploy commands, tests, or builds were run.
+
 ## GitHub Issue #12 Daily Dashboard E2E Smoke
 
 - Addressed GitHub issue #12 (`Add end-to-end smoke coverage for the daily dashboard workflow`).
