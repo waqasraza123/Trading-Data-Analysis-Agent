@@ -8,8 +8,9 @@ Create Date: 2026-05-02 12:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605021220_operator_playbook_policy_engine"
 down_revision: str | Sequence[str] | None = (

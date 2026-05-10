@@ -189,9 +189,7 @@ class IntelligenceQualityRepository:
             deterministic_explanation=await self.get_deterministic_explanation_by_analysis_run(
                 analysis_run_id
             ),
-            news_correlations=await self.list_news_correlations_by_analysis_run(
-                analysis_run_id
-            ),
+            news_correlations=await self.list_news_correlations_by_analysis_run(analysis_run_id),
             reasoning_runs=await self.list_reasoning_runs(None, analysis_run_id),
             outcomes=await self.list_analysis_outcomes(analysis_run_id),
             chart_screenshot_runs=await self.list_chart_screenshot_runs(analysis_run_id),
@@ -284,9 +282,9 @@ class IntelligenceQualityRepository:
         self,
         signal_id: UUID,
     ) -> DeterministicExplanation | None:
-        statement: Select[tuple[DeterministicExplanation]] = select(
-            DeterministicExplanation
-        ).where(DeterministicExplanation.signal_id == signal_id)
+        statement: Select[tuple[DeterministicExplanation]] = select(DeterministicExplanation).where(
+            DeterministicExplanation.signal_id == signal_id
+        )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 

@@ -175,9 +175,7 @@ class IntelligenceReportService:
         feature_snapshot = await self.repository.get_feature_snapshot(run.id)
         indicator_snapshot = await self.repository.get_indicator_snapshot(run.id)
         candidates = await self.repository.list_pattern_candidates(run.id)
-        explanation = await self.repository.get_deterministic_explanation_by_analysis_run_id(
-            run.id
-        )
+        explanation = await self.repository.get_deterministic_explanation_by_analysis_run_id(run.id)
         correlations = await self.repository.list_news_correlations_by_analysis_run_id(run.id)
         news_events = await self.news_events_for_correlations(correlations)
         outcomes = (
@@ -186,9 +184,7 @@ class IntelligenceReportService:
             else []
         )
         audit_logs = (
-            await self.repository.list_audit_logs(run.id)
-            if resolved_options.include_audit
-            else []
+            await self.repository.list_audit_logs(run.id) if resolved_options.include_audit else []
         )
         action_plan = (
             await self.repository.get_latest_action_plan_by_analysis_run_id(run.id)
@@ -494,9 +490,7 @@ class IntelligenceReportService:
             subject=IntelligenceReportSubject(type=subject_type, id=subject_id),
             sections=safe_sections if isinstance(safe_sections, dict) else {},
             warnings=(
-                [str(item) for item in safe_warnings]
-                if isinstance(safe_warnings, list)
-                else []
+                [str(item) for item in safe_warnings] if isinstance(safe_warnings, list) else []
             ),
             missing_sections=sorted(set(missing_sections)),
         )
@@ -549,9 +543,7 @@ class IntelligenceReportService:
                 50,
             ),
             "confidence_explanation": (
-                "; ".join(component.reason for component in components[:5])
-                if components
-                else None
+                "; ".join(component.reason for component in components[:5]) if components else None
             ),
         }
 
@@ -714,8 +706,7 @@ class IntelligenceReportService:
         include_diagnostics: bool,
     ) -> dict[str, Any]:
         horizons = (
-            sorted({outcome.horizon_minutes for outcome in outcomes})
-            or DEFAULT_HISTORICAL_HORIZONS
+            sorted({outcome.horizon_minutes for outcome in outcomes}) or DEFAULT_HISTORICAL_HORIZONS
         )
         aggregation: dict[str, Any] = {}
         for horizon in horizons:

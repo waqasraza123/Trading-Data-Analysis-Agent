@@ -134,8 +134,12 @@ def upgrade() -> None:
             "'provider_not_configured')",
             name="scenario_ensemble_items_status_allowed",
         ),
-        sa.ForeignKeyConstraint(["ensemble_run_id"], ["scenario_ensemble_runs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["reasoning_run_id"], ["llm_reasoning_runs.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["ensemble_run_id"], ["scenario_ensemble_runs.id"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(
+            ["reasoning_run_id"], ["llm_reasoning_runs.id"], ondelete="SET NULL"
+        ),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -192,7 +196,9 @@ def upgrade() -> None:
             "agreement_count >= 0 and disagreement_count >= 0",
             name="scenario_consensus_results_counts_non_negative",
         ),
-        sa.ForeignKeyConstraint(["ensemble_run_id"], ["scenario_ensemble_runs.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["ensemble_run_id"], ["scenario_ensemble_runs.id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )

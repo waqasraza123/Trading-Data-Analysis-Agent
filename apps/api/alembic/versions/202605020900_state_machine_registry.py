@@ -30,8 +30,12 @@ def upgrade() -> None:
         sa.Column("terminal_states_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("metadata_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("status", sa.String(length=24), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "status in ('active', 'draft', 'archived')",
             name=op.f("ck_state_machine_definitions_state_machine_definitions_status_allowed"),
@@ -69,10 +73,14 @@ def upgrade() -> None:
         sa.Column("to_state", sa.String(length=80), nullable=False),
         sa.Column("validation_status", sa.String(length=16), nullable=False),
         sa.Column("reason", sa.String(length=1000), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "validation_status in ('valid', 'invalid')",
-            name=op.f("ck_state_transition_validations_state_transition_validations_status_allowed"),
+            name=op.f(
+                "ck_state_transition_validations_state_transition_validations_status_allowed"
+            ),
         ),
         sa.ForeignKeyConstraint(
             ["workspace_id"],
@@ -113,11 +121,19 @@ def downgrade() -> None:
         "ix_state_transition_validations_workspace_created",
         table_name="state_transition_validations",
     )
-    op.drop_index("ix_state_transition_validations_status", table_name="state_transition_validations")
-    op.drop_index("ix_state_transition_validations_object", table_name="state_transition_validations")
-    op.drop_index("ix_state_transition_validations_machine", table_name="state_transition_validations")
+    op.drop_index(
+        "ix_state_transition_validations_status", table_name="state_transition_validations"
+    )
+    op.drop_index(
+        "ix_state_transition_validations_object", table_name="state_transition_validations"
+    )
+    op.drop_index(
+        "ix_state_transition_validations_machine", table_name="state_transition_validations"
+    )
     op.drop_table("state_transition_validations")
     op.drop_index("ix_state_machine_definitions_status", table_name="state_machine_definitions")
-    op.drop_index("ix_state_machine_definitions_object_type", table_name="state_machine_definitions")
+    op.drop_index(
+        "ix_state_machine_definitions_object_type", table_name="state_machine_definitions"
+    )
     op.drop_index("ix_state_machine_definitions_key", table_name="state_machine_definitions")
     op.drop_table("state_machine_definitions")

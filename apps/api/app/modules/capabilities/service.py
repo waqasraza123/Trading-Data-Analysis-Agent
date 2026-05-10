@@ -215,9 +215,7 @@ class CapabilityService:
         installed = module_path is None or find_spec(module_path) is not None
         database_configured = self.settings.database_url is not None
         credentials_configured = (
-            self.credentials_configured(metadata_json)
-            if requires_external_credentials
-            else None
+            self.credentials_configured(metadata_json) if requires_external_credentials else None
         )
         enabled = self.module_enabled(metadata_json, status)
         reasons: list[str] = []

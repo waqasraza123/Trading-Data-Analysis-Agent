@@ -47,17 +47,19 @@ def calculate_swing_structure(candles: list[Candle], swing_lookback: int) -> dic
 def is_swing_high(candles: list[Candle], index: int, lookback: int) -> bool:
     current = candles[index].high
     window = candles[index - lookback : index + lookback + 1]
-    return current == max(candle.high for candle in window) and sum(
-        1 for candle in window if candle.high == current
-    ) == 1
+    return (
+        current == max(candle.high for candle in window)
+        and sum(1 for candle in window if candle.high == current) == 1
+    )
 
 
 def is_swing_low(candles: list[Candle], index: int, lookback: int) -> bool:
     current = candles[index].low
     window = candles[index - lookback : index + lookback + 1]
-    return current == min(candle.low for candle in window) and sum(
-        1 for candle in window if candle.low == current
-    ) == 1
+    return (
+        current == min(candle.low for candle in window)
+        and sum(1 for candle in window if candle.low == current) == 1
+    )
 
 
 def swing_point(

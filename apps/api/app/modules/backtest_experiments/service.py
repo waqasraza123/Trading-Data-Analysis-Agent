@@ -94,7 +94,9 @@ class BacktestExperimentService:
         limit: int,
         status: str | None = None,
     ) -> list[BacktestExperimentRun]:
-        return await self.repository.list_runs(workspace_id=workspace_id, limit=limit, status=status)
+        return await self.repository.list_runs(
+            workspace_id=workspace_id, limit=limit, status=status
+        )
 
     async def list_experiment_cohorts(self, run_id: UUID) -> list[BacktestExperimentCohort]:
         await self.get_experiment_run(run_id)

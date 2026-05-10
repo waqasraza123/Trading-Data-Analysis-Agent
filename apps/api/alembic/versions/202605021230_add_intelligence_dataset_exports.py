@@ -8,8 +8,9 @@ Create Date: 2026-05-02 12:30:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605021250_intelligence_dataset_exports"
 down_revision: str | tuple[str, str] | None = "202605021240_advanced_intelligence_operations"
@@ -49,8 +50,12 @@ def upgrade() -> None:
         sa.Column("storage_mode", sa.String(length=32), nullable=False),
         sa.Column("content_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "dataset_type in ('signal_supervision', 'outcome_evaluation', "
             "'reasoning_grounding', 'quality_review', 'screenshot_review', "
@@ -102,13 +107,17 @@ def upgrade() -> None:
             server_default=sa.text("'[]'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "source_type in ('signal', 'analysis_run', 'outcome', 'reasoning_run', "
             "'quality_run', 'screenshot_decision')",
             name="intelligence_dataset_export_items_source_type_allowed",
         ),
-        sa.ForeignKeyConstraint(["export_id"], ["intelligence_dataset_exports.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["export_id"], ["intelligence_dataset_exports.id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )

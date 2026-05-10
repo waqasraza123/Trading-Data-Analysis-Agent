@@ -33,7 +33,9 @@ class DataQualityService:
             end_time=request.end_time,
         )
         score = Decimal(str(average_quality or 0)).quantize(Decimal("0.0001"))
-        findings = build_findings(request.workspace_id, candle_count, partial_count, score, self.settings)
+        findings = build_findings(
+            request.workspace_id, candle_count, partial_count, score, self.settings
+        )
         run = await self.repository.create_run(
             DataQualityRun(
                 workspace_id=request.workspace_id,
@@ -74,21 +76,27 @@ class DataQualityService:
             DataQualityRun(
                 workspace_id=workspace_id,
                 scope_type=DataQualityScopeType.DATA_SOURCE.value,
-                status=DataQualityRunStatus.COMPLETED_WITH_WARNINGS.value if findings else DataQualityRunStatus.COMPLETED.value,
+                status=DataQualityRunStatus.COMPLETED_WITH_WARNINGS.value
+                if findings
+                else DataQualityRunStatus.COMPLETED.value,
                 quality_version=self.settings.data_quality_version,
                 source_id=source_id,
                 candle_count=candle_count,
                 finding_count=len(findings),
                 quality_score=score,
                 quality_label=quality_label(score, candle_count, self.settings).value,
-                summary_json={"dataQualityLabel": quality_label(score, candle_count, self.settings).value},
+                summary_json={
+                    "dataQualityLabel": quality_label(score, candle_count, self.settings).value
+                },
             ),
             findings,
         )
         await self.session.commit()
         return run
 
-    async def run_live_subscription(self, workspace_id: UUID, subscription_id: UUID) -> DataQualityRun:
+    async def run_live_subscription(
+        self, workspace_id: UUID, subscription_id: UUID
+    ) -> DataQualityRun:
         run = await self.repository.create_run(
             DataQualityRun(
                 workspace_id=workspace_id,
@@ -113,7 +121,9 @@ class DataQualityService:
             raise AppError(404, "data_quality_run_not_found", "Data quality run not found")
         return run
 
-    async def list_findings(self, run_id: UUID, limit: int, offset: int) -> list[DataQualityFinding]:
+    async def list_findings(
+        self, run_id: UUID, limit: int, offset: int
+    ) -> list[DataQualityFinding]:
         await self.get_run(run_id)
         return await self.repository.list_findings(run_id, limit, offset)
 

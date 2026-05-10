@@ -115,12 +115,10 @@ def test_equity_scorer_marks_missing_fundamentals_context() -> None:
     )
 
     assert any(
-        item["message"] == "Fundamentals context unavailable."
-        for item in draft.evidence_json
+        item["message"] == "Fundamentals context unavailable." for item in draft.evidence_json
     )
     assert any(
-        item["message"] == "Average volume context available."
-        for item in draft.evidence_json
+        item["message"] == "Average volume context available." for item in draft.evidence_json
     )
 
 

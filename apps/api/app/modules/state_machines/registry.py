@@ -34,11 +34,15 @@ class StateMachineDefinitionSpec:
         return {(transition.from_state, transition.to_state) for transition in self.transitions}
 
 
-def transition(from_state: str, to_state: str, label: str | None = None) -> StateTransitionDefinition:
+def transition(
+    from_state: str, to_state: str, label: str | None = None
+) -> StateTransitionDefinition:
     return StateTransitionDefinition(from_state=from_state, to_state=to_state, label=label)
 
 
-def transitions_from(from_state: str, to_states: Iterable[str]) -> tuple[StateTransitionDefinition, ...]:
+def transitions_from(
+    from_state: str, to_states: Iterable[str]
+) -> tuple[StateTransitionDefinition, ...]:
     return tuple(transition(from_state, to_state) for to_state in to_states)
 
 
@@ -47,7 +51,14 @@ DEFAULT_STATE_MACHINES: tuple[StateMachineDefinitionSpec, ...] = (
         key="import_batch",
         version=DEFAULT_STATE_MACHINE_VERSION,
         object_type="import_batch",
-        states=("pending", "processing", "completed", "completed_with_warnings", "failed", "cancelled"),
+        states=(
+            "pending",
+            "processing",
+            "completed",
+            "completed_with_warnings",
+            "failed",
+            "cancelled",
+        ),
         transitions=(
             transition("pending", "processing"),
             transition("pending", "cancelled"),
@@ -116,24 +127,48 @@ DEFAULT_STATE_MACHINES: tuple[StateMachineDefinitionSpec, ...] = (
         key="outcome_evaluation",
         version=DEFAULT_STATE_MACHINE_VERSION,
         object_type="outcome_evaluation",
-        states=("pending", "evaluated", "insufficient_future_data", "skipped_not_directional", "failed"),
+        states=(
+            "pending",
+            "evaluated",
+            "insufficient_future_data",
+            "skipped_not_directional",
+            "failed",
+        ),
         transitions=transitions_from(
             "pending",
             ("evaluated", "insufficient_future_data", "skipped_not_directional", "failed"),
         ),
-        terminal_states=("evaluated", "insufficient_future_data", "skipped_not_directional", "failed"),
+        terminal_states=(
+            "evaluated",
+            "insufficient_future_data",
+            "skipped_not_directional",
+            "failed",
+        ),
         metadata={"source": "outcomes.models.OutcomeEvaluationStatus", "adoption": "optional"},
     ),
     StateMachineDefinitionSpec(
         key="reasoning_run",
         version=DEFAULT_STATE_MACHINE_VERSION,
         object_type="reasoning_run",
-        states=("pending", "completed", "failed", "blocked", "fallback_used", "provider_not_configured"),
+        states=(
+            "pending",
+            "completed",
+            "failed",
+            "blocked",
+            "fallback_used",
+            "provider_not_configured",
+        ),
         transitions=transitions_from(
             "pending",
             ("completed", "failed", "blocked", "fallback_used", "provider_not_configured"),
         ),
-        terminal_states=("completed", "failed", "blocked", "fallback_used", "provider_not_configured"),
+        terminal_states=(
+            "completed",
+            "failed",
+            "blocked",
+            "fallback_used",
+            "provider_not_configured",
+        ),
         metadata={"source": "reasoning.models.ReasoningRunStatus", "adoption": "optional"},
     ),
     StateMachineDefinitionSpec(
@@ -153,7 +188,10 @@ DEFAULT_STATE_MACHINES: tuple[StateMachineDefinitionSpec, ...] = (
             transition("failed", "cancelled"),
         ),
         terminal_states=("completed", "skipped", "cancelled"),
-        metadata={"source": "action_plans.models.ReasoningActionItemStatus", "adoption": "optional"},
+        metadata={
+            "source": "action_plans.models.ReasoningActionItemStatus",
+            "adoption": "optional",
+        },
     ),
     StateMachineDefinitionSpec(
         key="operator_review_item",
@@ -257,7 +295,9 @@ DEFAULT_STATE_MACHINES: tuple[StateMachineDefinitionSpec, ...] = (
     ),
 )
 
-DEFAULT_STATE_MACHINES_BY_KEY = {definition.key: definition for definition in DEFAULT_STATE_MACHINES}
+DEFAULT_STATE_MACHINES_BY_KEY = {
+    definition.key: definition for definition in DEFAULT_STATE_MACHINES
+}
 DEFAULT_STATE_MACHINES_BY_OBJECT_TYPE = {
     definition.object_type: definition for definition in DEFAULT_STATE_MACHINES
 }

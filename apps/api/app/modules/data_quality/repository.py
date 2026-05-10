@@ -12,7 +12,9 @@ class DataQualityRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create_run(self, run: DataQualityRun, findings: list[DataQualityFinding]) -> DataQualityRun:
+    async def create_run(
+        self, run: DataQualityRun, findings: list[DataQualityFinding]
+    ) -> DataQualityRun:
         self.session.add(run)
         await self.session.flush()
         await self.session.refresh(run)
@@ -27,7 +29,9 @@ class DataQualityRepository:
     async def get_run(self, run_id: UUID) -> DataQualityRun | None:
         return await self.session.get(DataQualityRun, run_id)
 
-    async def list_findings(self, run_id: UUID, limit: int, offset: int) -> list[DataQualityFinding]:
+    async def list_findings(
+        self, run_id: UUID, limit: int, offset: int
+    ) -> list[DataQualityFinding]:
         statement: Select[tuple[DataQualityFinding]] = (
             select(DataQualityFinding)
             .where(DataQualityFinding.data_quality_run_id == run_id)

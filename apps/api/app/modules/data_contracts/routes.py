@@ -16,6 +16,8 @@ from app.modules.data_contracts.schemas import (
     DataContractValidationResult,
 )
 from app.modules.data_contracts.service import DataContractService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/data-contracts", tags=["data-contracts"])
 
@@ -49,6 +51,7 @@ async def get_contract(
     "/seed-default",
     response_model=DataContractSeedRead,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def seed_default_contracts(
     service: Annotated[DataContractService, Depends(get_data_contract_service)],

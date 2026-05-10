@@ -32,7 +32,9 @@ def test_aggregator_builds_complete_5m_candle_from_1m_final_candles() -> None:
     end = datetime(2026, 5, 2, 12, 4, tzinfo=UTC)
     window = aggregator.build_windows(Timeframe.ONE_MINUTE, Timeframe.FIVE_MINUTES, start, end)[0]
     candles = [
-        make_candle(datetime(2026, 5, 2, 12, minute, tzinfo=UTC), str(100 + minute), str(101 + minute))
+        make_candle(
+            datetime(2026, 5, 2, 12, minute, tzinfo=UTC), str(100 + minute), str(101 + minute)
+        )
         for minute in range(5)
     ]
 
@@ -51,7 +53,9 @@ def test_aggregator_skips_incomplete_window() -> None:
     end = datetime(2026, 5, 2, 12, 4, tzinfo=UTC)
     window = aggregator.build_windows(Timeframe.ONE_MINUTE, Timeframe.FIVE_MINUTES, start, end)[0]
     candles = [
-        make_candle(datetime(2026, 5, 2, 12, minute, tzinfo=UTC), str(100 + minute), str(101 + minute))
+        make_candle(
+            datetime(2026, 5, 2, 12, minute, tzinfo=UTC), str(100 + minute), str(101 + minute)
+        )
         for minute in range(4)
     ]
 

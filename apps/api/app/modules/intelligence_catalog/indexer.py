@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -45,7 +46,9 @@ class IntelligenceCatalogIndexer:
             IntelligenceCatalogArtifactType.DATASET_EXPORT: self.build_dataset_export,
             IntelligenceCatalogArtifactType.REPORT: self.build_report,
             IntelligenceCatalogArtifactType.RULE_MANIFEST: self.build_rule_manifest,
-            IntelligenceCatalogArtifactType.PROVIDER_POLLING_REQUEST: self.build_provider_polling_request,
+            IntelligenceCatalogArtifactType.PROVIDER_POLLING_REQUEST: (
+                self.build_provider_polling_request
+            ),
         }
 
     async def build(
@@ -267,7 +270,13 @@ class IntelligenceCatalogIndexer:
                 "createdFrom": plan.created_from,
                 "planVersion": plan.plan_version,
             },
-            searchable_values=[title, plan.summary, plan.status, plan.source_type, plan.created_from],
+            searchable_values=[
+                title,
+                plan.summary,
+                plan.status,
+                plan.source_type,
+                plan.created_from,
+            ],
         )
 
     async def build_action_item(self, artifact_id: UUID) -> IntelligenceCatalogUpsert | None:
@@ -351,7 +360,9 @@ class IntelligenceCatalogIndexer:
             ],
         )
 
-    async def build_chart_screenshot_run(self, artifact_id: UUID) -> IntelligenceCatalogUpsert | None:
+    async def build_chart_screenshot_run(
+        self, artifact_id: UUID
+    ) -> IntelligenceCatalogUpsert | None:
         run = await self.session.get(ChartScreenshotRun, artifact_id)
         if run is None:
             return None
@@ -674,7 +685,9 @@ class IntelligenceCatalogIndexer:
             searchable_values=[title, summary, profile.key, profile.name, profile.version],
         )
 
-    async def build_provider_polling_request(self, artifact_id: UUID) -> IntelligenceCatalogUpsert | None:
+    async def build_provider_polling_request(
+        self, artifact_id: UUID
+    ) -> IntelligenceCatalogUpsert | None:
         source = await self.session.get(DataSource, artifact_id)
         if source is None or source.source_type != "api_polling":
             return None
@@ -695,7 +708,14 @@ class IntelligenceCatalogIndexer:
                 "provider": source.provider,
                 "sourceType": source.source_type,
             },
-            searchable_values=[title, summary, source.name, source.provider, source.source_type, source.status],
+            searchable_values=[
+                title,
+                summary,
+                source.name,
+                source.provider,
+                source.source_type,
+                source.status,
+            ],
         )
 
     def report_payload(
@@ -707,7 +727,7 @@ class IntelligenceCatalogIndexer:
         status: str | None,
         source_type: str,
         tags: list[str],
-        artifact_created_at,
+        artifact_created_at: datetime,
         symbol_id: UUID | None = None,
         timeframe: str | None = None,
     ) -> IntelligenceCatalogUpsert:
@@ -736,7 +756,10 @@ class IntelligenceCatalogIndexer:
             result = await self.session.execute(statement)
             workspace_id = result.scalar_one_or_none()
         if workspace_id is None:
-            msg = "At least one workspace-scoped artifact is required before indexing global manifests"
+            msg = (
+                "At least one workspace-scoped artifact is required before indexing "
+                "global manifests"
+            )
             raise ValueError(msg)
         return workspace_id
 
@@ -761,7 +784,7 @@ class IntelligenceCatalogIndexer:
         readiness_label: str | None = None,
         outcome_label: str | None = None,
         source_type: str | None = None,
-        artifact_created_at=None,
+        artifact_created_at: datetime | None = None,
     ) -> IntelligenceCatalogUpsert:
         normalized_tags = sorted({tag for tag in tags if tag})
         searchable_text = " ".join(

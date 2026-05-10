@@ -56,7 +56,9 @@ class StateTransitionValidation(Base):
             name="state_transition_validations_status_allowed",
         ),
         Index("ix_state_transition_validations_workspace_created", "workspace_id", "created_at"),
-        Index("ix_state_transition_validations_machine", "state_machine_key", "state_machine_version"),
+        Index(
+            "ix_state_transition_validations_machine", "state_machine_key", "state_machine_version"
+        ),
         Index("ix_state_transition_validations_object", "object_type", "object_id"),
         Index("ix_state_transition_validations_status", "validation_status"),
     )

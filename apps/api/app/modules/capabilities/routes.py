@@ -9,6 +9,7 @@ from app.modules.capabilities.models import (
     CapabilityExecutionType,
     CapabilitySafetyLevel,
     CapabilityStatus,
+    IntelligenceCapability,
 )
 from app.modules.capabilities.schemas import (
     CapabilityListQuery,
@@ -17,6 +18,8 @@ from app.modules.capabilities.schemas import (
     CapabilitySummaryRead,
 )
 from app.modules.capabilities.service import CapabilityService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/capabilities", tags=["capabilities"])
 
@@ -28,7 +31,7 @@ def get_capability_service(
 
 
 def capability_read(
-    capability,
+    capability: IntelligenceCapability,
     service: CapabilityService,
     include_runtime: bool,
 ) -> CapabilityRead:
@@ -70,8 +73,7 @@ async def list_capabilities(
         offset=query.offset,
     )
     return [
-        capability_read(capability, service, query.include_runtime)
-        for capability in capabilities
+        capability_read(capability, service, query.include_runtime) for capability in capabilities
     ]
 
 
@@ -96,6 +98,7 @@ async def get_capability(
     "/seed-default",
     response_model=CapabilitySeedRead,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def seed_default_capabilities(
     service: Annotated[CapabilityService, Depends(get_capability_service)],

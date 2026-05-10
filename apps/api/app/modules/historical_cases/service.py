@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -20,7 +19,11 @@ from app.modules.historical_cases.schemas import (
     HistoricalCaseSignalSummary,
     HistoricalCaseVectorRead,
 )
-from app.modules.historical_cases.similarity import build_case_vector, score_similarity
+from app.modules.historical_cases.similarity import (
+    CaseSimilarityResult,
+    build_case_vector,
+    score_similarity,
+)
 from app.modules.indicators.repository import IndicatorSnapshotRepository
 from app.modules.news.repository import NewsCorrelationRepository
 from app.modules.outcomes.repository import OutcomeRepository
@@ -61,8 +64,12 @@ class HistoricalCaseService:
         outcomes = await self.outcome_repository.list_by_signal_id(signal.id)
         news_correlations = await self.news_repository.list_by_signal_id(signal.id)
         explanation = await self.explanation_repository.get_by_signal_id(signal.id)
-        feature_summary = summarize_features(signal, features.features_json if features is not None else None)
-        indicator_summary = summarize_indicators(indicators.indicators_json if indicators is not None else None)
+        feature_summary = summarize_features(
+            signal, features.features_json if features is not None else None
+        )
+        indicator_summary = summarize_indicators(
+            indicators.indicators_json if indicators is not None else None
+        )
         outcome_summary = summarize_outcomes(outcomes)
         news_summary = summarize_news(news_correlations)
         signal_summary = summarize_signal(signal)
@@ -116,7 +123,9 @@ class HistoricalCaseService:
             self.settings.historical_case_vector_version,
         )
         if vector is None:
-            raise AppError(404, "historical_case_vector_not_found", "Historical case vector not found")
+            raise AppError(
+                404, "historical_case_vector_not_found", "Historical case vector not found"
+            )
         return HistoricalCaseVectorRead.model_validate(vector)
 
     async def search_similar_cases_for_signal(
@@ -204,7 +213,9 @@ class HistoricalCaseService:
             self.settings.historical_case_vector_version,
         )
         if built is None:
-            raise AppError(500, "historical_case_vector_build_failed", "Historical case vector build failed")
+            raise AppError(
+                500, "historical_case_vector_build_failed", "Historical case vector build failed"
+            )
         return built
 
     async def search_from_vector(
@@ -215,7 +226,9 @@ class HistoricalCaseService:
         source_analysis_run_id: UUID | None,
     ) -> HistoricalCaseSearchRead:
         if filters.workspace_id != source_vector.workspace_id:
-            raise AppError(422, "workspace_mismatch", "Search workspace must match the source case workspace")
+            raise AppError(
+                422, "workspace_mismatch", "Search workspace must match the source case workspace"
+            )
         resolved_limit = self.clamp_limit(limit or self.settings.historical_case_default_limit)
         candidate_limit = max(resolved_limit * 5, resolved_limit)
         candidates = await self.repository.list_candidate_vectors(
@@ -245,7 +258,9 @@ class HistoricalCaseService:
             if scored.score < min_score:
                 continue
             results.append(self.build_search_result(candidate, scored))
-        results = sorted(results, key=lambda item: item.similarity_score, reverse=True)[:resolved_limit]
+        results = sorted(results, key=lambda item: item.similarity_score, reverse=True)[
+            :resolved_limit
+        ]
         search = HistoricalCaseSearch(
             workspace_id=filters.workspace_id,
             source_signal_id=source_vector.signal_id,
@@ -265,7 +280,9 @@ class HistoricalCaseService:
             results=results,
         )
 
-    def build_search_result(self, candidate: HistoricalCaseVector, scored: Any) -> HistoricalCaseSearchResult:
+    def build_search_result(
+        self, candidate: HistoricalCaseVector, scored: CaseSimilarityResult
+    ) -> HistoricalCaseSearchResult:
         signal_section = section(candidate.vector_json, "signal")
         metadata = candidate.metadata_json
         return HistoricalCaseSearchResult(
@@ -288,7 +305,9 @@ class HistoricalCaseService:
                 summary=string_or_none(metadata.get("signalSummary")),
             ),
             outcome_summary=candidate.outcome_summary_json,
-            deterministic_explanation_summary=string_or_none(metadata.get("deterministicExplanationSummary")),
+            deterministic_explanation_summary=string_or_none(
+                metadata.get("deterministicExplanationSummary")
+            ),
         )
 
     async def get_signal(self, signal_id: UUID) -> Signal:
@@ -308,7 +327,9 @@ def summarize_signal(signal: Signal) -> dict[str, object]:
         "patternType": signal.pattern_type,
         "strategyProfileKey": signal.strategy_profile_key,
         "strategyProfileVersion": signal.strategy_profile_version,
-        "confidenceScore": str(signal.confidence_score) if signal.confidence_score is not None else None,
+        "confidenceScore": str(signal.confidence_score)
+        if signal.confidence_score is not None
+        else None,
         "confidenceLabel": signal.confidence_label,
         "timeframe": signal.timeframe,
         "summary": signal.summary,
@@ -321,8 +342,10 @@ def summarize_features(signal: Signal, features: dict[str, object] | None) -> di
     trend = section(features, "trend")
     range_section = section(features, "range")
     return {
-        "movementDirection": signal.movement_direction or string_or_none(movement.get("netDirection")),
-        "volatilityState": signal.volatility_state or string_or_none(volatility.get("volatilityState")),
+        "movementDirection": signal.movement_direction
+        or string_or_none(movement.get("netDirection")),
+        "volatilityState": signal.volatility_state
+        or string_or_none(volatility.get("volatilityState")),
         "trendState": signal.trend_state or string_or_none(trend.get("trendState")),
         "rangeState": signal.range_state or string_or_none(range_section.get("rangeState")),
         "movementQuality": signal.movement_quality,

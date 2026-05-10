@@ -8,8 +8,9 @@ Create Date: 2026-05-02 01:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605020100_operator_review_queue"
 down_revision: str | Sequence[str] | None = "202604301900"
@@ -81,8 +82,7 @@ def upgrade() -> None:
             name="operator_review_items_priority_allowed",
         ),
         sa.CheckConstraint(
-            "status in ('open', 'assigned', 'in_review', 'resolved', 'dismissed', "
-            "'cancelled')",
+            "status in ('open', 'assigned', 'in_review', 'resolved', 'dismissed', 'cancelled')",
             name="operator_review_items_status_allowed",
         ),
         sa.CheckConstraint(

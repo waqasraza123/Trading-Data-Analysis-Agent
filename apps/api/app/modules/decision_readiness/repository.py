@@ -102,13 +102,17 @@ class DecisionReadinessRepository:
             .offset(offset)
         )
         if readiness_label is not None:
-            statement = statement.where(DecisionReadinessAssessment.readiness_label == readiness_label)
+            statement = statement.where(
+                DecisionReadinessAssessment.readiness_label == readiness_label
+            )
         if source_type is not None:
             statement = statement.where(DecisionReadinessAssessment.source_type == source_type)
         if signal_id is not None:
             statement = statement.where(DecisionReadinessAssessment.signal_id == signal_id)
         if analysis_run_id is not None:
-            statement = statement.where(DecisionReadinessAssessment.analysis_run_id == analysis_run_id)
+            statement = statement.where(
+                DecisionReadinessAssessment.analysis_run_id == analysis_run_id
+            )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
@@ -168,9 +172,9 @@ class DecisionReadinessRepository:
         self,
         signal_id: UUID,
     ) -> DeterministicExplanation | None:
-        statement: Select[tuple[DeterministicExplanation]] = select(
-            DeterministicExplanation
-        ).where(DeterministicExplanation.signal_id == signal_id)
+        statement: Select[tuple[DeterministicExplanation]] = select(DeterministicExplanation).where(
+            DeterministicExplanation.signal_id == signal_id
+        )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
@@ -310,8 +314,12 @@ class DecisionReadinessRepository:
             return 0
         conditions = [StrategyProfileDiagnostic.workspace_id == signal.workspace_id]
         if signal.strategy_profile_key is not None:
-            conditions.append(StrategyProfileDiagnostic.strategy_profile_key == signal.strategy_profile_key)
-        statement = select(func.count()).select_from(StrategyProfileDiagnostic).where(and_(*conditions))
+            conditions.append(
+                StrategyProfileDiagnostic.strategy_profile_key == signal.strategy_profile_key
+            )
+        statement = (
+            select(func.count()).select_from(StrategyProfileDiagnostic).where(and_(*conditions))
+        )
         result = await self.session.execute(statement)
         strategy_count = int(result.scalar_one())
         pattern_count = 0

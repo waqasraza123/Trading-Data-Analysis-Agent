@@ -322,14 +322,10 @@ def evaluation(
     ranking_score: str,
 ) -> CandidateEvaluation:
     features = (
-        strong_bullish_features()
-        if candidate.bias != "bearish"
-        else strong_bearish_features()
+        strong_bullish_features() if candidate.bias != "bearish" else strong_bearish_features()
     )
     indicators = (
-        strong_bullish_indicators()
-        if candidate.bias != "bearish"
-        else strong_bearish_indicators()
+        strong_bullish_indicators() if candidate.bias != "bearish" else strong_bearish_indicators()
     )
     confidence = calculate_confidence(
         candidate=candidate,

@@ -71,7 +71,9 @@ class EventStudyCalculator:
         post_move = calculate_window_move(sorted_post_candles)
         pre_volatility = calculate_volatility_payload(sorted_pre_candles)
         post_volatility = calculate_volatility_payload(sorted_post_candles)
-        data_quality_label = data_quality(pre_candle_count, post_candle_count, request.minimum_candles)
+        data_quality_label = data_quality(
+            pre_candle_count, post_candle_count, request.minimum_candles
+        )
         volatility_reaction = label_volatility_reaction(
             pre_average_range=decimal_from_payload(pre_volatility, "averageRange"),
             post_average_range=decimal_from_payload(post_volatility, "averageRange"),
@@ -145,8 +147,7 @@ def calculate_volatility_payload(candles: list[Candle]) -> dict[str, object]:
         }
     candle_ranges = [candle.high - candle.low for candle in candles]
     close_changes = [
-        abs(candles[index].close - candles[index - 1].close)
-        for index in range(1, len(candles))
+        abs(candles[index].close - candles[index - 1].close) for index in range(1, len(candles))
     ]
     high = max(candle.high for candle in candles)
     low = min(candle.low for candle in candles)

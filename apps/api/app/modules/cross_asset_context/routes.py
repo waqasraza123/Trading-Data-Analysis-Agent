@@ -12,6 +12,8 @@ from app.modules.cross_asset_context.schemas import (
     CrossAssetContextRunRead,
 )
 from app.modules.cross_asset_context.service import CrossAssetContextService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["cross-asset-context"])
 
@@ -26,6 +28,7 @@ def get_cross_asset_context_service(
     "/analysis-runs/{analysis_run_id}/cross-asset-context",
     response_model=CrossAssetContextRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_analysis_run_cross_asset_context(
     analysis_run_id: UUID,
@@ -56,6 +59,7 @@ async def get_analysis_run_cross_asset_context(
     "/signals/{signal_id}/cross-asset-context",
     response_model=CrossAssetContextRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_signal_cross_asset_context(
     signal_id: UUID,

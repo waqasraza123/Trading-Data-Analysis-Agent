@@ -149,10 +149,14 @@ def build_journal_reflection(
 def infer_observed_bias(outcome: SignalOutcome) -> str | None:
     if outcome.outcome_label in NON_DIRECTIONAL_OUTCOMES:
         return None
-    if outcome.outcome_label in {
-        OutcomeLabel.CONTINUATION.value,
-        OutcomeLabel.PARTIAL_FOLLOW_THROUGH.value,
-    } and outcome.direction_followed:
+    if (
+        outcome.outcome_label
+        in {
+            OutcomeLabel.CONTINUATION.value,
+            OutcomeLabel.PARTIAL_FOLLOW_THROUGH.value,
+        }
+        and outcome.direction_followed
+    ):
         return outcome.bias if outcome.bias in DIRECTIONAL_BIASES else None
     if outcome.outcome_label == OutcomeLabel.REVERSAL.value or outcome.reversal_detected:
         if outcome.bias == JournalUserBias.BULLISH.value:

@@ -22,11 +22,11 @@ from app.modules.scenario_ensembles.models import (
 )
 from app.modules.scenario_ensembles.repository import ScenarioEnsembleRepository
 from app.modules.scenario_ensembles.schemas import (
+    ScenarioConsensusResultRead,
     ScenarioEnsembleItemRead,
     ScenarioEnsembleProviderRequest,
     ScenarioEnsembleResponse,
     ScenarioEnsembleRunRead,
-    ScenarioConsensusResultRead,
 )
 from app.modules.signals.models import Signal
 from app.modules.signals.repository import SignalRepository
@@ -194,10 +194,7 @@ class ScenarioEnsembleService:
         return ScenarioEnsembleResponse(
             run=ScenarioEnsembleRunRead.model_validate(run),
             items=[ScenarioEnsembleItemRead.model_validate(item) for item in items],
-            consensus=[
-                ScenarioConsensusResultRead.model_validate(result)
-                for result in consensus
-            ],
+            consensus=[ScenarioConsensusResultRead.model_validate(result) for result in consensus],
         )
 
     async def load_signal(self, signal_id: UUID) -> Signal:
@@ -244,12 +241,9 @@ def run_status_for(
     if consensus_label == ScenarioConsensusLabel.FAILED:
         return ScenarioEnsembleRunStatus.FAILED.value
     if outputs and all(
-        output.status == ReasoningRunStatus.PROVIDER_NOT_CONFIGURED.value
-        for output in outputs
+        output.status == ReasoningRunStatus.PROVIDER_NOT_CONFIGURED.value for output in outputs
     ):
         return ScenarioEnsembleRunStatus.PROVIDER_NOT_CONFIGURED.value
-    if outputs and any(
-        output.status != ReasoningRunStatus.COMPLETED.value for output in outputs
-    ):
+    if outputs and any(output.status != ReasoningRunStatus.COMPLETED.value for output in outputs):
         return ScenarioEnsembleRunStatus.COMPLETED_WITH_WARNINGS.value
     return ScenarioEnsembleRunStatus.COMPLETED.value

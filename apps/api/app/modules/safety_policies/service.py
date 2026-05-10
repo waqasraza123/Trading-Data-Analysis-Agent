@@ -13,12 +13,18 @@ from .schemas import (
     SafetyPolicySetStatus,
 )
 
-
-DEFAULT_POLICY_DESCRIPTION = "Core safety policy for market intelligence, non-execution analysis, public payload redaction, and operator-safe recommendations."
+DEFAULT_POLICY_DESCRIPTION = (
+    "Core safety policy for market intelligence, non-execution analysis, "
+    "public payload redaction, and operator-safe recommendations."
+)
 
 
 class SafetyPolicyService:
-    def __init__(self, repository: SafetyPolicyRepository | None = None, evaluator: SafetyPolicyEvaluator | None = None) -> None:
+    def __init__(
+        self,
+        repository: SafetyPolicyRepository | None = None,
+        evaluator: SafetyPolicyEvaluator | None = None,
+    ) -> None:
         self.repository = repository
         self.evaluator = evaluator or SafetyPolicyEvaluator()
 
@@ -42,7 +48,9 @@ class SafetyPolicyService:
             )
         return policy_data
 
-    async def get_active_policy_set(self, workspace_id: str | None = None, key: str = "core_market_intelligence") -> SafetyPolicy:
+    async def get_active_policy_set(
+        self, workspace_id: str | None = None, key: str = "core_market_intelligence"
+    ) -> SafetyPolicy:
         if self.repository is None:
             return default_policy()
         policy_set = await self.repository.get_policy_set(
@@ -94,7 +102,9 @@ class SafetyPolicyService:
         public_response: bool = True,
     ) -> SafetyEvaluationResponse:
         policy = await self.get_active_policy_set(workspace_id)
-        result = self.evaluator.evaluate_payload(payload, policy, SafetyPolicyEvaluationType.PAYLOAD, public_response)
+        result = self.evaluator.evaluate_payload(
+            payload, policy, SafetyPolicyEvaluationType.PAYLOAD, public_response
+        )
         await self._persist_result(workspace_id, source_type, source_id, result)
         return result
 
@@ -146,7 +156,7 @@ class SafetyPolicyService:
         await self._persist_result(workspace_id, source_type, source_id, result)
         return result
 
-    async def redact_payload(self, payload: Any, workspace_id: str | None = None) -> Any:
+    async def redact_payload(self, payload: object, workspace_id: str | None = None) -> object:
         policy = await self.get_active_policy_set(workspace_id)
         return redact_payload_shape(payload, policy.rules.secret_keys)
 
@@ -165,4 +175,3 @@ class SafetyPolicyService:
             source_id=source_id,
             result=result,
         )
-

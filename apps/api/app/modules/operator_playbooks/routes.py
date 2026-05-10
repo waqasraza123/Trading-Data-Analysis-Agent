@@ -12,6 +12,8 @@ from app.modules.operator_playbooks.schemas import (
     OperatorPlaybookRead,
 )
 from app.modules.operator_playbooks.service import OperatorPlaybookService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/operator-playbooks", tags=["operator-playbooks"])
 
@@ -29,14 +31,22 @@ async def list_operator_playbooks(
     return [OperatorPlaybookRead.model_validate(item) for item in await service.list_playbooks()]
 
 
-@router.post("/seed", response_model=list[OperatorPlaybookRead])
+@router.post(
+    "/seed",
+    response_model=list[OperatorPlaybookRead],
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def seed_operator_playbooks(
     service: Annotated[OperatorPlaybookService, Depends(get_operator_playbook_service)],
 ) -> list[OperatorPlaybookRead]:
     return [OperatorPlaybookRead.model_validate(item) for item in await service.seed_playbooks()]
 
 
-@router.post("/evaluate", response_model=OperatorPlaybookEvaluationRead)
+@router.post(
+    "/evaluate",
+    response_model=OperatorPlaybookEvaluationRead,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def evaluate_operator_playbooks(
     request: OperatorPlaybookEvaluationRequest,
     service: Annotated[OperatorPlaybookService, Depends(get_operator_playbook_service)],

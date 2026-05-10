@@ -1,5 +1,4 @@
 import json
-from typing import Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +13,7 @@ from app.modules.intelligence_datasets.models import (
 )
 from app.modules.intelligence_datasets.repository import IntelligenceDatasetRepository
 from app.modules.intelligence_datasets.schemas import IntelligenceDatasetExportCreate
+from app.modules.signals.models import Signal
 
 
 class IntelligenceDatasetService:
@@ -22,7 +22,9 @@ class IntelligenceDatasetService:
         self.settings = settings or get_settings()
         self.repository = IntelligenceDatasetRepository(session)
 
-    async def create_export(self, request: IntelligenceDatasetExportCreate) -> IntelligenceDatasetExport:
+    async def create_export(
+        self, request: IntelligenceDatasetExportCreate
+    ) -> IntelligenceDatasetExport:
         limit = request.limit or self.settings.intelligence_dataset_default_limit
         limit = min(limit, self.settings.intelligence_dataset_max_limit)
         signals = await self.repository.list_signals(
@@ -68,7 +70,9 @@ class IntelligenceDatasetService:
         await self.session.commit()
         return export
 
-    async def list_exports(self, workspace_id: UUID, limit: int, offset: int) -> list[IntelligenceDatasetExport]:
+    async def list_exports(
+        self, workspace_id: UUID, limit: int, offset: int
+    ) -> list[IntelligenceDatasetExport]:
         return await self.repository.list_exports(workspace_id, limit, offset)
 
     async def get_export(self, export_id: UUID) -> IntelligenceDatasetExport:
@@ -77,7 +81,9 @@ class IntelligenceDatasetService:
             raise AppError(404, "intelligence_dataset_export_not_found", "Dataset export not found")
         return export
 
-    async def list_items(self, export_id: UUID, limit: int, offset: int) -> list[IntelligenceDatasetExportItem]:
+    async def list_items(
+        self, export_id: UUID, limit: int, offset: int
+    ) -> list[IntelligenceDatasetExportItem]:
         await self.get_export(export_id)
         return await self.repository.list_items(export_id, limit, offset)
 
@@ -86,7 +92,7 @@ class IntelligenceDatasetService:
         return "\n".join(json.dumps(item.item_json, sort_keys=True, default=str) for item in items)
 
 
-def redacted_signal_item(signal: Any, settings: Settings) -> dict[str, object]:
+def redacted_signal_item(signal: Signal, settings: Settings) -> dict[str, object]:
     summary = str(signal.summary)
     if len(summary) > settings.intelligence_dataset_max_text_length:
         summary = f"{summary[: settings.intelligence_dataset_max_text_length]}..."

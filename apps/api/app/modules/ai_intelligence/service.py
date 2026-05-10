@@ -281,8 +281,7 @@ class AiIntelligenceService:
         parsed: ParsedAiIntelligence,
     ) -> None:
         insight_rows = [
-            insight_row(run, insight, index)
-            for index, insight in enumerate(parsed.insights)
+            insight_row(run, insight, index) for index, insight in enumerate(parsed.insights)
         ]
         persisted_insights = await self.repository.replace_insights(run.id, insight_rows)
         claim_rows: list[AiIntelligenceClaim] = []

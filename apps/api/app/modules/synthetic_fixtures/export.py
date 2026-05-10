@@ -6,7 +6,6 @@ from uuid import UUID
 from app.core.errors import AppError
 from app.modules.synthetic_fixtures.schemas import SyntheticFixtureCandle
 
-
 CSV_COLUMNS = ["timestamp", "open", "high", "low", "close", "volume"]
 
 

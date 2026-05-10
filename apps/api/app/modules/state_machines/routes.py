@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.state_machines.schemas import (
     StateMachineDefinitionRead,
     StateMachineSeedRead,
@@ -48,6 +50,7 @@ async def get_state_machine(
     "/seed-default",
     response_model=StateMachineSeedRead,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def seed_default_state_machines(
     service: Annotated[StateMachineService, Depends(get_state_machine_service)],

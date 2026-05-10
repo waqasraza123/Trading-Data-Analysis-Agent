@@ -97,10 +97,8 @@ class ArtifactGraphRepository:
             IntelligenceArtifactDependency
         ).where(
             IntelligenceArtifactDependency.workspace_id == workspace_id,
-            IntelligenceArtifactDependency.source_artifact_record_id
-            == source_artifact_record_id,
-            IntelligenceArtifactDependency.target_artifact_record_id
-            == target_artifact_record_id,
+            IntelligenceArtifactDependency.source_artifact_record_id == source_artifact_record_id,
+            IntelligenceArtifactDependency.target_artifact_record_id == target_artifact_record_id,
             IntelligenceArtifactDependency.relationship_type == relationship_type,
         )
         result = await self.session.execute(statement)

@@ -135,8 +135,7 @@ class CandleIngestionConflict(Base):
             name="candle_ingestion_conflicts_type_allowed",
         ),
         CheckConstraint(
-            "resolution in ('skipped', 'kept_existing', 'rejected', 'updated_partial', "
-            "'inserted')",
+            "resolution in ('skipped', 'kept_existing', 'rejected', 'updated_partial', 'inserted')",
             name="candle_ingestion_conflicts_resolution_allowed",
         ),
         Index("ix_candle_ingestion_conflicts_performance_run_id", "performance_run_id"),

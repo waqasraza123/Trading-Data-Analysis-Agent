@@ -99,9 +99,7 @@ class MarketMemoryService:
                 filters.freshness_label.value if filters.freshness_label is not None else None
             ),
             data_quality_label=(
-                filters.data_quality_label.value
-                if filters.data_quality_label is not None
-                else None
+                filters.data_quality_label.value if filters.data_quality_label is not None else None
             ),
             limit=filters.limit,
             offset=filters.offset,

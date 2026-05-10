@@ -57,7 +57,9 @@ class StateMachineService:
                         version=definition.version,
                         object_type=definition.object_type,
                         states_json=list(definition.states),
-                        transitions_json=[transition.to_json() for transition in definition.transitions],
+                        transitions_json=[
+                            transition.to_json() for transition in definition.transitions
+                        ],
                         terminal_states_json=list(definition.terminal_states),
                         metadata_json=definition.metadata,
                         status=StateMachineDefinitionStatus.ACTIVE,

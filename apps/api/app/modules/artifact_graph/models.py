@@ -68,9 +68,7 @@ class ArtifactInvalidationReasonCode(StrEnum):
 
 ARTIFACT_TYPE_VALUES = "', '".join(item.value for item in ArtifactType)
 ARTIFACT_STATUS_VALUES = "', '".join(item.value for item in ArtifactStatus)
-ARTIFACT_RELATIONSHIP_TYPE_VALUES = "', '".join(
-    item.value for item in ArtifactRelationshipType
-)
+ARTIFACT_RELATIONSHIP_TYPE_VALUES = "', '".join(item.value for item in ArtifactRelationshipType)
 ARTIFACT_INVALIDATION_REASON_CODE_VALUES = "', '".join(
     item.value for item in ArtifactInvalidationReasonCode
 )

@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy import (
     CheckConstraint,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -187,8 +186,12 @@ class BacktestExperimentCohort(Base):
     )
     average_max_adverse_pips: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
     average_net_pips: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
-    average_max_favorable_ticks: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
-    average_max_adverse_ticks: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
+    average_max_favorable_ticks: Mapped[Decimal | None] = mapped_column(
+        Numeric(24, 10), nullable=True
+    )
+    average_max_adverse_ticks: Mapped[Decimal | None] = mapped_column(
+        Numeric(24, 10), nullable=True
+    )
     average_net_ticks: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
     cohort_label: Mapped[str] = mapped_column(String(40), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)

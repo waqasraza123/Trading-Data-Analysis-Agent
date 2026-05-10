@@ -574,11 +574,7 @@ class ProviderPollingService:
             )
 
     def safe_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
-        return {
-            key: value
-            for key, value in metadata.items()
-            if not key_contains_secret(key)
-        }
+        return {key: value for key, value in metadata.items() if not key_contains_secret(key)}
 
     def final_status(
         self,

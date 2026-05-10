@@ -47,9 +47,7 @@ def calculate_candle_quality(
     if expected_set:
         quality_score = Decimal(len(final_timestamps)) / Decimal(len(expected_set))
     latest_expected = max(expected_set) if expected_set else None
-    has_partial_latest_candle = (
-        latest_expected in partial_timestamps if latest_expected else False
-    )
+    has_partial_latest_candle = latest_expected in partial_timestamps if latest_expected else False
     return CandleQualityReport(
         expected_candles=len(expected_set),
         available_final_candles=len(final_timestamps),

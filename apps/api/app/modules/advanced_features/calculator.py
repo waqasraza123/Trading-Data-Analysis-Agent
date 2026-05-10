@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
 
 from app.modules.advanced_features.pressure import (
     calculate_wick_pressure,
@@ -61,7 +60,8 @@ class AdvancedFeatureCalculator:
         warnings = self.warnings(payload)
         if len(candles) < payload.settings.min_candle_count:
             warnings.append(
-                f"Advanced feature pack expected at least {payload.settings.min_candle_count} final candles"
+                "Advanced feature pack expected at least "
+                f"{payload.settings.min_candle_count} final candles"
             )
         impulse = self.calculate_impulse(candles, payload.settings)
         correction = self.calculate_correction(candles)
@@ -246,8 +246,8 @@ class AdvancedFeatureCalculator:
         last = recent[-1]
         upper_rejection = upper_wick_ratio(last) >= settings.wick_pressure_threshold
         lower_rejection = lower_wick_ratio(last) >= settings.wick_pressure_threshold
-        body_expansion_then_wick_rejection = (
-            bodies[0] < bodies[1] <= bodies[2] and (upper_rejection or lower_rejection)
+        body_expansion_then_wick_rejection = bodies[0] < bodies[1] <= bodies[2] and (
+            upper_rejection or lower_rejection
         )
         decreasing_body_sequence = bodies[0] > bodies[1] > bodies[2]
         direction = exhaustion_direction(upper_rejection, lower_rejection)
@@ -463,7 +463,7 @@ def decimal_string(value: Decimal) -> str:
     return str(value.quantize(FOUR_PLACES))
 
 
-def safe_json(value: Any) -> Any:
+def safe_json(value: object) -> object:
     if isinstance(value, Decimal):
         return str(value)
     if isinstance(value, dict):

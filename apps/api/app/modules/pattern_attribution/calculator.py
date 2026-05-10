@@ -120,12 +120,7 @@ def calculate_group(
     no_follow_count = no_follow_through_count(observations)
     insufficient_count = count_outcome(observations, OutcomeLabel.INSUFFICIENT_DATA.value)
     candidate_count = len(observations)
-    outcome_count = (
-        continuation_count
-        + partial_count
-        + no_follow_count
-        + reversal_count
-    )
+    outcome_count = continuation_count + partial_count + no_follow_count + reversal_count
     continuation_rate = optional_rate(continuation_count + partial_count, outcome_count)
     reversal_rate = optional_rate(reversal_count, outcome_count)
     no_follow_rate = optional_rate(no_follow_count, outcome_count)
@@ -303,12 +298,15 @@ def is_blocker_pattern(pattern_type: str) -> bool:
 def no_follow_through_count(observations: list[CandidateAttributionObservation]) -> int:
     count = 0
     for observation in observations:
-        if observation.outcome_label == OutcomeLabel.NO_FOLLOW_THROUGH.value:
-            count += 1
-        elif observation.behavior == "blocked" and observation.outcome_label in {
-            OutcomeLabel.SIDEWAYS_AFTER_SIGNAL.value,
-            OutcomeLabel.NOT_DIRECTIONAL.value,
-        }:
+        if (
+            observation.outcome_label == OutcomeLabel.NO_FOLLOW_THROUGH.value
+            or observation.behavior == "blocked"
+            and observation.outcome_label
+            in {
+                OutcomeLabel.SIDEWAYS_AFTER_SIGNAL.value,
+                OutcomeLabel.NOT_DIRECTIONAL.value,
+            }
+        ):
             count += 1
     return count
 

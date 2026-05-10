@@ -125,10 +125,14 @@ def cohort_from_rows(
             [outcome.net_ticks for outcome in evaluated_outcomes]
         ),
         cohort_label=label,
-        summary=cohort_summary(label, sample_size, evaluated_count, continuation_rate, reversal_rate),
+        summary=cohort_summary(
+            label, sample_size, evaluated_count, continuation_rate, reversal_rate
+        ),
         metadata_json={
             "minimumSampleSize": minimum_sample_size,
-            "followThroughObservationRate": str(rate(continuation_count + partial_count, evaluated_count)),
+            "followThroughObservationRate": str(
+                rate(continuation_count + partial_count, evaluated_count)
+            ),
         },
     )
 
@@ -200,7 +204,8 @@ def cohort_summary(
 ) -> str:
     return (
         f"{label} cohort with {sample_size} stored outcomes, {evaluated_count} evaluated outcomes, "
-        f"{continuation_rate:.2%} continuation observations, and {reversal_rate:.2%} reversal observations."
+        f"{continuation_rate:.2%} continuation observations, and "
+        f"{reversal_rate:.2%} reversal observations."
     )
 
 

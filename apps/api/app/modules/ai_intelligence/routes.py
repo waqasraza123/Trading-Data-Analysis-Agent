@@ -11,6 +11,8 @@ from app.modules.ai_intelligence.schemas import (
     AiIntelligenceRunRead,
 )
 from app.modules.ai_intelligence.service import AiIntelligenceService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/ai-intelligence", tags=["ai-intelligence"])
 
@@ -25,6 +27,7 @@ def get_ai_intelligence_service(
     "/signals/{signal_id}/analyze",
     response_model=AiIntelligenceResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def generate_signal_ai_intelligence(
     signal_id: UUID,

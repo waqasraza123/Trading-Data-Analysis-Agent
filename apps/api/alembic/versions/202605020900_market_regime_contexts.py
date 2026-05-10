@@ -60,8 +60,12 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "trend_regime in ('uptrend', 'downtrend', 'sideways', 'mixed', 'unclear')",
             name="ck_market_regime_contexts_market_regime_trend_allowed",
@@ -133,7 +137,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_market_regime_contexts_range_regime", table_name="market_regime_contexts")
-    op.drop_index("ix_market_regime_contexts_volatility_regime", table_name="market_regime_contexts")
+    op.drop_index(
+        "ix_market_regime_contexts_volatility_regime", table_name="market_regime_contexts"
+    )
     op.drop_index("ix_market_regime_contexts_trend_regime", table_name="market_regime_contexts")
     op.drop_index("ix_market_regime_contexts_signal_id", table_name="market_regime_contexts")
     op.drop_index("ix_market_regime_contexts_analysis_run_id", table_name="market_regime_contexts")

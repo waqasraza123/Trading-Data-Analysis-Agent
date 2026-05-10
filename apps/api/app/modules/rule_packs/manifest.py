@@ -40,9 +40,7 @@ def build_strategy_profile_snapshot(
 ) -> dict[str, object]:
     if signal is not None and signal.strategy_profile_snapshot_json is not None:
         return {
-            "selectedStrategyProfile": normalize_json_object(
-                signal.strategy_profile_snapshot_json
-            )
+            "selectedStrategyProfile": normalize_json_object(signal.strategy_profile_snapshot_json)
         }
     rule_set_snapshot = analysis_run.rule_set_snapshot_json or {}
     strategy_profile_snapshot = rule_set_snapshot.get("strategyProfileSnapshot")

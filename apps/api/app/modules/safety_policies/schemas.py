@@ -56,10 +56,16 @@ class SafetyPolicyRules(BaseModel):
     blocked_trading_actions: list[str] = Field(default_factory=list, alias="blockedTradingActions")
     unsafe_direct_phrases: list[str] = Field(default_factory=list, alias="unsafeDirectPhrases")
     causation_phrases: list[str] = Field(default_factory=list, alias="causationPhrases")
-    invented_evidence_phrases: list[str] = Field(default_factory=list, alias="inventedEvidencePhrases")
+    invented_evidence_phrases: list[str] = Field(
+        default_factory=list, alias="inventedEvidencePhrases"
+    )
     secret_keys: list[str] = Field(default_factory=list, alias="secretKeys")
-    prohibited_output_claims: list[str] = Field(default_factory=list, alias="prohibitedOutputClaims")
-    provider_payload_exposure_keys: list[str] = Field(default_factory=list, alias="providerPayloadExposureKeys")
+    prohibited_output_claims: list[str] = Field(
+        default_factory=list, alias="prohibitedOutputClaims"
+    )
+    provider_payload_exposure_keys: list[str] = Field(
+        default_factory=list, alias="providerPayloadExposureKeys"
+    )
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -123,6 +129,8 @@ class SafetyEvaluationResponse(BaseModel):
     safety_status: SafetyStatus = Field(alias="safetyStatus")
     findings: list[SafetyFinding] = Field(default_factory=list)
     input_summary_json: dict[str, Any] = Field(default_factory=dict, alias="inputSummaryJson")
-    redacted_output_json: dict[str, Any] | list[Any] | str | int | float | bool | None = Field(default=None, alias="redactedOutputJson")
+    redacted_output_json: dict[str, Any] | list[Any] | str | int | float | bool | None = Field(
+        default=None, alias="redactedOutputJson"
+    )
 
     model_config = ConfigDict(populate_by_name=True)

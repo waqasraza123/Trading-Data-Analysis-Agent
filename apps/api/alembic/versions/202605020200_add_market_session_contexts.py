@@ -1,15 +1,17 @@
 """add market session contexts
 
 Revision ID: 202605020200
-Revises: 202605020100_operator_review_queue, 202605020110_intelligence_metric_snapshots, 202605020120_artifact_graph
+Revises: 202605020100_operator_review_queue,
+202605020110_intelligence_metric_snapshots, 202605020120_artifact_graph
 Create Date: 2026-05-02 02:00:00.000000
 """
 
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605020200"
 down_revision: str | Sequence[str] | None = (

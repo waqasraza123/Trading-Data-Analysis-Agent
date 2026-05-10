@@ -33,7 +33,9 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("cohort_dimensions_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "cohort_dimensions_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("horizons_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("minimum_sample_size", sa.Integer(), nullable=False),
         sa.Column("signal_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
@@ -41,8 +43,12 @@ def upgrade() -> None:
         sa.Column("cohort_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
         sa.Column("summary", sa.Text(), server_default="", nullable=False),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "minimum_sample_size > 0",
             name=op.f(
@@ -51,15 +57,11 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "signal_count >= 0 and outcome_count >= 0 and cohort_count >= 0",
-            name=op.f(
-                "ck_backtest_experiment_runs_backtest_experiment_runs_counts_non_negative"
-            ),
+            name=op.f("ck_backtest_experiment_runs_backtest_experiment_runs_counts_non_negative"),
         ),
         sa.CheckConstraint(
             "status in ('pending', 'completed', 'completed_with_warnings', 'failed')",
-            name=op.f(
-                "ck_backtest_experiment_runs_backtest_experiment_runs_status_allowed"
-            ),
+            name=op.f("ck_backtest_experiment_runs_backtest_experiment_runs_status_allowed"),
         ),
         sa.ForeignKeyConstraint(
             ["workspace_id"],
@@ -134,21 +136,19 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "cohort_label in ('strong_follow_through', 'mixed_behavior', "
             "'reversal_prone', 'low_sample', 'insufficient_data', 'neutral')",
-            name=op.f(
-                "ck_backtest_experiment_cohorts_backtest_experiment_cohorts_label_allowed"
-            ),
+            name=op.f("ck_backtest_experiment_cohorts_backtest_experiment_cohorts_label_allowed"),
         ),
         sa.CheckConstraint(
             "continuation_rate >= 0 and continuation_rate <= 1 and reversal_rate >= 0 "
             "and reversal_rate <= 1 and no_follow_through_rate >= 0 "
             "and no_follow_through_rate <= 1",
-            name=op.f(
-                "ck_backtest_experiment_cohorts_backtest_experiment_cohorts_rates_range"
-            ),
+            name=op.f("ck_backtest_experiment_cohorts_backtest_experiment_cohorts_rates_range"),
         ),
         sa.CheckConstraint(
             "horizon_minutes > 0",
@@ -167,9 +167,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["experiment_run_id"],
             ["backtest_experiment_runs.id"],
-            name=op.f(
-                "fk_backtest_experiment_cohorts_experiment_run_id_backtest_experiment_runs"
-            ),
+            name=op.f("fk_backtest_experiment_cohorts_experiment_run_id_backtest_experiment_runs"),
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(

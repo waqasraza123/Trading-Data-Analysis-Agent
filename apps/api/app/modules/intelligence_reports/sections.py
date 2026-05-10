@@ -158,11 +158,7 @@ def sanitize_text(value: str) -> str:
         while phrase in lowered:
             start = lowered.index(phrase)
             end = start + len(phrase)
-            sanitized = (
-                sanitized[:start]
-                + "[redacted unsafe trading language]"
-                + sanitized[end:]
-            )
+            sanitized = sanitized[:start] + "[redacted unsafe trading language]" + sanitized[end:]
             lowered = sanitized.lower()
     return sanitized
 

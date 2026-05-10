@@ -122,7 +122,9 @@ class ScenarioOutcomeService:
                     force_recompute=force_recompute,
                 )
                 outcomes.append(outcome)
-        return ReasoningRunScenarioOutcomesRead(reasoning_run_id=reasoning_run_id, outcomes=outcomes)
+        return ReasoningRunScenarioOutcomesRead(
+            reasoning_run_id=reasoning_run_id, outcomes=outcomes
+        )
 
     async def get_hypothesis_outcomes(
         self,
@@ -132,7 +134,9 @@ class ScenarioOutcomeService:
         outcomes = await self.repository.list_hypothesis_outcomes(reasoning_run_id)
         return ReasoningRunScenarioOutcomesRead(
             reasoning_run_id=reasoning_run_id,
-            outcomes=[ScenarioHypothesisOutcomeRead.model_validate(outcome) for outcome in outcomes],
+            outcomes=[
+                ScenarioHypothesisOutcomeRead.model_validate(outcome) for outcome in outcomes
+            ],
         )
 
     async def summarize_scenario_outcomes(
@@ -160,9 +164,7 @@ class ScenarioOutcomeService:
                 if outcome.evaluation_status == ScenarioOutcomeEvaluationStatus.EVALUATED
             )
             run.supported_count = counts[ScenarioOutcomeSupportLabel.SUPPORTED]
-            run.partially_supported_count = counts[
-                ScenarioOutcomeSupportLabel.PARTIALLY_SUPPORTED
-            ]
+            run.partially_supported_count = counts[ScenarioOutcomeSupportLabel.PARTIALLY_SUPPORTED]
             run.contradicted_count = counts[ScenarioOutcomeSupportLabel.CONTRADICTED]
             run.inconclusive_count = counts[ScenarioOutcomeSupportLabel.INCONCLUSIVE]
             run.status = (

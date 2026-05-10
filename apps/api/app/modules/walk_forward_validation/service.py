@@ -67,7 +67,9 @@ class WalkForwardValidationService:
             }
             if resolved_start is None or resolved_end is None:
                 run.status = WalkForwardValidationRunStatus.COMPLETED_WITH_WARNINGS.value
-                run.summary = "No stored signal outcomes matched the walk-forward validation filters."
+                run.summary = (
+                    "No stored signal outcomes matched the walk-forward validation filters."
+                )
                 await self.repository.update_run(run)
                 await self.session.commit()
                 return run
@@ -255,11 +257,7 @@ def comparison_model(
 
 
 def evaluated_source_rows(rows: list[WalkForwardOutcomeRow]) -> list[WalkForwardOutcomeRow]:
-    return [
-        row
-        for row in rows
-        if row.evaluation_status == OutcomeEvaluationStatus.EVALUATED.value
-    ]
+    return [row for row in rows if row.evaluation_status == OutcomeEvaluationStatus.EVALUATED.value]
 
 
 def validation_status(
@@ -289,7 +287,9 @@ def validation_summary(
     if evaluated_outcome_count == 0:
         return "No evaluated stored outcomes were available for walk-forward validation."
     low_sample_count = sum(
-        1 for result in window_results if result.stability_label == WalkForwardStabilityLabel.LOW_SAMPLE
+        1
+        for result in window_results
+        if result.stability_label == WalkForwardStabilityLabel.LOW_SAMPLE
     )
     insufficient_count = sum(
         1
@@ -302,19 +302,16 @@ def validation_summary(
         f"Validated {evaluated_outcome_count} evaluated stored outcomes from "
         f"{evaluated_signal_count} signals across {window_count} walk-forward windows. "
         f"Low-sample windows: {low_sample_count}. Insufficient-data windows: {insufficient_count}. "
-        f"Degradation comparisons: {degradation_count}. Improvement comparisons: {improvement_count}."
+        f"Degradation comparisons: {degradation_count}. "
+        f"Improvement comparisons: {improvement_count}."
     )
 
 
 def json_safe_mapping(values: dict[str, Any]) -> dict[str, object]:
-    return {
-        str(key): json_safe_value(value)
-        for key, value in values.items()
-        if value is not None
-    }
+    return {str(key): json_safe_value(value) for key, value in values.items() if value is not None}
 
 
-def json_safe_value(value: Any) -> object:
+def json_safe_value(value: object) -> object:
     if isinstance(value, Decimal):
         return str(value)
     if isinstance(value, datetime):

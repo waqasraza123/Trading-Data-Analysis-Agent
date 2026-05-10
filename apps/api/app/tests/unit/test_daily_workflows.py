@@ -29,18 +29,27 @@ def test_provider_polling_requires_request_and_setting() -> None:
     disabled_settings = Settings(_env_file=None, daily_workflow_enable_provider_polling=False)
     enabled_settings = Settings(_env_file=None, daily_workflow_enable_provider_polling=True)
 
-    assert should_create_provider_polling_requests(
-        DailyWorkflowOptions(allow_provider_polling=True),
-        disabled_settings,
-    ) is False
-    assert should_create_provider_polling_requests(
-        DailyWorkflowOptions(allow_provider_polling=False),
-        enabled_settings,
-    ) is False
-    assert should_create_provider_polling_requests(
-        DailyWorkflowOptions(allow_provider_polling=True),
-        enabled_settings,
-    ) is True
+    assert (
+        should_create_provider_polling_requests(
+            DailyWorkflowOptions(allow_provider_polling=True),
+            disabled_settings,
+        )
+        is False
+    )
+    assert (
+        should_create_provider_polling_requests(
+            DailyWorkflowOptions(allow_provider_polling=False),
+            enabled_settings,
+        )
+        is False
+    )
+    assert (
+        should_create_provider_polling_requests(
+            DailyWorkflowOptions(allow_provider_polling=True),
+            enabled_settings,
+        )
+        is True
+    )
 
 
 def test_watchlist_scan_requires_watchlist_id() -> None:

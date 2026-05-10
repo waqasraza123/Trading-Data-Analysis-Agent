@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import database_session
 from app.modules.engine_versions.schemas import EngineVersionRead, EngineVersionSeedRead
 from app.modules.engine_versions.service import EngineVersionService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/engine-versions", tags=["engine-versions"])
 
@@ -33,7 +35,12 @@ async def list_engine_versions_by_name(
     return [EngineVersionRead.model_validate(version) for version in versions]
 
 
-@router.post("/seed", response_model=EngineVersionSeedRead, status_code=status.HTTP_200_OK)
+@router.post(
+    "/seed",
+    response_model=EngineVersionSeedRead,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def seed_engine_versions(
     service: Annotated[EngineVersionService, Depends(get_engine_version_service)],
 ) -> EngineVersionSeedRead:

@@ -73,7 +73,9 @@ class EventStudyRepository:
         else:
             event_asset = normalized_token(event.asset)
             event_currency = normalized_token(event.currency)
-            relevance_tokens = {token for token in {event_asset, event_currency} if token is not None}
+            relevance_tokens = {
+                token for token in {event_asset, event_currency} if token is not None
+            }
             if not relevance_tokens:
                 return []
             statement = statement.where(

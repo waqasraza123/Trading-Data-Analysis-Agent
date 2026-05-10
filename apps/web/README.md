@@ -198,14 +198,30 @@ NEXT_PUBLIC_AUTH_MODE=dev
 NEXT_PUBLIC_AUTH_DEV_USER_ID=
 NEXT_PUBLIC_AUTH_DEV_WORKSPACE_ID=
 NEXT_PUBLIC_AUTH_BEARER_TOKEN_STORAGE_KEY=
+WEB_API_PROXY_BASE_URL=http://127.0.0.1:8000
+WEB_API_PROXY_ADMIN_API_KEY=
+WEB_API_PROXY_API_KEY_HEADER=x-api-key
 ```
 
 The API client sends `x-user-id` and `x-workspace-id` in dev mode when those public values are set.
 For JWT/mixed deployments, the client can read a bearer token from the configured browser storage
 key. Only public frontend configuration belongs in this file. Backend secrets, API keys, database
 URLs, and worker credentials must stay in backend environment files.
+
+Browser-initiated `POST`, `PATCH`, and `DELETE` calls go through the same-origin Next.js route
+`/api/backend/{path}`. That server-side proxy forwards the request to `WEB_API_PROXY_BASE_URL`
+and, when configured, attaches `WEB_API_PROXY_ADMIN_API_KEY` using
+`WEB_API_PROXY_API_KEY_HEADER` without exposing the key to browser JavaScript. For local or staging
+FastAPI runs with `AUTH_ENABLED=true` and the legacy admin API-key guard, set
+`WEB_API_PROXY_ADMIN_API_KEY` to the backend admin key. Production user-facing deployments should
+prefer a real session/JWT identity provider; keep the admin-key proxy limited to trusted local or
+staging environments.
+
 When building the Docker production image, pass `NEXT_PUBLIC_API_BASE_URL` as a build argument so
-browser code points at the public API origin.
+browser code points at the public API origin. Pass `WEB_API_PROXY_BASE_URL`,
+`WEB_API_PROXY_ADMIN_API_KEY`, and `WEB_API_PROXY_API_KEY_HEADER` as runtime server environment
+variables for the standalone Next.js server when mutating web actions must reach an
+`AUTH_ENABLED=true` backend through the server-side proxy.
 
 ## Run
 

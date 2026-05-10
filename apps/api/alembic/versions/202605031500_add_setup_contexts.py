@@ -8,8 +8,9 @@ Create Date: 2026-05-03 15:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605031500_setup_contexts"
 down_revision: str | Sequence[str] | None = (
@@ -130,7 +131,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["symbol_id"], ["symbols.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("signal_id", "context_version", name="uq_setup_contexts_signal_version"),
+        sa.UniqueConstraint(
+            "signal_id", "context_version", name="uq_setup_contexts_signal_version"
+        ),
     )
     op.create_index(
         "ix_setup_contexts_workspace_symbol_timeframe",

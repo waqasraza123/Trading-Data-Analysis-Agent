@@ -8,8 +8,9 @@ Create Date: 2026-05-02 14:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605021400"
 down_revision: str | Sequence[str] | None = "202605021330_provider_polling"
@@ -109,7 +110,8 @@ def upgrade() -> None:
             name="confidence_calibration_bins_horizon_positive",
         ),
         sa.CheckConstraint(
-            "bin_min >= 0 and bin_min <= 1 and bin_max >= 0 and bin_max <= 1 and bin_min <= bin_max",
+            "bin_min >= 0 and bin_min <= 1 and bin_max >= 0 and bin_max <= 1 "
+            "and bin_min <= bin_max",
             name="confidence_calibration_bins_bin_range",
         ),
         sa.CheckConstraint(

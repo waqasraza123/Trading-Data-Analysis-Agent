@@ -6,7 +6,6 @@ from app.core.errors import AppError
 from app.modules.candles.models import Candle
 from app.modules.candles.timeframes import Timeframe, normalize_timestamp, timeframe_duration
 
-
 SUPPORTED_AGGREGATION_PAIRS: set[tuple[Timeframe, Timeframe]] = {
     (Timeframe.ONE_MINUTE, Timeframe.FIVE_MINUTES),
     (Timeframe.ONE_MINUTE, Timeframe.FIFTEEN_MINUTES),
@@ -94,7 +93,9 @@ class TimeframeAggregator:
         window_candles = [
             candle
             for candle in candles
-            if window.base_start_time <= normalize_timestamp(candle.timestamp) <= window.base_end_time
+            if window.base_start_time
+            <= normalize_timestamp(candle.timestamp)
+            <= window.base_end_time
         ]
         by_timestamp = {
             normalize_timestamp(candle.timestamp): candle
@@ -124,7 +125,9 @@ class TimeframeAggregator:
     def completeness_score(self, expected_base_count: int, actual_base_count: int) -> Decimal:
         if expected_base_count == 0:
             return Decimal("0.00000")
-        return (Decimal(actual_base_count) / Decimal(expected_base_count)).quantize(Decimal("0.00001"))
+        return (Decimal(actual_base_count) / Decimal(expected_base_count)).quantize(
+            Decimal("0.00001")
+        )
 
     def sum_volume(self, candles: list[Candle]) -> Decimal | None:
         if any(candle.volume is None for candle in candles):

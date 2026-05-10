@@ -78,7 +78,6 @@ export function SetupReviewView({ data }: SetupReviewViewProps) {
           </AnimatedListItem>
           <AnimatedListItem as="section" style={motionRevealDensityStyle(4)}>
             <SetupJournalReviewPanel
-              apiBaseUrl={data.apiBaseUrl}
               workspaceId={workspaceId}
               signalId={data.signalId}
               model={model}

@@ -24,8 +24,7 @@ def resolve_conflicts(evaluations: list[CandidateEvaluation]) -> ConflictDecisio
             selected_evaluation=None,
             no_signal_reason="no_profile_candidates",
             summary=(
-                "No signal generated because no profile candidates passed "
-                "deterministic filters."
+                "No signal generated because no profile candidates passed deterministic filters."
             ),
             evidence=(
                 classifier_evidence(
@@ -74,8 +73,7 @@ def resolve_conflicts(evaluations: list[CandidateEvaluation]) -> ConflictDecisio
             evaluation=best,
             reason="chop_or_sideways_market",
             summary=(
-                "No directional signal generated because market conditions are "
-                "choppy or sideways."
+                "No directional signal generated because market conditions are choppy or sideways."
             ),
             message="Range/chop avoidance profile produced the strongest eligible candidate.",
         )
@@ -148,8 +146,7 @@ def chop_override(
             evaluation=best_chop,
             reason="chop_or_sideways_market",
             summary=(
-                "No directional signal generated because chop or sideways evidence "
-                "was strongest."
+                "No directional signal generated because chop or sideways evidence was strongest."
             ),
             message=(
                 "Range/chop candidate passed the avoidance profile without a stronger "
@@ -181,9 +178,7 @@ def opposing_directional_conflict(
     if best_bullish is None or best_bearish is None:
         return None
     stronger = (
-        best_bullish
-        if best_bullish.ranking_score >= best_bearish.ranking_score
-        else best_bearish
+        best_bullish if best_bullish.ranking_score >= best_bearish.ranking_score else best_bearish
     )
     weaker = best_bearish if stronger is best_bullish else best_bullish
     margin = profile_decimal(stronger, "opposing_bias_conflict_margin", Decimal("0.0800"))

@@ -13,7 +13,6 @@ from app.modules.data_retention.models import (
     DataRetentionTargetType,
 )
 
-
 DEFAULT_RETENTION_POLICY: dict[str, int] = {
     "importBatchRetentionDays": 365,
     "liveEventPayloadRetentionDays": 90,

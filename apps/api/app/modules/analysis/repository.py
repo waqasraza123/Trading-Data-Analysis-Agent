@@ -30,10 +30,7 @@ class AnalysisRepository:
         replayed_from_analysis_run_id: UUID | None = None,
     ) -> list[AnalysisRun]:
         statement: Select[tuple[AnalysisRun]] = (
-            select(AnalysisRun)
-            .order_by(AnalysisRun.created_at.desc())
-            .limit(limit)
-            .offset(offset)
+            select(AnalysisRun).order_by(AnalysisRun.created_at.desc()).limit(limit).offset(offset)
         )
         if workspace_id is not None:
             statement = statement.where(AnalysisRun.workspace_id == workspace_id)

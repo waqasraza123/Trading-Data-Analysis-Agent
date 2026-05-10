@@ -48,8 +48,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "status in ('pending', 'completed', 'completed_with_warnings', 'failed')",
             name=op.f("ck_event_study_runs_event_study_runs_status_allowed"),
@@ -122,7 +126,9 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "volatility_reaction in ('none', 'normal', 'elevated', 'spike', 'insufficient_data')",
             name=op.f("ck_event_study_results_event_study_results_volatility_reaction_allowed"),
@@ -148,7 +154,9 @@ def upgrade() -> None:
             "post_candle_count >= 0",
             name=op.f("ck_event_study_results_event_study_results_post_count_non_negative"),
         ),
-        sa.ForeignKeyConstraint(["event_study_run_id"], ["event_study_runs.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["event_study_run_id"], ["event_study_runs.id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["news_event_id"], ["news_events.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["source_id"], ["data_sources.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["symbol_id"], ["symbols.id"], ondelete="RESTRICT"),

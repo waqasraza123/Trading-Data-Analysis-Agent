@@ -177,8 +177,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "classification_status in ('signal', 'no_signal', 'unclear', "
-            "'insufficient_evidence')",
+            "classification_status in ('signal', 'no_signal', 'unclear', 'insufficient_evidence')",
             name="shadow_classification_results_status_allowed",
         ),
         sa.CheckConstraint(

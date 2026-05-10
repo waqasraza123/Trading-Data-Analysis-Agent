@@ -3,7 +3,17 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -131,7 +141,9 @@ class EventStudyResult(Base):
             name="event_study_results_data_quality_label_allowed",
         ),
         CheckConstraint("pre_candle_count >= 0", name="event_study_results_pre_count_non_negative"),
-        CheckConstraint("post_candle_count >= 0", name="event_study_results_post_count_non_negative"),
+        CheckConstraint(
+            "post_candle_count >= 0", name="event_study_results_post_count_non_negative"
+        ),
         Index(
             "ix_event_study_results_news_symbol_timeframe",
             "news_event_id",

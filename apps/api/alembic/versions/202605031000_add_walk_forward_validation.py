@@ -8,8 +8,9 @@ Create Date: 2026-05-03 10:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605031000_walk_forward_validation"
 down_revision: str | Sequence[str] | None = "202605021500_scalable_engines_merge"
@@ -172,8 +173,12 @@ def upgrade() -> None:
         sa.Column("horizon_minutes", sa.Integer(), nullable=False),
         sa.Column("compared_window_count", sa.Integer(), nullable=False),
         sa.Column("stability_score", sa.Numeric(precision=10, scale=6), nullable=False),
-        sa.Column("degradation_detected", sa.Boolean(), server_default=sa.text("false"), nullable=False),
-        sa.Column("improvement_detected", sa.Boolean(), server_default=sa.text("false"), nullable=False),
+        sa.Column(
+            "degradation_detected", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.Column(
+            "improvement_detected", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
         sa.Column("summary", sa.Text(), nullable=False),
         sa.Column(
             "metadata_json",

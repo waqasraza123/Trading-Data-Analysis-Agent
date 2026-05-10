@@ -13,18 +13,12 @@ def test_provider_health_freshness_uses_configured_thresholds() -> None:
     delayed_time = datetime.now(UTC) - timedelta(seconds=240)
     stale_time = datetime.now(UTC) - timedelta(seconds=420)
 
-    assert (
-        service.determine_freshness_label(fresh_time, "1m")
-        == ProviderHealthFreshnessLabel.FRESH
-    )
+    assert service.determine_freshness_label(fresh_time, "1m") == ProviderHealthFreshnessLabel.FRESH
     assert (
         service.determine_freshness_label(delayed_time, "1m")
         == ProviderHealthFreshnessLabel.DELAYED
     )
-    assert (
-        service.determine_freshness_label(stale_time, "1m")
-        == ProviderHealthFreshnessLabel.STALE
-    )
+    assert service.determine_freshness_label(stale_time, "1m") == ProviderHealthFreshnessLabel.STALE
 
 
 def test_provider_health_counts_consecutive_failures_until_success() -> None:

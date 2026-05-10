@@ -3,7 +3,6 @@ from decimal import Decimal, InvalidOperation
 
 from app.modules.strategy_profiles.seeds import DEFAULT_STRATEGY_PROFILES
 
-
 SUPPORTED_PATTERN_TYPES = {
     pattern
     for profile in DEFAULT_STRATEGY_PROFILES

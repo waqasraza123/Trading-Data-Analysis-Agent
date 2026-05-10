@@ -346,8 +346,7 @@ def build_outcome_item(context: SignalDigestOutcomeContext) -> SignalDigestDraft
         priority=SignalDigestPriority.NORMAL,
         title=sanitize_digest_text(f"{symbol_label} outcome update"),
         summary=sanitize_digest_text(
-            f"{symbol_label} completed a {outcome.horizon_minutes} minute outcome review: "
-            f"{label}."
+            f"{symbol_label} completed a {outcome.horizon_minutes} minute outcome review: {label}."
         ),
         tags=["outcome_update", outcome.outcome_label, outcome.timeframe],
         metadata={

@@ -35,7 +35,9 @@ class SafetyPolicySet(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     policy_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class SafetyPolicyEvaluation(Base):
@@ -57,6 +59,7 @@ class SafetyPolicyEvaluation(Base):
     safety_status: Mapped[str] = mapped_column(String(40), nullable=False)
     input_summary_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
     findings_json: Mapped[list] = mapped_column(JSONB, nullable=False)
-    redacted_output_json: Mapped[dict | list | str | int | float | bool | None] = mapped_column(JSONB, nullable=True)
+    redacted_output_json: Mapped[dict | list | str | int | float | bool | None] = mapped_column(
+        JSONB, nullable=True
+    )
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-

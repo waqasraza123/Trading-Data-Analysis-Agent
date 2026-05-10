@@ -62,7 +62,11 @@ async def list_providers(
     return await service.list_providers()
 
 
-@router.post("/providers/{provider}/test", response_model=EquityDataProviderTestRead)
+@router.post(
+    "/providers/{provider}/test",
+    response_model=EquityDataProviderTestRead,
+    dependencies=[Depends(require_permission(Permission.CREDENTIALS_ADMIN))],
+)
 async def test_provider(
     provider: str,
     payload: EquityDataProviderTestRequest,
@@ -189,11 +193,7 @@ async def get_operation(
     data = EquityDataOperationRead.model_validate(operation).model_dump(mode="python")
     return EquityDataOperationDetailRead.model_validate(
         data
-        | {
-            "recentErrors": [
-                EquityDataImportErrorRead.model_validate(error) for error in errors
-            ]
-        }
+        | {"recentErrors": [EquityDataImportErrorRead.model_validate(error) for error in errors]}
     )
 
 

@@ -11,6 +11,8 @@ from app.modules.explanation_comparison.schemas import (
     ExplanationComparisonResponse,
 )
 from app.modules.explanation_comparison.service import ExplanationComparisonService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["explanation-comparison"])
 
@@ -24,6 +26,7 @@ def get_explanation_comparison_service(
 @router.post(
     "/signals/{signal_id}/explanation-comparison",
     response_model=ExplanationComparisonResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def compare_signal_explanations(
     signal_id: UUID,

@@ -1,5 +1,140 @@
 # Current Session
 
+## GitHub Issue #10 Backend RBAC Route Coverage
+
+- Addressed GitHub issue #10 (`Audit RBAC dependency coverage across mutating backend routes`).
+- Added route-level `Depends(require_permission(...))` coverage to mutating backend route decorators that were missing
+  explicit RBAC guards across analysis, market data, runtime/admin, notification, journal, scanner, strategy profile,
+  and related intelligence modules.
+- Left seven intentional write-free validation/preview POST routes unguarded at route level and documented them as
+  explicit exemptions:
+  - `POST /chart-screenshot-runs/image/preview`;
+  - `POST /data-contracts/validate`;
+  - `POST /data-contracts/validate-source`;
+  - `POST /safety-policies/evaluate-action`;
+  - `POST /safety-policies/evaluate-payload`;
+  - `POST /safety-policies/evaluate-text`;
+  - `POST /state-machines/validate-transition`.
+- Updated `apps/api/docs/rbac-route-coverage.md` with the mutating route permission map and exemption table.
+- Added `apps/api/app/tests/unit/test_rbac_route_coverage.py`, which scans `app/modules/**/routes.py` and fails when a
+  new mutating route lacks `require_permission`, `require_admin`, or an explicit exemption.
+- Verification:
+  - source inventory reports `total=246 missing=0 exempt=7`;
+  - `cd apps/api && .venv/bin/pytest app/tests/unit/test_rbac_route_coverage.py -q` passes;
+  - `cd apps/api && .venv/bin/ruff check app/tests/unit/test_rbac_route_coverage.py app/modules/*/routes.py` passes;
+  - `cd apps/api && .venv/bin/ruff format --check app/tests/unit/test_rbac_route_coverage.py app/modules/*/routes.py`
+    passes.
+
+## GitHub Issue #9 Setup Detail Journal API Client
+
+- Addressed GitHub issue #9 (`Route setup-detail journal submission through the shared API client`).
+- Updated `apps/web/src/components/setup-detail/SetupJournalPanel.tsx` to submit journal entries via
+  `createJournalEntry` from `apps/web/src/lib/api/journal.ts` instead of constructing a direct browser `fetch`.
+- Removed the now-unused `apiBaseUrl` prop from the setup-detail and setup-review journal panel call chain.
+- The setup-detail journal create path now inherits shared API timeout, auth header, error normalization, and
+  browser mutation proxy behavior from `apps/web/src/lib/api/client.ts`.
+- Verification:
+  - `cd apps/web && npm run typecheck` passes;
+  - `cd apps/web && npm run lint` passes with the 4 pre-existing unused-symbol warnings.
+
+## GitHub Issue #8 Web Mutation Auth Proxy
+
+- Addressed GitHub issue #8 (`Make frontend mutating API calls compatible with AUTH_ENABLED=true`).
+- Added server-only Next.js mutation proxy at `apps/web/app/api/backend/[...path]/route.ts`.
+- Browser-initiated `POST`, `PATCH`, `DELETE`, and form POST calls from the shared web API client now use the
+  same-origin proxy instead of calling the backend origin directly.
+- The proxy forwards to `WEB_API_PROXY_BASE_URL` and attaches `WEB_API_PROXY_ADMIN_API_KEY` using
+  `WEB_API_PROXY_API_KEY_HEADER`, with fallback support for backend-style `ADMIN_API_KEY` and
+  `API_KEY_HEADER_NAME`.
+- Kept `NEXT_PUBLIC_*` env vars public-only; server API keys are documented as server runtime env only.
+- Updated `apps/web/.env.example` and `apps/web/README.md` with the local/staging auth path and production caveat.
+- Verification:
+  - `cd apps/web && npm run lint` passes with the 4 pre-existing unused-symbol warnings;
+  - `cd apps/web && npm run build` passes and includes `ƒ /api/backend/[...path]`;
+  - `cd apps/web && npm run typecheck` passes after build-generated `.next/types` settle;
+  - local runtime smoke with a mock backend requiring `x-api-key` returned HTTP 200 through
+    `POST /api/backend/onboarding/actions` when `WEB_API_PROXY_ADMIN_API_KEY=proxy-secret`.
+
+## GitHub Issue #7 Data Contract Schema Warning
+
+- Addressed GitHub issue #7 (`Resolve DataContractRead schema_json Pydantic shadow warning`).
+- Updated `apps/api/app/modules/data_contracts/schemas.py` so `DataContractRead` uses internal field
+  `schema_definition` with `schema_json` validation and serialization aliases.
+- Preserved the external API response contract: `model_dump(by_alias=True)` still emits `schema_json`.
+- Added focused serialization coverage in `apps/api/app/tests/test_data_contract_validators.py`.
+- Verification:
+  - `cd apps/api && .venv/bin/pytest app/tests/test_data_contract_validators.py -q` passes with 4 tests;
+  - `cd apps/api && .venv/bin/pytest --collect-only -q` collects 449 tests with no Pydantic shadow warning;
+  - `cd apps/api && .venv/bin/ruff check app/modules/data_contracts/schemas.py app/tests/test_data_contract_validators.py` passes;
+  - `cd apps/api && .venv/bin/pytest -q` passes with 399 passed and 50 skipped, with no Pydantic shadow warning.
+
+## GitHub Issue #6 Pytest Top-Level Tests
+
+- Addressed GitHub issue #6 (`Include top-level apps/api/tests files in default pytest collection`).
+- Updated `apps/api/pyproject.toml` pytest `testpaths` from `["app/tests"]` to `["app/tests", "tests"]`.
+- Confirmed API CI uses plain `pytest`, so the full default collection now includes the top-level tests.
+- Verification:
+  - before the change, `cd apps/api && .venv/bin/pytest --collect-only -q` collected 436 tests and omitted the top-level `tests/*.py` modules;
+  - after the change, `cd apps/api && .venv/bin/pytest --collect-only -q` collected 448 tests and included `tests/test_profile_governance.py`, `tests/test_scenario_outcomes.py`, and `tests/test_timeframe_aggregation.py`;
+  - `cd apps/api && .venv/bin/pytest tests/test_profile_governance.py tests/test_scenario_outcomes.py tests/test_timeframe_aggregation.py -q` passes with 12 tests.
+
+## GitHub Issue Closure
+
+- Posted completion comments and closed completed issues as `completed`:
+  - #10 `Audit RBAC dependency coverage across mutating backend routes`;
+  - #9 `Route setup-detail journal submission through the shared API client`;
+  - #8 `Make frontend mutating API calls compatible with AUTH_ENABLED=true`;
+  - #7 `Resolve DataContractRead schema_json Pydantic shadow warning`;
+  - #6 `Include top-level apps/api/tests files in default pytest collection`;
+  - #3 `Fix backend Ruff failures so API CI can pass`;
+  - #4 `Add reproducible frontend dependency lockfile and restore web typecheck`;
+  - #5 `Add CI coverage for the Next.js web app`.
+
+## GitHub Issue #5 Web CI
+
+- Addressed GitHub issue #5 (`Add CI coverage for the Next.js web app`).
+- Added `.github/workflows/web-ci.yml` for push and pull request changes under `apps/web/**` and the workflow file.
+- CI uses Node 22 with npm cache keyed by `apps/web/package-lock.json`, then runs:
+  - `npm ci`;
+  - `npm run lint`;
+  - `npm run typecheck`;
+  - `npm run build`.
+- Fixed the production build blocker by wrapping `WorkspaceSelector` in a Suspense boundary inside
+  `apps/web/src/components/layout/WorkspaceSwitcher.tsx`, because `WorkspaceSelector` reads search params.
+- Verification:
+  - `cd apps/web && npm ci` passes;
+  - `cd apps/web && npm run lint` passes with 4 pre-existing unused-symbol warnings outside this issue's touched files;
+  - `cd apps/web && npm run typecheck` passes;
+  - `cd apps/web && npm run build` passes.
+
+## GitHub Issue #4 Web Lockfile and Typecheck
+
+- Addressed GitHub issue #4 acceptance in `apps/web`.
+- Confirmed `apps/web/package-lock.json` is committed and docs already point clean installs to npm/`npm ci`.
+- Fixed web typecheck blockers found during verification:
+  - corrected a mismatched JSX closing tag in `apps/web/src/components/setup-wizard/SetupWizardLayout.tsx`;
+  - broadened shared motion helper element/return/child/style typing in `apps/web/src/components/ui/motion.tsx`;
+  - made `cn` flatten nested class arrays in `apps/web/src/lib/ui/cn.ts`;
+  - typed demo metric tuples in `apps/web/src/components/demo/DemoRunButton.tsx`.
+- Verification:
+  - `cd apps/web && npm ci` passes;
+  - `cd apps/web && npm run typecheck` passes;
+  - `cd apps/web && npm run lint` passes with 4 pre-existing unused-symbol warnings outside the touched files.
+
+## GitHub Issue #3 Backend Ruff Cleanup
+
+- Addressed GitHub issue #3 (`Fix backend Ruff failures so API CI can pass`) for `apps/api`.
+- Ran Ruff safe fixes and formatting across `apps/api`, then fixed remaining lint categories manually:
+  - FastAPI `Query`/`Depends` defaults now use `Annotated` where needed;
+  - dynamic `Any` helper signatures were narrowed to concrete/object types;
+  - long generated/model/query strings were wrapped without behavior changes.
+- Verification:
+  - `cd apps/api && .venv/bin/ruff check .` passes;
+  - `cd apps/api && .venv/bin/ruff format --check .` passes;
+  - `cd apps/api && .venv/bin/pytest --collect-only -q` collects 436 tests and still emits the pre-existing `DataContractRead.schema_json` Pydantic warning.
+- Secondary check:
+  - `cd apps/api && .venv/bin/mypy app` was run after Ruff; it still fails with 306 existing type errors across 67 files, so typecheck remains a separate follow-up after the Ruff unblock.
+
 ## Go Market Worker Live Startup Validation Retryability
 
 - Updated `apps/go/market-worker/internal/live/service.go` so startup symbol/source lookup errors are retryable unless
@@ -9,6 +144,10 @@
 - Documented terminal-vs-retry classification in:
   - `apps/go/market-worker/README.md`
   - `apps/go/market-worker/OPERATIONS.md`
+- Added retryable startup lookup observability:
+  - `liveSubscriptionStartupLoadFailures` metric in `apps/go/market-worker/internal/health/metrics.go`;
+  - `live_subscription_symbol_source_load_retryable` log/metric path in `apps/go/market-worker/internal/live/service.go`;
+  - docs updates in `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md`.
 - Scope remains code and documentation only; no tests/builds executed.
 
 ## Go Market Worker Live Subscription Failure Determinism

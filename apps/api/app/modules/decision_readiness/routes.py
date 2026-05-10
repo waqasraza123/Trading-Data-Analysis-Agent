@@ -15,6 +15,8 @@ from app.modules.decision_readiness.schemas import (
     DecisionReadinessAssessmentResponse,
 )
 from app.modules.decision_readiness.service import DecisionReadinessService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/decision-readiness", tags=["decision-readiness"])
 
@@ -28,6 +30,7 @@ def get_decision_readiness_service(
 @router.post(
     "/signals/{signal_id}/assess",
     response_model=DecisionReadinessAssessmentResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def assess_signal_readiness(
     signal_id: UUID,
@@ -60,6 +63,7 @@ async def get_latest_signal_readiness(
 @router.post(
     "/analysis-runs/{analysis_run_id}/assess",
     response_model=DecisionReadinessAssessmentResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def assess_analysis_run_readiness(
     analysis_run_id: UUID,

@@ -85,10 +85,14 @@ class OperatorReviewRepository:
             statement = statement.where(
                 OperatorReviewItem.related_analysis_run_id == related_analysis_run_id
             )
-        statement = statement.order_by(
-            OperatorReviewItem.created_at.desc(),
-            OperatorReviewItem.id.desc(),
-        ).offset(offset).limit(limit)
+        statement = (
+            statement.order_by(
+                OperatorReviewItem.created_at.desc(),
+                OperatorReviewItem.id.desc(),
+            )
+            .offset(offset)
+            .limit(limit)
+        )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

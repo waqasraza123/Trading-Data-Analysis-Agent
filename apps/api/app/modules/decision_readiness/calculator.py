@@ -240,8 +240,7 @@ class DecisionReadinessCalculator:
             )
             next_steps.append("review_evidence")
         elif (
-            context.deterministic_explanation.safety_status
-            == ExplanationSafetyStatus.BLOCKED.value
+            context.deterministic_explanation.safety_status == ExplanationSafetyStatus.BLOCKED.value
         ):
             score = score - CRITICAL_BLOCKER_DEDUCTION
             required_checks.append(
@@ -540,9 +539,7 @@ class DecisionReadinessCalculator:
                         CRITICAL_BLOCKER_DEDUCTION,
                     )
                 )
-                blockers.append(
-                    blocker_item("critical_quality_finding", message, "critical")
-                )
+                blockers.append(blocker_item("critical_quality_finding", message, "critical"))
                 next_steps.append("run_quality_check")
             elif severity == "high":
                 score = score - HIGH_SEVERITY_DEDUCTION
@@ -605,9 +602,7 @@ class DecisionReadinessCalculator:
                         UNRESOLVED_HIGH_PRIORITY_REVIEW_DEDUCTION,
                     )
                 )
-                warnings.append(
-                    warning_item("unresolved_high_priority_review", message, "high")
-                )
+                warnings.append(warning_item("unresolved_high_priority_review", message, "high"))
                 next_steps.append("request_human_review")
         return score
 
@@ -711,9 +706,7 @@ def warning_item(code: str, message: str, severity: str) -> dict[str, object]:
 
 
 def has_backend_follow_up(hypothesis: ScenarioHypothesis) -> bool:
-    return any(
-        str(action) != "no_action" for action in hypothesis.suggested_backend_actions_json
-    )
+    return any(str(action) != "no_action" for action in hypothesis.suggested_backend_actions_json)
 
 
 def screenshot_requires_review(screenshot_run: ChartScreenshotRun) -> bool:
@@ -785,14 +778,10 @@ def build_summary(label: str) -> str:
             "and no blocking findings for operator consumption."
         )
     if label == DecisionReadinessLabel.BLOCKED.value:
-        return (
-            "Assessment is blocked because required traceability or safety evidence is missing."
-        )
+        return "Assessment is blocked because required traceability or safety evidence is missing."
     if label == DecisionReadinessLabel.REVIEW_RECOMMENDED.value:
         return (
             "Source has core readiness support, but review or follow-up context is still "
             "recommended."
         )
-    return (
-        "Source does not have enough persisted backend context for operator consumption."
-    )
+    return "Source does not have enough persisted backend context for operator consumption."

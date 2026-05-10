@@ -63,7 +63,9 @@ class CapabilityRepository:
                 )
             )
         statement = (
-            statement.order_by(IntelligenceCapability.category.asc(), IntelligenceCapability.key.asc())
+            statement.order_by(
+                IntelligenceCapability.category.asc(), IntelligenceCapability.key.asc()
+            )
             .limit(limit)
             .offset(offset)
         )

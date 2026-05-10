@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
 from app.modules.candles.timeframes import Timeframe
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.timeframe_aggregation.models import CandleAggregationRunStatus
 from app.modules.timeframe_aggregation.schemas import (
     CandleAggregationRunRead,
@@ -33,6 +35,7 @@ def get_timeframe_aggregation_service(
     "/timeframe-aggregation/runs",
     response_model=CandleAggregationRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def create_aggregation_run(
     payload: TimeframeAggregationRunCreate,
@@ -91,6 +94,7 @@ async def get_derived_candle_lineage(
     "/analysis-runs/{analysis_run_id}/multi-timeframe-context",
     response_model=MultiTimeframeContextRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_analysis_multi_timeframe_context(
     analysis_run_id: UUID,
@@ -122,6 +126,7 @@ async def get_analysis_multi_timeframe_context(
     "/signals/{signal_id}/multi-timeframe-context",
     response_model=MultiTimeframeContextRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def build_signal_multi_timeframe_context(
     signal_id: UUID,
@@ -137,7 +142,9 @@ async def build_signal_multi_timeframe_context(
     return MultiTimeframeContextRead.model_validate(context)
 
 
-@router.get("/signals/{signal_id}/multi-timeframe-context", response_model=MultiTimeframeContextRead)
+@router.get(
+    "/signals/{signal_id}/multi-timeframe-context", response_model=MultiTimeframeContextRead
+)
 async def get_signal_multi_timeframe_context(
     signal_id: UUID,
     service: Annotated[TimeframeAggregationService, Depends(get_timeframe_aggregation_service)],

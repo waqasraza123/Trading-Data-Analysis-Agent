@@ -61,9 +61,7 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "explanation_type in ('deterministic_signal', 'deterministic_no_signal')",
-            name=op.f(
-                "ck_deterministic_explanations_deterministic_explanation_type_allowed"
-            ),
+            name=op.f("ck_deterministic_explanations_deterministic_explanation_type_allowed"),
         ),
         sa.CheckConstraint(
             "safety_status in ('passed', 'blocked', 'fallback_used')",

@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.scenario_ensembles.schemas import (
     ScenarioConsensusResultRead,
     ScenarioEnsembleItemRead,
@@ -26,6 +28,7 @@ def get_scenario_ensemble_service(
 @router.post(
     "/signals/{signal_id}/scenario-ensemble",
     response_model=ScenarioEnsembleResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_signal_scenario_ensemble(
     signal_id: UUID,

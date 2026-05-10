@@ -42,7 +42,8 @@ class StrategyProfileDraft(Base):
     __tablename__ = "strategy_profile_drafts"
     __table_args__ = (
         CheckConstraint(
-            "status in ('draft', 'ready_for_review', 'approved', 'rejected', 'promoted', 'archived')",
+            "status in ('draft', 'ready_for_review', 'approved', 'rejected', "
+            "'promoted', 'archived')",
             name="strategy_profile_drafts_status_allowed",
         ),
         CheckConstraint(

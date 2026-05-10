@@ -171,8 +171,7 @@ class ShadowClassificationResult(Base):
     __tablename__ = "shadow_classification_results"
     __table_args__ = (
         CheckConstraint(
-            "classification_status in ('signal', 'no_signal', 'unclear', "
-            "'insufficient_evidence')",
+            "classification_status in ('signal', 'no_signal', 'unclear', 'insufficient_evidence')",
             name="shadow_classification_results_status_allowed",
         ),
         CheckConstraint(

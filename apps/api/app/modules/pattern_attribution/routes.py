@@ -11,6 +11,8 @@ from app.modules.pattern_attribution.schemas import (
     PatternAttributionRunRequest,
 )
 from app.modules.pattern_attribution.service import PatternAttributionService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/pattern-attribution", tags=["pattern-attribution"])
 
@@ -25,6 +27,7 @@ def get_pattern_attribution_service(
     "/run",
     response_model=PatternAttributionRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_pattern_attribution(
     payload: PatternAttributionRunRequest,

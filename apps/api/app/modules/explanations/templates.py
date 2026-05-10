@@ -29,8 +29,7 @@ NO_SIGNAL_REASON_MESSAGES: dict[str, str] = {
         "analysis run."
     ),
     "no_profile_candidates": (
-        "No signal was generated because no pattern candidate matched an active strategy "
-        "profile."
+        "No signal was generated because no pattern candidate matched an active strategy profile."
     ),
     "below_minimum_strength": (
         "No signal was generated because available candidates were below the configured "
@@ -52,8 +51,7 @@ NO_SIGNAL_REASON_MESSAGES: dict[str, str] = {
         "were stronger than directional candidates."
     ),
     "low_data_quality": (
-        "No signal was generated because candle data quality was below the configured "
-        "threshold."
+        "No signal was generated because candle data quality was below the configured threshold."
     ),
     "insufficient_evidence": (
         "No signal was generated because the available evidence was not strong enough for "
@@ -233,8 +231,7 @@ def build_risk_summary(risk_notes: list[SignalRiskNote]) -> str:
         return "No additional deterministic risk notes were attached to this signal."
     visible_notes = risk_notes[:6]
     entries = [
-        f"{note.message} Severity: {note.severity}. Code: {note.code}."
-        for note in visible_notes
+        f"{note.message} Severity: {note.severity}. Code: {note.code}." for note in visible_notes
     ]
     if len(risk_notes) > len(visible_notes):
         entries.append(f"{len(risk_notes) - len(visible_notes)} additional risk notes exist.")
@@ -298,73 +295,73 @@ def build_source_snapshot(
     return cast(
         dict[str, object],
         json_safe(
-                {
-                    "signal": {
-                        "id": signal.id,
-                        "analysisRunId": signal.analysis_run_id,
-                        "workspaceId": signal.workspace_id,
-                        "symbolId": signal.symbol_id,
-                        "timeframe": signal.timeframe,
-                        "classificationStatus": signal.classification_status,
-                        "bias": signal.bias,
-                        "patternType": signal.pattern_type,
-                        "confidenceScore": signal.confidence_score,
-                        "confidenceLabel": signal.confidence_label,
-                        "candidateStrength": signal.candidate_strength,
-                        "selectedPatternCandidateId": signal.selected_pattern_candidate_id,
-                        "pipsMoved": signal.pips_moved,
-                        "tickMoved": signal.tick_moved,
-                        "movementDirection": signal.movement_direction,
-                        "movementQuality": signal.movement_quality,
-                        "volatilityState": signal.volatility_state,
-                        "trendState": signal.trend_state,
-                        "rangeState": signal.range_state,
-                        "noSignalReason": signal.no_signal_reason,
-                    },
-                    "strategyProfile": signal.strategy_profile_snapshot_json,
-                    "featureSnapshot": snapshot_payload(
-                        feature_snapshot.id if feature_snapshot is not None else None,
-                        feature_snapshot.features_json if feature_snapshot is not None else None,
-                    ),
-                    "indicatorSnapshot": snapshot_payload(
-                        indicator_snapshot.id if indicator_snapshot is not None else None,
-                        (
-                            indicator_snapshot.indicators_json
-                            if indicator_snapshot is not None
-                            else None
-                        ),
-                    ),
-                    "confidenceComponents": [
-                        {
-                            "componentName": component.component_name,
-                            "componentScore": component.component_score,
-                            "componentWeight": component.component_weight,
-                            "weightedScore": component.weighted_score,
-                            "reason": component.reason,
-                        }
-                        for component in confidence_components
-                    ],
-                    "evidence": [
-                        {
-                            "evidenceType": item.evidence_type,
-                            "direction": item.direction,
-                            "message": item.message,
-                            "numericValue": item.numeric_value,
-                            "weight": item.weight,
-                            "metadata": item.metadata_json,
-                        }
-                        for item in evidence
-                    ],
-                    "riskNotes": [
-                        {
-                            "code": note.code,
-                            "message": note.message,
-                            "severity": note.severity,
-                            "metadata": note.metadata_json,
-                        }
-                        for note in risk_notes
-                    ],
+            {
+                "signal": {
+                    "id": signal.id,
+                    "analysisRunId": signal.analysis_run_id,
+                    "workspaceId": signal.workspace_id,
+                    "symbolId": signal.symbol_id,
+                    "timeframe": signal.timeframe,
+                    "classificationStatus": signal.classification_status,
+                    "bias": signal.bias,
+                    "patternType": signal.pattern_type,
+                    "confidenceScore": signal.confidence_score,
+                    "confidenceLabel": signal.confidence_label,
+                    "candidateStrength": signal.candidate_strength,
+                    "selectedPatternCandidateId": signal.selected_pattern_candidate_id,
+                    "pipsMoved": signal.pips_moved,
+                    "tickMoved": signal.tick_moved,
+                    "movementDirection": signal.movement_direction,
+                    "movementQuality": signal.movement_quality,
+                    "volatilityState": signal.volatility_state,
+                    "trendState": signal.trend_state,
+                    "rangeState": signal.range_state,
+                    "noSignalReason": signal.no_signal_reason,
                 },
+                "strategyProfile": signal.strategy_profile_snapshot_json,
+                "featureSnapshot": snapshot_payload(
+                    feature_snapshot.id if feature_snapshot is not None else None,
+                    feature_snapshot.features_json if feature_snapshot is not None else None,
+                ),
+                "indicatorSnapshot": snapshot_payload(
+                    indicator_snapshot.id if indicator_snapshot is not None else None,
+                    (
+                        indicator_snapshot.indicators_json
+                        if indicator_snapshot is not None
+                        else None
+                    ),
+                ),
+                "confidenceComponents": [
+                    {
+                        "componentName": component.component_name,
+                        "componentScore": component.component_score,
+                        "componentWeight": component.component_weight,
+                        "weightedScore": component.weighted_score,
+                        "reason": component.reason,
+                    }
+                    for component in confidence_components
+                ],
+                "evidence": [
+                    {
+                        "evidenceType": item.evidence_type,
+                        "direction": item.direction,
+                        "message": item.message,
+                        "numericValue": item.numeric_value,
+                        "weight": item.weight,
+                        "metadata": item.metadata_json,
+                    }
+                    for item in evidence
+                ],
+                "riskNotes": [
+                    {
+                        "code": note.code,
+                        "message": note.message,
+                        "severity": note.severity,
+                        "metadata": note.metadata_json,
+                    }
+                    for note in risk_notes
+                ],
+            },
         ),
     )
 

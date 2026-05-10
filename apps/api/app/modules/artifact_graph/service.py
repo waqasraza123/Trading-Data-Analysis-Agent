@@ -26,8 +26,8 @@ from app.modules.artifact_graph.schemas import (
     ArtifactRegisterRequest,
     ArtifactTraversalRead,
     DependencyLinkRequest,
-    DependencyRead,
     DependencyPathRead,
+    DependencyRead,
     MarkArtifactCurrentRequest,
 )
 
@@ -124,7 +124,10 @@ class ArtifactGraphService:
             artifact_record_id=payload.target_artifact_record_id,
             artifact_reference=payload.target_artifact,
         )
-        if source.workspace_id != target.workspace_id or source.workspace_id != payload.workspace_id:
+        if (
+            source.workspace_id != target.workspace_id
+            or source.workspace_id != payload.workspace_id
+        ):
             raise AppError(
                 422,
                 "dependency_workspace_mismatch",

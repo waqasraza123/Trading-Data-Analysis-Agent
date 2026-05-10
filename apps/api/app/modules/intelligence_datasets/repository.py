@@ -32,7 +32,9 @@ class IntelligenceDatasetRepository:
         await self.session.refresh(export)
         return export
 
-    async def list_exports(self, workspace_id: UUID, limit: int, offset: int) -> list[IntelligenceDatasetExport]:
+    async def list_exports(
+        self, workspace_id: UUID, limit: int, offset: int
+    ) -> list[IntelligenceDatasetExport]:
         statement: Select[tuple[IntelligenceDatasetExport]] = (
             select(IntelligenceDatasetExport)
             .where(IntelligenceDatasetExport.workspace_id == workspace_id)
@@ -46,7 +48,9 @@ class IntelligenceDatasetRepository:
     async def get_export(self, export_id: UUID) -> IntelligenceDatasetExport | None:
         return await self.session.get(IntelligenceDatasetExport, export_id)
 
-    async def list_items(self, export_id: UUID, limit: int, offset: int) -> list[IntelligenceDatasetExportItem]:
+    async def list_items(
+        self, export_id: UUID, limit: int, offset: int
+    ) -> list[IntelligenceDatasetExportItem]:
         statement: Select[tuple[IntelligenceDatasetExportItem]] = (
             select(IntelligenceDatasetExportItem)
             .where(IntelligenceDatasetExportItem.export_id == export_id)

@@ -14,6 +14,8 @@ from app.modules.historical_cases.schemas import (
     HistoricalCaseVectorRead,
 )
 from app.modules.historical_cases.service import HistoricalCaseService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["historical-cases"])
 
@@ -24,7 +26,11 @@ def get_historical_case_service(
     return HistoricalCaseService(session)
 
 
-@router.post("/signals/{signal_id}/historical-case-vector", response_model=HistoricalCaseVectorRead)
+@router.post(
+    "/signals/{signal_id}/historical-case-vector",
+    response_model=HistoricalCaseVectorRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def build_signal_historical_case_vector(
     signal_id: UUID,
     payload: HistoricalCaseVectorBuildRequest,
@@ -44,7 +50,11 @@ async def get_signal_historical_case_vector(
     return await service.get_case_vector(signal_id)
 
 
-@router.post("/signals/{signal_id}/historical-cases/search", response_model=HistoricalCaseSearchRead)
+@router.post(
+    "/signals/{signal_id}/historical-cases/search",
+    response_model=HistoricalCaseSearchRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def search_signal_historical_cases(
     signal_id: UUID,
     payload: HistoricalCaseSearchRequest,
@@ -60,6 +70,7 @@ async def search_signal_historical_cases(
 @router.post(
     "/analysis-runs/{analysis_run_id}/historical-cases/search",
     response_model=HistoricalCaseSearchRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def search_analysis_run_historical_cases(
     analysis_run_id: UUID,
@@ -73,7 +84,11 @@ async def search_analysis_run_historical_cases(
     )
 
 
-@router.post("/historical-cases/backfill", response_model=HistoricalCaseBackfillRead)
+@router.post(
+    "/historical-cases/backfill",
+    response_model=HistoricalCaseBackfillRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def backfill_historical_case_vectors(
     payload: HistoricalCaseBackfillRequest,
     service: Annotated[HistoricalCaseService, Depends(get_historical_case_service)],

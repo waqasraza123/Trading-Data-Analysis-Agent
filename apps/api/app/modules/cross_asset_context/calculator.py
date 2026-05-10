@@ -191,7 +191,7 @@ def pearson_correlation(left_values: list[float], right_values: list[float]) -> 
     right_mean = sum(right_values) / len(right_values)
     numerator = sum(
         (left - left_mean) * (right - right_mean)
-        for left, right in zip(left_values, right_values)
+        for left, right in zip(left_values, right_values, strict=False)
     )
     left_variance = sum((left - left_mean) ** 2 for left in left_values)
     right_variance = sum((right - right_mean) ** 2 for right in right_values)
@@ -204,15 +204,13 @@ def pearson_correlation(left_values: list[float], right_values: list[float]) -> 
 def directional_alignment_ratio(left_values: list[float], right_values: list[float]) -> float:
     directional_pairs = [
         (left, right)
-        for left, right in zip(left_values, right_values)
+        for left, right in zip(left_values, right_values, strict=False)
         if abs(left) > FLAT_MOVE_EPSILON or abs(right) > FLAT_MOVE_EPSILON
     ]
     if not directional_pairs:
         return 0.0
     aligned_count = sum(
-        1
-        for left, right in directional_pairs
-        if signed_direction(left) == signed_direction(right)
+        1 for left, right in directional_pairs if signed_direction(left) == signed_direction(right)
     )
     return aligned_count / len(directional_pairs)
 
@@ -220,15 +218,13 @@ def directional_alignment_ratio(left_values: list[float], right_values: list[flo
 def directional_conflict_ratio(left_values: list[float], right_values: list[float]) -> float:
     directional_pairs = [
         (left, right)
-        for left, right in zip(left_values, right_values)
+        for left, right in zip(left_values, right_values, strict=False)
         if abs(left) > FLAT_MOVE_EPSILON and abs(right) > FLAT_MOVE_EPSILON
     ]
     if not directional_pairs:
         return 0.0
     conflicting_count = sum(
-        1
-        for left, right in directional_pairs
-        if signed_direction(left) != signed_direction(right)
+        1 for left, right in directional_pairs if signed_direction(left) != signed_direction(right)
     )
     return conflicting_count / len(directional_pairs)
 

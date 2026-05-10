@@ -35,9 +35,9 @@ class ContextPackService:
         warnings = self.default_warnings()
         state = ContextPackRedactionState()
         limits = self.resolve_limits(resolved_options)
-        sections = await self.builders(limits, resolved_options, state, missing_sections, warnings).signal_sections(
-            signal
-        )
+        sections = await self.builders(
+            limits, resolved_options, state, missing_sections, warnings
+        ).signal_sections(signal)
         return self.context_pack(
             subject_type=ContextPackSubjectType.SIGNAL,
             subject_id=signal.id,
@@ -226,6 +226,7 @@ class ContextPackService:
     def default_warnings(self) -> list[str]:
         return [
             "Context packs are read-only bounded artifact snapshots.",
-            "Context packs do not execute actions, evaluate outcomes, call providers, or trigger LLM generation.",
+            "Context packs do not execute actions, evaluate outcomes, call providers, "
+            "or trigger LLM generation.",
             "Context packs are not financial advice and do not provide market-action instructions.",
         ]

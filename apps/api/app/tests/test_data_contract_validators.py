@@ -1,5 +1,10 @@
+from datetime import UTC, datetime
+from types import SimpleNamespace
+from uuid import uuid4
+
 from app.modules.data_contracts.models import DataContractValidationStatus
 from app.modules.data_contracts.registry import DEFAULT_DATA_CONTRACT_BY_KEY_VERSION
+from app.modules.data_contracts.schemas import DataContractRead
 from app.modules.data_contracts.validators import validate_payload_against_schema
 
 
@@ -60,3 +65,26 @@ def test_validate_payload_fails_missing_required_field() -> None:
 
     assert result.status == DataContractValidationStatus.FAILED
     assert result.errors[0]["code"] == "missing_required_field"
+
+
+def test_data_contract_read_serializes_schema_json_alias() -> None:
+    contract_id = uuid4()
+    now = datetime(2026, 5, 10, tzinfo=UTC)
+    contract = SimpleNamespace(
+        id=contract_id,
+        key="normalized_candle",
+        version="v1",
+        status="active",
+        description="Normalized candle contract",
+        schema_json={"type": "object", "required": ["open"]},
+        metadata_json={"owner": "tests"},
+        created_at=now,
+        updated_at=now,
+    )
+
+    result = DataContractRead.model_validate(contract)
+    payload = result.model_dump(by_alias=True)
+
+    assert result.schema_definition == {"type": "object", "required": ["open"]}
+    assert payload["schema_json"] == {"type": "object", "required": ["open"]}
+    assert "schema_definition" not in payload

@@ -170,6 +170,7 @@ class EquityDataProviderRequest(Base):
     created_at = created_at_column()
     updated_at = updated_at_column()
 
+
 class EquityDataOperation(Base):
     __tablename__ = "equity_data_operations"
     __table_args__ = (

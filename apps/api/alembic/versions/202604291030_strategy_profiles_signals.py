@@ -219,9 +219,7 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "minimum_candidate_strength >= 0 and minimum_candidate_strength <= 1",
-            name=op.f(
-                "ck_strategy_profiles_strategy_profile_minimum_candidate_strength_range"
-            ),
+            name=op.f("ck_strategy_profiles_strategy_profile_minimum_candidate_strength_range"),
         ),
         sa.CheckConstraint(
             "minimum_confidence >= 0 and minimum_confidence <= 1",
@@ -356,15 +354,11 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "component_score >= 0 and component_score <= 1",
-            name=op.f(
-                "ck_signal_confidence_components_signal_confidence_component_score_range"
-            ),
+            name=op.f("ck_signal_confidence_components_signal_confidence_component_score_range"),
         ),
         sa.CheckConstraint(
             "component_weight >= 0 and component_weight <= 1",
-            name=op.f(
-                "ck_signal_confidence_components_signal_confidence_component_weight_range"
-            ),
+            name=op.f("ck_signal_confidence_components_signal_confidence_component_weight_range"),
         ),
         sa.CheckConstraint(
             "weighted_score >= 0 and weighted_score <= 1",

@@ -137,7 +137,7 @@ def build_trend_hypothesis(
     directional_steps = max(upward_steps, downward_steps)
     consistency = Decimal(directional_steps) / Decimal(len(close_deltas))
     magnitude = min(abs(move_ratio) * Decimal("20"), Decimal("1"))
-    confidence = ((consistency * Decimal("0.60")) + (magnitude * Decimal("0.40")))
+    confidence = (consistency * Decimal("0.60")) + (magnitude * Decimal("0.40"))
     confidence = (confidence * extraction_confidence).quantize(
         Decimal("0.0001"),
         rounding=ROUND_HALF_UP,
@@ -487,12 +487,7 @@ def detect_chart_bounds(
 ) -> ChartImageBounds:
     full_bounds = ChartImageBounds(left=0, top=0, right=image.width - 1, bottom=image.height - 1)
     mask = build_foreground_mask(image, full_bounds, tuning)
-    active_points = [
-        (x, y)
-        for y in range(image.height)
-        for x in range(image.width)
-        if mask[y][x]
-    ]
+    active_points = [(x, y) for y in range(image.height) for x in range(image.width) if mask[y][x]]
     if not active_points:
         raise AppError(
             422,
@@ -546,10 +541,9 @@ def is_colored_candle(pixel: RgbPixel, tuning: ChartImageExtractionTuning) -> bo
 
 
 def matches_color_profile(pixel: RgbPixel, profile: ChartImageColorProfile) -> bool:
-    return (
-        pixel_within_tolerance(pixel, profile.bullish, profile.tolerance)
-        or pixel_within_tolerance(pixel, profile.bearish, profile.tolerance)
-    )
+    return pixel_within_tolerance(
+        pixel, profile.bullish, profile.tolerance
+    ) or pixel_within_tolerance(pixel, profile.bearish, profile.tolerance)
 
 
 def pixel_within_tolerance(
@@ -639,11 +633,7 @@ def group_active_columns(
             group_left = column
         previous = column
     groups.append((group_left, previous))
-    return [
-        (left, right)
-        for left, right in groups
-        if right - left + 1 >= tuning.min_cluster_width
-    ]
+    return [(left, right) for left, right in groups if right - left + 1 >= tuning.min_cluster_width]
 
 
 def build_pixel_cluster(
@@ -749,8 +739,7 @@ def densest_tick_y(
     low_y: int,
 ) -> int | None:
     row_counts = [
-        (sum(1 for x in columns if foreground_mask[y][x]), y)
-        for y in range(high_y, low_y + 1)
+        (sum(1 for x in columns if foreground_mask[y][x]), y) for y in range(high_y, low_y + 1)
     ]
     if not row_counts:
         return None

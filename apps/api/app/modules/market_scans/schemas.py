@@ -154,9 +154,8 @@ class ScheduledScanConfigCreate(ApiSchema):
         if self.scan_mode == ScheduledScanMode.WATCHLIST and self.watchlist_id is None:
             msg = "watchlist_id is required for watchlist scan mode"
             raise ValueError(msg)
-        if (
-            self.scan_mode == ScheduledScanMode.SINGLE_SYMBOL
-            and (self.symbol_id is None or self.timeframe is None)
+        if self.scan_mode == ScheduledScanMode.SINGLE_SYMBOL and (
+            self.symbol_id is None or self.timeframe is None
         ):
             msg = "symbol_id and timeframe are required for single_symbol scan mode"
             raise ValueError(msg)

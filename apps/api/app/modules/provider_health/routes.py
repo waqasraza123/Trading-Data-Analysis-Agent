@@ -106,9 +106,7 @@ async def refresh_provider_health_workspace(
         requested_limit=limit,
         refreshed_count=len(snapshots),
         skipped_count=skipped_count,
-        snapshots=[
-            ProviderHealthSnapshotRead.model_validate(snapshot) for snapshot in snapshots
-        ],
+        snapshots=[ProviderHealthSnapshotRead.model_validate(snapshot) for snapshot in snapshots],
     )
 
 

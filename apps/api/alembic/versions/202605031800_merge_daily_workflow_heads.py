@@ -1,7 +1,8 @@
 """merge daily workflow heads
 
 Revision ID: 202605031800_merge_daily_workflow_heads
-Revises: 202605031700_provider_health_snapshots, 202605031700_signal_priority_scores, 202605031700_preference_profiles
+Revises: 202605031700_provider_health_snapshots,
+202605031700_signal_priority_scores, 202605031700_preference_profiles
 Create Date: 2026-05-03 18:00:00.000000
 """
 

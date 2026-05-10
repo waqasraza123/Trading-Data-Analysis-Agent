@@ -57,7 +57,10 @@ class ScenarioOutcomeEvaluator:
                 matched_outcome_label=None,
                 matched_evidence=["Scenario was explicitly stored as insufficient_context."],
                 conflicting_evidence=[],
-                summary="Scenario outcome tracking is not applicable to insufficient-context hypotheses.",
+                summary=(
+                    "Scenario outcome tracking is not applicable to insufficient-context "
+                    "hypotheses."
+                ),
             )
         if payload.outcome is None:
             return ScenarioOutcomeEvaluationResult(
@@ -67,7 +70,10 @@ class ScenarioOutcomeEvaluator:
                 matched_outcome_label=None,
                 matched_evidence=[],
                 conflicting_evidence=["No stored signal outcome matched the requested horizon."],
-                summary="Scenario hypothesis could not be evaluated because no stored signal outcome exists.",
+                summary=(
+                    "Scenario hypothesis could not be evaluated because no stored signal "
+                    "outcome exists."
+                ),
             )
         if payload.outcome.evaluation_status != OutcomeEvaluationStatus.EVALUATED:
             return ScenarioOutcomeEvaluationResult(
@@ -77,7 +83,10 @@ class ScenarioOutcomeEvaluator:
                 matched_outcome_label=payload.outcome.outcome_label,
                 matched_evidence=[f"Stored outcome status is {payload.outcome.evaluation_status}."],
                 conflicting_evidence=[],
-                summary="Scenario hypothesis could not be evaluated because the stored outcome is not an evaluated outcome.",
+                summary=(
+                    "Scenario hypothesis could not be evaluated because the stored outcome "
+                    "is not an evaluated outcome."
+                ),
             )
         result = self.evaluate_outcome(payload)
         if (
@@ -190,7 +199,8 @@ class ScenarioOutcomeEvaluator:
                     "Stored outcome label is partial_follow_through, "
                     "which weakens a pure consolidation read."
                 ],
-                "Consolidation hypothesis was only partially supported because later movement had limited follow-through.",
+                "Consolidation hypothesis was only partially supported because later "
+                "movement had limited follow-through.",
             )
         if outcome_label in {OutcomeLabel.CONTINUATION, OutcomeLabel.REVERSAL}:
             return contradicted_result(
@@ -216,12 +226,14 @@ class ScenarioOutcomeEvaluator:
                 payload.outcome.outcome_label,
                 SUPPORTED_SCORE,
                 ["Stored outcome metadata indicates elevated volatility."],
-                "Volatility expansion hypothesis was supported by stored high-volatility outcome context.",
+                "Volatility expansion hypothesis was supported by stored high-volatility "
+                "outcome context.",
             )
         return inconclusive_result(
             payload.outcome.outcome_label,
             ["Stored outcome does not include elevated volatility context."],
-            "Volatility expansion hypothesis remained inconclusive because no stored volatility context was available.",
+            "Volatility expansion hypothesis remained inconclusive because no stored "
+            "volatility context was available.",
         )
 
     def evaluate_fakeout(
@@ -250,7 +262,9 @@ class ScenarioOutcomeEvaluator:
                 conflicting_evidence=(
                     [] if breakout_context else ["No stored breakout context was available."]
                 ),
-                summary="Fakeout-risk hypothesis aligned with reversal or no-follow-through behavior.",
+                summary=(
+                    "Fakeout-risk hypothesis aligned with reversal or no-follow-through behavior."
+                ),
             )
         if payload.outcome.outcome_label in {
             OutcomeLabel.CONTINUATION,
@@ -281,24 +295,31 @@ class ScenarioOutcomeEvaluator:
                 payload.outcome.outcome_label,
                 SUPPORTED_SCORE,
                 ["Stored news correlation and outcome volatility context are both elevated."],
-                "Event-driven volatility hypothesis was supported by stored news correlation and volatility context.",
+                "Event-driven volatility hypothesis was supported by stored news "
+                "correlation and volatility context.",
             )
         if has_news and not has_volatility:
             return inconclusive_result(
                 payload.outcome.outcome_label,
                 ["Stored news correlation exists but outcome volatility context is not elevated."],
-                "Event-driven volatility hypothesis remained inconclusive because volatility outcome context was unavailable.",
+                "Event-driven volatility hypothesis remained inconclusive because "
+                "volatility outcome context was unavailable.",
             )
         if has_volatility and not has_news:
             return inconclusive_result(
                 payload.outcome.outcome_label,
-                ["Stored volatility context exists but no possible or strong news correlation was stored."],
-                "Event-driven volatility hypothesis remained inconclusive because news correlation was not stored.",
+                [
+                    "Stored volatility context exists but no possible or strong news "
+                    "correlation was stored."
+                ],
+                "Event-driven volatility hypothesis remained inconclusive because news "
+                "correlation was not stored.",
             )
         return inconclusive_result(
             payload.outcome.outcome_label,
             ["No stored news correlation or elevated volatility context was available."],
-            "Event-driven volatility hypothesis could not be confirmed from stored outcomes and news correlations.",
+            "Event-driven volatility hypothesis could not be confirmed from stored "
+            "outcomes and news correlations.",
         )
 
 
@@ -327,7 +348,9 @@ def missing_outcome_result() -> ScenarioOutcomeEvaluationResult:
         matched_outcome_label=None,
         matched_evidence=[],
         conflicting_evidence=["No stored signal outcome matched the requested horizon."],
-        summary="Scenario hypothesis could not be evaluated because no stored signal outcome exists.",
+        summary=(
+            "Scenario hypothesis could not be evaluated because no stored signal outcome exists."
+        ),
     )
 
 
@@ -411,7 +434,7 @@ def has_news_volatility_context(news_contexts: list[ScenarioNewsContext]) -> boo
     )
 
 
-def collect_metadata_values(value: Any) -> set[str]:
+def collect_metadata_values(value: object) -> set[str]:
     collected: set[str] = set()
     if isinstance(value, dict):
         for key, item in value.items():

@@ -156,9 +156,7 @@ def build_observations(
     observations: list[CandidateAttributionObservation] = []
     for row in rows:
         signal = row.signal
-        selected_candidate_id = (
-            signal.selected_pattern_candidate_id if signal is not None else None
-        )
+        selected_candidate_id = signal.selected_pattern_candidate_id if signal is not None else None
         signal_id = signal.id if signal is not None else None
         behavior = candidate_behavior(
             candidate_id=row.candidate.id,
@@ -169,9 +167,7 @@ def build_observations(
             ),
             signal_no_signal_reason=signal.no_signal_reason if signal is not None else None,
             signal_risk_note_codes=(
-                risk_note_codes_by_signal_id.get(signal.id, set())
-                if signal is not None
-                else set()
+                risk_note_codes_by_signal_id.get(signal.id, set()) if signal is not None else set()
             ),
         )
         for horizon_minutes in horizons_minutes:

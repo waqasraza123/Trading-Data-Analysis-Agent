@@ -302,7 +302,10 @@ def run_status_for_results(
 ) -> str:
     if not symbols or not results:
         return EventStudyRunStatus.COMPLETED_WITH_WARNINGS.value
-    if any(result.reaction_label == EventStudyReactionLabel.INSUFFICIENT_DATA.value for result in results):
+    if any(
+        result.reaction_label == EventStudyReactionLabel.INSUFFICIENT_DATA.value
+        for result in results
+    ):
         return EventStudyRunStatus.COMPLETED_WITH_WARNINGS.value
     return EventStudyRunStatus.COMPLETED.value
 
@@ -328,7 +331,9 @@ def build_summary(symbols: list[Symbol], results: list[EventStudyResult]) -> dic
                 "sourceId": str(result.source_id) if result.source_id is not None else None,
                 "timeframe": result.timeframe,
                 "postMove": str(result.post_move),
-                "postMovePips": str(result.post_move_pips) if result.post_move_pips is not None else None,
+                "postMovePips": str(result.post_move_pips)
+                if result.post_move_pips is not None
+                else None,
                 "postMoveTicks": str(result.post_move_ticks)
                 if result.post_move_ticks is not None
                 else None,

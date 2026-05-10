@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PaginationParams
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.profile_simulations.schemas import (
     ProfileSimulationRunRequest,
     StrategyProfileSimulationResultRead,
@@ -22,7 +24,11 @@ def get_profile_simulation_service(
     return ProfileSimulationService(session)
 
 
-@router.post("/run", response_model=StrategyProfileSimulationRunRead)
+@router.post(
+    "/run",
+    response_model=StrategyProfileSimulationRunRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def run_profile_simulation(
     request: ProfileSimulationRunRequest,
     service: Annotated[ProfileSimulationService, Depends(get_profile_simulation_service)],

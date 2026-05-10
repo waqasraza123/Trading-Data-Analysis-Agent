@@ -79,9 +79,7 @@ def timeline_event(
         summary=sanitize_text(summary),
         severity=severity,
         metadata=(
-            safe_metadata(metadata if metadata is not None else {})
-            if include_metadata
-            else {}
+            safe_metadata(metadata if metadata is not None else {}) if include_metadata else {}
         ),
     )
 
@@ -233,11 +231,7 @@ def sanitize_text(value: str) -> str:
         while phrase in lowered:
             start = lowered.index(phrase)
             end = start + len(phrase)
-            sanitized = (
-                sanitized[:start]
-                + "[redacted unsafe trading language]"
-                + sanitized[end:]
-            )
+            sanitized = sanitized[:start] + "[redacted unsafe trading language]" + sanitized[end:]
             lowered = sanitized.lower()
     return sanitized
 

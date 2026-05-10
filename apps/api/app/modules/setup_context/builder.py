@@ -845,15 +845,9 @@ def assert_setup_context_safety(setup_context: SetupContext) -> None:
     payload = to_json_value(setup_context_payload(setup_context))
     text = " ".join(str(value).lower() for value in flatten_values(payload))
     blocked = [
-        term
-        for term in BLOCKED_OUTPUT_TERMS
-        if term in text and term not in {"enter", "exit"}
+        term for term in BLOCKED_OUTPUT_TERMS if term in text and term not in {"enter", "exit"}
     ]
-    blocked.extend(
-        term
-        for term in ("enter", "exit")
-        if f" {term} " in f" {text} "
-    )
+    blocked.extend(term for term in ("enter", "exit") if f" {term} " in f" {text} ")
     if blocked:
         msg = f"Setup context output contains blocked language: {sorted(set(blocked))}"
         raise ValueError(msg)

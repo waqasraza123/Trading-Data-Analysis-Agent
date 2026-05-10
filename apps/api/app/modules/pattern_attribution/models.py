@@ -41,8 +41,7 @@ class PatternAttributionRun(Base):
             name="pattern_attribution_runs_minimum_sample_size_positive",
         ),
         CheckConstraint(
-            "evaluated_candidate_count >= 0 and evaluated_signal_count >= 0 "
-            "and result_count >= 0",
+            "evaluated_candidate_count >= 0 and evaluated_signal_count >= 0 and result_count >= 0",
             name="pattern_attribution_runs_counts_non_negative",
         ),
         Index(
@@ -117,8 +116,7 @@ class PatternAttributionResult(Base):
             name="pattern_attribution_results_average_selected_confidence_range",
         ),
         CheckConstraint(
-            "continuation_rate is null or "
-            "(continuation_rate >= 0 and continuation_rate <= 1)",
+            "continuation_rate is null or (continuation_rate >= 0 and continuation_rate <= 1)",
             name="pattern_attribution_results_continuation_rate_range",
         ),
         CheckConstraint(

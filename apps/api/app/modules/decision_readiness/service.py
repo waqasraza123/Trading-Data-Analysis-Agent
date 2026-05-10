@@ -172,9 +172,7 @@ class DecisionReadinessService:
             analysis_run=analysis_run,
             evidence=await self.repository.list_evidence(signal_id) if signal_id else [],
             confidence_components=(
-                await self.repository.list_confidence_components(signal_id)
-                if signal_id
-                else []
+                await self.repository.list_confidence_components(signal_id) if signal_id else []
             ),
             risk_notes=await self.repository.list_risk_notes(signal_id) if signal_id else [],
             deterministic_explanation=(
@@ -183,9 +181,7 @@ class DecisionReadinessService:
                 else None
             ),
             llm_explanation=(
-                await self.repository.get_latest_llm_explanation(signal_id)
-                if signal_id
-                else None
+                await self.repository.get_latest_llm_explanation(signal_id) if signal_id else None
             ),
             news_correlations=(
                 await self.repository.list_news_correlations(signal_id) if signal_id else []
@@ -201,9 +197,7 @@ class DecisionReadinessService:
                 analysis_run_id,
             ),
             audit_logs=await self.repository.list_audit_logs(analysis_run_id),
-            chart_screenshot_runs=await self.repository.list_chart_screenshot_runs(
-                analysis_run_id
-            ),
+            chart_screenshot_runs=await self.repository.list_chart_screenshot_runs(analysis_run_id),
             profile_diagnostics_count=await self.repository.count_profile_diagnostics(signal),
             historical_cases_count=len(await self.repository.list_historical_cases(signal)),
             quality_findings=await self.repository.list_quality_findings(

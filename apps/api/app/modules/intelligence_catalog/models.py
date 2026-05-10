@@ -39,7 +39,9 @@ class IntelligenceCatalogItem(Base):
             "artifact_id",
             name="uq_intelligence_catalog_items_workspace_artifact",
         ),
-        Index("ix_intelligence_catalog_items_workspace_artifact_type", "workspace_id", "artifact_type"),
+        Index(
+            "ix_intelligence_catalog_items_workspace_artifact_type", "workspace_id", "artifact_type"
+        ),
         Index("ix_intelligence_catalog_items_workspace_status", "workspace_id", "status"),
         Index(
             "ix_intelligence_catalog_items_workspace_symbol_timeframe",
@@ -52,9 +54,13 @@ class IntelligenceCatalogItem(Base):
             "workspace_id",
             "strategy_profile_key",
         ),
-        Index("ix_intelligence_catalog_items_workspace_pattern_type", "workspace_id", "pattern_type"),
+        Index(
+            "ix_intelligence_catalog_items_workspace_pattern_type", "workspace_id", "pattern_type"
+        ),
         Index("ix_intelligence_catalog_items_workspace_bias", "workspace_id", "bias"),
-        Index("ix_intelligence_catalog_items_workspace_outcome_label", "workspace_id", "outcome_label"),
+        Index(
+            "ix_intelligence_catalog_items_workspace_outcome_label", "workspace_id", "outcome_label"
+        ),
         Index("ix_intelligence_catalog_items_workspace_indexed_at", "workspace_id", "indexed_at"),
     )
 

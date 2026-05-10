@@ -93,7 +93,9 @@ class MarketRegimeClassifier:
             "indicatorAgreementScore": str(trend_agreement.quantize(Decimal("0.0001"))),
             "patternSignalAgreementScore": str(pattern_signal_score.quantize(Decimal("0.0001"))),
             "dataQualityScore": str(data_quality_score.quantize(Decimal("0.0001"))),
-            "signalId": str(classification_input.signal.id) if classification_input.signal else None,
+            "signalId": str(classification_input.signal.id)
+            if classification_input.signal
+            else None,
             "patternCandidateCount": len(classification_input.pattern_candidates),
             "selectedPatternCandidateId": self.selected_pattern_candidate_id(
                 classification_input.pattern_candidates
@@ -166,7 +168,9 @@ class MarketRegimeClassifier:
             warnings.append(
                 {
                     "code": "indicator_trend_missing",
-                    "message": "Feature trend was present but indicator trend alignment was unavailable.",
+                    "message": (
+                        "Feature trend was present but indicator trend alignment was unavailable."
+                    ),
                 }
             )
             return feature_trend, Decimal("0.70")
@@ -337,9 +341,7 @@ class MarketRegimeClassifier:
                 return True
             risk_notes = candidate.risk_notes_json or []
             risk_codes = [
-                str(note.get("code", "")).lower()
-                for note in risk_notes
-                if isinstance(note, dict)
+                str(note.get("code", "")).lower() for note in risk_notes if isinstance(note, dict)
             ]
             if any("fakeout" in code for code in risk_codes):
                 return True

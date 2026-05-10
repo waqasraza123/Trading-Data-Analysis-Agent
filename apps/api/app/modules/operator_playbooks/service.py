@@ -84,7 +84,9 @@ def default_playbooks(version: str) -> tuple[OperatorPlaybook, ...]:
             key="calibration_review",
             version=version,
             name="Calibration Review",
-            description="Suggests manual review when diagnostics or simulations indicate changed decisions.",
+            description=(
+                "Suggests manual review when diagnostics or simulations indicate changed decisions."
+            ),
             is_enabled=True,
             priority=10,
             rules_json={"uses": ["profile_diagnostics", "profile_simulations"]},
@@ -93,7 +95,9 @@ def default_playbooks(version: str) -> tuple[OperatorPlaybook, ...]:
             key="data_quality_review",
             version=version,
             name="Data Quality Review",
-            description="Suggests manual review when data quality findings may affect interpretation.",
+            description=(
+                "Suggests manual review when data quality findings may affect interpretation."
+            ),
             is_enabled=True,
             priority=20,
             rules_json={"uses": ["data_quality", "decision_readiness"]},

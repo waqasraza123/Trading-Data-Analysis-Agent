@@ -91,9 +91,7 @@ async def test_seed_service_creates_required_defaults_without_duplicates(
 
     symbol_result = await db_session.execute(select(Symbol.symbol))
     data_source_result = await db_session.execute(select(DataSource.name))
-    profile_result = await db_session.execute(
-        select(StrategyProfile.key, StrategyProfile.version)
-    )
+    profile_result = await db_session.execute(select(StrategyProfile.key, StrategyProfile.version))
     engine_result = await db_session.execute(
         select(EngineVersion.engine_name, EngineVersion.version)
     )

@@ -129,9 +129,9 @@ class ExplanationComparisonRepository:
         self,
         signal_id: UUID,
     ) -> DeterministicExplanation | None:
-        statement: Select[tuple[DeterministicExplanation]] = select(
-            DeterministicExplanation
-        ).where(DeterministicExplanation.signal_id == signal_id)
+        statement: Select[tuple[DeterministicExplanation]] = select(DeterministicExplanation).where(
+            DeterministicExplanation.signal_id == signal_id
+        )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 

@@ -26,9 +26,7 @@ def test_ai_intelligence_parser_accepts_cited_insight() -> None:
                     "title": "Confidence needs context",
                     "summary": "Confidence should be reviewed against stored outcomes.",
                     "rationale": "The cited signal is available.",
-                    "evidenceRefs": [
-                        {"artifactType": "signal", "artifactId": str(signal_id)}
-                    ],
+                    "evidenceRefs": [{"artifactType": "signal", "artifactId": str(signal_id)}],
                     "limitations": ["Advisory only."],
                     "safeFollowUpActions": ["evaluate_outcome_after_horizon"],
                     "claims": [
@@ -97,9 +95,7 @@ def test_ai_intelligence_grounding_requires_known_refs() -> None:
                         "title": "Known ref",
                         "summary": "Known ref",
                         "rationale": "Known ref",
-                        "evidenceRefs": [
-                            {"artifactType": "signal", "artifactId": str(signal_id)}
-                        ],
+                        "evidenceRefs": [{"artifactType": "signal", "artifactId": str(signal_id)}],
                         "claims": [
                             {
                                 "claim": "Known claim",
@@ -141,11 +137,7 @@ async def test_mock_adapter_returns_ai_intelligence_schema() -> None:
             model="mock-ai",
             system_prompt="system",
             user_prompt="user",
-            input_json={
-                "artifactRefs": [
-                    {"artifactType": "signal", "artifactId": str(signal_id)}
-                ]
-            },
+            input_json={"artifactRefs": [{"artifactType": "signal", "artifactId": str(signal_id)}]},
             response_schema_name="ai_intelligence_v1",
             max_output_tokens=100,
             temperature=0,

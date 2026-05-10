@@ -143,9 +143,7 @@ class SignalClassificationService:
             candidates=candidates,
             features=feature_snapshot.features_json if feature_snapshot is not None else None,
             indicators=(
-                indicator_snapshot.indicators_json
-                if indicator_snapshot is not None
-                else None
+                indicator_snapshot.indicators_json if indicator_snapshot is not None else None
             ),
         )
         await self.add_audit_log(
@@ -234,8 +232,7 @@ class SignalClassificationService:
             analysis_run_id=signal.analysis_run_id,
             signal=SignalRead.model_validate(signal),
             confidence_components=[
-                SignalConfidenceComponentRead.model_validate(component)
-                for component in components
+                SignalConfidenceComponentRead.model_validate(component) for component in components
             ],
             evidence=[SignalEvidenceRead.model_validate(item) for item in evidence],
             risk_notes=[SignalRiskNoteRead.model_validate(note) for note in risk_notes],
@@ -245,8 +242,7 @@ class SignalClassificationService:
                 else None
             ),
             news_correlations=[
-                NewsCorrelationRead.model_validate(correlation)
-                for correlation in news_correlations
+                NewsCorrelationRead.model_validate(correlation) for correlation in news_correlations
             ],
             llm_explanation=(
                 LlmExplanationRead.model_validate(llm_explanation)
@@ -422,9 +418,7 @@ class SignalClassificationService:
     ) -> Signal:
         selected = decision.selected_evaluation
         for candidate in candidates:
-            candidate.is_selected = (
-                selected is not None and candidate.id == selected.candidate.id
-            )
+            candidate.is_selected = selected is not None and candidate.id == selected.candidate.id
         signal = self.build_signal(
             run=run,
             classification_status=decision.classification_status,
@@ -455,8 +449,7 @@ class SignalClassificationService:
                 evidence_type="classification",
                 direction="neutral",
                 message=(
-                    "No signal generated because no persisted pattern candidates "
-                    "were available."
+                    "No signal generated because no persisted pattern candidates were available."
                 ),
                 numeric_value=None,
                 weight=Decimal("0.00000"),
@@ -532,8 +525,7 @@ class SignalClassificationService:
             confidence_score=Decimal("0.0000"),
             confidence_label=SignalConfidenceLabel.LOW,
             summary=(
-                "No signal generated because no candidate passed deterministic "
-                "profile filters."
+                "No signal generated because no candidate passed deterministic profile filters."
             ),
             no_signal_reason=reason,
             features=features,
@@ -664,9 +656,7 @@ class SignalClassificationService:
         evidence_rows: list[SignalEvidence] = []
         if selected_evaluation is not None:
             evidence_rows.extend(candidate_evidence_rows(selected_evaluation.candidate))
-            evidence_rows.extend(
-                classifier_evidence_rows(selected_evaluation.classifier_evidence)
-            )
+            evidence_rows.extend(classifier_evidence_rows(selected_evaluation.classifier_evidence))
         evidence_rows.extend(classifier_evidence_rows(decision_evidence))
         return evidence_rows
 

@@ -11,6 +11,8 @@ from app.modules.confidence_calibration.schemas import (
     ConfidenceCalibrationRunRequest,
 )
 from app.modules.confidence_calibration.service import ConfidenceCalibrationService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/confidence-calibration", tags=["confidence-calibration"])
 
@@ -25,6 +27,7 @@ def get_confidence_calibration_service(
     "/run",
     response_model=ConfidenceCalibrationRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_confidence_calibration(
     payload: ConfidenceCalibrationRunRequest,
@@ -88,4 +91,6 @@ async def list_confidence_calibration_bins(
         limit=limit,
         offset=offset,
     )
-    return [ConfidenceCalibrationBinRead.model_validate(calibration_bin) for calibration_bin in bins]
+    return [
+        ConfidenceCalibrationBinRead.model_validate(calibration_bin) for calibration_bin in bins
+    ]

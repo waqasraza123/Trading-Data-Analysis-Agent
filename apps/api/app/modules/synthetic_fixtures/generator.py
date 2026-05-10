@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from random import Random
 
 from app.core.errors import AppError
@@ -16,7 +16,6 @@ from app.modules.synthetic_fixtures.schemas import (
     SyntheticFixturePattern,
     SyntheticVolumeBehavior,
 )
-
 
 DEFAULT_REQUEST_START_PRICE = Decimal("1.1000")
 DEFAULT_REQUEST_VOLATILITY = Decimal("0.0005")
@@ -218,11 +217,7 @@ def missing_candle_indexes(
         return set()
     first_gap = max(1, candle_count // 3)
     second_gap = max(first_gap + 2, (candle_count * 2) // 3)
-    return {
-        index
-        for index in {first_gap, first_gap + 1, second_gap}
-        if 0 <= index < candle_count
-    }
+    return {index for index in {first_gap, first_gap + 1, second_gap} if 0 <= index < candle_count}
 
 
 def malformed_candle(

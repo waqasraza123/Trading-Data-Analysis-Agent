@@ -51,7 +51,9 @@ class DataRetentionService:
     async def get_policy(self, policy_id: UUID) -> DataRetentionPolicy:
         policy = await self.repository.get_policy(policy_id)
         if policy is None:
-            raise AppError(404, "data_retention_policy_not_found", "Data retention policy not found")
+            raise AppError(
+                404, "data_retention_policy_not_found", "Data retention policy not found"
+            )
         return policy
 
     async def update_policy(
@@ -165,7 +167,9 @@ class DataRetentionService:
         run = await self.get_run(run_id)
         return await self.repository.list_run_items(run.id, limit, offset)
 
-    async def _resolve_policy(self, filters: DataRetentionRunFilters) -> DataRetentionPolicyDocument:
+    async def _resolve_policy(
+        self, filters: DataRetentionRunFilters
+    ) -> DataRetentionPolicyDocument:
         if filters.policy_id is None:
             return DataRetentionPolicyDocument()
         policy = await self.get_policy(filters.policy_id)
@@ -176,15 +180,17 @@ class DataRetentionService:
                 "Data retention policy not found for workspace",
             )
         if policy.status != DataRetentionPolicyStatus.ACTIVE.value:
-            raise AppError(409, "data_retention_policy_inactive", "Data retention policy is not active")
+            raise AppError(
+                409, "data_retention_policy_inactive", "Data retention policy is not active"
+            )
         return DataRetentionPolicyDocument.model_validate(policy.policy_json)
 
     def _build_plan_summary(self, actions: list[object]) -> dict[str, object]:
         by_target_type: dict[str, int] = {}
         by_action_type: dict[str, int] = {}
         for action in actions:
-            target_type = str(getattr(action, "target_type").value)
-            action_type = str(getattr(action, "action_type").value)
+            target_type = str(action.target_type.value)
+            action_type = str(action.action_type.value)
             by_target_type[target_type] = by_target_type.get(target_type, 0) + 1
             by_action_type[action_type] = by_action_type.get(action_type, 0) + 1
         return {

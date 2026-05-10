@@ -11,6 +11,8 @@ from app.modules.backtest_experiments.schemas import (
     BacktestExperimentRunRequest,
 )
 from app.modules.backtest_experiments.service import BacktestExperimentService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["backtest-experiments"])
 
@@ -25,6 +27,7 @@ def get_backtest_experiment_service(
     "/backtest-experiments/run",
     response_model=BacktestExperimentRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_backtest_experiment(
     payload: BacktestExperimentRunRequest,

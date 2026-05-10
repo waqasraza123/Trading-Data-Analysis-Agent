@@ -105,8 +105,7 @@ class ProfileCalibrationRecommender:
                     status=CalibrationRecommendationStatus.OPEN,
                     title="Review minimum confidence",
                     rationale=(
-                        "Observed reversal behavior is elevated for this filtered "
-                        "profile sample."
+                        "Observed reversal behavior is elevated for this filtered profile sample."
                     ),
                     suggested_change_json=minimum_confidence_review(profile),
                     evidence_json=evidence_from_profile_diagnostic(diagnostic),
@@ -195,8 +194,7 @@ class ProfileCalibrationRecommender:
                     status=CalibrationRecommendationStatus.OPEN,
                     title="Monitor symbol and timeframe behavior",
                     rationale=(
-                        "This symbol/timeframe/profile combination shows weaker "
-                        "observed behavior."
+                        "This symbol/timeframe/profile combination shows weaker observed behavior."
                     ),
                     evidence_json=evidence_from_profile_diagnostic(diagnostic),
                 )

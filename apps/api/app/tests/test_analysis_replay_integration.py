@@ -118,9 +118,9 @@ async def test_replay_api_smoke_exercises_latest_and_same_engine_modes(
     assert same_response.json()["status"] == "completed"
     assert latest_response.json()["replayAnalysisRunId"] != str(original.analysis_run.id)
     assert same_response.json()["replayAnalysisRunId"] != str(original.analysis_run.id)
-    assert latest_response.json()["replayAnalysisRunId"] != same_response.json()[
-        "replayAnalysisRunId"
-    ]
+    assert (
+        latest_response.json()["replayAnalysisRunId"] != same_response.json()["replayAnalysisRunId"]
+    )
     assert original_signal.signal.id == original_signal_id
     assert original_signal.deterministic_explanation is not None
     assert original_signal.deterministic_explanation.id == original_explanation_id

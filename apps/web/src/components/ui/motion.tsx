@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode, ComponentPropsWithoutRef } from "react";
+import type { CSSProperties, ReactElement, ReactNode, ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/ui/cn";
 
 export const MOTION_VARIANTS = ["up", "scale", "fade"] as const;
@@ -43,7 +43,20 @@ type MotionDefaultsOptions = {
 
 export type MotionRevealStyle = MotionStyleVariables;
 
-type AnimatedElement = "div" | "section" | "article" | "main" | "header" | "aside" | "nav" | "ol" | "ul" | "li";
+type AnimatedElement =
+  | "div"
+  | "section"
+  | "article"
+  | "main"
+  | "header"
+  | "aside"
+  | "nav"
+  | "ol"
+  | "ul"
+  | "li"
+  | "p"
+  | "span"
+  | "tr";
 
 export type AnimateChildrenProps = ComponentPropsWithoutRef<"section"> & {
   as?: AnimatedElement;
@@ -64,7 +77,6 @@ const motionLegacyHelpersWarned = new Set<string>();
 function warnLegacyMotionHelper(name: string): void {
   if (process.env.NODE_ENV !== "production" && !motionLegacyHelpersWarned.has(name)) {
     motionLegacyHelpersWarned.add(name);
-    // eslint-disable-next-line no-console
     console.warn(
       `[motion] Legacy API used: ${name}. Use motionRevealPresetClass, motionRevealDensityStyle, or motionRevealProfileStyle instead.`,
     );
@@ -137,7 +149,7 @@ export function AnimatedSection({
   className,
   style,
   ...props
-}: AnimateChildrenProps): JSX.Element {
+}: AnimateChildrenProps): ReactElement {
   const Tag = resolveTag(as);
   const mergedStyle = withMotionDefaults(style, { preset, delayMs, durationMs });
   return (
@@ -162,7 +174,7 @@ export function AnimatedListItem({
   className,
   style,
   ...props
-}: AnimateListItemProps): JSX.Element {
+}: AnimateListItemProps): ReactElement {
   const Tag = resolveTag(as);
   const mergedStyle = withMotionDefaults(style, { preset, delayMs, durationMs, index, staggerMs });
   return (
@@ -180,21 +192,28 @@ export function ShimmerSkeleton({
   className,
   ariaLabel = "loading",
   ariaHidden = true,
+  children,
+  style,
 }: {
   className?: string;
   ariaLabel?: string;
   ariaHidden?: boolean;
-}): JSX.Element {
+  children?: ReactNode;
+  style?: MotionStyleVariables;
+}): ReactElement {
   return (
     <div
       aria-hidden={ariaHidden}
       aria-label={ariaLabel}
       className={cn("motion-shimmer rounded-xl", className)}
-    />
+      style={style}
+    >
+      {children}
+    </div>
   );
 }
 
-export function PulseDot({ className }: { className?: string }): JSX.Element {
+export function PulseDot({ className }: { className?: string }): ReactElement {
   return <span aria-hidden="true" className={cn("motion-pulse-dot inline-block rounded-full", className)} />;
 }
 

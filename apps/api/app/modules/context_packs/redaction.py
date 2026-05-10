@@ -6,7 +6,6 @@ from enum import Enum
 from typing import Any
 from uuid import UUID
 
-
 SECRET_KEY_PARTS = (
     "api_key",
     "apikey",
@@ -125,7 +124,9 @@ def safe_text(
         while phrase in lowered:
             start = lowered.index(phrase)
             end = start + len(phrase)
-            sanitized = sanitized[:start] + "[redacted unsafe market-action language]" + sanitized[end:]
+            sanitized = (
+                sanitized[:start] + "[redacted unsafe market-action language]" + sanitized[end:]
+            )
             lowered = sanitized.lower()
             state.unsafe_text_paths.append(path)
     if len(sanitized) <= max_text_length:

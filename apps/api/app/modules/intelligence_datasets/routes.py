@@ -12,6 +12,8 @@ from app.modules.intelligence_datasets.schemas import (
     IntelligenceDatasetExportRead,
 )
 from app.modules.intelligence_datasets.service import IntelligenceDatasetService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/intelligence-datasets", tags=["intelligence-datasets"])
 
@@ -22,7 +24,11 @@ def get_intelligence_dataset_service(
     return IntelligenceDatasetService(session)
 
 
-@router.post("/exports", response_model=IntelligenceDatasetExportRead)
+@router.post(
+    "/exports",
+    response_model=IntelligenceDatasetExportRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_intelligence_dataset_export(
     request: IntelligenceDatasetExportCreate,
     service: Annotated[IntelligenceDatasetService, Depends(get_intelligence_dataset_service)],

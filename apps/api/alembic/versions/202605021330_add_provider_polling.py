@@ -8,8 +8,9 @@ Create Date: 2026-05-02 13:30:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605021330_provider_polling"
 down_revision: str | Sequence[str] | None = "202605021300_scenario_ensembles"
@@ -67,8 +68,7 @@ def upgrade() -> None:
             name="provider_polling_requests_status_allowed",
         ),
         sa.CheckConstraint(
-            "received_candle_count >= 0 and stored_candle_count >= 0 and "
-            "skipped_candle_count >= 0",
+            "received_candle_count >= 0 and stored_candle_count >= 0 and skipped_candle_count >= 0",
             name="provider_polling_requests_counts_non_negative",
         ),
         sa.CheckConstraint(

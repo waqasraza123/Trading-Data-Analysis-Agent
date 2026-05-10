@@ -207,15 +207,21 @@ def calculate_window_result(
         continuation_rate=continuation_rate,
         reversal_rate=reversal_rate,
         no_follow_through_rate=no_follow_rate,
-        average_confidence_score=quantize_rate(average_confidence) if average_confidence is not None else None,
+        average_confidence_score=quantize_rate(average_confidence)
+        if average_confidence is not None
+        else None,
         confidence_alignment_score=alignment,
         stability_label=label,
-        summary=window_summary(label, window.window_index, horizon_minutes, len(directional), evaluated_count),
+        summary=window_summary(
+            label, window.window_index, horizon_minutes, len(directional), evaluated_count
+        ),
         metadata_json={
             "minimumSampleSize": minimum_sample_size,
             "observedFollowThroughRate": str(continuation_rate),
             "alignmentDenominator": evaluated_count if alignment is not None else 0,
-            "previousSufficientWindowIndex": previous.window_index if previous is not None else None,
+            "previousSufficientWindowIndex": previous.window_index
+            if previous is not None
+            else None,
             "continuationRateDelta": (
                 str(quantize_rate(continuation_rate - previous.continuation_rate))
                 if previous is not None
@@ -286,7 +292,9 @@ def compare_horizon_windows(
             "lastWindowIndex": last.window_index,
             "continuationRateDelta": str(continuation_delta),
             "reversalRateDelta": str(reversal_delta),
-            "confidenceAlignmentDelta": str(alignment_delta) if alignment_delta is not None else None,
+            "confidenceAlignmentDelta": str(alignment_delta)
+            if alignment_delta is not None
+            else None,
             "degradationThreshold": str(thresholds.degradation_threshold),
             "improvementThreshold": str(thresholds.improvement_threshold),
         },
@@ -412,7 +420,9 @@ def horizon_stability_score(results: list[WalkForwardWindowResult]) -> Decimal:
             current.confidence_alignment_score is not None
             and previous.confidence_alignment_score is not None
         ):
-            differences.append(abs(current.confidence_alignment_score - previous.confidence_alignment_score))
+            differences.append(
+                abs(current.confidence_alignment_score - previous.confidence_alignment_score)
+            )
         previous = current
     average_difference = sum(differences, Decimal("0")) / Decimal(len(differences))
     return quantize_rate(max(Decimal("0"), Decimal("1") - average_difference))

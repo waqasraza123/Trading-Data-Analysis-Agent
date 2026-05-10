@@ -21,6 +21,8 @@ from app.modules.operator_reviews.schemas import (
     OperatorReviewStatusUpdateRequest,
 )
 from app.modules.operator_reviews.service import OperatorReviewService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/operator-reviews", tags=["operator-reviews"])
 
@@ -35,6 +37,7 @@ def get_operator_review_service(
     "",
     response_model=OperatorReviewItemRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def create_operator_review_item(
     payload: OperatorReviewCreateRequest,
@@ -79,7 +82,11 @@ async def get_operator_review_item(
     return await service.get_review_item(review_item_id)
 
 
-@router.post("/{review_item_id}/assign", response_model=OperatorReviewItemRead)
+@router.post(
+    "/{review_item_id}/assign",
+    response_model=OperatorReviewItemRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def assign_operator_review_item(
     review_item_id: UUID,
     payload: OperatorReviewAssignRequest,
@@ -92,7 +99,11 @@ async def assign_operator_review_item(
     )
 
 
-@router.post("/{review_item_id}/status", response_model=OperatorReviewItemRead)
+@router.post(
+    "/{review_item_id}/status",
+    response_model=OperatorReviewItemRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def update_operator_review_status(
     review_item_id: UUID,
     payload: OperatorReviewStatusUpdateRequest,
@@ -106,7 +117,11 @@ async def update_operator_review_status(
     )
 
 
-@router.post("/{review_item_id}/resolve", response_model=OperatorReviewItemRead)
+@router.post(
+    "/{review_item_id}/resolve",
+    response_model=OperatorReviewItemRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def resolve_operator_review_item(
     review_item_id: UUID,
     payload: OperatorReviewResolveRequest,
@@ -120,7 +135,11 @@ async def resolve_operator_review_item(
     )
 
 
-@router.post("/{review_item_id}/dismiss", response_model=OperatorReviewItemRead)
+@router.post(
+    "/{review_item_id}/dismiss",
+    response_model=OperatorReviewItemRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def dismiss_operator_review_item(
     review_item_id: UUID,
     payload: OperatorReviewDismissRequest,

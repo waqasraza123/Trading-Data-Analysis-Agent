@@ -55,9 +55,7 @@ def check_explanation_grounding(
     normalized_output = " ".join(output_text.lower().split())
     allowed_numbers = _collect_allowed_numbers(input_json)
     invented_numbers = _extract_invented_numbers(allowed_numbers, normalized_output)
-    issues.extend(
-        [f"invented numeric value: {value}" for value in invented_numbers]
-    )
+    issues.extend([f"invented numeric value: {value}" for value in invented_numbers])
     if invented_numbers:
         return GroundingCheckResult(
             status=LlmExplanationGroundingStatus.FAILED,
@@ -175,10 +173,7 @@ def _mentions_news_without_input_news(
     normalized_output: str,
 ) -> bool:
     has_news = _has_news_correlations(input_json)
-    return (
-        not has_news
-        and any(keyword in normalized_output for keyword in NEWS_KEYWORDS)
-    )
+    return not has_news and any(keyword in normalized_output for keyword in NEWS_KEYWORDS)
 
 
 def _mentions_news(normalized_output: str) -> bool:

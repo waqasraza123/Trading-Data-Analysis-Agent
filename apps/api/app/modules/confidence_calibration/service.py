@@ -163,10 +163,10 @@ def calibration_outcome_from_row(row: CalibrationOutcomeRow) -> CalibrationOutco
 
 
 def is_directional_calibration_row(row: CalibrationOutcomeRow) -> bool:
-    return (
-        row.classification_status == SignalClassificationStatus.SIGNAL.value
-        and row.bias in {SignalBias.BULLISH.value, SignalBias.BEARISH.value}
-    )
+    return row.classification_status == SignalClassificationStatus.SIGNAL.value and row.bias in {
+        SignalBias.BULLISH.value,
+        SignalBias.BEARISH.value,
+    }
 
 
 def calibration_bin_model(

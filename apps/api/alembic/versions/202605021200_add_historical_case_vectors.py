@@ -8,8 +8,9 @@ Create Date: 2026-05-02 12:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605021200_historical_case_vectors"
 down_revision: str | tuple[str, str] | None = "f9eb9423c4a2"
@@ -58,14 +59,20 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["analysis_run_id"], ["analysis_runs.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["signal_id"], ["signals.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["symbol_id"], ["symbols.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("signal_id", "vector_version", name="uq_historical_case_vectors_signal_version"),
+        sa.UniqueConstraint(
+            "signal_id", "vector_version", name="uq_historical_case_vectors_signal_version"
+        ),
     )
     op.create_index(
         "ix_historical_case_vectors_workspace_symbol_timeframe",
@@ -107,8 +114,15 @@ def upgrade() -> None:
             server_default=sa.text("'[]'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(["source_analysis_run_id"], ["analysis_runs.id"], ondelete="SET NULL"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["source_analysis_run_id"], ["analysis_runs.id"], ondelete="SET NULL"
+        ),
         sa.ForeignKeyConstraint(["source_signal_id"], ["signals.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
@@ -121,10 +135,17 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_historical_case_searches_workspace_created", table_name="historical_case_searches")
+    op.drop_index(
+        "ix_historical_case_searches_workspace_created", table_name="historical_case_searches"
+    )
     op.drop_table("historical_case_searches")
     op.drop_index("ix_historical_case_vectors_vector_version", table_name="historical_case_vectors")
     op.drop_index("ix_historical_case_vectors_bias_status", table_name="historical_case_vectors")
-    op.drop_index("ix_historical_case_vectors_profile_pattern", table_name="historical_case_vectors")
-    op.drop_index("ix_historical_case_vectors_workspace_symbol_timeframe", table_name="historical_case_vectors")
+    op.drop_index(
+        "ix_historical_case_vectors_profile_pattern", table_name="historical_case_vectors"
+    )
+    op.drop_index(
+        "ix_historical_case_vectors_workspace_symbol_timeframe",
+        table_name="historical_case_vectors",
+    )
     op.drop_table("historical_case_vectors")

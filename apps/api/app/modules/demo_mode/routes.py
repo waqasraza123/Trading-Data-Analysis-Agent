@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Request, status
+from fastapi import APIRouter, Body, Depends, Request, status
 
 from app.core.errors import AppError
 from app.db.session import get_async_session_factory
@@ -18,6 +18,8 @@ from app.modules.demo_mode.service import (
     disabled_flow_response,
     disabled_workspace_response,
 )
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/demo-mode", tags=["demo-mode"])
 
@@ -31,6 +33,7 @@ async def get_demo_mode_status(request: Request) -> DemoModeStatusResponse:
     "/workspace",
     response_model=DemoModeWorkspaceResponse,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_ADMIN))],
 )
 async def create_demo_workspace(
     payload: Annotated[DemoModeWorkspaceRequest, Body(default_factory=DemoModeWorkspaceRequest)],
@@ -51,6 +54,7 @@ async def create_demo_workspace(
     "/run-full-flow",
     response_model=DemoModeRunFullFlowResponse,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(Permission.WORKSPACE_ADMIN))],
 )
 async def run_full_demo_flow(
     payload: Annotated[DemoModeRunRequest, Body(default_factory=DemoModeRunRequest)],

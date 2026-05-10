@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from app.modules.reasoning.models import (
     ReasoningGroundingStatus,
@@ -137,9 +137,7 @@ def compute_consensus(
             "invalidProviderCount": invalid_count,
             "topScenarioType": top_scenario,
             "topScenarioAgreementRatio": str(quantize_score(raw_ratio)),
-            "topScenarioPossibilityAgreementRatio": str(
-                possibility_agreement_ratio(top_scenarios)
-            ),
+            "topScenarioPossibilityAgreementRatio": str(possibility_agreement_ratio(top_scenarios)),
             "topScenarioActionAgreementRatio": str(action_agreement_ratio(top_scenarios)),
             "minAgreementRatio": str(quantize_score(min_agreement_ratio)),
         },
@@ -216,27 +214,17 @@ def scenario_results(
                 scenario_type=scenario_type,
                 agreement_count=agreement_count,
                 disagreement_count=disagreement_count,
-                possibility_labels=sorted(
-                    {scenario.possibility_label for scenario in scenarios}
-                ),
+                possibility_labels=sorted({scenario.possibility_label for scenario in scenarios}),
                 supporting_evidence=dedupe_text(
-                    text
-                    for scenario in scenarios
-                    for text in scenario.supporting_evidence
+                    text for scenario in scenarios for text in scenario.supporting_evidence
                 ),
                 conflicting_evidence=dedupe_text(
-                    text
-                    for scenario in scenarios
-                    for text in scenario.conflicting_evidence
+                    text for scenario in scenarios for text in scenario.conflicting_evidence
                 ),
                 consensus_label=run_label,
                 metadata={
                     "suggestedBackendActions": sorted(
-                        {
-                            action
-                            for scenario in scenarios
-                            for action in scenario.suggested_actions
-                        }
+                        {action for scenario in scenarios for action in scenario.suggested_actions}
                     ),
                     "providerScenarioCount": len(scenarios),
                 },
@@ -294,7 +282,11 @@ def summary_text(
     valid_count: int,
     invalid_count: int,
 ) -> str:
-    warning = f" {invalid_count} provider output(s) were excluded from consensus." if invalid_count else ""
+    warning = (
+        f" {invalid_count} provider output(s) were excluded from consensus."
+        if invalid_count
+        else ""
+    )
     if label == ScenarioConsensusLabel.INSUFFICIENT_CONTEXT:
         return (
             "Scenario ensemble did not have enough valid grounded provider agreement for a "

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -21,6 +21,8 @@ from app.modules.observability.schemas import (
 )
 from app.modules.observability.slo import calculate_service_slo, persist_service_slo_snapshot
 from app.modules.observability.tracing import tracing_status
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/observability", tags=["observability"])
 
@@ -66,6 +68,7 @@ async def get_slo_status(
     "/slo/snapshot",
     response_model=ServiceSloSnapshotRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def create_slo_snapshot(
     request: Request,

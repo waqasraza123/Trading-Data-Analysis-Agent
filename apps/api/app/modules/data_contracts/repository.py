@@ -95,13 +95,19 @@ class DataContractRepository:
             return (snapshot.workspace_id, snapshot.features_json) if snapshot is not None else None
         if source_type == "indicator_snapshot":
             snapshot = await self.session.get(IndicatorSnapshot, source_id)
-            return (snapshot.workspace_id, snapshot.indicators_json) if snapshot is not None else None
+            return (
+                (snapshot.workspace_id, snapshot.indicators_json) if snapshot is not None else None
+            )
         if source_type == "pattern_evidence":
             candidate = await self.session.get(PatternCandidate, source_id)
-            return (candidate.workspace_id, candidate.evidence_json) if candidate is not None else None
+            return (
+                (candidate.workspace_id, candidate.evidence_json) if candidate is not None else None
+            )
         if source_type == "pattern_metrics":
             candidate = await self.session.get(PatternCandidate, source_id)
-            return (candidate.workspace_id, candidate.metrics_json) if candidate is not None else None
+            return (
+                (candidate.workspace_id, candidate.metrics_json) if candidate is not None else None
+            )
         if source_type == "strategy_profile_config":
             profile = await self.session.get(StrategyProfile, source_id)
             if profile is None:
@@ -139,7 +145,11 @@ class DataContractRepository:
             )
         if source_type == "news_correlation_metadata":
             correlation = await self.session.get(SignalNewsCorrelation, source_id)
-            return (correlation.workspace_id, correlation.metadata_json) if correlation is not None else None
+            return (
+                (correlation.workspace_id, correlation.metadata_json)
+                if correlation is not None
+                else None
+            )
         if source_type == "outcome_metadata":
             outcome = await self.session.get(SignalOutcome, source_id)
             return (outcome.workspace_id, outcome.metadata_json) if outcome is not None else None

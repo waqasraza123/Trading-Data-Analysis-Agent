@@ -123,7 +123,9 @@ class TimeframeAggregationRepository:
             statement = statement.where(Candle.source_id == source_id)
         result = await self.session.execute(statement)
         candles = list(result.scalars().all())
-        return sorted(self.dedupe_candles_by_timestamp(candles), key=lambda candle: candle.timestamp)
+        return sorted(
+            self.dedupe_candles_by_timestamp(candles), key=lambda candle: candle.timestamp
+        )
 
     async def get_context_for_analysis_run(
         self,

@@ -37,7 +37,9 @@ class OperatorPlaybook(Base):
     version: Mapped[str] = mapped_column(String(32), nullable=False)
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default=text("true"))
+    is_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     rules_json: Mapped[dict[str, object]] = mapped_column(
         JSONB,

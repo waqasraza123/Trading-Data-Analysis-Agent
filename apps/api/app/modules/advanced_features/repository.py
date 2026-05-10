@@ -15,9 +15,7 @@ class AdvancedFeatureSnapshotRepository:
         analysis_run_id: UUID,
         feature_pack_version: str,
     ) -> AdvancedFeatureSnapshot | None:
-        statement: Select[tuple[AdvancedFeatureSnapshot]] = select(
-            AdvancedFeatureSnapshot
-        ).where(
+        statement: Select[tuple[AdvancedFeatureSnapshot]] = select(AdvancedFeatureSnapshot).where(
             AdvancedFeatureSnapshot.analysis_run_id == analysis_run_id,
             AdvancedFeatureSnapshot.feature_pack_version == feature_pack_version,
         )

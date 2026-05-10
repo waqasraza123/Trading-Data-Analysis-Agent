@@ -90,9 +90,7 @@ class ServiceMetricsRegistry:
                     "statusCode": status_code,
                     **stats.snapshot(),
                 }
-                for (method, path, status_code), stats in sorted(
-                    self._request_durations.items()
-                )
+                for (method, path, status_code), stats in sorted(self._request_durations.items())
             ]
         return {
             "startedAt": self.started_at.isoformat(),
@@ -106,16 +104,12 @@ class ServiceMetricsRegistry:
         durations = list_dict(snapshot.get("durations"))
         request_count = sum(int(item.get("count", 0)) for item in requests)
         error_count = sum(
-            int(item.get("count", 0))
-            for item in requests
-            if int(item.get("statusCode", 0)) >= 500
+            int(item.get("count", 0)) for item in requests if int(item.get("statusCode", 0)) >= 500
         )
         duration_count = sum(int(item.get("count", 0)) for item in durations)
         total_ms = sum(float(item.get("totalMs", 0.0)) for item in durations)
         max_values = [
-            float(item["maxMs"])
-            for item in durations
-            if isinstance(item.get("maxMs"), int | float)
+            float(item["maxMs"]) for item in durations if isinstance(item.get("maxMs"), int | float)
         ]
         average_ms = total_ms / duration_count if duration_count else None
         error_rate = error_count / request_count if request_count else 0.0
@@ -467,9 +461,7 @@ def dict_str_int(value: object) -> dict[str, int]:
     if not isinstance(value, dict):
         return {}
     return {
-        str(key): int(raw_value)
-        for key, raw_value in value.items()
-        if isinstance(raw_value, int)
+        str(key): int(raw_value) for key, raw_value in value.items() if isinstance(raw_value, int)
     }
 
 

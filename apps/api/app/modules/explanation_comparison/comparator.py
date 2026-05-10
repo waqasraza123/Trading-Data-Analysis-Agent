@@ -1,7 +1,7 @@
 import json
 import re
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 from app.modules.explanation_comparison.models import (
@@ -140,7 +140,8 @@ class ExplanationComparator:
         )
         operator_review_recommended = (
             score < review_threshold
-            or label in {
+            or label
+            in {
                 ExplanationAlignmentLabel.CONFLICTING.value,
                 ExplanationAlignmentLabel.INSUFFICIENT_CONTEXT.value,
             }
@@ -690,8 +691,7 @@ def alignment_label_for(
     if artifacts.llm_explanation is None and artifacts.reasoning_run is None:
         return ExplanationAlignmentLabel.INSUFFICIENT_CONTEXT.value
     if any(
-        finding.severity == ExplanationComparisonSeverity.CRITICAL.value
-        for finding in findings
+        finding.severity == ExplanationComparisonSeverity.CRITICAL.value for finding in findings
     ):
         return ExplanationAlignmentLabel.CONFLICTING.value
     if score < review_threshold or any(

@@ -8,8 +8,9 @@ Create Date: 2026-05-02 11:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605021100_decision_readiness_assessments"
 down_revision: str | Sequence[str] | None = "202604301900"
@@ -80,7 +81,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "source_type in ('signal', 'analysis_run', 'reasoning_run', 'outcome', 'screenshot_decision')",
+            "source_type in ('signal', 'analysis_run', 'reasoning_run', "
+            "'outcome', 'screenshot_decision')",
             name=op.f("ck_decision_readiness_assessments_decision_readiness_source_type_allowed"),
         ),
         sa.CheckConstraint(

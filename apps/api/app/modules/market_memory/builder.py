@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
 from uuid import UUID
 
 from app.config import Settings
@@ -24,6 +23,8 @@ from app.modules.market_sessions.models import MarketSessionContext
 from app.modules.outcomes.models import SignalOutcome
 from app.modules.signals.models import Signal
 from app.modules.timeframe_aggregation.models import MultiTimeframeContext
+
+JsonValue = dict[str, "JsonValue"] | list["JsonValue"] | str | int | float | bool | None
 
 
 @dataclass(frozen=True)
@@ -779,7 +780,7 @@ def string_or_none(value: object | None) -> str | None:
     return value if isinstance(value, str) else None
 
 
-def to_json_value(value: object) -> Any:
+def to_json_value(value: object) -> JsonValue:
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, UUID):

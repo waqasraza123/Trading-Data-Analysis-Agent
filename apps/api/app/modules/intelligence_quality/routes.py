@@ -12,6 +12,8 @@ from app.modules.intelligence_quality.schemas import (
     ShadowClassificationResultRead,
 )
 from app.modules.intelligence_quality.service import IntelligenceQualityService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/intelligence-quality", tags=["intelligence-quality"])
 
@@ -22,7 +24,11 @@ def get_intelligence_quality_service(
     return IntelligenceQualityService(session)
 
 
-@router.post("/signals/{signal_id}/run", response_model=IntelligenceQualityResponse)
+@router.post(
+    "/signals/{signal_id}/run",
+    response_model=IntelligenceQualityResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def run_signal_quality(
     signal_id: UUID,
     payload: IntelligenceQualityRunRequest,
@@ -43,7 +49,11 @@ async def get_latest_signal_quality(
     return await service.get_latest_for_signal(signal_id)
 
 
-@router.post("/analysis-runs/{analysis_run_id}/run", response_model=IntelligenceQualityResponse)
+@router.post(
+    "/analysis-runs/{analysis_run_id}/run",
+    response_model=IntelligenceQualityResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def run_analysis_quality(
     analysis_run_id: UUID,
     payload: IntelligenceQualityRunRequest,

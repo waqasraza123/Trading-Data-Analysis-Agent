@@ -93,7 +93,9 @@ class ConfidenceCalibrationRepository:
         if horizon_minutes is not None:
             statement = statement.where(ConfidenceCalibrationBin.horizon_minutes == horizon_minutes)
         if calibration_label is not None:
-            statement = statement.where(ConfidenceCalibrationBin.calibration_label == calibration_label)
+            statement = statement.where(
+                ConfidenceCalibrationBin.calibration_label == calibration_label
+            )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

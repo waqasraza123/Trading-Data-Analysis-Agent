@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Request
 
 from app.config import AppEnvironment, Settings
 from app.core.errors import AppError
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.synthetic_fixtures.generator import SyntheticFixtureGenerator
 from app.modules.synthetic_fixtures.schemas import (
     SyntheticFixtureGenerateRequest,
@@ -30,7 +32,11 @@ def get_synthetic_fixture_generator(request: Request) -> SyntheticFixtureGenerat
     return SyntheticFixtureGenerator(settings.synthetic_fixtures_default_seed)
 
 
-@router.post("/generate", response_model=SyntheticFixtureGenerateResponse)
+@router.post(
+    "/generate",
+    response_model=SyntheticFixtureGenerateResponse,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def generate_synthetic_fixture(
     payload: SyntheticFixtureGenerateRequest,
     generator: Annotated[

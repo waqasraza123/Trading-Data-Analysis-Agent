@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy import (
     CheckConstraint,
-    DateTime,
     ForeignKey,
     Index,
     Numeric,
@@ -46,7 +45,8 @@ class DecisionReadinessAssessment(Base):
     __tablename__ = "decision_readiness_assessments"
     __table_args__ = (
         CheckConstraint(
-            "source_type in ('signal', 'analysis_run', 'reasoning_run', 'outcome', 'screenshot_decision')",
+            "source_type in ('signal', 'analysis_run', 'reasoning_run', "
+            "'outcome', 'screenshot_decision')",
             name="decision_readiness_source_type_allowed",
         ),
         CheckConstraint(

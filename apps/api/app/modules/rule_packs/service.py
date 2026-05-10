@@ -23,7 +23,6 @@ from app.modules.rule_packs.manifest import (
 )
 from app.modules.rule_packs.models import (
     AnalysisReproducibilityManifest,
-    ReplaySupportStatus,
     RulePack,
     RulePackStatus,
 )
@@ -55,9 +54,7 @@ class RulePackService:
             status=payload.status.value,
             description=payload.description,
             engine_versions_json=normalize_json_object(payload.engine_versions_json),
-            strategy_profile_refs_json=normalize_json_object(
-                payload.strategy_profile_refs_json
-            ),
+            strategy_profile_refs_json=normalize_json_object(payload.strategy_profile_refs_json),
             parser_versions_json=normalize_json_object(payload.parser_versions_json),
             threshold_config_json=normalize_json_object(payload.threshold_config_json),
             module_versions_json=normalize_json_object(payload.module_versions_json),
@@ -258,8 +255,10 @@ class ReproducibilityManifestService:
             analysis_run.id,
             self.settings.reproducibility_manifest_version,
         )
-        if existing is not None and not force_recompute and (
-            signal is None or existing.signal_id == signal.id
+        if (
+            existing is not None
+            and not force_recompute
+            and (signal is None or existing.signal_id == signal.id)
         ):
             return existing
         rule_pack = await self.rule_pack_service.seed_default_rule_pack(
@@ -429,9 +428,7 @@ def build_module_versions(settings: Settings) -> dict[str, object]:
         "profileDiagnostics": {
             "version": "unknown",
             "minimumSampleSize": settings.profile_diagnostics_minimum_sample_size,
-            "strongFollowThroughRate": str(
-                settings.profile_diagnostics_strong_follow_through_rate
-            ),
+            "strongFollowThroughRate": str(settings.profile_diagnostics_strong_follow_through_rate),
             "highReversalRate": str(settings.profile_diagnostics_high_reversal_rate),
             "highNoFollowThroughRate": str(
                 settings.profile_diagnostics_high_no_follow_through_rate

@@ -8,8 +8,9 @@ Create Date: 2026-05-02 01:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605020120_artifact_graph"
 down_revision: str | tuple[str, str] | None = "f9eb9423c4a2"
@@ -203,8 +204,7 @@ def upgrade() -> None:
             ["source_artifact_record_id"],
             ["intelligence_artifacts.id"],
             name=(
-                "fk_artifact_invalidation_events_"
-                "source_artifact_record_id_intelligence_artifacts"
+                "fk_artifact_invalidation_events_source_artifact_record_id_intelligence_artifacts"
             ),
             ondelete="CASCADE",
         ),
@@ -259,8 +259,7 @@ def upgrade() -> None:
             ["invalidation_event_id"],
             ["artifact_invalidation_events.id"],
             name=(
-                "fk_artifact_invalidation_items_"
-                "invalidation_event_id_artifact_invalidation_events"
+                "fk_artifact_invalidation_items_invalidation_event_id_artifact_invalidation_events"
             ),
             ondelete="CASCADE",
         ),

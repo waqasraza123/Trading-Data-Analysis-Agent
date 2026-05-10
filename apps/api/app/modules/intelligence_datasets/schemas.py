@@ -20,7 +20,11 @@ class IntelligenceDatasetExportFilters(ApiSchema):
 
     @model_validator(mode="after")
     def validate_window(self) -> "IntelligenceDatasetExportFilters":
-        if self.start_time is not None and self.end_time is not None and self.start_time > self.end_time:
+        if (
+            self.start_time is not None
+            and self.end_time is not None
+            and self.start_time > self.end_time
+        ):
             msg = "start_time must be before end_time"
             raise ValueError(msg)
         return self
@@ -28,7 +32,9 @@ class IntelligenceDatasetExportFilters(ApiSchema):
 
 class IntelligenceDatasetExportCreate(ApiSchema):
     workspace_id: UUID
-    filters: IntelligenceDatasetExportFilters = Field(default_factory=IntelligenceDatasetExportFilters)
+    filters: IntelligenceDatasetExportFilters = Field(
+        default_factory=IntelligenceDatasetExportFilters
+    )
     limit: int | None = None
     include_outcomes: bool = True
     include_market_session: bool = True

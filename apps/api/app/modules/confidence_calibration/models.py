@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy import (
     CheckConstraint,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -109,7 +108,8 @@ class ConfidenceCalibrationBin(Base):
             name="confidence_calibration_bins_horizon_positive",
         ),
         CheckConstraint(
-            "bin_min >= 0 and bin_min <= 1 and bin_max >= 0 and bin_max <= 1 and bin_min <= bin_max",
+            "bin_min >= 0 and bin_min <= 1 and bin_max >= 0 and bin_max <= 1 "
+            "and bin_min <= bin_max",
             name="confidence_calibration_bins_bin_range",
         ),
         CheckConstraint(

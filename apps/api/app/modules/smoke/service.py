@@ -259,9 +259,7 @@ class SmokeService:
 
 
 def smoke_candles() -> list[RawCandlePayload]:
-    start_time = datetime(2026, 1, 1, 0, 0, tzinfo=UTC) + timedelta(
-        minutes=uuid4().int % 1000000
-    )
+    start_time = datetime(2026, 1, 1, 0, 0, tzinfo=UTC) + timedelta(minutes=uuid4().int % 1000000)
     candles: list[RawCandlePayload] = []
     for index in range(24):
         base = Decimal("1.1000") + Decimal(index) * Decimal("0.0005")

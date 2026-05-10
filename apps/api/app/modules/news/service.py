@@ -702,7 +702,5 @@ def correlation_reason(
             f"{timing} and may have contributed to volatility."
         )
     if label == CorrelationLabel.WEAK:
-        return (
-            f"Weak correlation detected because the event was relevant but happened {timing}."
-        )
+        return f"Weak correlation detected because the event was relevant but happened {timing}."
     return "No strong event correlation was found inside the configured event window."

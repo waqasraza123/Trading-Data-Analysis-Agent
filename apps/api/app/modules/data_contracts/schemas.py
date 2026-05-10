@@ -17,7 +17,10 @@ class DataContractRead(ApiReadSchema):
     version: str
     status: DataContractStatus
     description: str
-    schema_json: dict[str, Any]
+    schema_definition: dict[str, Any] = Field(
+        validation_alias="schema_json",
+        serialization_alias="schema_json",
+    )
     metadata_json: dict[str, Any]
     created_at: datetime
     updated_at: datetime

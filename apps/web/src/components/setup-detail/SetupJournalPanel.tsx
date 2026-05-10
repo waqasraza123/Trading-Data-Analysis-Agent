@@ -3,6 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { Panel } from "@/components/layout/panel";
 import { Badge, toneForQuality } from "@/components/status/badge";
+import { createJournalEntry } from "@/lib/api/journal";
 import type { JournalEntry, UUID } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/formatting/dates";
 import { AnimatedListItem, motionRevealDensityStyle } from "@/lib/ui/motion";
@@ -20,7 +21,6 @@ const decisionTypes = [
 ];
 
 type SetupJournalPanelProps = {
-  apiBaseUrl: string;
   workspaceId: UUID | null;
   signalId: UUID;
   analysisRunId: UUID | null;
@@ -29,7 +29,6 @@ type SetupJournalPanelProps = {
 };
 
 export function SetupJournalPanel({
-  apiBaseUrl,
   workspaceId,
   signalId,
   analysisRunId,
@@ -42,7 +41,6 @@ export function SetupJournalPanel({
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const canSubmit = Boolean(workspaceId && title.trim() && userNotes.trim() && status !== "saving");
-  const normalizedBaseUrl = apiBaseUrl.replace(/\/$/, "");
 
   async function submitJournalEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,28 +49,21 @@ export function SetupJournalPanel({
     }
     setStatus("saving");
     setErrorMessage("");
-    const response = await fetch(`${normalizedBaseUrl}/journal-entries`, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
+    const result = await createJournalEntry({
+      workspaceId,
+      signalId,
+      analysisRunId,
+      setupContextId,
+      title: title.trim(),
+      status: "saved",
+      decisionType,
+      userNotes: userNotes.trim(),
+      tags: ["setup-detail"],
+      metadata: {
+        source: "setup_detail_view",
       },
-      body: JSON.stringify({
-        workspaceId,
-        signalId,
-        analysisRunId,
-        setupContextId,
-        title: title.trim(),
-        status: "saved",
-        decisionType,
-        userNotes: userNotes.trim(),
-        tags: ["setup-detail"],
-        metadata: {
-          source: "setup_detail_view",
-        },
-      }),
     });
-    if (!response.ok) {
+    if (!result.ok) {
       setStatus("failed");
       setErrorMessage("Journal note could not be saved.");
       return;

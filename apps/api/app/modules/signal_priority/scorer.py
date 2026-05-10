@@ -106,9 +106,7 @@ class SignalPriorityScorer:
         penalties = collect_penalties(artifacts, self.settings)
         boosters = collect_boosters(artifacts, components)
         final_score = decimal_score(
-            weighted_score
-            - sum_decimal_values(penalties)
-            + sum_decimal_values(boosters)
+            weighted_score - sum_decimal_values(penalties) + sum_decimal_values(boosters)
         )
         review_bucket = review_bucket_for(artifacts, components, final_score)
         priority_label = priority_label_for(artifacts, final_score, review_bucket, self.settings)
@@ -399,9 +397,7 @@ def collect_boosters(
     if Decimal(artifacts.signal.confidence_score) >= Decimal("0.7500"):
         boosters.append(booster("high_confidence", Decimal("0.0500"), "High signal confidence."))
     if components["setup_quality_component"].score >= Decimal("0.7500"):
-        boosters.append(
-            booster("strong_setup_context", Decimal("0.0500"), "Strong setup context.")
-        )
+        boosters.append(booster("strong_setup_context", Decimal("0.0500"), "Strong setup context."))
     if components["freshness_component"].score >= Decimal("0.9000"):
         boosters.append(booster("fresh_data", Decimal("0.0400"), "Fresh data context."))
     if components["timeframe_agreement_component"].score >= Decimal("0.7500"):
@@ -746,9 +742,8 @@ def has_critical_artifact_issue(artifacts: SignalPriorityArtifacts) -> bool:
 def has_avoid_condition(setup_context: SetupContext | None) -> bool:
     if setup_context is None:
         return False
-    return (
-        setup_context.setup_quality_label == "avoid_condition"
-        or bool(setup_context.avoid_reasons_json)
+    return setup_context.setup_quality_label == "avoid_condition" or bool(
+        setup_context.avoid_reasons_json
     )
 
 

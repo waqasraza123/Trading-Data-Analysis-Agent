@@ -46,6 +46,8 @@ from app.modules.chart_screenshots.schemas import (
 )
 from app.modules.chart_screenshots.service import ChartScreenshotPredictionService
 from app.modules.chart_screenshots.types import ChartCalibrationMode, ChartOcrStatus
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/chart-screenshot-runs", tags=["chart-screenshot-runs"])
 PREVIEW_HUMAN_REVIEW_CONFIDENCE_THRESHOLD = Decimal("0.7500")
@@ -71,7 +73,12 @@ def get_chart_screenshot_service(
     return ChartScreenshotPredictionService(session)
 
 
-@router.post("", response_model=ChartScreenshotRunRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ChartScreenshotRunRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def create_chart_screenshot_run(
     payload: ChartScreenshotPredictionCreate,
     service: Annotated[
@@ -87,6 +94,7 @@ async def create_chart_screenshot_run(
     "/image",
     response_model=ChartScreenshotRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def create_chart_screenshot_run_from_image(
     request: Request,
@@ -577,7 +585,11 @@ async def get_chart_screenshot_run(
     return ChartScreenshotRunRead.model_validate(run)
 
 
-@router.post("/{run_id}/review", response_model=ChartScreenshotRunReviewRead)
+@router.post(
+    "/{run_id}/review",
+    response_model=ChartScreenshotRunReviewRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def review_chart_screenshot_run(
     run_id: UUID,
     payload: ChartScreenshotRunReviewRequest,

@@ -97,7 +97,9 @@ class MarketRegimeContextService:
         await self.get_analysis_run(analysis_run_id)
         context = await self.repository.get_by_analysis_run_id(analysis_run_id, self.regime_version)
         if context is None:
-            raise AppError(404, "market_regime_context_not_found", "Market regime context not found")
+            raise AppError(
+                404, "market_regime_context_not_found", "Market regime context not found"
+            )
         return context
 
     async def get_for_signal(self, signal_id: UUID) -> MarketRegimeContext:
@@ -109,7 +111,9 @@ class MarketRegimeContextService:
                 self.regime_version,
             )
         if context is None:
-            raise AppError(404, "market_regime_context_not_found", "Market regime context not found")
+            raise AppError(
+                404, "market_regime_context_not_found", "Market regime context not found"
+            )
         return context
 
     async def build_context(

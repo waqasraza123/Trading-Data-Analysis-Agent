@@ -18,6 +18,8 @@ from app.modules.intelligence_catalog.schemas import (
     IntelligenceCatalogUpsert,
 )
 from app.modules.intelligence_catalog.service import IntelligenceCatalogService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/intelligence-catalog", tags=["intelligence-catalog"])
 
@@ -28,7 +30,12 @@ def get_intelligence_catalog_service(
     return IntelligenceCatalogService(session)
 
 
-@router.post("/index", response_model=IntelligenceCatalogItemRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/index",
+    response_model=IntelligenceCatalogItemRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def index_intelligence_artifact(
     payload: IntelligenceCatalogIndexRequest,
     service: Annotated[IntelligenceCatalogService, Depends(get_intelligence_catalog_service)],
@@ -37,7 +44,12 @@ async def index_intelligence_artifact(
     return IntelligenceCatalogItemRead.model_validate(item)
 
 
-@router.post("/items", response_model=IntelligenceCatalogItemRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/items",
+    response_model=IntelligenceCatalogItemRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def upsert_intelligence_catalog_item(
     payload: IntelligenceCatalogUpsert,
     service: Annotated[IntelligenceCatalogService, Depends(get_intelligence_catalog_service)],
@@ -46,7 +58,11 @@ async def upsert_intelligence_catalog_item(
     return IntelligenceCatalogItemRead.model_validate(item)
 
 
-@router.delete("/items", response_model=dict[str, bool])
+@router.delete(
+    "/items",
+    response_model=dict[str, bool],
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def remove_intelligence_catalog_item(
     payload: IntelligenceCatalogRemoveRequest,
     service: Annotated[IntelligenceCatalogService, Depends(get_intelligence_catalog_service)],
@@ -54,7 +70,11 @@ async def remove_intelligence_catalog_item(
     return {"removed": await service.remove_catalog_item(payload)}
 
 
-@router.post("/reindex", response_model=IntelligenceCatalogReindexRead)
+@router.post(
+    "/reindex",
+    response_model=IntelligenceCatalogReindexRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def reindex_intelligence_catalog(
     payload: IntelligenceCatalogReindexRequest,
     service: Annotated[IntelligenceCatalogService, Depends(get_intelligence_catalog_service)],

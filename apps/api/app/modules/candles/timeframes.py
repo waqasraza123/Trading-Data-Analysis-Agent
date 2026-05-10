@@ -42,10 +42,7 @@ def timestamp_aligns_with_timeframe(timestamp: datetime, timeframe: Timeframe) -
         + normalized_timestamp.second
     )
     duration_seconds = int(duration.total_seconds())
-    return (
-        normalized_timestamp.microsecond == 0
-        and seconds_since_day_start % duration_seconds == 0
-    )
+    return normalized_timestamp.microsecond == 0 and seconds_since_day_start % duration_seconds == 0
 
 
 def expected_timestamps(

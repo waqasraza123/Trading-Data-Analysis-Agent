@@ -8,8 +8,9 @@ Create Date: 2026-05-03 21:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605032100_provider_credential_refs"
 down_revision: str | Sequence[str] | None = "202605032000_daily_product_workflow_merge"

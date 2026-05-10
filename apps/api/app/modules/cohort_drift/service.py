@@ -145,8 +145,7 @@ class CohortDriftService:
         )
         baseline_end = (
             payload.baseline_window.end_time
-            if payload.baseline_window is not None
-            and payload.baseline_window.end_time is not None
+            if payload.baseline_window is not None and payload.baseline_window.end_time is not None
             else default_baseline_end
         )
         if baseline_start >= baseline_end:

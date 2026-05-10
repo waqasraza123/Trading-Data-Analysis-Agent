@@ -1,7 +1,16 @@
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
+from sqlalchemy import (
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -101,10 +110,18 @@ class IntelligenceBackfillPlan(Base):
         default=True,
         server_default=text("true"),
     )
-    eligible_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    planned_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    skipped_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    blocked_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    eligible_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    planned_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    skipped_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    blocked_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     metadata_json: Mapped[dict[str, object]] = mapped_column(
         JSONB,
@@ -167,7 +184,9 @@ class IntelligenceBackfillItem(Base):
     )
     skip_reason: Mapped[str | None] = mapped_column(String(120), nullable=True)
     block_reason: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    execution_record_id: Mapped[UUID | None] = mapped_column(PostgresUUID(as_uuid=True), nullable=True)
+    execution_record_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True), nullable=True
+    )
     result_json: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
     created_at = created_at_column()
     updated_at = updated_at_column()

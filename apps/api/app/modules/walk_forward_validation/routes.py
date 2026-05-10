@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.walk_forward_validation.schemas import (
     WalkForwardValidationComparisonRead,
     WalkForwardValidationRunRead,
@@ -26,6 +28,7 @@ def get_walk_forward_validation_service(
     "/walk-forward-validations/run",
     response_model=WalkForwardValidationRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_walk_forward_validation(
     payload: WalkForwardValidationRunRequest,
@@ -114,6 +117,5 @@ async def list_walk_forward_validation_comparisons(
 ) -> list[WalkForwardValidationComparisonRead]:
     comparisons = await service.list_comparisons(run_id)
     return [
-        WalkForwardValidationComparisonRead.model_validate(comparison)
-        for comparison in comparisons
+        WalkForwardValidationComparisonRead.model_validate(comparison) for comparison in comparisons
     ]

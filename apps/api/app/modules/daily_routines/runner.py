@@ -497,9 +497,7 @@ class DailyRoutineRunner:
                 ),
             )
         )
-        state.signal_digest_run_ids = unique_strings(
-            [*state.signal_digest_run_ids, str(digest.id)]
-        )
+        state.signal_digest_run_ids = unique_strings([*state.signal_digest_run_ids, str(digest.id)])
         return completed(
             {
                 "digestRunId": str(digest.id),

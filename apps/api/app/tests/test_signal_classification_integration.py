@@ -87,9 +87,7 @@ async def test_strategy_profile_seed_is_idempotent(db_session: AsyncSession) -> 
     second_profiles = await service.seed_default_profiles()
 
     assert len(first_profiles) == 4
-    assert {profile.id for profile in first_profiles} == {
-        profile.id for profile in second_profiles
-    }
+    assert {profile.id for profile in first_profiles} == {profile.id for profile in second_profiles}
 
 
 @pytest.mark.asyncio

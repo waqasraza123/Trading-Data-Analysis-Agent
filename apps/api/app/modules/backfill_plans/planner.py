@@ -62,15 +62,21 @@ class PreparedBackfillPlan:
 
     @property
     def planned_count(self) -> int:
-        return sum(1 for candidate in self.candidates if candidate.status == BackfillItemStatus.PLANNED)
+        return sum(
+            1 for candidate in self.candidates if candidate.status == BackfillItemStatus.PLANNED
+        )
 
     @property
     def skipped_count(self) -> int:
-        return sum(1 for candidate in self.candidates if candidate.status == BackfillItemStatus.SKIPPED)
+        return sum(
+            1 for candidate in self.candidates if candidate.status == BackfillItemStatus.SKIPPED
+        )
 
     @property
     def blocked_count(self) -> int:
-        return sum(1 for candidate in self.candidates if candidate.status == BackfillItemStatus.BLOCKED)
+        return sum(
+            1 for candidate in self.candidates if candidate.status == BackfillItemStatus.BLOCKED
+        )
 
 
 OPERATION_CONTRACTS: dict[str, BackfillOperationContract] = {
@@ -249,7 +255,9 @@ class BackfillPlanPlanner:
         if contract.operation == "outcomes.evaluate":
             return await self.prepare_missing_outcomes_plan(payload, filters, contract)
         if contract.operation == "reproducibility_manifest.generate":
-            analysis_runs = await self.list_analysis_runs_missing_reproducibility(payload.workspace_id, filters)
+            analysis_runs = await self.list_analysis_runs_missing_reproducibility(
+                payload.workspace_id, filters
+            )
             candidates = [
                 self.build_candidate(
                     target_type=BackfillItemTargetType.ANALYSIS_RUN,
@@ -332,7 +340,9 @@ class BackfillPlanPlanner:
 
     async def list_signals(self, workspace_id: UUID, filters: BackfillPlanFilters) -> list[Signal]:
         limit = self.resolve_limit(filters.limit)
-        result = await self.session.execute(self.signal_statement(workspace_id, filters).limit(limit))
+        result = await self.session.execute(
+            self.signal_statement(workspace_id, filters).limit(limit)
+        )
         return list(result.scalars().all())
 
     async def list_completed_analysis_runs(
@@ -361,7 +371,9 @@ class BackfillPlanPlanner:
         result = await self.session.execute(statement.limit(limit))
         return list(result.scalars().all())
 
-    def signal_statement(self, workspace_id: UUID, filters: BackfillPlanFilters) -> Select[tuple[Signal]]:
+    def signal_statement(
+        self, workspace_id: UUID, filters: BackfillPlanFilters
+    ) -> Select[tuple[Signal]]:
         statement: Select[tuple[Signal]] = (
             select(Signal)
             .join(AnalysisRun, AnalysisRun.id == Signal.analysis_run_id)
@@ -415,7 +427,9 @@ class BackfillPlanPlanner:
         metadata_json: dict[str, object] = {
             "operationAvailability": contract.availability.value,
             "createExecutionRecordsRequested": payload.create_execution_records,
-            "executionRegistryStatus": BackfillModuleAvailability.EXECUTION_REGISTRY_UNAVAILABLE.value,
+            "executionRegistryStatus": (
+                BackfillModuleAvailability.EXECUTION_REGISTRY_UNAVAILABLE.value
+            ),
             "sourceArtifactMutationAllowed": False,
             "externalProviderCallsAllowed": False,
             "automaticExecutionAllowed": False,
@@ -463,13 +477,19 @@ class BackfillPlanPlanner:
         operation = payload.target_operation or DEFAULT_OPERATION_BY_PLAN_TYPE[payload.plan_type]
         contract = OPERATION_CONTRACTS.get(operation)
         if contract is None:
-            raise AppError(422, "unsupported_backfill_operation", "Unsupported backfill target operation")
+            raise AppError(
+                422, "unsupported_backfill_operation", "Unsupported backfill target operation"
+            )
         return contract
 
     def resolve_limit(self, requested_limit: int | None) -> int:
         limit = requested_limit or self.settings.backfill_plan_default_limit
         if limit > self.settings.backfill_plan_max_limit:
-            raise AppError(422, "backfill_plan_limit_exceeded", "Backfill plan limit exceeds configured maximum")
+            raise AppError(
+                422,
+                "backfill_plan_limit_exceeded",
+                "Backfill plan limit exceeds configured maximum",
+            )
         return limit
 
     def analysis_run_input(self, analysis_run: AnalysisRun, dry_run: bool) -> dict[str, object]:
@@ -491,9 +511,15 @@ class BackfillPlanPlanner:
         contract: BackfillOperationContract,
         candidates: list[PlannedBackfillCandidate],
     ) -> str:
-        planned_count = sum(1 for candidate in candidates if candidate.status == BackfillItemStatus.PLANNED)
-        blocked_count = sum(1 for candidate in candidates if candidate.status == BackfillItemStatus.BLOCKED)
-        skipped_count = sum(1 for candidate in candidates if candidate.status == BackfillItemStatus.SKIPPED)
+        planned_count = sum(
+            1 for candidate in candidates if candidate.status == BackfillItemStatus.PLANNED
+        )
+        blocked_count = sum(
+            1 for candidate in candidates if candidate.status == BackfillItemStatus.BLOCKED
+        )
+        skipped_count = sum(
+            1 for candidate in candidates if candidate.status == BackfillItemStatus.SKIPPED
+        )
         return (
             f"{plan_type.value} prepared {len(candidates)} eligible artifact(s) for "
             f"{contract.operation}: {planned_count} planned, {blocked_count} blocked, "

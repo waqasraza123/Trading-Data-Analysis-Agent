@@ -43,7 +43,9 @@ class MarketSessionService:
     async def get_for_analysis_run(self, analysis_run_id: UUID) -> MarketSessionContext:
         context = await self.repository.get_by_analysis_run_id(analysis_run_id)
         if context is None:
-            raise AppError(404, "market_session_context_not_found", "Market session context not found")
+            raise AppError(
+                404, "market_session_context_not_found", "Market session context not found"
+            )
         return context
 
     async def create_for_signal(self, signal_id: UUID) -> MarketSessionContext:
@@ -74,7 +76,9 @@ class MarketSessionService:
     async def get_for_signal(self, signal_id: UUID) -> MarketSessionContext:
         context = await self.repository.get_by_signal_id(signal_id)
         if context is None:
-            raise AppError(404, "market_session_context_not_found", "Market session context not found")
+            raise AppError(
+                404, "market_session_context_not_found", "Market session context not found"
+            )
         return context
 
 

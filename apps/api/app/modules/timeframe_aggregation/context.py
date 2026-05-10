@@ -79,7 +79,9 @@ class MultiTimeframeContextEngine:
             warnings_json=warnings,
         )
 
-    def snapshot_from_candles(self, timeframe: str, candles: list[Candle]) -> TimeframeContextSnapshot:
+    def snapshot_from_candles(
+        self, timeframe: str, candles: list[Candle]
+    ) -> TimeframeContextSnapshot:
         ordered = sorted(candles, key=lambda candle: candle.timestamp)
         if len(ordered) < 2:
             return TimeframeContextSnapshot(
@@ -158,7 +160,9 @@ class MultiTimeframeContextEngine:
     def average_range(self, candles: list[Candle]) -> Decimal:
         if not candles:
             return Decimal("0")
-        return sum((candle.high - candle.low for candle in candles), Decimal("0")) / Decimal(len(candles))
+        return sum((candle.high - candle.low for candle in candles), Decimal("0")) / Decimal(
+            len(candles)
+        )
 
     def average_absolute_return(self, candles: list[Candle]) -> Decimal:
         returns: list[Decimal] = []
@@ -223,7 +227,9 @@ class MultiTimeframeContextEngine:
             return TimeframeAlignment.CONFLICTING
         return TimeframeAlignment.UNCLEAR
 
-    def score_agreement(self, signal: Signal | None, snapshots: list[TimeframeContextSnapshot]) -> Decimal:
+    def score_agreement(
+        self, signal: Signal | None, snapshots: list[TimeframeContextSnapshot]
+    ) -> Decimal:
         if signal is None or signal.classification_status != SignalClassificationStatus.SIGNAL:
             return Decimal("0")
         if signal.bias not in {SignalBias.BULLISH, SignalBias.BEARISH}:
@@ -249,7 +255,11 @@ class MultiTimeframeContextEngine:
         snapshots: list[TimeframeContextSnapshot],
         agreement_score: Decimal,
     ) -> TimeframeAgreementLabel:
-        if not snapshots or signal is None or signal.classification_status != SignalClassificationStatus.SIGNAL:
+        if (
+            not snapshots
+            or signal is None
+            or signal.classification_status != SignalClassificationStatus.SIGNAL
+        ):
             return TimeframeAgreementLabel.INSUFFICIENT_CONTEXT
         if agreement_score >= Decimal("0.7500"):
             return TimeframeAgreementLabel.STRONG

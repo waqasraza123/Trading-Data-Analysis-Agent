@@ -426,12 +426,14 @@ class OperatorReviewService:
             raise AppError(404, "operator_review_not_found", "Operator review item not found")
         return item
 
-    async def optional_get(self, module_name: str, model_name: str, item_id: UUID) -> Any:
+    async def optional_get(self, module_name: str, model_name: str, item_id: UUID) -> object:
         try:
             module = import_module(module_name)
             model = getattr(module, model_name)
         except (ImportError, AttributeError) as error:
-            raise AppError(422, "unsupported_source_type", "Review source is unavailable") from error
+            raise AppError(
+                422, "unsupported_source_type", "Review source is unavailable"
+            ) from error
         item = await self.session.get(model, item_id)
         if item is None:
             raise AppError(404, "review_source_not_found", "Review source not found")

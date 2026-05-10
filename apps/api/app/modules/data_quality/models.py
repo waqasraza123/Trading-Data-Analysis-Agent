@@ -3,7 +3,17 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -94,8 +104,12 @@ class DataQualityRun(Base):
     timeframe: Mapped[str | None] = mapped_column(String(16), nullable=True)
     start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    candle_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    finding_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    candle_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    finding_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     quality_score: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False)
     quality_label: Mapped[str] = mapped_column(String(32), nullable=False)
     summary_json: Mapped[dict[str, object]] = mapped_column(

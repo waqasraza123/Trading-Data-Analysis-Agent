@@ -42,7 +42,6 @@ from app.modules.provider_polling.schemas import ProviderPollingProvider
 from app.modules.symbols.models import Symbol
 from app.modules.symbols.repository import SymbolRepository
 
-
 TERMINAL_PLAN_STATUSES = {
     CandleGapRecoveryPlanStatus.COMPLETED.value,
     CandleGapRecoveryPlanStatus.COMPLETED_WITH_WARNINGS.value,
@@ -103,8 +102,7 @@ class CandleGapRecoveryService:
             end_time=end_time,
         )
         method_decisions = [
-            self.resolve_recovery_method(gap, symbol, source)
-            for gap in detection.gaps
+            self.resolve_recovery_method(gap, symbol, source) for gap in detection.gaps
         ]
         planned_request_count = sum(
             1

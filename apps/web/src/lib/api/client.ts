@@ -30,7 +30,7 @@ export async function apiPostForm<T>(
   options: RequestOptions = {},
 ): Promise<ApiResult<T>> {
   const env = getPublicEnv();
-  const url = buildUrl(env.apiBaseUrl, path, options.query);
+  const url = buildRequestUrl(env.apiBaseUrl, "POST", path, options.query);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || defaultTimeoutMs);
   try {
@@ -99,7 +99,7 @@ async function apiRequest<T>(
   options: RequestOptions,
 ): Promise<ApiResult<T>> {
   const env = getPublicEnv();
-  const url = buildUrl(env.apiBaseUrl, path, options.query);
+  const url = buildRequestUrl(env.apiBaseUrl, method, path, options.query);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || defaultTimeoutMs);
   try {
@@ -192,6 +192,26 @@ function buildUrl(baseUrl: string, path: string, query?: Record<string, QueryVal
     }
   });
   return url.toString();
+}
+
+function buildRequestUrl(
+  baseUrl: string,
+  method: RequestMethod,
+  path: string,
+  query?: Record<string, QueryValue>,
+): string {
+  if (method !== "GET" && typeof window !== "undefined") {
+    return buildUrl(window.location.origin, `/api/backend/${normalizeProxyPath(path)}`, query);
+  }
+  return buildUrl(baseUrl, path, query);
+}
+
+function normalizeProxyPath(path: string): string {
+  return path
+    .split("/")
+    .filter((segment) => segment.length > 0)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 }
 
 async function parseResponse(response: Response): Promise<unknown> {

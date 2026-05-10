@@ -8,8 +8,9 @@ Create Date: 2026-05-03 12:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605031200_pattern_attribution"
 down_revision: str | Sequence[str] | None = "202605031100_context_validation_recovery_merge"
@@ -60,8 +61,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "evaluated_candidate_count >= 0 and evaluated_signal_count >= 0 "
-            "and result_count >= 0",
+            "evaluated_candidate_count >= 0 and evaluated_signal_count >= 0 and result_count >= 0",
             name="pattern_attribution_runs_counts_non_negative",
         ),
         sa.CheckConstraint(
@@ -142,8 +142,7 @@ def upgrade() -> None:
             name="pattern_attribution_results_counts_non_negative",
         ),
         sa.CheckConstraint(
-            "continuation_rate is null or "
-            "(continuation_rate >= 0 and continuation_rate <= 1)",
+            "continuation_rate is null or (continuation_rate >= 0 and continuation_rate <= 1)",
             name="pattern_attribution_results_continuation_rate_range",
         ),
         sa.CheckConstraint(

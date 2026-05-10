@@ -559,9 +559,7 @@ class AnalysisService:
                 "Indicator snapshot calculated and persisted",
                 {
                     "indicatorSnapshotId": str(indicator_snapshot.id),
-                    "isReady": indicator_snapshot_is_ready(
-                        indicator_snapshot.indicators_json
-                    ),
+                    "isReady": indicator_snapshot_is_ready(indicator_snapshot.indicators_json),
                 },
             )
             pattern_candidates = await self.pattern_candidate_service.create_candidates(
@@ -585,9 +583,7 @@ class AnalysisService:
                         str(selected_candidate.id) if selected_candidate is not None else None
                     ),
                     "selectedPatternType": (
-                        selected_candidate.pattern_type
-                        if selected_candidate is not None
-                        else None
+                        selected_candidate.pattern_type if selected_candidate is not None else None
                     ),
                 },
             )

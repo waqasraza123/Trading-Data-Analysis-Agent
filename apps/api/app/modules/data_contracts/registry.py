@@ -271,7 +271,9 @@ DEFAULT_DATA_CONTRACTS: tuple[DataContractDefinition, ...] = (
     DataContractDefinition(
         key="chart_axis_calibration",
         version="v1",
-        description="Chart screenshot axis calibration metadata extracted from OCR or manual calibration.",
+        description=(
+            "Chart screenshot axis calibration metadata extracted from OCR or manual calibration."
+        ),
         schema_json=object_schema(
             {
                 "priceAxis": OBJECT,
@@ -290,7 +292,9 @@ DEFAULT_DATA_CONTRACTS: tuple[DataContractDefinition, ...] = (
     DataContractDefinition(
         key="chart_ocr_metadata",
         version="v1",
-        description="Chart screenshot OCR metadata used for extraction confidence and review gating.",
+        description=(
+            "Chart screenshot OCR metadata used for extraction confidence and review gating."
+        ),
         schema_json=object_schema(
             {
                 "status": STRING,

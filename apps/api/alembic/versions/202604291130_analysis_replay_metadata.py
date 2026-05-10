@@ -38,8 +38,7 @@ def upgrade() -> None:
     op.create_check_constraint(
         op.f("ck_analysis_runs_replay_mode_allowed"),
         "analysis_runs",
-        "replay_mode is null or replay_mode in "
-        "('latest_engine_version', 'same_engine_version')",
+        "replay_mode is null or replay_mode in ('latest_engine_version', 'same_engine_version')",
     )
     op.create_index(
         "ix_analysis_runs_replayed_from",

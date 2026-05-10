@@ -160,8 +160,7 @@ def has_low_follow_through(outcomes: list[SignalOutcome]) -> bool:
         outcome
         for outcome in outcomes
         if outcome.evaluation_status == "evaluated"
-        and outcome.outcome_label
-        in {"no_follow_through", "reversal", "sideways_after_signal"}
+        and outcome.outcome_label in {"no_follow_through", "reversal", "sideways_after_signal"}
     ]
     return len(checked) >= 2
 

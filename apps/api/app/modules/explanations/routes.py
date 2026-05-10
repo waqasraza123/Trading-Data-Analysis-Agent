@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import database_session
 from app.modules.explanations.schemas import DeterministicExplanationRead
 from app.modules.explanations.service import DeterministicExplanationService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["deterministic-explanations"])
 
@@ -20,6 +22,7 @@ def get_deterministic_explanation_service(
 @router.post(
     "/signals/{signal_id}/deterministic-explanation",
     response_model=DeterministicExplanationRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def generate_signal_deterministic_explanation(
     signal_id: UUID,
@@ -48,6 +51,7 @@ async def get_signal_deterministic_explanation(
 @router.post(
     "/analysis-runs/{analysis_run_id}/deterministic-explanation",
     response_model=DeterministicExplanationRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def generate_analysis_run_deterministic_explanation(
     analysis_run_id: UUID,

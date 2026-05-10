@@ -422,8 +422,7 @@ class ProductReadinessService:
                 else "No provider health snapshot has been recorded yet."
             ),
             remediation=(
-                "Use data onboarding or an explicit daily workflow run to refresh provider "
-                "health."
+                "Use data onboarding or an explicit daily workflow run to refresh provider health."
             ),
             related_route="/data/onboarding",
             metadata={"snapshot_count": count},

@@ -98,9 +98,7 @@ def test_profile_governance_diff_tracks_pattern_threshold_and_weight_changes() -
         "added": ["bullish_continuation"],
         "removed": ["bearish_breakdown"],
     }
-    assert result["minimumThresholds"] == {
-        "minimum_confidence": {"from": "0.6500", "to": "0.7000"}
-    }
+    assert result["minimumThresholds"] == {"minimum_confidence": {"from": "0.6500", "to": "0.7000"}}
     assert result["componentWeights"]["changed"]["pattern_strength"] == {
         "from": "0.35",
         "to": "0.40",

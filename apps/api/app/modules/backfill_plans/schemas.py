@@ -13,7 +13,6 @@ from app.modules.backfill_plans.models import (
     BackfillPlanType,
 )
 
-
 SUPPORTED_BACKFILL_OPERATIONS = {
     "outcomes.evaluate",
     "market_regime.generate",
@@ -66,7 +65,10 @@ class BackfillPlanCreate(ApiSchema):
 
     @model_validator(mode="after")
     def validate_operation(self) -> "BackfillPlanCreate":
-        if self.target_operation is not None and self.target_operation not in SUPPORTED_BACKFILL_OPERATIONS:
+        if (
+            self.target_operation is not None
+            and self.target_operation not in SUPPORTED_BACKFILL_OPERATIONS
+        ):
             msg = "Unsupported backfill target operation"
             raise ValueError(msg)
         return self

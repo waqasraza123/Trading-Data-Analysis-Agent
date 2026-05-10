@@ -104,7 +104,8 @@ class AnalysisReproducibilityManifest(Base):
     __tablename__ = "analysis_reproducibility_manifests"
     __table_args__ = (
         CheckConstraint(
-            "replay_support_status in ('supported', 'partially_supported', 'unsupported', 'unknown')",
+            "replay_support_status in ('supported', 'partially_supported', "
+            "'unsupported', 'unknown')",
             name="analysis_reproducibility_manifests_replay_support_allowed",
         ),
         UniqueConstraint(

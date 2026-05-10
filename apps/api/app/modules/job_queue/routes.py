@@ -19,6 +19,8 @@ from app.modules.job_queue.schemas import (
     JobQueueSeedDefinitionsResponse,
 )
 from app.modules.job_queue.service import JobQueueService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/job-queue", tags=["job-queue"])
 
@@ -29,7 +31,12 @@ def get_job_queue_service(
     return JobQueueService(session)
 
 
-@router.post("/jobs", response_model=JobQueueJobRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/jobs",
+    response_model=JobQueueJobRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def enqueue_job(
     payload: JobQueueJobCreate,
     service: Annotated[JobQueueService, Depends(get_job_queue_service)],
@@ -68,7 +75,11 @@ async def get_job(
     return JobQueueJobRead.model_validate(job)
 
 
-@router.post("/jobs/{job_id}/cancel", response_model=JobQueueJobRead)
+@router.post(
+    "/jobs/{job_id}/cancel",
+    response_model=JobQueueJobRead,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def cancel_job(
     job_id: UUID,
     payload: JobQueueCancelRequest,
@@ -91,6 +102,7 @@ async def list_job_events(
     "/definitions/seed-default",
     response_model=JobQueueSeedDefinitionsResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def seed_default_definitions(
     service: Annotated[JobQueueService, Depends(get_job_queue_service)],

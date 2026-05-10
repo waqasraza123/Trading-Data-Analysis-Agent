@@ -5,7 +5,11 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
-from app.modules.backfill_plans.models import BackfillItemStatus, BackfillPlanStatus, BackfillPlanType
+from app.modules.backfill_plans.models import (
+    BackfillItemStatus,
+    BackfillPlanStatus,
+    BackfillPlanType,
+)
 from app.modules.backfill_plans.schemas import (
     BackfillItemListQuery,
     BackfillItemRead,
@@ -14,6 +18,8 @@ from app.modules.backfill_plans.schemas import (
     BackfillPlanRead,
 )
 from app.modules.backfill_plans.service import BackfillPlanService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/backfill-plans", tags=["backfill-plans"])
 
@@ -24,7 +30,12 @@ def get_backfill_plan_service(
     return BackfillPlanService(session)
 
 
-@router.post("", response_model=BackfillPlanRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=BackfillPlanRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
+)
 async def create_backfill_plan(
     payload: BackfillPlanCreate,
     service: Annotated[BackfillPlanService, Depends(get_backfill_plan_service)],
@@ -78,7 +89,11 @@ async def list_backfill_items(
     return [BackfillItemRead.model_validate(item) for item in items]
 
 
-@router.post("/{plan_id}/cancel", response_model=BackfillPlanRead)
+@router.post(
+    "/{plan_id}/cancel",
+    response_model=BackfillPlanRead,
+    dependencies=[Depends(require_permission(Permission.PROVIDER_POLLING_WRITE))],
+)
 async def cancel_backfill_plan(
     plan_id: UUID,
     service: Annotated[BackfillPlanService, Depends(get_backfill_plan_service)],

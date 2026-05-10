@@ -10,4 +10,3 @@ __all__ = [
     "default_policy",
     "redact_payload",
 ]
-

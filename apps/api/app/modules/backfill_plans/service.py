@@ -100,7 +100,9 @@ class BackfillPlanService:
         await self.session.commit()
         return cancelled
 
-    async def prepare_missing_outcomes_plan(self, payload: BackfillPlanCreate) -> PreparedBackfillPlan:
+    async def prepare_missing_outcomes_plan(
+        self, payload: BackfillPlanCreate
+    ) -> PreparedBackfillPlan:
         filters = self.normalized_filters(payload)
         return await self.planner.prepare_missing_outcomes_plan(
             payload,
@@ -108,7 +110,9 @@ class BackfillPlanService:
             self.planner.resolve_contract(payload),
         )
 
-    async def prepare_missing_context_plan(self, payload: BackfillPlanCreate) -> PreparedBackfillPlan:
+    async def prepare_missing_context_plan(
+        self, payload: BackfillPlanCreate
+    ) -> PreparedBackfillPlan:
         filters = self.normalized_filters(payload)
         return await self.planner.prepare_missing_context_plan(
             payload,
@@ -116,7 +120,9 @@ class BackfillPlanService:
             self.planner.resolve_contract(payload),
         )
 
-    async def prepare_stale_artifacts_plan(self, payload: BackfillPlanCreate) -> PreparedBackfillPlan:
+    async def prepare_stale_artifacts_plan(
+        self, payload: BackfillPlanCreate
+    ) -> PreparedBackfillPlan:
         filters = self.normalized_filters(payload)
         return await self.planner.prepare_stale_artifacts_plan(
             payload,
@@ -124,7 +130,9 @@ class BackfillPlanService:
             self.planner.resolve_contract(payload),
         )
 
-    async def prepare_module_backfill_plan(self, payload: BackfillPlanCreate) -> PreparedBackfillPlan:
+    async def prepare_module_backfill_plan(
+        self, payload: BackfillPlanCreate
+    ) -> PreparedBackfillPlan:
         filters = self.normalized_filters(payload)
         return await self.planner.prepare_module_backfill_plan(
             payload,
@@ -150,7 +158,9 @@ class BackfillPlanService:
                 target_operation=candidate.target_operation,
                 status=candidate.status,
                 priority=candidate.priority,
-                idempotency_key=self.idempotency_key(plan, candidate.target_type, candidate.target_id),
+                idempotency_key=self.idempotency_key(
+                    plan, candidate.target_type, candidate.target_id
+                ),
                 input_json=candidate.input_json,
                 skip_reason=candidate.skip_reason,
                 block_reason=candidate.block_reason,
@@ -158,6 +168,8 @@ class BackfillPlanService:
             for candidate in prepared_plan.candidates
         ]
 
-    def idempotency_key(self, plan: IntelligenceBackfillPlan, target_type: str, target_id: UUID) -> str:
+    def idempotency_key(
+        self, plan: IntelligenceBackfillPlan, target_type: str, target_id: UUID
+    ) -> str:
         raw_key = f"{plan.id}:{plan.target_operation}:{target_type}:{target_id}"
         return sha256(raw_key.encode("utf-8")).hexdigest()

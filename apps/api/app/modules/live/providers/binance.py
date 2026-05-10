@@ -71,9 +71,7 @@ class BinanceLiveProvider(LiveProvider):
             ) from error
         return NormalizedLiveProviderEvent(
             event_type=(
-                LiveFeedEventType.CANDLE_FINAL
-                if is_final
-                else LiveFeedEventType.CANDLE_PARTIAL
+                LiveFeedEventType.CANDLE_FINAL if is_final else LiveFeedEventType.CANDLE_PARTIAL
             ),
             provider_timestamp=(
                 payload.provider_timestamp or datetime_from_event(payload.payload_json)

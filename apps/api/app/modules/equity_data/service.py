@@ -896,9 +896,8 @@ class EquityDataService:
             return False
         if provider == "csv_equity_import":
             return False
-        if (
-            not self.settings.equity_data_allow_external_requests
-            and (credential_ref_id is None or requires_credential_ref)
+        if not self.settings.equity_data_allow_external_requests and (
+            credential_ref_id is None or requires_credential_ref
         ):
             return False
         if requires_credential_ref and credential_ref_id is None:

@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.webhook_outbox.models import (
     WebhookEventType,
     WebhookOutboxEventStatus,
@@ -28,7 +30,11 @@ def get_webhook_outbox_service(
     return WebhookOutboxService(session)
 
 
-@router.post("/webhook-subscriptions", response_model=WebhookSubscriptionRead)
+@router.post(
+    "/webhook-subscriptions",
+    response_model=WebhookSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def create_webhook_subscription(
     payload: WebhookSubscriptionCreate,
     service: Annotated[WebhookOutboxService, Depends(get_webhook_outbox_service)],
@@ -63,7 +69,11 @@ async def get_webhook_subscription(
     return WebhookSubscriptionRead.model_validate(subscription)
 
 
-@router.patch("/webhook-subscriptions/{subscription_id}", response_model=WebhookSubscriptionRead)
+@router.patch(
+    "/webhook-subscriptions/{subscription_id}",
+    response_model=WebhookSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def update_webhook_subscription(
     subscription_id: UUID,
     payload: WebhookSubscriptionUpdate,
@@ -76,6 +86,7 @@ async def update_webhook_subscription(
 @router.post(
     "/webhook-subscriptions/{subscription_id}/archive",
     response_model=WebhookSubscriptionRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
 )
 async def archive_webhook_subscription(
     subscription_id: UUID,
@@ -85,7 +96,11 @@ async def archive_webhook_subscription(
     return WebhookSubscriptionRead.model_validate(subscription)
 
 
-@router.post("/webhook-outbox/events", response_model=WebhookOutboxEventRead)
+@router.post(
+    "/webhook-outbox/events",
+    response_model=WebhookOutboxEventRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def create_webhook_outbox_event(
     payload: WebhookOutboxEventCreate,
     service: Annotated[WebhookOutboxService, Depends(get_webhook_outbox_service)],
@@ -126,7 +141,11 @@ async def get_webhook_outbox_event(
     return WebhookOutboxEventRead.model_validate(event)
 
 
-@router.post("/webhook-outbox/events/{event_id}/cancel", response_model=WebhookOutboxEventRead)
+@router.post(
+    "/webhook-outbox/events/{event_id}/cancel",
+    response_model=WebhookOutboxEventRead,
+    dependencies=[Depends(require_permission(Permission.NOTIFICATIONS_WRITE))],
+)
 async def cancel_webhook_outbox_event(
     event_id: UUID,
     service: Annotated[WebhookOutboxService, Depends(get_webhook_outbox_service)],

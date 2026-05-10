@@ -4,6 +4,15 @@ from uuid import UUID
 from app.modules.action_plans.models import ReasoningActionItem, ReasoningActionPlan
 from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.chart_screenshots.models import ChartScreenshotRun
+from app.modules.context_packs.limits import ContextPackLimits
+from app.modules.context_packs.redaction import (
+    ContextPackRedactionState,
+    bounded_items,
+    safe_value,
+    summarize_snapshot,
+)
+from app.modules.context_packs.repository import ContextPackRepository
+from app.modules.context_packs.schemas import ContextPackOptions
 from app.modules.data_sources.models import DataSource
 from app.modules.explanations.models import DeterministicExplanation
 from app.modules.features.models import FeatureSnapshot
@@ -21,15 +30,6 @@ from app.modules.signals.models import (
 )
 from app.modules.strategy_profiles.models import StrategyProfile
 from app.modules.symbols.models import Symbol
-from app.modules.context_packs.limits import ContextPackLimits
-from app.modules.context_packs.redaction import (
-    ContextPackRedactionState,
-    bounded_items,
-    safe_value,
-    summarize_snapshot,
-)
-from app.modules.context_packs.repository import ContextPackRepository
-from app.modules.context_packs.schemas import ContextPackOptions
 
 
 class ContextPackBuilders:
@@ -60,8 +60,8 @@ class ContextPackBuilders:
         evidence = await self.repository.list_evidence(signal.id, self.limits.max_evidence_rows)
         confidence_components = await self.repository.list_confidence_components(signal.id)
         risk_notes = await self.repository.list_risk_notes(signal.id, self.limits.max_risk_notes)
-        deterministic_explanation = await self.repository.get_deterministic_explanation_by_signal_id(
-            signal.id
+        deterministic_explanation = (
+            await self.repository.get_deterministic_explanation_by_signal_id(signal.id)
         )
         llm_explanation = await self.repository.get_llm_explanation_by_signal_id(signal.id)
         correlations = await self.repository.list_news_correlations_by_signal_id(
@@ -201,7 +201,8 @@ class ContextPackBuilders:
                     "sample_size, evaluated_count, diagnostic_label, diagnostic_summary, "
                     "metadata_json, created_at from strategy_profile_diagnostics "
                     "where workspace_id = :workspace_id "
-                    "and (:strategy_profile_key is null or strategy_profile_key = :strategy_profile_key) "
+                    "and (:strategy_profile_key is null "
+                    "or strategy_profile_key = :strategy_profile_key) "
                     "and (:symbol_id is null or symbol_id = :symbol_id) "
                     "and (:timeframe is null or timeframe = :timeframe) "
                     "order by created_at desc limit :limit",
@@ -266,8 +267,8 @@ class ContextPackBuilders:
         feature_snapshot = await self.repository.get_feature_snapshot(run.id)
         indicator_snapshot = await self.repository.get_indicator_snapshot(run.id)
         candidates = await self.repository.list_pattern_candidates(run.id)
-        deterministic_explanation = await self.repository.get_deterministic_explanation_by_analysis_run_id(
-            run.id
+        deterministic_explanation = (
+            await self.repository.get_deterministic_explanation_by_analysis_run_id(run.id)
         )
         correlations = await self.repository.list_news_correlations_by_analysis_run_id(
             run.id,
@@ -309,7 +310,8 @@ class ContextPackBuilders:
                     "advancedFeatureSnapshot",
                     "select id, analysis_run_id, feature_family, summary_json, metadata_json, "
                     "created_at from advanced_feature_snapshots "
-                    "where analysis_run_id = :analysis_run_id order by created_at desc limit :limit",
+                    "where analysis_run_id = :analysis_run_id order by created_at desc "
+                    "limit :limit",
                     run.id,
                     20,
                 ),
@@ -343,7 +345,8 @@ class ContextPackBuilders:
                     "eventStudies",
                     "select id, analysis_run_id, event_type, event_window_json, result_json, "
                     "metadata_json, created_at from event_studies "
-                    "where analysis_run_id = :analysis_run_id order by created_at desc limit :limit",
+                    "where analysis_run_id = :analysis_run_id order by created_at desc "
+                    "limit :limit",
                     run.id,
                     20,
                 ),
@@ -351,7 +354,8 @@ class ContextPackBuilders:
                     "intelligenceReports",
                     "select id, analysis_run_id, report_type, status, summary_json, "
                     "metadata_json, created_at from intelligence_report_artifacts "
-                    "where analysis_run_id = :analysis_run_id order by created_at desc limit :limit",
+                    "where analysis_run_id = :analysis_run_id order by created_at desc "
+                    "limit :limit",
                     run.id,
                     20,
                     self.options.include_reports,
@@ -463,7 +467,8 @@ class ContextPackBuilders:
                     ),
                     "regime": await self.optional_analysis_section(
                         "outcome.regime",
-                        "select id, analysis_run_id, regime_label, confidence_score, evidence_json, "
+                        "select id, analysis_run_id, regime_label, confidence_score, "
+                        "evidence_json, "
                         "metadata_json, created_at from market_regime_snapshots "
                         "where analysis_run_id = :analysis_run_id order by created_at desc limit 1",
                         outcome.analysis_run_id,

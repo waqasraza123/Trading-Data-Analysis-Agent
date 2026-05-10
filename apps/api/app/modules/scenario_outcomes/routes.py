@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.scenario_outcomes.schemas import (
     ReasoningRunScenarioOutcomesRead,
     ReasoningRunScenarioOutcomesRequest,
@@ -28,6 +30,7 @@ def get_scenario_outcome_service(
     "/reasoning/scenarios/{scenario_hypothesis_id}/outcome",
     response_model=ScenarioHypothesisOutcomeRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def evaluate_scenario_hypothesis_outcome(
     scenario_hypothesis_id: UUID,
@@ -45,6 +48,7 @@ async def evaluate_scenario_hypothesis_outcome(
     "/reasoning/runs/{reasoning_run_id}/scenario-outcomes",
     response_model=ReasoningRunScenarioOutcomesRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def evaluate_reasoning_run_scenario_outcomes(
     reasoning_run_id: UUID,
@@ -73,6 +77,7 @@ async def get_reasoning_run_scenario_outcomes(
     "/scenario-outcomes/summary",
     response_model=ScenarioOutcomeSummaryRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def summarize_scenario_outcomes(
     payload: ScenarioOutcomeSummaryRequest,

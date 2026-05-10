@@ -110,9 +110,13 @@ class WalkForwardValidationRepository:
             .offset(offset)
         )
         if horizon_minutes is not None:
-            statement = statement.where(WalkForwardValidationWindow.horizon_minutes == horizon_minutes)
+            statement = statement.where(
+                WalkForwardValidationWindow.horizon_minutes == horizon_minutes
+            )
         if stability_label is not None:
-            statement = statement.where(WalkForwardValidationWindow.stability_label == stability_label)
+            statement = statement.where(
+                WalkForwardValidationWindow.stability_label == stability_label
+            )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
@@ -225,7 +229,9 @@ def apply_source_filters(
     include_time_filters: bool,
 ) -> Select[object]:
     if filters.strategy_profile_key is not None:
-        statement = statement.where(SignalOutcome.strategy_profile_key == filters.strategy_profile_key)
+        statement = statement.where(
+            SignalOutcome.strategy_profile_key == filters.strategy_profile_key
+        )
     if filters.pattern_type is not None:
         statement = statement.where(SignalOutcome.pattern_type == filters.pattern_type)
     if filters.symbol_id is not None:

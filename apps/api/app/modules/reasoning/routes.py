@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.reasoning.schemas import (
     ReasoningRunRead,
     ScenarioReasoningRequest,
@@ -24,6 +26,7 @@ def get_scenario_reasoning_service(
 @router.post(
     "/signals/{signal_id}/reasoning/scenarios",
     response_model=ScenarioReasoningResponse,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def generate_signal_reasoning_scenarios(
     signal_id: UUID,

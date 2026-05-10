@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from typing import Any
 from uuid import UUID
 
-from app.modules.analysis.models import AnalysisRun
+from app.modules.analysis.models import AnalysisAuditLog, AnalysisRun
 from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.intelligence_datasets.models import (
     IntelligenceDatasetSourceType,
@@ -10,9 +9,10 @@ from app.modules.intelligence_datasets.models import (
 )
 from app.modules.intelligence_datasets.repository import IntelligenceDatasetRepository
 from app.modules.intelligence_datasets.schemas import IntelligenceDatasetFilters
+from app.modules.news.models import SignalNewsCorrelation
 from app.modules.outcomes.models import SignalOutcome
-from app.modules.reasoning.models import LlmReasoningRun
-from app.modules.signals.models import Signal
+from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
+from app.modules.signals.models import Signal, SignalConfidenceComponent, SignalEvidence
 
 DATASET_SCHEMA_VERSION = "v1"
 
@@ -294,7 +294,9 @@ class IntelligenceDatasetBuilder:
                 "engineVersion": run.engine_version,
                 "ruleSetVersion": run.rule_set_version,
             },
-            "qualityFindings": quality_findings(feature_snapshot.features_json if feature_snapshot else None),
+            "qualityFindings": quality_findings(
+                feature_snapshot.features_json if feature_snapshot else None
+            ),
             "indicatorReadiness": summarize_snapshot(
                 indicator_snapshot.indicators_json if indicator_snapshot else None
             ),
@@ -327,7 +329,9 @@ class IntelligenceDatasetBuilder:
             "extractionWarnings": run.extraction_warnings_json,
             "parserMetadataSummary": summarize_snapshot(run.parser_metadata_json),
             "humanCorrectionLineage": {
-                "correctedFromRunId": run.parser_metadata_json.get("correctedFromChartScreenshotRunId"),
+                "correctedFromRunId": run.parser_metadata_json.get(
+                    "correctedFromChartScreenshotRunId"
+                ),
                 "humanReview": run.parser_metadata_json.get("humanReview"),
             },
             "rawImageBytesIncluded": False,
@@ -354,7 +358,7 @@ def signal_summary(signal: Signal) -> dict[str, object]:
     }
 
 
-def evidence_summary(item: Any) -> dict[str, object]:
+def evidence_summary(item: SignalEvidence) -> dict[str, object]:
     return {
         "evidenceType": item.evidence_type,
         "direction": item.direction,
@@ -365,7 +369,7 @@ def evidence_summary(item: Any) -> dict[str, object]:
     }
 
 
-def confidence_component_summary(item: Any) -> dict[str, object]:
+def confidence_component_summary(item: SignalConfidenceComponent) -> dict[str, object]:
     return {
         "componentName": item.component_name,
         "componentScore": item.component_score,
@@ -414,7 +418,7 @@ def outcome_summary(item: SignalOutcome) -> dict[str, object]:
     }
 
 
-def news_correlation_summary(item: Any) -> dict[str, object]:
+def news_correlation_summary(item: SignalNewsCorrelation) -> dict[str, object]:
     return {
         "correlationLabel": item.correlation_label,
         "correlationScore": item.correlation_score,
@@ -425,7 +429,7 @@ def news_correlation_summary(item: Any) -> dict[str, object]:
     }
 
 
-def scenario_summary(item: Any) -> dict[str, object]:
+def scenario_summary(item: ScenarioHypothesis) -> dict[str, object]:
     return {
         "scenarioType": item.scenario_type,
         "scenarioLabel": item.scenario_label,
@@ -440,7 +444,7 @@ def scenario_summary(item: Any) -> dict[str, object]:
     }
 
 
-def audit_log_summary(item: Any) -> dict[str, object]:
+def audit_log_summary(item: AnalysisAuditLog) -> dict[str, object]:
     return {
         "eventType": item.event_type,
         "message": item.message,

@@ -194,5 +194,7 @@ class IntelligenceCatalogRepository:
                 statement = statement.where(IntelligenceCatalogItem.tags_json.contains([tag]))
         if query.query is not None:
             like_query = f"%{query.query.lower()}%"
-            statement = statement.where(func.lower(IntelligenceCatalogItem.searchable_text).ilike(like_query))
+            statement = statement.where(
+                func.lower(IntelligenceCatalogItem.searchable_text).ilike(like_query)
+            )
         return statement

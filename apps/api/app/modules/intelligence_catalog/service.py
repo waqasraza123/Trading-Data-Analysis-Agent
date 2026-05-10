@@ -10,7 +10,10 @@ from app.modules.chart_screenshots.models import ChartScreenshotRun
 from app.modules.data_sources.models import DataSource
 from app.modules.imports.models import ImportBatch
 from app.modules.intelligence_catalog.indexer import IntelligenceCatalogIndexer
-from app.modules.intelligence_catalog.models import IntelligenceCatalogArtifactType, IntelligenceCatalogItem
+from app.modules.intelligence_catalog.models import (
+    IntelligenceCatalogArtifactType,
+    IntelligenceCatalogItem,
+)
 from app.modules.intelligence_catalog.repository import IntelligenceCatalogRepository
 from app.modules.intelligence_catalog.schemas import (
     IntelligenceCatalogReindexRead,

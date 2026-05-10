@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +29,6 @@ from app.modules.timeframe_aggregation.models import (
     CandleAggregationRunStatus,
     DerivedCandleLineage,
     MultiTimeframeContext,
-    TimeframeAgreementLabel,
 )
 from app.modules.timeframe_aggregation.repository import TimeframeAggregationRepository
 from app.modules.timeframe_aggregation.schemas import (
@@ -137,7 +135,9 @@ class TimeframeAggregationService:
             expected_count += window.expected_base_count
             actual_base_count = self.actual_base_count(window, base_candles_by_timestamp)
             available_count += actual_base_count
-            candidate = self.aggregator.aggregate_window(window, list(base_candles_by_timestamp.values()))
+            candidate = self.aggregator.aggregate_window(
+                window, list(base_candles_by_timestamp.values())
+            )
             if candidate is None:
                 incomplete_count += 1
                 skipped_count += 1
@@ -267,7 +267,9 @@ class TimeframeAggregationService:
     async def get_derived_lineage(self, derived_candle_id: UUID) -> list[DerivedCandleLineage]:
         lineage = await self.repository.get_lineage_by_derived_candle_id(derived_candle_id)
         if not lineage:
-            raise AppError(404, "derived_candle_lineage_not_found", "Derived candle lineage not found")
+            raise AppError(
+                404, "derived_candle_lineage_not_found", "Derived candle lineage not found"
+            )
         return lineage
 
     async def build_context_for_analysis_run(
@@ -381,13 +383,17 @@ class TimeframeAggregationService:
     async def get_context_for_analysis_run(self, analysis_run_id: UUID) -> MultiTimeframeContext:
         context = await self.repository.get_context_for_analysis_run(analysis_run_id)
         if context is None:
-            raise AppError(404, "multi_timeframe_context_not_found", "Multi-timeframe context not found")
+            raise AppError(
+                404, "multi_timeframe_context_not_found", "Multi-timeframe context not found"
+            )
         return context
 
     async def get_context_for_signal(self, signal_id: UUID) -> MultiTimeframeContext:
         context = await self.repository.get_context_for_signal(signal_id)
         if context is None:
-            raise AppError(404, "multi_timeframe_context_not_found", "Multi-timeframe context not found")
+            raise AppError(
+                404, "multi_timeframe_context_not_found", "Multi-timeframe context not found"
+            )
         return context
 
     async def fetch_base_candles(
@@ -414,7 +420,9 @@ class TimeframeAggregationService:
         end_time: datetime,
         source_id: UUID | None,
     ) -> list[Candle]:
-        normalized_end = floor_to_boundary(normalize_timestamp(end_time), timeframe_duration(timeframe))
+        normalized_end = floor_to_boundary(
+            normalize_timestamp(end_time), timeframe_duration(timeframe)
+        )
         return await self.repository.list_recent_final_candles(
             workspace_id=workspace_id,
             symbol_id=symbol_id,
@@ -439,7 +447,9 @@ class TimeframeAggregationService:
         if source is None:
             raise AppError(404, "data_source_not_found", "Data source not found")
         if source.workspace_id != workspace_id:
-            raise AppError(422, "workspace_source_mismatch", "Data source does not belong to workspace")
+            raise AppError(
+                422, "workspace_source_mismatch", "Data source does not belong to workspace"
+            )
 
     async def get_or_create_derived_data_source(self, workspace_id: UUID) -> DataSource:
         name = "Derived candle aggregation"
@@ -503,7 +513,9 @@ class TimeframeAggregationService:
     ) -> int:
         count = 0
         current = window.base_start_time
-        step = (window.base_end_time - window.base_start_time) / max(window.expected_base_count - 1, 1)
+        step = (window.base_end_time - window.base_start_time) / max(
+            window.expected_base_count - 1, 1
+        )
         if window.expected_base_count == 1:
             return 1 if current in candles_by_timestamp else 0
         while current <= window.base_end_time:
@@ -542,5 +554,7 @@ class TimeframeAggregationService:
         return f"Produced {produced_count} complete derived candles."
 
 
-def context_payload_or_default(payload: MultiTimeframeContextCreate | None) -> MultiTimeframeContextCreate:
+def context_payload_or_default(
+    payload: MultiTimeframeContextCreate | None,
+) -> MultiTimeframeContextCreate:
     return payload or MultiTimeframeContextCreate()

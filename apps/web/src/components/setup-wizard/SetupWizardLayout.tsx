@@ -202,7 +202,7 @@ export function SetupWizardLayout({ initialData }: SetupWizardLayoutProps) {
               </button>
             )}
           </div>
-        </div>
+        </section>
       </AnimatedListItem>
       {mutation.message && (
         <AnimatedListItem

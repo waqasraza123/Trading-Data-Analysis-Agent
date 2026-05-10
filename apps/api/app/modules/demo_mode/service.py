@@ -190,8 +190,7 @@ class DemoModeService:
                 key="context_priority_outcomes",
                 status="completed",
                 summary=(
-                    "Setup context, review priority, and observed outcome artifacts were "
-                    "generated."
+                    "Setup context, review priority, and observed outcome artifacts were generated."
                 ),
                 metadata={
                     "setupContextIds": [str(item.id) for item in setup_contexts],

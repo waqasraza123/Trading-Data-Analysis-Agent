@@ -3,10 +3,14 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import model_validator
 
 from app.core.schemas import ApiReadSchema, ApiSchema
-from app.modules.data_quality.models import DataQualityLabel, DataQualityRunStatus, DataQualityScopeType
+from app.modules.data_quality.models import (
+    DataQualityLabel,
+    DataQualityRunStatus,
+    DataQualityScopeType,
+)
 
 
 class DataQualityCandleRangeRequest(ApiSchema):
@@ -19,7 +23,11 @@ class DataQualityCandleRangeRequest(ApiSchema):
 
     @model_validator(mode="after")
     def validate_window(self) -> "DataQualityCandleRangeRequest":
-        if self.start_time is not None and self.end_time is not None and self.start_time > self.end_time:
+        if (
+            self.start_time is not None
+            and self.end_time is not None
+            and self.start_time > self.end_time
+        ):
             msg = "start_time must be before end_time"
             raise ValueError(msg)
         return self

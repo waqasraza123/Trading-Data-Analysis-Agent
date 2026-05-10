@@ -97,9 +97,7 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "status in ('passed', 'failed', 'passed_with_warnings')",
-            name=op.f(
-                "ck_data_contract_validations_data_contract_validations_status_allowed"
-            ),
+            name=op.f("ck_data_contract_validations_data_contract_validations_status_allowed"),
         ),
         sa.ForeignKeyConstraint(
             ["workspace_id"],

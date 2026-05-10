@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any
-
 
 REDACTION_VALUE = "[REDACTED]"
 
@@ -16,10 +14,12 @@ def is_sensitive_key(key: str, secret_keys: Sequence[str]) -> bool:
     return any(normalize_key(secret_key) in normalized_key for secret_key in secret_keys)
 
 
-def redact_payload(payload: Any, secret_keys: Sequence[str]) -> Any:
+def redact_payload(payload: object, secret_keys: Sequence[str]) -> object:
     if isinstance(payload, Mapping):
         return {
-            key: REDACTION_VALUE if is_sensitive_key(str(key), secret_keys) else redact_payload(value, secret_keys)
+            key: REDACTION_VALUE
+            if is_sensitive_key(str(key), secret_keys)
+            else redact_payload(value, secret_keys)
             for key, value in payload.items()
         }
     if isinstance(payload, list):
@@ -29,11 +29,11 @@ def redact_payload(payload: Any, secret_keys: Sequence[str]) -> Any:
     return payload
 
 
-def summarize_payload(payload: Any) -> dict[str, Any]:
+def summarize_payload(payload: object) -> dict[str, object]:
     if isinstance(payload, Mapping):
         return {
             "type": "object",
-            "keys": sorted(str(key) for key in payload.keys()),
+            "keys": sorted(str(key) for key in payload),
         }
     if isinstance(payload, Sequence) and not isinstance(payload, str):
         return {
@@ -48,4 +48,3 @@ def summarize_payload(payload: Any) -> dict[str, Any]:
     return {
         "type": type(payload).__name__,
     }
-

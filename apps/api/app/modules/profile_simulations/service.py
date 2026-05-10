@@ -147,7 +147,9 @@ class ProfileSimulationService:
         for signal in signals:
             candidates = await self.repository.list_candidates(signal.analysis_run_id)
             feature_snapshot = await self.repository.get_feature_snapshot(signal.analysis_run_id)
-            indicator_snapshot = await self.repository.get_indicator_snapshot(signal.analysis_run_id)
+            indicator_snapshot = await self.repository.get_indicator_snapshot(
+                signal.analysis_run_id
+            )
             outcomes = await self.repository.list_outcomes(signal.id, request.horizons_minutes)
             decision = self.simulator.simulate_signal(
                 signal=signal,
@@ -246,8 +248,4 @@ def select_primary_outcome(
 
 
 def json_safe_mapping(values: dict[str, Any]) -> dict[str, object]:
-    return {
-        str(key): json_safe_value(value)
-        for key, value in values.items()
-        if value is not None
-    }
+    return {str(key): json_safe_value(value) for key, value in values.items() if value is not None}

@@ -91,9 +91,7 @@ class ProviderHealthRepository:
         if status is not None:
             statement = statement.where(ProviderHealthSnapshot.status == status)
         if freshness_label is not None:
-            statement = statement.where(
-                ProviderHealthSnapshot.freshness_label == freshness_label
-            )
+            statement = statement.where(ProviderHealthSnapshot.freshness_label == freshness_label)
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

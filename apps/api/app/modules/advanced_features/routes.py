@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import database_session
 from app.modules.advanced_features.schemas import AdvancedFeatureSnapshotRead
 from app.modules.advanced_features.service import AdvancedFeatureSnapshotService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["advanced-features"])
 
@@ -20,6 +22,7 @@ def get_advanced_feature_service(
 @router.post(
     "/analysis-runs/{analysis_run_id}/advanced-features",
     response_model=AdvancedFeatureSnapshotRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def generate_analysis_run_advanced_features(
     analysis_run_id: UUID,
@@ -45,7 +48,11 @@ async def get_analysis_run_advanced_features(
     return AdvancedFeatureSnapshotRead.model_validate(snapshot)
 
 
-@router.post("/signals/{signal_id}/advanced-features", response_model=AdvancedFeatureSnapshotRead)
+@router.post(
+    "/signals/{signal_id}/advanced-features",
+    response_model=AdvancedFeatureSnapshotRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def generate_signal_advanced_features(
     signal_id: UUID,
     service: Annotated[AdvancedFeatureSnapshotService, Depends(get_advanced_feature_service)],

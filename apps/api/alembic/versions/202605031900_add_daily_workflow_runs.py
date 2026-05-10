@@ -8,8 +8,9 @@ Create Date: 2026-05-03 19:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "202605031900_daily_workflow_runs"
 down_revision: str | Sequence[str] | None = "202605031800_merge_daily_workflow_heads"
@@ -70,7 +71,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "workflow_type in ('daily_scan', 'session_scan', 'watchlist_scan', 'data_refresh_only')",
+            "workflow_type in ('daily_scan', 'session_scan', 'watchlist_scan', "
+            "'data_refresh_only')",
             name="daily_workflow_runs_type_allowed",
         ),
         sa.CheckConstraint(

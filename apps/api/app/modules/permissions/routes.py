@@ -17,8 +17,5 @@ async def get_permission_registry() -> PermissionRegistryRead:
 
 @router.get("/roles/{role}", response_model=RolePermissionRead)
 async def get_role_permissions(role: UserRole) -> RolePermissionRead:
-    role_permissions = {
-        item.role: item
-        for item in role_permission_definitions()
-    }
+    role_permissions = {item.role: item for item in role_permission_definitions()}
     return role_permissions[role]

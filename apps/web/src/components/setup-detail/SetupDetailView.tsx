@@ -101,7 +101,6 @@ export function SetupDetailView({ data }: SetupDetailViewProps) {
           </AnimatedListItem>
           <AnimatedListItem as="section" style={motionRevealDensityStyle(8)}>
             <SetupJournalPanel
-              apiBaseUrl={data.apiBaseUrl}
               workspaceId={workspaceId}
               signalId={data.signalId}
               analysisRunId={signal?.analysis_run_id || model.setupContext?.analysis_run_id || null}

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from app.modules.cohort_drift.models import CohortDriftLabel, CohortDriftSeverity
@@ -124,10 +124,7 @@ def cohort_dimension_values(
     row: CohortDriftOutcomeRow,
     dimensions: list[str],
 ) -> dict[str, str]:
-    return {
-        dimension: str(cohort_dimension_value(row, dimension))
-        for dimension in dimensions
-    }
+    return {dimension: str(cohort_dimension_value(row, dimension)) for dimension in dimensions}
 
 
 def cohort_dimension_value(row: CohortDriftOutcomeRow, dimension: str) -> object:
@@ -443,10 +440,7 @@ def result_summary(
             f"{baseline_metrics.sample_size}, recent window {comparison_metrics.sample_size}."
         )
     if label == CohortDriftLabel.NO_DRIFT:
-        return (
-            f"Horizon {horizon_minutes} shows no material cohort drift. "
-            f"Drift score {score}."
-        )
+        return f"Horizon {horizon_minutes} shows no material cohort drift. Drift score {score}."
     return (
         f"Horizon {horizon_minutes} shows {label.value} with {severity.value} severity. "
         f"Review recommended. Drift score {score}."

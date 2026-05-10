@@ -79,8 +79,7 @@ def parse_payload(payload: dict[str, Any]) -> ParsedScenarioReasoning:
 def fallback_parsed(reason: str) -> ParsedScenarioReasoning:
     return ParsedScenarioReasoning(
         summary=(
-            "The LLM output could not be safely parsed. "
-            "Review deterministic artifacts directly."
+            "The LLM output could not be safely parsed. Review deterministic artifacts directly."
         ),
         scenarios=[
             ScenarioOutput(

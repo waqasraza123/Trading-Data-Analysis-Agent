@@ -56,9 +56,9 @@ class RuntimeSupervisorRepository:
         return list(result.scalars().all())
 
     async def get_worker_definition(self, key: str) -> RuntimeWorkerDefinition | None:
-        statement: Select[tuple[RuntimeWorkerDefinition]] = select(
-            RuntimeWorkerDefinition
-        ).where(RuntimeWorkerDefinition.key == key)
+        statement: Select[tuple[RuntimeWorkerDefinition]] = select(RuntimeWorkerDefinition).where(
+            RuntimeWorkerDefinition.key == key
+        )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 

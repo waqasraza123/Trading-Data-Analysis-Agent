@@ -284,9 +284,10 @@ class IntelligenceQualityGateService:
                     observed_value=signal.bias,
                 )
             )
-        if signal.candidate_strength is not None and abs(
-            signal.candidate_strength - selected.strength_score
-        ) > TOLERANCE:
+        if (
+            signal.candidate_strength is not None
+            and abs(signal.candidate_strength - selected.strength_score) > TOLERANCE
+        ):
             findings.append(
                 finding(
                     IntelligenceQualityFindingType.INVARIANT_FAILURE,
@@ -499,9 +500,7 @@ class IntelligenceQualityGateService:
         if signal is None:
             return []
         findings: list[FindingDraft] = []
-        high_risk = [
-            note for note in artifacts.risk_notes if note.severity in {"high", "critical"}
-        ]
+        high_risk = [note for note in artifacts.risk_notes if note.severity in {"high", "critical"}]
         if signal.confidence_label == "very_high" and high_risk:
             findings.append(
                 finding(

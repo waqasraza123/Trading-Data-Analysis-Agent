@@ -4,10 +4,7 @@ from decimal import Decimal
 def calculate_rsi(values: list[Decimal], period: int = 14) -> Decimal | None:
     if len(values) <= period:
         return None
-    deltas = [
-        current - previous
-        for previous, current in zip(values, values[1:], strict=False)
-    ]
+    deltas = [current - previous for previous, current in zip(values, values[1:], strict=False)]
     recent_deltas = deltas[-period:]
     gains = [delta if delta > 0 else Decimal("0") for delta in recent_deltas]
     losses = [abs(delta) if delta < 0 else Decimal("0") for delta in recent_deltas]

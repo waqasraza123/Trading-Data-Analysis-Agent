@@ -25,8 +25,7 @@ class PersonalStrategyPreferenceProfile(Base):
             name="personal_strategy_preference_profiles_status_allowed",
         ),
         CheckConstraint(
-            "minimum_confidence is null or "
-            "(minimum_confidence >= 0 and minimum_confidence <= 1)",
+            "minimum_confidence is null or (minimum_confidence >= 0 and minimum_confidence <= 1)",
             name="personal_strategy_preference_profiles_minimum_confidence_range",
         ),
         CheckConstraint(

@@ -12,7 +12,7 @@ from app.modules.profile_diagnostics.models import (
     PatternOutcomeDiagnostic,
     StrategyProfileDiagnostic,
 )
-from app.modules.reasoning.models import LlmReasoningRun, ScenarioHypothesis
+from app.modules.reasoning.models import ScenarioHypothesis
 from app.modules.signals.models import (
     Signal,
     SignalConfidenceComponent,
@@ -197,7 +197,9 @@ class WebhookPayloadBuilder:
                 "updatedAt": reasoning_run.updated_at,
             },
             "scenarios": [self.scenario_row(scenario) for scenario in scenarios[:20]],
-            "links": {"reasoningReport": f"/intelligence-reports/reasoning-runs/{reasoning_run.id}"},
+            "links": {
+                "reasoningReport": f"/intelligence-reports/reasoning-runs/{reasoning_run.id}"
+            },
         }
 
     async def action_plan_artifact(
@@ -567,7 +569,7 @@ class WebhookPayloadBuilder:
             if isinstance(item, list):
                 summary[key] = {"itemCount": len(item)}
             elif isinstance(item, dict):
-                summary[key] = {"keys": sorted(str(nested_key) for nested_key in item.keys())[:30]}
+                summary[key] = {"keys": sorted(str(nested_key) for nested_key in item)[:30]}
             else:
                 summary[key] = item
         return summary

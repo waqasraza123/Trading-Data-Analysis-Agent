@@ -58,7 +58,9 @@ class StrategyProfileSandboxSimulator:
             profiles=[hypothetical_profile],
             candidates=candidates,
             features=feature_snapshot.features_json if feature_snapshot is not None else None,
-            indicators=indicator_snapshot.indicators_json if indicator_snapshot is not None else None,
+            indicators=indicator_snapshot.indicators_json
+            if indicator_snapshot is not None
+            else None,
         )
         if evaluations:
             decision = resolve_conflicts(evaluations)
@@ -171,7 +173,10 @@ def classify_decision_change(
         return StrategyProfileSimulationDecisionChangeType.BIAS_CHANGED
     if signal.pattern_type != simulated_pattern_type:
         return StrategyProfileSimulationDecisionChangeType.PATTERN_CHANGED
-    if simulated_confidence_score is not None and signal.confidence_score != simulated_confidence_score:
+    if (
+        simulated_confidence_score is not None
+        and signal.confidence_score != simulated_confidence_score
+    ):
         return StrategyProfileSimulationDecisionChangeType.CONFIDENCE_CHANGED
     return StrategyProfileSimulationDecisionChangeType.UNCHANGED
 
@@ -227,7 +232,7 @@ def json_safe_dict(values: Mapping[str, Any]) -> dict[str, object]:
     return {str(key): json_safe_value(value) for key, value in values.items()}
 
 
-def json_safe_value(value: Any) -> object:
+def json_safe_value(value: object) -> object:
     if isinstance(value, Decimal):
         return str(value)
     if isinstance(value, dict):

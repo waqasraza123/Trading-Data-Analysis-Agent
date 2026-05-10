@@ -467,8 +467,7 @@ class AuditTimelineService:
                 "rejected_actions_metadata": bool(plan.metadata_json.get("rejectedActions")),
                 "worker_runs": bool(worker_runs),
                 "completed_or_terminal_items": any(
-                    item.status in {"completed", "skipped", "failed", "cancelled"}
-                    for item in items
+                    item.status in {"completed", "skipped", "failed", "cancelled"} for item in items
                 ),
             }
         )
@@ -816,9 +815,7 @@ class AuditTimelineService:
                 options.limit_artifacts,
             )
             deterministic_explanation = (
-                await self.repository.get_deterministic_explanation_by_signal_id(
-                    resolved_signal.id
-                )
+                await self.repository.get_deterministic_explanation_by_signal_id(resolved_signal.id)
             )
             llm_explanations = await self.repository.list_llm_explanations_by_signal_id(
                 resolved_signal.id,
@@ -1024,9 +1021,7 @@ class AuditTimelineService:
         sections: dict[str, Any],
         options: AuditTimelineOptions,
     ) -> AuditTimelineRead:
-        safe_sections = (
-            to_timeline_value(sections) if options.include_artifacts else {}
-        )
+        safe_sections = to_timeline_value(sections) if options.include_artifacts else {}
         warnings = [
             "Audit timelines are read-only traceability views over persisted artifacts.",
             "Completeness measures traceability coverage only, not quality or profitability.",
@@ -2333,9 +2328,7 @@ class AuditTimelineService:
     def chart_screenshot_metadata(self, item: ChartScreenshotRun) -> dict[str, Any]:
         parser_metadata = item.parser_metadata_json or {}
         extracted_payload = (
-            item.extracted_payload_json
-            if isinstance(item.extracted_payload_json, dict)
-            else {}
+            item.extracted_payload_json if isinstance(item.extracted_payload_json, dict) else {}
         )
         return {
             "id": item.id,

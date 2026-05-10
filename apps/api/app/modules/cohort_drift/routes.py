@@ -13,6 +13,8 @@ from app.modules.cohort_drift.schemas import (
     CohortDriftRunRequest,
 )
 from app.modules.cohort_drift.service import CohortDriftService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["cohort-drift"])
 
@@ -27,6 +29,7 @@ def get_cohort_drift_service(
     "/cohort-drift/run",
     response_model=CohortDriftRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_cohort_drift_detection(
     payload: CohortDriftRunRequest,

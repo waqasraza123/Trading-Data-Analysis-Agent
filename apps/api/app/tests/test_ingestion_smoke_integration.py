@@ -199,8 +199,7 @@ async def test_mock_live_partial_final_and_ignored_subscription_events(
     assert stop_response.status_code == 200
     assert stopped_ignored_response.status_code == 202
     assert (
-        stopped_ignored_response.json()["processingStatus"]
-        == LiveFeedEventProcessingStatus.IGNORED
+        stopped_ignored_response.json()["processingStatus"] == LiveFeedEventProcessingStatus.IGNORED
     )
 
 

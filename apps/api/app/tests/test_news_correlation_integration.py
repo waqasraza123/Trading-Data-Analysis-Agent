@@ -103,12 +103,8 @@ async def test_manual_signal_news_correlation_persists_and_is_idempotent(
         },
     )
 
-    first_response = await api_client.post(
-        f"/signals/{signal_response.signal.id}/correlate-news"
-    )
-    second_response = await api_client.post(
-        f"/signals/{signal_response.signal.id}/correlate-news"
-    )
+    first_response = await api_client.post(f"/signals/{signal_response.signal.id}/correlate-news")
+    second_response = await api_client.post(f"/signals/{signal_response.signal.id}/correlate-news")
     list_response = await api_client.get(
         f"/analysis-runs/{result.analysis_run.id}/news-correlations"
     )

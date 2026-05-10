@@ -1,63 +1,35 @@
-from __future__ import annotations
-
-import importlib
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 from .repository import SafetyPolicyRepository
-from .schemas import EvaluateActionRequest, EvaluatePayloadRequest, EvaluateTextRequest, SafetyEvaluationResponse, SafetyPolicySetRead
+from .schemas import (
+    EvaluateActionRequest,
+    EvaluatePayloadRequest,
+    EvaluateTextRequest,
+    SafetyEvaluationResponse,
+    SafetyPolicySetRead,
+)
 from .service import SafetyPolicyService
-
 
 router = APIRouter(prefix="/safety-policies", tags=["safety-policies"])
 
 
-def _resolve_session_dependency() -> Any | None:
-    candidates = (
-        ("app.database", "get_db"),
-        ("app.database", "get_session"),
-        ("app.db", "get_db"),
-        ("app.db", "get_session"),
-        ("app.core.database", "get_db"),
-        ("app.core.database", "get_session"),
-        ("app.core.db", "get_db"),
-        ("app.core.db", "get_session"),
-    )
-    for module_name, attribute_name in candidates:
-        try:
-            module = importlib.import_module(module_name)
-        except ImportError:
-            continue
-        dependency = getattr(module, attribute_name, None)
-        if dependency is not None:
-            return dependency
-    return None
-
-
-_session_dependency = _resolve_session_dependency()
-
-
-async def _missing_session_dependency() -> AsyncIterator[Any]:
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Database session dependency is not configured for safety policies.",
-    )
-    yield None
-
-
-get_session = _session_dependency or _missing_session_dependency
-
-
-def get_service(session: Any = Depends(get_session)) -> SafetyPolicyService:
+def get_service(
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> SafetyPolicyService:
     return SafetyPolicyService(SafetyPolicyRepository(session))
 
 
 @router.get("", response_model=list[SafetyPolicySetRead])
 async def list_safety_policies(
+    service: Annotated[SafetyPolicyService, Depends(get_service)],
     workspace_id: str | None = None,
-    service: SafetyPolicyService = Depends(get_service),
 ) -> list[SafetyPolicySetRead]:
     if service.repository is None:
         return []
@@ -82,14 +54,20 @@ async def list_safety_policies(
 async def get_safety_policy(
     key: str,
     version: str,
+    service: Annotated[SafetyPolicyService, Depends(get_service)],
     workspace_id: str | None = None,
-    service: SafetyPolicyService = Depends(get_service),
 ) -> SafetyPolicySetRead:
     if service.repository is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Safety policy set not found.")
-    policy_set = await service.repository.get_policy_set(key=key, version=version, workspace_id=workspace_id)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Safety policy set not found."
+        )
+    policy_set = await service.repository.get_policy_set(
+        key=key, version=version, workspace_id=workspace_id
+    )
     if policy_set is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Safety policy set not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Safety policy set not found."
+        )
     return SafetyPolicySetRead(
         id=policy_set.id,
         workspaceId=policy_set.workspace_id,
@@ -103,10 +81,13 @@ async def get_safety_policy(
     )
 
 
-@router.post("/seed-default")
+@router.post(
+    "/seed-default",
+    dependencies=[Depends(require_permission(Permission.SAFETY_POLICIES_ADMIN))],
+)
 async def seed_default_safety_policy(
+    service: Annotated[SafetyPolicyService, Depends(get_service)],
     workspace_id: str | None = None,
-    service: SafetyPolicyService = Depends(get_service),
 ) -> dict[str, str]:
     policy = await service.seed_default_policy_set(workspace_id)
     return {"key": policy.key, "version": policy.version, "status": policy.status.value}
@@ -115,7 +96,7 @@ async def seed_default_safety_policy(
 @router.post("/evaluate-text", response_model=SafetyEvaluationResponse)
 async def evaluate_text(
     request: EvaluateTextRequest,
-    service: SafetyPolicyService = Depends(get_service),
+    service: Annotated[SafetyPolicyService, Depends(get_service)],
 ) -> SafetyEvaluationResponse:
     return await service.evaluate_text(
         text=request.text,
@@ -128,7 +109,7 @@ async def evaluate_text(
 @router.post("/evaluate-action", response_model=SafetyEvaluationResponse)
 async def evaluate_action(
     request: EvaluateActionRequest,
-    service: SafetyPolicyService = Depends(get_service),
+    service: Annotated[SafetyPolicyService, Depends(get_service)],
 ) -> SafetyEvaluationResponse:
     return await service.evaluate_action(
         action=request.action,
@@ -142,7 +123,7 @@ async def evaluate_action(
 @router.post("/evaluate-payload", response_model=SafetyEvaluationResponse)
 async def evaluate_payload(
     request: EvaluatePayloadRequest,
-    service: SafetyPolicyService = Depends(get_service),
+    service: Annotated[SafetyPolicyService, Depends(get_service)],
 ) -> SafetyEvaluationResponse:
     return await service.evaluate_payload(
         payload=request.payload,
@@ -151,4 +132,3 @@ async def evaluate_payload(
         source_id=request.source_id,
         public_response=request.public_response,
     )
-

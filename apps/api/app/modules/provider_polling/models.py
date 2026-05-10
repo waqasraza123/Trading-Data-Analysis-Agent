@@ -27,8 +27,7 @@ class ProviderPollingRequest(Base):
             name="provider_polling_requests_status_allowed",
         ),
         CheckConstraint(
-            "received_candle_count >= 0 and stored_candle_count >= 0 and "
-            "skipped_candle_count >= 0",
+            "received_candle_count >= 0 and stored_candle_count >= 0 and skipped_candle_count >= 0",
             name="provider_polling_requests_counts_non_negative",
         ),
         CheckConstraint(

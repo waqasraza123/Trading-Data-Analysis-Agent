@@ -23,7 +23,6 @@ from app.modules.profile_governance.schemas import (
 from app.modules.profile_governance.validator import validate_profile_config
 from app.modules.strategy_profiles.models import StrategyProfile
 
-
 EDITABLE_STATUSES = {
     StrategyProfileDraftStatus.DRAFT.value,
     StrategyProfileDraftStatus.READY_FOR_REVIEW.value,
@@ -47,7 +46,9 @@ class StrategyProfileGovernanceService:
             base_strategy_profile_id=base_profile.id if base_profile is not None else None,
             base_strategy_profile_key=payload.base_strategy_profile_key,
             base_strategy_profile_version=(
-                base_profile.version if base_profile is not None else payload.base_strategy_profile_version
+                base_profile.version
+                if base_profile is not None
+                else payload.base_strategy_profile_version
             ),
             draft_key=payload.draft_key,
             draft_version=payload.draft_version,
@@ -104,7 +105,9 @@ class StrategyProfileGovernanceService:
     async def get_draft(self, draft_id: UUID) -> StrategyProfileDraft:
         draft = await self.repository.get_draft(draft_id)
         if draft is None:
-            raise AppError(404, "strategy_profile_draft_not_found", "Strategy profile draft not found")
+            raise AppError(
+                404, "strategy_profile_draft_not_found", "Strategy profile draft not found"
+            )
         return draft
 
     async def list_drafts(
@@ -139,7 +142,13 @@ class StrategyProfileGovernanceService:
             )
         values = payload.model_dump(exclude_unset=True)
         config_changed = "proposed_config_json" in values
-        for field_name in ("name", "description", "simulation_run_id", "diagnostic_run_id", "review_notes"):
+        for field_name in (
+            "name",
+            "description",
+            "simulation_run_id",
+            "diagnostic_run_id",
+            "review_notes",
+        ):
             if field_name in values:
                 setattr(draft, field_name, values[field_name])
         if config_changed:
@@ -296,8 +305,12 @@ class StrategyProfileGovernanceService:
                 description=draft.description,
                 version=draft.draft_version,
                 is_active=True,
-                allowed_patterns_json=list(config_list(draft.proposed_config_json, "allowed_patterns_json")),
-                excluded_patterns_json=list(config_list(draft.proposed_config_json, "excluded_patterns_json")),
+                allowed_patterns_json=list(
+                    config_list(draft.proposed_config_json, "allowed_patterns_json")
+                ),
+                excluded_patterns_json=list(
+                    config_list(draft.proposed_config_json, "excluded_patterns_json")
+                ),
                 minimum_candidate_strength=config_decimal(
                     draft.proposed_config_json,
                     "minimum_candidate_strength",
@@ -316,7 +329,9 @@ class StrategyProfileGovernanceService:
         )
         deactivated_profile_ids: list[str] = []
         if payload.deactivate_previous:
-            active_profiles = await self.repository.list_active_strategy_profiles_by_key(draft.draft_key)
+            active_profiles = await self.repository.list_active_strategy_profiles_by_key(
+                draft.draft_key
+            )
             for active_profile in active_profiles:
                 if active_profile.id == profile.id:
                     continue
@@ -418,7 +433,9 @@ class StrategyProfileGovernanceService:
         if base_strategy_profile_id is not None:
             profile = await self.repository.get_strategy_profile(base_strategy_profile_id)
             if profile is None:
-                raise AppError(404, "base_strategy_profile_not_found", "Base strategy profile not found")
+                raise AppError(
+                    404, "base_strategy_profile_not_found", "Base strategy profile not found"
+                )
             return profile
         if base_strategy_profile_version is not None:
             return await self.repository.get_strategy_profile_by_key_version(

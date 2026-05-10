@@ -56,10 +56,7 @@ def test_settings_load_defaults() -> None:
     assert settings.scanner_preset_version == "v1"
     assert settings.provider_polling_timeout_seconds == 20
     assert settings.provider_polling_max_candles_per_request == 1000
-    assert (
-        settings.provider_polling_user_agent
-        == "trading-intelligence-api-provider-polling/0.1"
-    )
+    assert settings.provider_polling_user_agent == "trading-intelligence-api-provider-polling/0.1"
     assert settings.binance_public_rest_base_url == "https://api.binance.com"
     assert settings.provider_credentials_version == "v1"
     assert settings.provider_credential_test_timeout_seconds == 10

@@ -6,7 +6,6 @@ from app.modules.provider_polling.adapters.binance_public_rest import (
 from app.modules.provider_polling.adapters.generic_ohlc_http import GenericOhlcHttpPollingAdapter
 from app.modules.provider_polling.adapters.mock import MockPollingProviderAdapter
 
-
 PROVIDER_POLLING_ADAPTERS: dict[str, ProviderPollingAdapter] = {
     MockPollingProviderAdapter.provider_key: MockPollingProviderAdapter(),
     BinancePublicRestPollingAdapter.provider_key: BinancePublicRestPollingAdapter(),

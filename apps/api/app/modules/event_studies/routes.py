@@ -12,6 +12,8 @@ from app.modules.event_studies.schemas import (
     EventStudyRunRequest,
 )
 from app.modules.event_studies.service import EventStudyService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["event-studies"])
 
@@ -26,6 +28,7 @@ def get_event_study_service(
     "/event-studies/run",
     response_model=EventStudyRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_event_study(
     payload: EventStudyRunRequest,

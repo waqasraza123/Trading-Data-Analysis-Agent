@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.profile_diagnostics.schemas import (
     CalibrationRecommendationRead,
     CalibrationRecommendationStatusUpdate,
@@ -28,6 +30,7 @@ def get_profile_diagnostic_service(
     "/run",
     response_model=StrategyProfileDiagnosticRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def run_profile_diagnostics(
     payload: ProfileDiagnosticRunRequest,
@@ -136,6 +139,7 @@ async def list_calibration_recommendations(
 @router.patch(
     "/recommendations/{recommendation_id}",
     response_model=CalibrationRecommendationRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
 )
 async def update_calibration_recommendation_status(
     recommendation_id: UUID,

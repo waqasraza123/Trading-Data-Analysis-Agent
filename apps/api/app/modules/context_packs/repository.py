@@ -102,7 +102,9 @@ class ContextPackRepository:
 
     async def get_selected_pattern_candidate(self, signal: Signal) -> PatternCandidate | None:
         if signal.selected_pattern_candidate_id is not None:
-            candidate = await self.session.get(PatternCandidate, signal.selected_pattern_candidate_id)
+            candidate = await self.session.get(
+                PatternCandidate, signal.selected_pattern_candidate_id
+            )
             if candidate is not None:
                 return candidate
         statement: Select[tuple[PatternCandidate]] = (
@@ -364,13 +366,17 @@ class ContextPackRepository:
         return list(result.scalars().all())
 
     async def count_final_candles_for_run(self, run: AnalysisRun) -> int:
-        statement = select(func.count()).select_from(Candle).where(
-            Candle.workspace_id == run.workspace_id,
-            Candle.symbol_id == run.symbol_id,
-            Candle.timeframe == run.timeframe,
-            Candle.timestamp >= run.start_time,
-            Candle.timestamp <= run.end_time,
-            Candle.is_final.is_(True),
+        statement = (
+            select(func.count())
+            .select_from(Candle)
+            .where(
+                Candle.workspace_id == run.workspace_id,
+                Candle.symbol_id == run.symbol_id,
+                Candle.timeframe == run.timeframe,
+                Candle.timestamp >= run.start_time,
+                Candle.timestamp <= run.end_time,
+                Candle.is_final.is_(True),
+            )
         )
         if run.source_id is not None:
             statement = statement.where(Candle.source_id == run.source_id)

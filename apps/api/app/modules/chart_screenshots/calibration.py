@@ -47,9 +47,8 @@ def build_axis_calibration(
     price_max = manual_price_max or inferred_price_max
     window_start = manual_window_start or inferred_window_start
     warnings = list(ocr_result.warnings)
-    if (
-        (manual_price_min is None or manual_price_max is None)
-        and (inferred_price_min is None or inferred_price_max is None)
+    if (manual_price_min is None or manual_price_max is None) and (
+        inferred_price_min is None or inferred_price_max is None
     ):
         warnings.append("OCR could not infer a complete price axis")
     if manual_window_start is None and inferred_window_start is None:
@@ -102,11 +101,7 @@ def extract_price_values(text_boxes: list[OcrTextBox], image_width: int) -> list
 
 
 def extract_window_start(text_boxes: list[OcrTextBox], image_height: int) -> datetime | None:
-    bottom_boxes = [
-        box
-        for box in text_boxes
-        if box_center(box)[1] >= image_height * 0.55
-    ]
+    bottom_boxes = [box for box in text_boxes if box_center(box)[1] >= image_height * 0.55]
     candidates: list[tuple[int, datetime]] = []
     for box in bottom_boxes:
         parsed = parse_datetime_text(box.text)

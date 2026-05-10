@@ -7,7 +7,6 @@ from app.modules.capabilities.models import (
     CapabilityStatus,
 )
 
-
 DEFAULT_CAPABILITY_VERSION = "v1"
 
 
@@ -136,7 +135,9 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
             read_only=False,
             mutates_intelligence_artifacts=True,
             safe_to_run_automatically=False,
-            notes="Uses configured provider adapters; public Binance polling does not require a key.",
+            notes=(
+                "Uses configured provider adapters; public Binance polling does not require a key."
+            ),
         ),
     ),
     CapabilityDefinition(
@@ -148,7 +149,14 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         module_path="app.modules.analysis",
         input_contracts=("normalized_candle",),
         output_contracts=("feature_snapshot", "indicator_snapshot"),
-        produced_artifacts=("analysis_runs", "analysis_audit_logs", "feature_snapshots", "indicator_snapshots", "pattern_candidates", "signals"),
+        produced_artifacts=(
+            "analysis_runs",
+            "analysis_audit_logs",
+            "feature_snapshots",
+            "indicator_snapshots",
+            "pattern_candidates",
+            "signals",
+        ),
         route_refs=("/analysis-runs", "/analysis-runs/{analysis_run_id}/retry"),
         dependencies=("candle_imports", "live_feed_ingestion", "provider_polling"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
@@ -162,7 +170,12 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         module_path="app.modules.signals",
         input_contracts=("feature_snapshot", "indicator_snapshot", "strategy_profile_config"),
         output_contracts=("signal_snapshot",),
-        produced_artifacts=("signals", "signal_confidence_components", "signal_evidence", "signal_risk_notes"),
+        produced_artifacts=(
+            "signals",
+            "signal_confidence_components",
+            "signal_evidence",
+            "signal_risk_notes",
+        ),
         route_refs=("/analysis-runs/{analysis_run_id}/signal", "/signals/{signal_id}"),
         dependencies=("analysis_lifecycle", "rule_packs"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
@@ -176,7 +189,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         module_path="app.modules.explanations",
         input_contracts=("signal_snapshot",),
         produced_artifacts=("deterministic_explanations",),
-        route_refs=("/signals/{signal_id}/explanation", "/analysis-runs/{analysis_run_id}/explanation"),
+        route_refs=(
+            "/signals/{signal_id}/explanation",
+            "/analysis-runs/{analysis_run_id}/explanation",
+        ),
         dependencies=("signal_classification", "safety_policies"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
@@ -209,7 +225,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         requires_external_credentials=True,
         input_contracts=("signal_snapshot",),
         produced_artifacts=("llm_explanations",),
-        route_refs=("/signals/{signal_id}/ai-explanation", "/analysis-runs/{analysis_run_id}/ai-explanation"),
+        route_refs=(
+            "/signals/{signal_id}/ai-explanation",
+            "/analysis-runs/{analysis_run_id}/ai-explanation",
+        ),
         dependencies=("deterministic_explanations", "safety_policies"),
         metadata=metadata(
             deterministic=False,
@@ -249,7 +268,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
         module_path="app.modules.action_plans",
         produced_artifacts=("reasoning_action_plans", "reasoning_action_items"),
-        route_refs=("/reasoning-runs/{reasoning_run_id}/action-plan", "/reasoning-action-plans/{action_plan_id}"),
+        route_refs=(
+            "/reasoning-runs/{reasoning_run_id}/action-plan",
+            "/reasoning-action-plans/{action_plan_id}",
+        ),
         dependencies=("scenario_reasoning", "safety_policies"),
         metadata=metadata(
             deterministic=True,
@@ -348,7 +370,12 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
         safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
         module_path="app.modules.profile_diagnostics",
-        produced_artifacts=("strategy_profile_diagnostic_runs", "strategy_profile_diagnostics", "pattern_outcome_diagnostics", "calibration_recommendations"),
+        produced_artifacts=(
+            "strategy_profile_diagnostic_runs",
+            "strategy_profile_diagnostics",
+            "pattern_outcome_diagnostics",
+            "calibration_recommendations",
+        ),
         route_refs=("/profile-diagnostics/runs", "/profile-diagnostics/recommendations"),
         dependencies=("outcomes", "strategy_profiles"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
@@ -361,7 +388,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.SAFE_READ,
         module_path="app.modules.intelligence_reports",
         produced_artifacts=(),
-        route_refs=("/intelligence-reports/signals/{signal_id}", "/intelligence-reports/analysis-runs/{analysis_run_id}"),
+        route_refs=(
+            "/intelligence-reports/signals/{signal_id}",
+            "/intelligence-reports/analysis-runs/{analysis_run_id}",
+        ),
         dependencies=("signal_classification", "outcomes", "scenario_reasoning"),
         metadata=metadata(deterministic=True, read_only=True),
     ),
@@ -372,7 +402,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         execution_type=CapabilityExecutionType.READ_ONLY,
         safety_level=CapabilitySafetyLevel.SAFE_READ,
         module_path="app.modules.audit_timeline",
-        route_refs=("/audit-timeline/analysis-runs/{analysis_run_id}", "/audit-timeline/signals/{signal_id}"),
+        route_refs=(
+            "/audit-timeline/analysis-runs/{analysis_run_id}",
+            "/audit-timeline/signals/{signal_id}",
+        ),
         dependencies=("analysis_lifecycle", "signal_classification"),
         metadata=metadata(deterministic=True, read_only=True),
     ),
@@ -383,8 +416,15 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         execution_type=CapabilityExecutionType.DETERMINISTIC_WRITE,
         safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
         module_path="app.modules.intelligence_quality",
-        produced_artifacts=("intelligence_quality_runs", "intelligence_quality_findings", "shadow_classification_results"),
-        route_refs=("/intelligence-quality/signals/{signal_id}", "/intelligence-quality/runs/{run_id}"),
+        produced_artifacts=(
+            "intelligence_quality_runs",
+            "intelligence_quality_findings",
+            "shadow_classification_results",
+        ),
+        route_refs=(
+            "/intelligence-quality/signals/{signal_id}",
+            "/intelligence-quality/runs/{run_id}",
+        ),
         dependencies=("signal_classification", "safety_policies"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
@@ -417,7 +457,12 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
         module_path="app.modules.market_scans",
         status=CapabilityStatus.DISABLED,
-        produced_artifacts=("market_watchlists", "scheduled_scan_configs", "scheduled_scan_runs", "scheduled_scan_run_items"),
+        produced_artifacts=(
+            "market_watchlists",
+            "scheduled_scan_configs",
+            "scheduled_scan_runs",
+            "scheduled_scan_run_items",
+        ),
         route_refs=("/market-watchlists", "/scheduled-scan-configs", "/scheduled-scan-runs"),
         dependencies=("analysis_lifecycle",),
         metadata=metadata(
@@ -435,7 +480,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
         module_path="app.modules.historical_cases",
         produced_artifacts=("historical_case_vectors", "historical_case_searches"),
-        route_refs=("/signals/{signal_id}/historical-cases", "/analysis-runs/{analysis_run_id}/historical-cases"),
+        route_refs=(
+            "/signals/{signal_id}/historical-cases",
+            "/analysis-runs/{analysis_run_id}/historical-cases",
+        ),
         dependencies=("signal_classification", "outcomes"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
@@ -447,7 +495,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
         module_path="app.modules.market_regimes",
         produced_artifacts=("market_regime_contexts",),
-        route_refs=("/analysis-runs/{analysis_run_id}/market-regime", "/signals/{signal_id}/market-regime"),
+        route_refs=(
+            "/analysis-runs/{analysis_run_id}/market-regime",
+            "/signals/{signal_id}/market-regime",
+        ),
         dependencies=("analysis_lifecycle",),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
@@ -459,7 +510,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.SAFE_BACKEND_WRITE,
         module_path="app.modules.market_sessions",
         produced_artifacts=("market_session_contexts",),
-        route_refs=("/analysis-runs/{analysis_run_id}/market-session", "/signals/{signal_id}/market-session"),
+        route_refs=(
+            "/analysis-runs/{analysis_run_id}/market-session",
+            "/signals/{signal_id}/market-session",
+        ),
         dependencies=("analysis_lifecycle",),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
@@ -676,7 +730,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         module_path="app.modules.intelligence_datasets",
         input_contracts=("dataset_record",),
         produced_artifacts=("intelligence_dataset_exports", "intelligence_dataset_export_items"),
-        route_refs=("/intelligence-datasets/exports", "/intelligence-datasets/exports/{export_id}/jsonl"),
+        route_refs=(
+            "/intelligence-datasets/exports",
+            "/intelligence-datasets/exports/{export_id}/jsonl",
+        ),
         dependencies=("signal_classification", "outcomes", "safety_policies"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),
@@ -711,7 +768,11 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.RESTRICTED,
         module_path="app.modules.webhook_outbox",
         status=CapabilityStatus.EXPERIMENTAL,
-        produced_artifacts=("webhook_subscriptions", "webhook_outbox_events", "webhook_delivery_attempts"),
+        produced_artifacts=(
+            "webhook_subscriptions",
+            "webhook_outbox_events",
+            "webhook_delivery_attempts",
+        ),
         route_refs=("/webhook-subscriptions", "/webhook-outbox-events"),
         dependencies=("safety_policies",),
         metadata=metadata(
@@ -740,7 +801,10 @@ DEFAULT_CAPABILITIES: tuple[CapabilityDefinition, ...] = (
         safety_level=CapabilitySafetyLevel.REVIEW_REQUIRED,
         module_path="app.modules.decision_readiness",
         produced_artifacts=("decision_readiness_assessments",),
-        route_refs=("/decision-readiness/signals/{signal_id}", "/decision-readiness/analysis-runs/{analysis_run_id}"),
+        route_refs=(
+            "/decision-readiness/signals/{signal_id}",
+            "/decision-readiness/analysis-runs/{analysis_run_id}",
+        ),
         dependencies=("signal_classification", "intelligence_quality", "safety_policies"),
         metadata=metadata(deterministic=True, read_only=False, mutates_intelligence_artifacts=True),
     ),

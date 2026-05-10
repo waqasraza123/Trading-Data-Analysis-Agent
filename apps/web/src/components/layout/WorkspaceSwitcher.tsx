@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { WorkspaceSelector } from "@/components/workspace/WorkspaceSelector";
 
 type WorkspaceSwitcherProps = {
@@ -6,5 +7,9 @@ type WorkspaceSwitcherProps = {
 };
 
 export function WorkspaceSwitcher({ workspaceName, workspaceId }: WorkspaceSwitcherProps) {
-  return <WorkspaceSelector workspaceId={workspaceId} workspaceName={workspaceName} />;
+  return (
+    <Suspense fallback={<div className="muted-surface h-24 rounded-lg" />}>
+      <WorkspaceSelector workspaceId={workspaceId} workspaceName={workspaceName} />
+    </Suspense>
+  );
 }

@@ -84,9 +84,9 @@ class IntelligenceReportRepository:
         self,
         signal_id: UUID,
     ) -> DeterministicExplanation | None:
-        statement: Select[tuple[DeterministicExplanation]] = select(
-            DeterministicExplanation
-        ).where(DeterministicExplanation.signal_id == signal_id)
+        statement: Select[tuple[DeterministicExplanation]] = select(DeterministicExplanation).where(
+            DeterministicExplanation.signal_id == signal_id
+        )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
@@ -315,16 +315,13 @@ class IntelligenceReportRepository:
         return list(result.scalars().all())
 
     async def count_candles_for_run(self, run: AnalysisRun) -> int:
-        statement = (
-            select(Candle)
-            .where(
-                Candle.workspace_id == run.workspace_id,
-                Candle.symbol_id == run.symbol_id,
-                Candle.timeframe == run.timeframe,
-                Candle.timestamp >= run.start_time,
-                Candle.timestamp <= run.end_time,
-                Candle.is_final.is_(True),
-            )
+        statement = select(Candle).where(
+            Candle.workspace_id == run.workspace_id,
+            Candle.symbol_id == run.symbol_id,
+            Candle.timeframe == run.timeframe,
+            Candle.timestamp >= run.start_time,
+            Candle.timestamp <= run.end_time,
+            Candle.is_final.is_(True),
         )
         if run.source_id is not None:
             statement = statement.where(Candle.source_id == run.source_id)

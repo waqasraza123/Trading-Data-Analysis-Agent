@@ -119,7 +119,9 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "duplicate_count >= 0",
-            name=op.f("ck_chart_screenshot_runs_chart_screenshot_runs_duplicate_count_non_negative"),
+            name=op.f(
+                "ck_chart_screenshot_runs_chart_screenshot_runs_duplicate_count_non_negative"
+            ),
         ),
         sa.CheckConstraint(
             "conflict_count >= 0",

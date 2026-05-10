@@ -19,6 +19,8 @@ from app.modules.artifact_graph.schemas import (
     MarkArtifactCurrentRequest,
 )
 from app.modules.artifact_graph.service import ArtifactGraphService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/artifact-graph", tags=["artifact-graph"])
 
@@ -29,7 +31,11 @@ def get_artifact_graph_service(
     return ArtifactGraphService(session)
 
 
-@router.post("/artifacts", response_model=ArtifactRead)
+@router.post(
+    "/artifacts",
+    response_model=ArtifactRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def register_artifact(
     payload: ArtifactRegisterRequest,
     service: Annotated[ArtifactGraphService, Depends(get_artifact_graph_service)],
@@ -40,9 +46,9 @@ async def register_artifact(
 @router.get("/artifacts/by-source", response_model=ArtifactRead)
 async def get_artifact_by_source(
     service: Annotated[ArtifactGraphService, Depends(get_artifact_graph_service)],
-    workspace_id: UUID = Query(alias="workspaceId"),
-    artifact_type: ArtifactType = Query(alias="artifactType"),
-    artifact_id: str = Query(alias="artifactId"),
+    workspace_id: Annotated[UUID, Query(alias="workspaceId")],
+    artifact_type: Annotated[ArtifactType, Query(alias="artifactType")],
+    artifact_id: Annotated[str, Query(alias="artifactId")],
 ) -> ArtifactRead:
     return await service.get_artifact_by_source(workspace_id, artifact_type, artifact_id)
 
@@ -55,7 +61,11 @@ async def get_artifact(
     return await service.get_artifact(artifact_record_id)
 
 
-@router.post("/dependencies", response_model=DependencyRead)
+@router.post(
+    "/dependencies",
+    response_model=DependencyRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def link_artifacts(
     payload: DependencyLinkRequest,
     service: Annotated[ArtifactGraphService, Depends(get_artifact_graph_service)],
@@ -107,6 +117,7 @@ async def get_dependency_path(
 @router.post(
     "/artifacts/{artifact_record_id}/invalidate-downstream",
     response_model=ArtifactInvalidationResultRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def invalidate_downstream(
     artifact_record_id: UUID,
@@ -119,14 +130,18 @@ async def invalidate_downstream(
 @router.get("/stale", response_model=list[ArtifactRead])
 async def list_stale_artifacts(
     service: Annotated[ArtifactGraphService, Depends(get_artifact_graph_service)],
-    workspace_id: UUID = Query(alias="workspaceId"),
-    artifact_type: ArtifactType | None = Query(default=None, alias="artifactType"),
-    limit: int = Query(default=100, ge=1, le=1000),
+    workspace_id: Annotated[UUID, Query(alias="workspaceId")],
+    artifact_type: Annotated[ArtifactType | None, Query(alias="artifactType")] = None,
+    limit: Annotated[int, Query(ge=1, le=1000)] = 100,
 ) -> list[ArtifactRead]:
     return await service.list_stale_artifacts(workspace_id, artifact_type, limit)
 
 
-@router.post("/artifacts/{artifact_record_id}/mark-current", response_model=ArtifactRead)
+@router.post(
+    "/artifacts/{artifact_record_id}/mark-current",
+    response_model=ArtifactRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def mark_artifact_current(
     artifact_record_id: UUID,
     payload: MarkArtifactCurrentRequest,
@@ -138,6 +153,6 @@ async def mark_artifact_current(
 @router.get("/summary", response_model=ArtifactGraphSummaryRead)
 async def summarize_artifact_graph(
     service: Annotated[ArtifactGraphService, Depends(get_artifact_graph_service)],
-    workspace_id: UUID = Query(alias="workspaceId"),
+    workspace_id: Annotated[UUID, Query(alias="workspaceId")],
 ) -> ArtifactGraphSummaryRead:
     return await service.summarize_artifact_graph(workspace_id)

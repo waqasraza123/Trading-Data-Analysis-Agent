@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
-
 
 CASE_SIMILARITY_VERSION = "v1"
 
@@ -67,11 +66,17 @@ def score_similarity(
         weighted_match("symbol", 0.10, source_vector, candidate_vector, "symbol.symbolId"),
         weighted_match("timeframe", 0.09, source_vector, candidate_vector, "signal.timeframe"),
         weighted_match("market_type", 0.04, source_vector, candidate_vector, "symbol.marketType"),
-        weighted_match("volatility_state", 0.08, source_vector, candidate_vector, "features.volatilityState"),
+        weighted_match(
+            "volatility_state", 0.08, source_vector, candidate_vector, "features.volatilityState"
+        ),
         weighted_match("trend_state", 0.07, source_vector, candidate_vector, "features.trendState"),
         weighted_match("range_state", 0.06, source_vector, candidate_vector, "features.rangeState"),
-        weighted_match("confidence_bucket", 0.04, source_vector, candidate_vector, "signal.confidenceBucket"),
-        weighted_match("news_correlation_label", 0.03, source_vector, candidate_vector, "news.correlationLabel"),
+        weighted_match(
+            "confidence_bucket", 0.04, source_vector, candidate_vector, "signal.confidenceBucket"
+        ),
+        weighted_match(
+            "news_correlation_label", 0.03, source_vector, candidate_vector, "news.correlationLabel"
+        ),
     ]
     if include_outcomes:
         checks.append(
@@ -90,14 +95,20 @@ def score_similarity(
     )
     matched_weight = sum(check.score for check in checks)
     if total_weight == 0:
-        return CaseSimilarityResult(score=Decimal("0.0000"), matched_reasons=[], differing_reasons=[])
+        return CaseSimilarityResult(
+            score=Decimal("0.0000"), matched_reasons=[], differing_reasons=[]
+        )
     score = Decimal(str(matched_weight / total_weight)).quantize(
         Decimal("0.0001"),
         rounding=ROUND_HALF_UP,
     )
     matched_reasons = [check.matched_reason for check in checks if check.matched_reason is not None]
-    differing_reasons = [check.differing_reason for check in checks if check.differing_reason is not None]
-    return CaseSimilarityResult(score=score, matched_reasons=matched_reasons, differing_reasons=differing_reasons)
+    differing_reasons = [
+        check.differing_reason for check in checks if check.differing_reason is not None
+    ]
+    return CaseSimilarityResult(
+        score=score, matched_reasons=matched_reasons, differing_reasons=differing_reasons
+    )
 
 
 @dataclass(frozen=True)
@@ -182,7 +193,9 @@ def weighted_overlap(
         source_value=sorted(source_values),
         candidate_value=sorted(candidate_values),
         matched_reason=None,
-        differing_reason=f"different {label}: {sorted(source_values)} vs {sorted(candidate_values)}",
+        differing_reason=(
+            f"different {label}: {sorted(source_values)} vs {sorted(candidate_values)}"
+        ),
     )
 
 

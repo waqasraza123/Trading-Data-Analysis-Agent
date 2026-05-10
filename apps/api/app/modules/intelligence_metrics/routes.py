@@ -16,6 +16,8 @@ from app.modules.intelligence_metrics.schemas import (
     IntelligenceMetricWarning,
 )
 from app.modules.intelligence_metrics.service import IntelligenceMetricsService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/intelligence-metrics", tags=["intelligence-metrics"])
 
@@ -53,6 +55,7 @@ async def get_global_intelligence_metrics(
     "/snapshots/workspace/{workspace_id}",
     response_model=IntelligenceMetricSnapshotRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def create_workspace_intelligence_metric_snapshot(
     workspace_id: UUID,
@@ -72,6 +75,7 @@ async def create_workspace_intelligence_metric_snapshot(
     "/snapshots/global",
     response_model=IntelligenceMetricSnapshotRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
 )
 async def create_global_intelligence_metric_snapshot(
     service: Annotated[
@@ -138,8 +142,7 @@ def to_metrics_read(
         collected_at=collected.collected_at,
         metrics_json=collected.metrics_json,
         warnings_json=[
-            IntelligenceMetricWarning.model_validate(warning)
-            for warning in collected.warnings_json
+            IntelligenceMetricWarning.model_validate(warning) for warning in collected.warnings_json
         ],
         health_summary=health_summary if isinstance(health_summary, dict) else {},
     )

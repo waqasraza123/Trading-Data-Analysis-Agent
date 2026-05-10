@@ -29,6 +29,6 @@ def build_llm_prompt(input_payload: LlmExplanationInputPayload) -> str:
         "Confidence explanation: explain confidence level and why.\n"
         "Risk/uncertainty explanation: explain risk notes and uncertainty.\n"
         "Include this disclaimer exactly once: "
-        "\"This is analysis based on available backend data, not a trade instruction.\"\n"
+        '"This is analysis based on available backend data, not a trade instruction."\n'
         "Use plain text only."
     )

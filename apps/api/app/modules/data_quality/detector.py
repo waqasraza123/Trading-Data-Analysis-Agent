@@ -144,7 +144,9 @@ class DataQualityDetector:
         )
         completeness = Decimal("1")
         if expected_set:
-            completeness = Decimal(len(final_timestamps & expected_set)) / Decimal(len(expected_set))
+            completeness = Decimal(len(final_timestamps & expected_set)) / Decimal(
+                len(expected_set)
+            )
         if expected_set and completeness < self.thresholds.acceptable:
             findings.append(
                 DetectedFinding(
@@ -264,7 +266,9 @@ class DataQualityDetector:
             final_candles = [candle for candle in timestamp_candles if candle.is_final]
             partial_candles = [candle for candle in timestamp_candles if not candle.is_final]
             source_counts = Counter(candle.source_id for candle in timestamp_candles)
-            duplicate_sources = [source_id for source_id, count in source_counts.items() if count > 1]
+            duplicate_sources = [
+                source_id for source_id, count in source_counts.items() if count > 1
+            ]
             if len(timestamp_candles) > 1:
                 findings.append(
                     DetectedFinding(
@@ -278,8 +282,12 @@ class DataQualityDetector:
                         expected_value="1",
                         observed_value=str(len(timestamp_candles)),
                         metadata_json={
-                            "sourceIds": sorted({str(candle.source_id) for candle in timestamp_candles}),
-                            "duplicateSourceIds": [str(source_id) for source_id in duplicate_sources],
+                            "sourceIds": sorted(
+                                {str(candle.source_id) for candle in timestamp_candles}
+                            ),
+                            "duplicateSourceIds": [
+                                str(source_id) for source_id in duplicate_sources
+                            ],
                         },
                     )
                 )
@@ -415,9 +423,7 @@ class DataQualityDetector:
         score = Decimal("1.00000")
         for finding in findings:
             score -= FINDING_PENALTIES[finding.severity]
-        score = min(max(score, Decimal("0.00000")), Decimal("1.00000")).quantize(
-            Decimal("0.00001")
-        )
+        score = min(max(score, Decimal("0.00000")), Decimal("1.00000")).quantize(Decimal("0.00001"))
         if expected_candle_count > 0 and checked_candle_count == 0:
             label = DataQualityLabel.INSUFFICIENT
         else:
@@ -431,8 +437,7 @@ class DataQualityDetector:
             **extra_metadata,
         }
         summary = (
-            f"{summary_subject} completed with {len(findings)} findings "
-            f"and label {label.value}"
+            f"{summary_subject} completed with {len(findings)} findings and label {label.value}"
         )
         return DetectionResult(
             findings=findings,

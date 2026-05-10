@@ -48,10 +48,14 @@ class TradingJournalRepository:
             statement = statement.where(JournalEntry.decision_type == decision_type)
         if status is not None:
             statement = statement.where(JournalEntry.status == status)
-        statement = statement.order_by(
-            JournalEntry.created_at.desc(),
-            JournalEntry.id.desc(),
-        ).offset(offset).limit(limit)
+        statement = (
+            statement.order_by(
+                JournalEntry.created_at.desc(),
+                JournalEntry.id.desc(),
+            )
+            .offset(offset)
+            .limit(limit)
+        )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

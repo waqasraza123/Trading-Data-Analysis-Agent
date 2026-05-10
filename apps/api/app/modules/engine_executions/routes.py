@@ -13,6 +13,8 @@ from app.modules.engine_executions.schemas import (
     EngineExecutionRead,
 )
 from app.modules.engine_executions.service import EngineExecutionService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(prefix="/engine-executions", tags=["engine-executions"])
 
@@ -23,7 +25,12 @@ def get_engine_execution_service(
     return EngineExecutionService(session)
 
 
-@router.post("", response_model=EngineExecutionRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=EngineExecutionRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def create_engine_execution(
     payload: EngineExecutionCreate,
     service: Annotated[EngineExecutionService, Depends(get_engine_execution_service)],
@@ -76,7 +83,11 @@ async def list_engine_execution_events(
     return [EngineExecutionEventRead.model_validate(event) for event in events]
 
 
-@router.post("/{record_id}/cancel", response_model=EngineExecutionRead)
+@router.post(
+    "/{record_id}/cancel",
+    response_model=EngineExecutionRead,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def cancel_engine_execution(
     record_id: UUID,
     service: Annotated[EngineExecutionService, Depends(get_engine_execution_service)],

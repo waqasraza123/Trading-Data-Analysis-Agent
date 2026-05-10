@@ -53,12 +53,12 @@ export function DemoRunButton({ enabled }: { enabled: boolean }) {
         {result && (
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-4">
-              {[
+              {([
                 ["Signals", result.signal_ids.length],
                 ["Setup contexts", result.setup_context_ids.length],
                 ["Priority scores", result.priority_score_ids.length],
                 ["Outcomes", result.outcome_ids.length],
-              ].map(([label, value], index) => (
+              ] as [string, number][]).map(([label, value], index) => (
                 <AnimatedListItem
                   as="article"
                   key={label}

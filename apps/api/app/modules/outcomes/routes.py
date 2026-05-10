@@ -17,6 +17,8 @@ from app.modules.outcomes.schemas import (
     SignalOutcomeRead,
 )
 from app.modules.outcomes.service import OutcomeEvaluationService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["outcomes"])
 
@@ -27,7 +29,11 @@ def get_outcome_service(
     return OutcomeEvaluationService(session)
 
 
-@router.post("/signals/{signal_id}/outcomes/evaluate", response_model=SignalOutcomeEvaluationRead)
+@router.post(
+    "/signals/{signal_id}/outcomes/evaluate",
+    response_model=SignalOutcomeEvaluationRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def evaluate_signal_outcomes(
     signal_id: UUID,
     payload: OutcomeEvaluationRequest,
@@ -66,6 +72,7 @@ async def get_signal_outcome(
 @router.post(
     "/analysis-runs/{analysis_run_id}/outcomes/evaluate",
     response_model=AnalysisRunOutcomeEvaluationRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def evaluate_analysis_run_outcomes(
     analysis_run_id: UUID,
@@ -96,6 +103,7 @@ async def list_analysis_run_outcomes(
     "/outcome-evaluation-runs/backfill",
     response_model=OutcomeEvaluationRunRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def backfill_outcomes(
     payload: OutcomeBackfillRequest,

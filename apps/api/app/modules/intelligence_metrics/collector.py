@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
 from uuid import UUID
 
 from app.modules.intelligence_metrics.models import (
@@ -345,7 +344,9 @@ def build_health_summary(
     warnings: list[dict[str, object]],
 ) -> dict[str, object]:
     counters = {
-        "failedAnalyses": grouped_count(modules, "analysis", "analysis_runs", "by_status", "failed"),
+        "failedAnalyses": grouped_count(
+            modules, "analysis", "analysis_runs", "by_status", "failed"
+        ),
         "failedReasoningRuns": grouped_count(
             modules,
             "reasoning",
@@ -553,7 +554,10 @@ def build_health_sentence(status: str, counters: dict[str, int]) -> str:
     if status == "partial":
         return "Backend intelligence counters were collected with missing optional modules."
     if status == "attention":
-        return "Backend intelligence counters show review, due-work, quality, or reasoning attention items."
+        return (
+            "Backend intelligence counters show review, due-work, quality, "
+            "or reasoning attention items."
+        )
     return "Backend intelligence counters show failed operational work that needs investigation."
 
 

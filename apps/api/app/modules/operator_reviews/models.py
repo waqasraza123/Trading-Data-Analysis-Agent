@@ -89,8 +89,7 @@ class OperatorReviewItem(Base):
             name="operator_review_items_priority_allowed",
         ),
         CheckConstraint(
-            "status in ('open', 'assigned', 'in_review', 'resolved', 'dismissed', "
-            "'cancelled')",
+            "status in ('open', 'assigned', 'in_review', 'resolved', 'dismissed', 'cancelled')",
             name="operator_review_items_status_allowed",
         ),
         CheckConstraint(

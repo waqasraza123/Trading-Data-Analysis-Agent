@@ -14,8 +14,6 @@ from app.modules.data_retention.models import (
     DataRetentionRun,
     DataRetentionRunItem,
     DataRetentionRunItemStatus,
-    DataRetentionRunMode,
-    DataRetentionRunStatus,
     DataRetentionTargetType,
 )
 from app.modules.data_retention.planner import PlannedRetentionAction, RetentionTargetPlan
@@ -168,7 +166,9 @@ class DataRetentionRepository:
             return await self._redact_reasoning_run(item)
         if target_type == DataRetentionTargetType.CHART_SCREENSHOT_AUDIT_PAYLOAD:
             return await self._redact_chart_screenshot_run(item)
-        return await self._skip_item(item, "target type has no safe redaction adapter in this phase")
+        return await self._skip_item(
+            item, "target type has no safe redaction adapter in this phase"
+        )
 
     async def _plan_known_actions(
         self,
@@ -257,7 +257,9 @@ class DataRetentionRepository:
     ) -> list[PlannedRetentionAction]:
         statement: Select[tuple[LlmExplanation]] = (
             select(LlmExplanation)
-            .where(LlmExplanation.workspace_id == workspace_id, LlmExplanation.created_at < plan.cutoff)
+            .where(
+                LlmExplanation.workspace_id == workspace_id, LlmExplanation.created_at < plan.cutoff
+            )
             .order_by(LlmExplanation.created_at.asc())
             .limit(limit)
         )
@@ -284,7 +286,10 @@ class DataRetentionRepository:
     ) -> list[PlannedRetentionAction]:
         statement: Select[tuple[LlmReasoningRun]] = (
             select(LlmReasoningRun)
-            .where(LlmReasoningRun.workspace_id == workspace_id, LlmReasoningRun.created_at < plan.cutoff)
+            .where(
+                LlmReasoningRun.workspace_id == workspace_id,
+                LlmReasoningRun.created_at < plan.cutoff,
+            )
             .order_by(LlmReasoningRun.created_at.asc())
             .limit(limit)
         )
@@ -421,7 +426,10 @@ class DataRetentionRepository:
                 LlmExplanation.id == item.target_id,
                 LlmExplanation.workspace_id == item.workspace_id,
             )
-            .values(input_json=self._redacted_payload(item), output_text="[redacted by retention policy]")
+            .values(
+                input_json=self._redacted_payload(item),
+                output_text="[redacted by retention policy]",
+            )
         )
         return await self._mark_mutation_result(item, int(result.rowcount or 0))
 
@@ -440,7 +448,9 @@ class DataRetentionRepository:
         )
         return await self._mark_mutation_result(item, int(result.rowcount or 0))
 
-    async def _redact_chart_screenshot_run(self, item: DataRetentionRunItem) -> DataRetentionRunItem:
+    async def _redact_chart_screenshot_run(
+        self, item: DataRetentionRunItem
+    ) -> DataRetentionRunItem:
         run = await self.session.get(ChartScreenshotRun, item.target_id)
         if run is None or run.workspace_id != item.workspace_id:
             return await self._skip_item(item, "target record was not found")

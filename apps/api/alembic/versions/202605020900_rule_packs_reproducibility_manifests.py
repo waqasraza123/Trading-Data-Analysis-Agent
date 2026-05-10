@@ -64,8 +64,12 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "status in ('draft', 'active', 'deprecated', 'archived')",
             name=op.f("ck_rule_packs_rule_pack_status_allowed"),
@@ -144,10 +148,15 @@ def upgrade() -> None:
         ),
         sa.Column("replay_support_status", sa.String(length=32), nullable=False),
         sa.Column("summary", sa.String(length=1200), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
-            "replay_support_status in ('supported', 'partially_supported', 'unsupported', 'unknown')",
+            "replay_support_status in ('supported', 'partially_supported', "
+            "'unsupported', 'unknown')",
             name=op.f("ck_analysis_reproducibility_manifests_replay_support_allowed"),
         ),
         sa.ForeignKeyConstraint(

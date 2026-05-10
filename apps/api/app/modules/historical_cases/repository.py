@@ -82,13 +82,17 @@ class HistoricalCaseRepository:
         if timeframe is not None:
             statement = statement.where(HistoricalCaseVector.timeframe == timeframe)
         if strategy_profile_key is not None:
-            statement = statement.where(HistoricalCaseVector.strategy_profile_key == strategy_profile_key)
+            statement = statement.where(
+                HistoricalCaseVector.strategy_profile_key == strategy_profile_key
+            )
         if pattern_type is not None:
             statement = statement.where(HistoricalCaseVector.pattern_type == pattern_type)
         if bias is not None:
             statement = statement.where(HistoricalCaseVector.bias == bias)
         if classification_status is not None:
-            statement = statement.where(HistoricalCaseVector.classification_status == classification_status)
+            statement = statement.where(
+                HistoricalCaseVector.classification_status == classification_status
+            )
         if exclude_signal_id is not None:
             statement = statement.where(HistoricalCaseVector.signal_id != exclude_signal_id)
         result = await self.session.execute(statement)

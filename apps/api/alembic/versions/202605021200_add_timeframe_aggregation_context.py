@@ -37,11 +37,21 @@ def upgrade() -> None:
         sa.Column("start_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column("end_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column("status", sa.String(length=32), nullable=False),
-        sa.Column("expected_base_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("available_base_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("produced_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("skipped_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("incomplete_window_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column(
+            "expected_base_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
+        sa.Column(
+            "available_base_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
+        sa.Column(
+            "produced_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
+        sa.Column(
+            "skipped_candle_count", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
+        sa.Column(
+            "incomplete_window_count", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
         sa.Column("aggregation_version", sa.String(length=32), nullable=False),
         sa.Column("summary", sa.String(length=1000), nullable=False),
         sa.Column(
@@ -52,8 +62,12 @@ def upgrade() -> None:
         ),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "available_base_candle_count >= 0",
             name="ck_candle_aggregation_runs_available_base_candle_count_non_negative",
@@ -116,7 +130,9 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
             "actual_base_count >= 0",
             name="ck_derived_candle_lineage_derived_actual_base_count_non_negative",
@@ -129,7 +145,9 @@ def upgrade() -> None:
             "expected_base_count >= 0",
             name="ck_derived_candle_lineage_derived_expected_base_count_non_negative",
         ),
-        sa.ForeignKeyConstraint(["aggregation_run_id"], ["candle_aggregation_runs.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["aggregation_run_id"], ["candle_aggregation_runs.id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["derived_candle_id"], ["candles.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["source_id"], ["data_sources.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["symbol_id"], ["symbols.id"], ondelete="RESTRICT"),
@@ -155,7 +173,9 @@ def upgrade() -> None:
         sa.Column("symbol_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("source_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("primary_timeframe", sa.String(length=16), nullable=False),
-        sa.Column("context_timeframes_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "context_timeframes_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False
+        ),
         sa.Column("context_version", sa.String(length=32), nullable=False),
         sa.Column("trend_alignment", sa.String(length=32), nullable=False),
         sa.Column("volatility_alignment", sa.String(length=32), nullable=False),
@@ -165,10 +185,15 @@ def upgrade() -> None:
         sa.Column("context_summary", sa.String(length=1000), nullable=False),
         sa.Column("context_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("warnings_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.CheckConstraint(
-            "agreement_label in ('strong', 'acceptable', 'mixed', 'conflicting', 'insufficient_context')",
+            "agreement_label in ('strong', 'acceptable', 'mixed', 'conflicting', "
+            "'insufficient_context')",
             name="ck_multi_timeframe_contexts_multi_timeframe_agreement_label_allowed",
         ),
         sa.CheckConstraint(
@@ -199,7 +224,9 @@ def upgrade() -> None:
         "multi_timeframe_contexts",
         ["analysis_run_id"],
     )
-    op.create_index("ix_multi_timeframe_contexts_signal_id", "multi_timeframe_contexts", ["signal_id"])
+    op.create_index(
+        "ix_multi_timeframe_contexts_signal_id", "multi_timeframe_contexts", ["signal_id"]
+    )
     op.create_index(
         "ix_multi_timeframe_contexts_workspace_symbol_primary",
         "multi_timeframe_contexts",
@@ -208,15 +235,22 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_multi_timeframe_contexts_workspace_symbol_primary", table_name="multi_timeframe_contexts")
+    op.drop_index(
+        "ix_multi_timeframe_contexts_workspace_symbol_primary",
+        table_name="multi_timeframe_contexts",
+    )
     op.drop_index("ix_multi_timeframe_contexts_signal_id", table_name="multi_timeframe_contexts")
-    op.drop_index("ix_multi_timeframe_contexts_analysis_run_id", table_name="multi_timeframe_contexts")
+    op.drop_index(
+        "ix_multi_timeframe_contexts_analysis_run_id", table_name="multi_timeframe_contexts"
+    )
     op.drop_table("multi_timeframe_contexts")
     op.drop_index(
         "ix_derived_candle_lineage_workspace_symbol_target_timestamp",
         table_name="derived_candle_lineage",
     )
-    op.drop_index("ix_derived_candle_lineage_derived_candle_id", table_name="derived_candle_lineage")
+    op.drop_index(
+        "ix_derived_candle_lineage_derived_candle_id", table_name="derived_candle_lineage"
+    )
     op.drop_table("derived_candle_lineage")
     op.drop_index(
         "ix_candle_aggregation_runs_workspace_symbol_timeframes",

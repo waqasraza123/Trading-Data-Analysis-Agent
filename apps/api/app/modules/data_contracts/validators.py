@@ -37,7 +37,7 @@ def validate_payload_against_schema(
 
 
 def validate_node(
-    value: Any,
+    value: object,
     schema: dict[str, object],
     path: str,
     strict: bool,
@@ -85,7 +85,11 @@ def validate_object(
     required = schema.get("required")
     properties = schema.get("properties")
     additional_properties = schema.get("additionalProperties", True)
-    required_fields = [field for field in required if isinstance(field, str)] if isinstance(required, list) else []
+    required_fields = (
+        [field for field in required if isinstance(field, str)]
+        if isinstance(required, list)
+        else []
+    )
     property_schemas = properties if isinstance(properties, dict) else {}
     for field in required_fields:
         if field not in value:
@@ -118,7 +122,7 @@ def validate_object(
             )
 
 
-def value_matches_type(value: Any, expected_type: str) -> bool:
+def value_matches_type(value: object, expected_type: str) -> bool:
     if expected_type == "object":
         return isinstance(value, dict)
     if expected_type == "array":
@@ -138,7 +142,7 @@ def value_matches_type(value: Any, expected_type: str) -> bool:
     return True
 
 
-def is_market_number(value: Any) -> bool:
+def is_market_number(value: object) -> bool:
     if isinstance(value, bool) or value is None:
         return False
     if isinstance(value, int | float | Decimal | str):
@@ -152,7 +156,7 @@ def is_market_number(value: Any) -> bool:
 
 def summarize_payload(payload: dict[str, Any] | list[Any]) -> dict[str, object]:
     if isinstance(payload, dict):
-        keys = sorted(str(key) for key in payload.keys())
+        keys = sorted(str(key) for key in payload)
         return {
             "payloadType": "object",
             "fieldCount": len(keys),

@@ -1,22 +1,23 @@
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import SafetyPolicyEvaluation, SafetyPolicySet
 from .schemas import SafetyEvaluationResponse, SafetyPolicySetStatus
 
 
 class SafetyPolicyRepository:
-    def __init__(self, session: Any) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
     async def list_policy_sets(self, workspace_id: str | None = None) -> list[SafetyPolicySet]:
         statement = select(SafetyPolicySet)
         if workspace_id is not None:
             statement = statement.where(SafetyPolicySet.workspace_id == workspace_id)
-        result = await self.session.execute(statement.order_by(SafetyPolicySet.key, SafetyPolicySet.version))
+        result = await self.session.execute(
+            statement.order_by(SafetyPolicySet.key, SafetyPolicySet.version)
+        )
         return list(result.scalars().all())
 
     async def get_policy_set(
@@ -43,7 +44,7 @@ class SafetyPolicyRepository:
         version: str,
         status: SafetyPolicySetStatus,
         description: str,
-        policy_json: dict[str, Any],
+        policy_json: dict[str, object],
         workspace_id: str | None = None,
     ) -> SafetyPolicySet:
         existing = await self.get_policy_set(key=key, version=version, workspace_id=workspace_id)
@@ -91,4 +92,3 @@ class SafetyPolicyRepository:
         await self.session.commit()
         await self.session.refresh(evaluation)
         return evaluation
-

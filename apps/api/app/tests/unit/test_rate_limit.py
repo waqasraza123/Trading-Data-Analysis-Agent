@@ -84,6 +84,4 @@ async def test_check_redis_connection_closes_client() -> None:
 
 
 def test_rate_limit_key_uses_stable_request_scope() -> None:
-    assert rate_limit_key("127.0.0.1", "POST", "/symbols") == (
-        "rate-limit:127.0.0.1:POST:/symbols"
-    )
+    assert rate_limit_key("127.0.0.1", "POST", "/symbols") == ("rate-limit:127.0.0.1:POST:/symbols")

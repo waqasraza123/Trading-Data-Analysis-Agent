@@ -411,9 +411,7 @@ def build_worker_summary(
     run_request_worker_counts: dict[str, dict[str, int]],
 ) -> RuntimeHealthWorkerSummary:
     worker_instances = [
-        instance
-        for instance in instances
-        if instance.worker_definition_key == definition.key
+        instance for instance in instances if instance.worker_definition_key == definition.key
     ]
     worker_counts = run_request_worker_counts.get(definition.key, {})
     return RuntimeHealthWorkerSummary(

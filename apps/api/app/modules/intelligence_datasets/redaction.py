@@ -65,7 +65,9 @@ def redact_value(value: object, path: str, warnings: list[str]) -> object:
     return value
 
 
-def redact_mapping(payload: dict[object, object], path: str, warnings: list[str]) -> dict[str, object]:
+def redact_mapping(
+    payload: dict[object, object], path: str, warnings: list[str]
+) -> dict[str, object]:
     redacted: dict[str, object] = {}
     for raw_key, raw_value in payload.items():
         key = str(raw_key)

@@ -5,6 +5,8 @@ from fastapi import APIRouter, Body, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import database_session
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 from app.modules.rule_packs.models import RulePackStatus
 from app.modules.rule_packs.schemas import (
     ReproducibilityManifestGenerateRequest,
@@ -33,7 +35,12 @@ def get_manifest_service(
     return ReproducibilityManifestService(session)
 
 
-@router.post("/rule-packs", response_model=RulePackRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rule-packs",
+    response_model=RulePackRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
+)
 async def create_rule_pack(
     payload: RulePackCreate,
     service: Annotated[RulePackService, Depends(get_rule_pack_service)],
@@ -73,7 +80,11 @@ async def get_rule_pack(
     return RulePackRead.model_validate(rule_pack)
 
 
-@router.post("/rule-packs/seed-default", response_model=RulePackRead)
+@router.post(
+    "/rule-packs/seed-default",
+    response_model=RulePackRead,
+    dependencies=[Depends(require_permission(Permission.RUNTIME_ADMIN))],
+)
 async def seed_default_rule_pack(
     service: Annotated[RulePackService, Depends(get_rule_pack_service)],
     payload: Annotated[RulePackSeedRequest | None, Body()] = None,
@@ -88,6 +99,7 @@ async def seed_default_rule_pack(
 @router.post(
     "/analysis-runs/{analysis_run_id}/reproducibility-manifest",
     response_model=ReproducibilityManifestRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
 )
 async def generate_analysis_reproducibility_manifest(
     analysis_run_id: UUID,
@@ -117,6 +129,7 @@ async def get_analysis_reproducibility_manifest(
 @router.post(
     "/signals/{signal_id}/reproducibility-manifest",
     response_model=ReproducibilityManifestRead,
+    dependencies=[Depends(require_permission(Permission.STRATEGY_PROFILES_ADMIN))],
 )
 async def generate_signal_reproducibility_manifest(
     signal_id: UUID,

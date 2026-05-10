@@ -184,9 +184,7 @@ class IntelligenceQualityService:
                 IntelligenceQualityRun(
                     workspace_id=self.workspace_id(artifacts),
                     analysis_run_id=(
-                        artifacts.analysis_run.id
-                        if artifacts.analysis_run is not None
-                        else None
+                        artifacts.analysis_run.id if artifacts.analysis_run is not None else None
                     ),
                     signal_id=artifacts.signal.id if artifacts.signal is not None else None,
                     source_type=source_type,
@@ -228,8 +226,7 @@ class IntelligenceQualityService:
                     for item in persisted_findings
                 ],
                 shadow_classifications=[
-                    ShadowClassificationResultRead.model_validate(item)
-                    for item in persisted_shadow
+                    ShadowClassificationResultRead.model_validate(item) for item in persisted_shadow
                 ],
             )
         except Exception:

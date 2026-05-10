@@ -17,6 +17,8 @@ from app.modules.news.schemas import (
     NewsEventUpdate,
 )
 from app.modules.news.service import NewsCorrelationService, NewsEventService
+from app.modules.permissions.dependencies import require_permission
+from app.modules.permissions.registry import Permission
 
 router = APIRouter(tags=["news"])
 news_events_router = APIRouter(prefix="/news-events", tags=["news-events"])
@@ -34,7 +36,12 @@ def get_news_correlation_service(
     return NewsCorrelationService(session)
 
 
-@news_events_router.post("", response_model=NewsEventRead, status_code=status.HTTP_201_CREATED)
+@news_events_router.post(
+    "",
+    response_model=NewsEventRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def create_news_event(
     payload: NewsEventCreate,
     service: Annotated[NewsEventService, Depends(get_news_event_service)],
@@ -47,6 +54,7 @@ async def create_news_event(
     "/import-json",
     response_model=NewsEventImportRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
 )
 async def import_news_events(
     payload: list[NewsEventCreate],
@@ -94,7 +102,11 @@ async def get_news_event(
     return NewsEventRead.model_validate(event)
 
 
-@news_events_router.patch("/{news_event_id}", response_model=NewsEventRead)
+@news_events_router.patch(
+    "/{news_event_id}",
+    response_model=NewsEventRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
 async def update_news_event(
     news_event_id: UUID,
     payload: NewsEventUpdate,
@@ -107,6 +119,7 @@ async def update_news_event(
 @router.post(
     "/analysis-runs/{analysis_run_id}/correlate-news",
     response_model=NewsCorrelationRunRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
 )
 async def correlate_analysis_run_news(
     analysis_run_id: UUID,
@@ -138,7 +151,11 @@ async def list_analysis_run_news_correlations(
     return [NewsCorrelationRead.model_validate(item) for item in correlations]
 
 
-@router.post("/signals/{signal_id}/correlate-news", response_model=NewsCorrelationRunRead)
+@router.post(
+    "/signals/{signal_id}/correlate-news",
+    response_model=NewsCorrelationRunRead,
+    dependencies=[Depends(require_permission(Permission.ANALYSIS_WRITE))],
+)
 async def correlate_signal_news(
     signal_id: UUID,
     service: Annotated[NewsCorrelationService, Depends(get_news_correlation_service)],
