@@ -363,13 +363,36 @@ make migrate
 make seed
 ```
 
-The API uses `pyproject.toml` as the dependency source of truth. No Python lockfile is currently
-committed.
+The API uses `pyproject.toml` as the dependency source of truth. The production Docker image also
+uses `constraints-runtime.txt` to pin runtime dependency resolution. Local development and CI keep
+using the `dev` extra so pytest, Ruff, mypy, and HTTP test tooling stay outside the runtime image.
 
-Run with Docker:
+Build the production Docker image from the repository root:
 
 ```sh
 docker build -f apps/api/Dockerfile -t trading-intelligence-api:latest .
+```
+
+Run the production image with runtime configuration injected by the orchestrator:
+
+```sh
+docker run --rm -p 8000:8000 \
+  -e APP_ENV=production \
+  -e DATABASE_URL=postgresql://user:password@host:5432/trading \
+  -e AUTH_ENABLED=true \
+  -e AUTH_MODE=api_key \
+  -e ADMIN_API_KEY=replace-with-secret-from-secret-manager \
+  trading-intelligence-api:latest
+```
+
+`DATABASE_URL` is optional for liveness startup but required for database-backed product routes,
+migrations, and workers. Production auth should use `AUTH_MODE=api_key`, `AUTH_MODE=jwt`, or
+`AUTH_MODE=mixed`; when legacy API-key enforcement is enabled, set `ADMIN_API_KEY` and
+`API_KEY_HEADER_NAME`.
+
+Run the local compose stack:
+
+```sh
 docker compose up --build api postgres redis
 ```
 

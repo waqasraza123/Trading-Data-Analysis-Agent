@@ -13,9 +13,10 @@ WORKDIR /build
 RUN python -m venv "${VIRTUAL_ENV}"
 
 COPY apps/api/pyproject.toml ./pyproject.toml
+COPY apps/api/constraints-runtime.txt ./constraints-runtime.txt
 COPY apps/api/app ./app
 
-RUN pip install --upgrade pip && pip install .
+RUN pip install --constraint constraints-runtime.txt .
 
 FROM python:3.12-slim AS runtime
 

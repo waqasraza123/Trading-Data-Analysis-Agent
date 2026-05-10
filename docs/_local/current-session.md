@@ -1,5 +1,25 @@
 # Current Session
 
+## GitHub Issue #11 API Docker Reproducibility
+
+- Addressed GitHub issue #11 (`Make the API Docker image production-oriented and reproducible`).
+- Added `apps/api/constraints-runtime.txt` with pinned runtime dependency versions for the production API image.
+- Updated `apps/api/Dockerfile` so the production image installs `.` with `--constraint constraints-runtime.txt` and does
+  not install the `dev` extra.
+- Left `apps/api/Dockerfile.dev` as the dev/test image path with `.[dev]`, keeping pytest, Ruff, mypy, and HTTP test
+  tooling available outside the runtime image.
+- Updated `apps/api/README.md` with the production Docker build command, a `docker run` example, and expected runtime
+  environment variables including `DATABASE_URL`, `AUTH_ENABLED`, `AUTH_MODE`, `ADMIN_API_KEY`, and
+  `API_KEY_HEADER_NAME`.
+- Verification:
+  - constraints check confirms all 14 direct runtime dependencies are covered and dev tooling is excluded;
+  - `cd apps/api && .venv/bin/python -m pip install --dry-run --constraint constraints-runtime.txt .` passes;
+  - `rg -n "\\[dev\\]|constraints-runtime|pip install" apps/api/Dockerfile apps/api/Dockerfile.dev apps/api/README.md`
+    confirms `.[dev]` remains only in local/dev docs and `Dockerfile.dev`;
+  - `git diff --check` passes;
+  - `docker build -f apps/api/Dockerfile -t trading-intelligence-api:issue-11 .` could not run because the local
+    Docker daemon socket was unavailable.
+
 ## GitHub Issue #10 Backend RBAC Route Coverage
 
 - Addressed GitHub issue #10 (`Audit RBAC dependency coverage across mutating backend routes`).
@@ -81,6 +101,7 @@
 ## GitHub Issue Closure
 
 - Posted completion comments and closed completed issues as `completed`:
+  - #11 `Make the API Docker image production-oriented and reproducible`;
   - #10 `Audit RBAC dependency coverage across mutating backend routes`;
   - #9 `Route setup-detail journal submission through the shared API client`;
   - #8 `Make frontend mutating API calls compatible with AUTH_ENABLED=true`;
