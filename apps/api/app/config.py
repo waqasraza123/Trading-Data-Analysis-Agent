@@ -189,6 +189,11 @@ class Settings(BaseSettings):
     auth_mode: str = "dev"
     auth_jwt_enabled: bool = False
     auth_api_keys_enabled: bool = True
+    auth_password_enabled: bool = True
+    auth_password_signup_enabled: bool = True
+    auth_session_ttl_minutes: int = Field(default=1440, ge=15, le=43200)
+    auth_password_failed_attempt_limit: int = Field(default=8, ge=1, le=100)
+    auth_password_lockout_minutes: int = Field(default=15, ge=1, le=1440)
     auth_dev_user_email: str | None = None
     auth_dev_workspace_id: str | None = None
     jwt_issuer: str | None = None
@@ -472,8 +477,8 @@ class Settings(BaseSettings):
     @classmethod
     def validate_auth_mode(cls, value: str) -> str:
         normalized_value = value.strip().lower()
-        if normalized_value not in {"dev", "api_key", "jwt", "mixed"}:
-            msg = "AUTH_MODE must be dev, api_key, jwt, or mixed"
+        if normalized_value not in {"dev", "api_key", "jwt", "session", "mixed"}:
+            msg = "AUTH_MODE must be dev, api_key, jwt, session, or mixed"
             raise ValueError(msg)
         return normalized_value
 
@@ -975,10 +980,13 @@ class Settings(BaseSettings):
         if effective_auth_mode == "jwt" and not self.auth_jwt_enabled:
             msg = "AUTH_JWT_ENABLED must be true when AUTH_MODE=jwt"
             raise ValueError(msg)
+        if effective_auth_mode == "session" and not self.auth_password_enabled:
+            msg = "AUTH_PASSWORD_ENABLED must be true when AUTH_MODE=session"
+            raise ValueError(msg)
         if effective_auth_mode == "mixed" and not (
-            self.auth_jwt_enabled or self.auth_api_keys_enabled
+            self.auth_password_enabled or self.auth_jwt_enabled or self.auth_api_keys_enabled
         ):
-            msg = "AUTH_MODE=mixed requires JWT or API keys to be enabled"
+            msg = "AUTH_MODE=mixed requires sessions, JWT, or API keys to be enabled"
             raise ValueError(msg)
         if (
             effective_auth_mode in {"api_key", "mixed"}

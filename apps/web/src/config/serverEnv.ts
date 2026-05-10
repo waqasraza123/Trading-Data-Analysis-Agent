@@ -1,10 +1,12 @@
 const defaultApiBaseUrl = "http://127.0.0.1:8000";
 const defaultApiKeyHeaderName = "x-api-key";
+export const defaultAuthSessionCookieName = "trading_intelligence_session";
 
 export type ServerApiProxyEnv = {
   apiBaseUrl: string;
   apiKeyHeaderName: string;
   adminApiKey: string | null;
+  authSessionCookieName: string;
 };
 
 export function getServerApiProxyEnv(): ServerApiProxyEnv {
@@ -18,6 +20,8 @@ export function getServerApiProxyEnv(): ServerApiProxyEnv {
     adminApiKey: optionalValue(
       process.env.WEB_API_PROXY_ADMIN_API_KEY || process.env.ADMIN_API_KEY,
     ),
+    authSessionCookieName:
+      optionalValue(process.env.WEB_AUTH_SESSION_COOKIE) || defaultAuthSessionCookieName,
   };
 }
 

@@ -1,13 +1,14 @@
 # Authentication And Identity
 
-The API now has a production auth abstraction under `app.modules.auth`. It keeps local developer flows working while adding a clear path for JWT providers, persisted API keys, workspace membership checks, and RBAC enforcement.
+The API now has a production auth abstraction under `app.modules.auth`. It keeps local developer flows working while adding a clear path for first-party password sessions, JWT providers, persisted API keys, workspace membership checks, and RBAC enforcement.
 
 ## Modes
 
 - `AUTH_MODE=dev`: local/test mode. `x-user-id` and `x-workspace-id` may provide context. With `AUTH_ENABLED=false`, protected dependencies remain a local pass-through.
+- `AUTH_MODE=session`: protected routes require a `Bearer tai_session_*` token created by `POST /auth/login` or `POST /auth/register`.
 - `AUTH_MODE=api_key`: protected routes require an API key. Persisted keys are hashed in `auth_api_keys`; the legacy `ADMIN_API_KEY` remains supported.
 - `AUTH_MODE=jwt`: protected routes require `Authorization: Bearer <token>` and `AUTH_JWT_ENABLED=true`.
-- `AUTH_MODE=mixed`: JWT is preferred and API keys are accepted as fallback.
+- `AUTH_MODE=mixed`: password sessions are preferred, JWT is accepted next, and API keys are accepted as fallback.
 
 `AUTH_ENABLED=true` remains a compatibility switch for the legacy admin API-key model. For new production deployments, prefer setting `AUTH_MODE` explicitly.
 
@@ -17,6 +18,11 @@ The API now has a production auth abstraction under `app.modules.auth`. It keeps
 - `AUTH_ENABLED=false`
 - `AUTH_JWT_ENABLED=false`
 - `AUTH_API_KEYS_ENABLED=true`
+- `AUTH_PASSWORD_ENABLED=true`
+- `AUTH_PASSWORD_SIGNUP_ENABLED=true`
+- `AUTH_SESSION_TTL_MINUTES=1440`
+- `AUTH_PASSWORD_FAILED_ATTEMPT_LIMIT=8`
+- `AUTH_PASSWORD_LOCKOUT_MINUTES=15`
 - `AUTH_DEV_USER_EMAIL=`
 - `AUTH_DEV_WORKSPACE_ID=`
 - `JWT_ISSUER=`
@@ -28,6 +34,12 @@ The API now has a production auth abstraction under `app.modules.auth`. It keeps
 - `WORKSPACE_CONTEXT_HEADER_NAME=x-workspace-id`
 
 JWT verification currently supports RS256 with a configured PEM public key. OAuth/session providers such as Auth.js, Clerk, Supabase Auth, or a custom issuer should link their provider subject into `auth_identities`.
+
+## Password Sessions
+
+Password credentials are stored in `auth_password_credentials` with PBKDF2-SHA256 hashes and never return raw passwords. Sessions are stored in `auth_sessions` as SHA-256 token hashes with expiry and revocation state. `POST /auth/register` creates a workspace, admin user, password credential, and session. `POST /auth/login` creates a new session for an existing credential. `POST /auth/logout` revokes the supplied bearer token.
+
+Use a Neon Postgres `DATABASE_URL` and run Alembic migrations before enabling `AUTH_MODE=session` in deployed environments.
 
 ## API Keys
 

@@ -1,4 +1,5 @@
 import { getServerApiProxyEnv } from "@/config/serverEnv";
+import { cookies } from "next/headers";
 
 type RouteContext = {
   params: Promise<{ path?: string[] }>;
@@ -10,19 +11,23 @@ const forwardedResponseHeaders = ["content-type"];
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+export async function GET(request: Request, context: RouteContext): Promise<Response> {
+  return proxyRequest(request, context);
+}
+
 export async function POST(request: Request, context: RouteContext): Promise<Response> {
-  return proxyMutation(request, context);
+  return proxyRequest(request, context);
 }
 
 export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
-  return proxyMutation(request, context);
+  return proxyRequest(request, context);
 }
 
 export async function DELETE(request: Request, context: RouteContext): Promise<Response> {
-  return proxyMutation(request, context);
+  return proxyRequest(request, context);
 }
 
-async function proxyMutation(request: Request, context: RouteContext): Promise<Response> {
+async function proxyRequest(request: Request, context: RouteContext): Promise<Response> {
   const params = await context.params;
   const path = params.path || [];
   if (path.length === 0) {
@@ -35,7 +40,7 @@ async function proxyMutation(request: Request, context: RouteContext): Promise<R
   try {
     const response = await fetch(targetUrl, {
       method: request.method,
-      headers: buildForwardHeaders(request.headers),
+      headers: await buildForwardHeaders(request.headers),
       body: body.byteLength > 0 ? body : undefined,
       cache: "no-store",
     });
@@ -59,7 +64,7 @@ function buildTargetUrl(request: Request, path: string[]): string {
   return targetUrl.toString();
 }
 
-function buildForwardHeaders(incomingHeaders: Headers): Headers {
+async function buildForwardHeaders(incomingHeaders: Headers): Promise<Headers> {
   const env = getServerApiProxyEnv();
   const headers = new Headers();
   headers.set("accept", incomingHeaders.get("accept") || "application/json");
@@ -78,6 +83,14 @@ function buildForwardHeaders(incomingHeaders: Headers): Headers {
 
   if (env.adminApiKey) {
     headers.set(env.apiKeyHeaderName, env.adminApiKey);
+  }
+
+  if (!headers.has("authorization")) {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get(env.authSessionCookieName)?.value;
+    if (sessionToken) {
+      headers.set("authorization", `Bearer ${sessionToken}`);
+    }
   }
 
   return headers;

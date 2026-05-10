@@ -52,6 +52,8 @@ APP_TABLES = (
     "job_queue_events",
     "job_queue_items",
     "job_queue_definitions",
+    "auth_sessions",
+    "auth_password_credentials",
     "auth_api_keys",
     "auth_identities",
     "provider_connection_tests",

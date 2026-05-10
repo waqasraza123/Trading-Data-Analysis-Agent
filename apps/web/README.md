@@ -45,6 +45,10 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 The client composes data from optional backend APIs:
 
 - `GET /health`
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
 - `GET /demo-mode/status`
 - `POST /demo-mode/run-full-flow`
 - `GET /health/workers`
@@ -201,6 +205,7 @@ NEXT_PUBLIC_AUTH_BEARER_TOKEN_STORAGE_KEY=
 WEB_API_PROXY_BASE_URL=http://127.0.0.1:8000
 WEB_API_PROXY_ADMIN_API_KEY=
 WEB_API_PROXY_API_KEY_HEADER=x-api-key
+WEB_AUTH_SESSION_COOKIE=trading_intelligence_session
 ```
 
 The API client sends `x-user-id` and `x-workspace-id` in dev mode when those public values are set.
@@ -208,8 +213,14 @@ For JWT/mixed deployments, the client can read a bearer token from the configure
 key. Only public frontend configuration belongs in this file. Backend secrets, API keys, database
 URLs, and worker credentials must stay in backend environment files.
 
+For the first-party password session flow, set `NEXT_PUBLIC_AUTH_MODE=session` on the web app and
+set the API to `AUTH_MODE=session` with a Neon-backed `DATABASE_URL`. The `/login` and `/register`
+pages call same-origin Next.js auth handlers, which store the returned backend session token in an
+HttpOnly cookie named by `WEB_AUTH_SESSION_COOKIE`.
+
 Browser-initiated `POST`, `PATCH`, and `DELETE` calls go through the same-origin Next.js route
-`/api/backend/{path}`. That server-side proxy forwards the request to `WEB_API_PROXY_BASE_URL`
+`/api/backend/{path}`. In session mode, browser `GET` calls use the same proxy so the server can
+attach the HttpOnly session token. That server-side proxy forwards the request to `WEB_API_PROXY_BASE_URL`
 and, when configured, attaches `WEB_API_PROXY_ADMIN_API_KEY` using
 `WEB_API_PROXY_API_KEY_HEADER` without exposing the key to browser JavaScript. For local or staging
 FastAPI runs with `AUTH_ENABLED=true` and the legacy admin API-key guard, set

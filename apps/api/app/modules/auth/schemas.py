@@ -12,6 +12,7 @@ from app.modules.users.models import UserRole
 class IdentitySource(StrEnum):
     DEV = "dev"
     JWT = "jwt"
+    SESSION = "session"
     API_KEY = "api_key"
     LEGACY_ADMIN_API_KEY = "legacy_admin_api_key"
 
@@ -95,3 +96,26 @@ class AuthApiKeyRead(ApiReadSchema):
     last_used_at: datetime | None
     created_at: datetime
     updated_at: datetime
+
+
+class AuthRegisterRequest(ApiSchema):
+    workspace_name: str = Field(min_length=1, max_length=120)
+    name: str = Field(min_length=1, max_length=160)
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=12, max_length=256)
+
+
+class AuthLoginRequest(ApiSchema):
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class AuthLogoutRequest(ApiSchema):
+    token: str | None = Field(default=None, min_length=1, max_length=512)
+
+
+class AuthSessionCreated(ApiSchema):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: datetime
+    identity: CurrentIdentityRead

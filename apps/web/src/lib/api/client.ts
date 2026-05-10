@@ -200,7 +200,8 @@ function buildRequestUrl(
   path: string,
   query?: Record<string, QueryValue>,
 ): string {
-  if (method !== "GET" && typeof window !== "undefined") {
+  const env = getPublicEnv();
+  if ((method !== "GET" || env.authMode === "session") && typeof window !== "undefined") {
     return buildUrl(window.location.origin, `/api/backend/${normalizeProxyPath(path)}`, query);
   }
   return buildUrl(baseUrl, path, query);

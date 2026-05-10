@@ -20,6 +20,7 @@ from app.modules.auth.identity import (
     build_jwt_identity,
 )
 from app.modules.auth.jwt import JwtVerifier
+from app.modules.auth.passwords import PasswordAuthService
 from app.modules.auth.settings import AuthMode, auth_is_enforced, effective_auth_mode
 from app.modules.auth.workspace_context import resolve_request_workspace_id
 from app.modules.permissions.registry import Permission
@@ -172,7 +173,11 @@ async def resolve_identity(
         if identity is None and required and settings.auth_enabled:
             raise AppError(401, "authentication_required", "Authentication is required")
         return identity
-    if mode == AuthMode.JWT:
+    if mode == AuthMode.SESSION:
+        identity = await resolve_session_identity(
+            request=request, session=session, required=required
+        )
+    elif mode == AuthMode.JWT:
         identity = await resolve_jwt_identity(request=request, session=session, required=required)
     elif mode == AuthMode.API_KEY:
         identity = await resolve_api_key_identity(
@@ -181,7 +186,9 @@ async def resolve_identity(
             required=required,
         )
     else:
-        identity = await resolve_jwt_identity(request=request, session=session, required=False)
+        identity = await resolve_session_identity(request=request, session=session, required=False)
+        if identity is None:
+            identity = await resolve_jwt_identity(request=request, session=session, required=False)
         if identity is None:
             identity = await resolve_api_key_identity(
                 request=request,
@@ -220,6 +227,34 @@ async def resolve_api_key_identity(
         validation_api_key=validation.api_key,
         legacy_admin=validation.legacy_admin,
     )
+
+
+async def resolve_session_identity(
+    *,
+    request: Request,
+    session: AsyncSession,
+    required: bool,
+) -> IdentityContext | None:
+    authorization = request.headers.get("authorization")
+    if authorization is None or not authorization.lower().startswith("bearer "):
+        if required:
+            raise AppError(401, "authentication_required", "Authentication is required")
+        return None
+    token = authorization.split(" ", 1)[1].strip()
+    if not token:
+        if required:
+            raise AppError(401, "invalid_token", "Token is invalid")
+        return None
+    if not token.startswith("tai_session_"):
+        if required:
+            raise AppError(401, "invalid_token", "Token is invalid")
+        return None
+    identity = await PasswordAuthService(
+        session=session, settings=request.app.state.settings
+    ).resolve_session(token)
+    if identity is None and required:
+        raise AppError(401, "invalid_credentials", "Credentials are invalid")
+    return identity
 
 
 async def resolve_jwt_identity(

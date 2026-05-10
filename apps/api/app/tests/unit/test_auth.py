@@ -9,6 +9,12 @@ from app.config import AppEnvironment, Settings
 from app.main import create_app
 from app.modules.auth.api_keys import api_key_prefix, generate_api_key, hash_api_key
 from app.modules.auth.identity import IdentityContext
+from app.modules.auth.passwords import (
+    generate_session_token,
+    hash_password,
+    hash_session_token,
+    verify_password,
+)
 from app.modules.auth.schemas import IdentitySource
 from app.modules.permissions.dependencies import require_permission
 from app.modules.permissions.registry import Permission
@@ -23,6 +29,24 @@ def test_api_key_hash_does_not_store_raw_key() -> None:
     assert hashed_key != raw_key
     assert hash_api_key(raw_key) == hashed_key
     assert api_key_prefix(raw_key) == raw_key[:16]
+
+
+def test_password_hash_verification_does_not_store_raw_password() -> None:
+    raw_password = "correct horse battery staple"
+    password_hash = hash_password(raw_password)
+
+    assert raw_password not in password_hash
+    assert verify_password(raw_password, password_hash)
+    assert not verify_password("incorrect horse battery", password_hash)
+
+
+def test_session_token_hash_does_not_store_raw_token() -> None:
+    raw_token = generate_session_token()
+    token_hash = hash_session_token(raw_token)
+
+    assert raw_token.startswith("tai_session_")
+    assert token_hash != raw_token
+    assert hash_session_token(raw_token) == token_hash
 
 
 def test_identity_workspace_mismatch_denies_access() -> None:

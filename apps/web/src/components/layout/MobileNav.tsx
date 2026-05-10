@@ -7,6 +7,7 @@ import { cn } from "@/lib/ui/cn";
 import { isActiveNavigationPath, navigationHref, primaryNavigationTargets, navigationItems } from "@/lib/ui/navigation";
 import { ApiStatusIndicator } from "./ApiStatusIndicator";
 import { AnimatedSection, MOTION_INTERACTIVE_CLASS, motionRevealPresetClass, motionRevealDensityStyle } from "@/lib/ui/motion";
+import { AuthStatus } from "@/components/auth/AuthStatus";
 
 type MobileNavProps = {
   appName: string;
@@ -37,7 +38,10 @@ export function MobileNav({ appName, apiBaseUrl, workspaceName, workspaceId }: M
       </div>
       <div className="mt-2 flex items-center justify-between gap-3">
         <p className="min-w-0 truncate text-xs text-[var(--text-muted)]">API {apiBaseUrl}</p>
-        <ApiStatusIndicator apiBaseUrl={apiBaseUrl} />
+        <div className="flex items-center gap-2">
+          <ApiStatusIndicator apiBaseUrl={apiBaseUrl} />
+          <AuthStatus />
+        </div>
       </div>
       <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
         {items.map((item, index) => {

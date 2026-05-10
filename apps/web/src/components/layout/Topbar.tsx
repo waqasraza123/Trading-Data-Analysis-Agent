@@ -4,6 +4,7 @@ import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { AnimatedSection } from "@/lib/ui/motion";
 import { motionRevealDensityStyle } from "@/lib/ui/motion";
 import { cn } from "@/lib/ui/cn";
+import { AuthStatus } from "@/components/auth/AuthStatus";
 
 type TopbarProps = {
   apiBaseUrl: string;
@@ -27,6 +28,7 @@ export function Topbar({ apiBaseUrl, workspaceName, workspaceId }: TopbarProps) 
           <h1 className="mt-1 truncate text-lg font-semibold text-[var(--strong)]">Daily read-only workspace</h1>
         </div>
         <div className="flex items-center gap-3">
+          <AuthStatus />
           <ApiStatusIndicator apiBaseUrl={apiBaseUrl} />
           <Badge value={apiBaseUrl} tone="neutral" className="max-w-72" />
           <div className="w-72">

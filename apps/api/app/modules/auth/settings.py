@@ -7,6 +7,7 @@ class AuthMode(StrEnum):
     DEV = "dev"
     API_KEY = "api_key"
     JWT = "jwt"
+    SESSION = "session"
     MIXED = "mixed"
 
 

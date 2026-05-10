@@ -10,7 +10,7 @@ financial advice. Enable it with `DEMO_MODE_ENABLED=true` outside development. S
 
 Production auth and workspace RBAC are implemented under `/auth`, `/permissions`,
 `app.modules.auth`, and `app.modules.permissions`. The layer supports dev headers,
-legacy admin API keys, hashed persisted API keys, RS256 JWT verification, current
+first-party password sessions, legacy admin API keys, hashed persisted API keys, RS256 JWT verification, current
 identity/context routes, workspace isolation, and reusable permission dependencies.
 `AUTH_ENABLED=false` plus `AUTH_MODE=dev` remains the local/test default. See
 `docs/auth.md`, `docs/permissions.md`, and `docs/rbac-route-coverage.md`.
@@ -588,6 +588,11 @@ AUTH_ENABLED=false
 AUTH_MODE=dev
 AUTH_JWT_ENABLED=false
 AUTH_API_KEYS_ENABLED=true
+AUTH_PASSWORD_ENABLED=true
+AUTH_PASSWORD_SIGNUP_ENABLED=true
+AUTH_SESSION_TTL_MINUTES=1440
+AUTH_PASSWORD_FAILED_ATTEMPT_LIMIT=8
+AUTH_PASSWORD_LOCKOUT_MINUTES=15
 AUTH_DEV_USER_EMAIL=
 AUTH_DEV_WORKSPACE_ID=
 JWT_ISSUER=
@@ -792,9 +797,10 @@ BACKFILL_PLAN_MAX_LIMIT=10000
 ```
 
 `AUTH_MODE=dev` and `AUTH_ENABLED=false` are the local/test defaults. In production, use
-`AUTH_MODE=jwt`, `AUTH_MODE=api_key`, or `AUTH_MODE=mixed`; protected routes resolve an identity
-before applying workspace membership and permission checks. The legacy `ADMIN_API_KEY` remains
-supported for compatibility. Health endpoints stay public. Rate limiting is disabled by default,
+`AUTH_MODE=session`, `AUTH_MODE=jwt`, `AUTH_MODE=api_key`, or `AUTH_MODE=mixed`; protected routes resolve an identity
+before applying workspace membership and permission checks. For first-party UI login, set `DATABASE_URL`
+to a migrated Neon Postgres database, use `AUTH_MODE=session`, and keep `AUTH_PASSWORD_ENABLED=true`.
+The legacy `ADMIN_API_KEY` remains supported for compatibility. Health endpoints stay public. Rate limiting is disabled by default,
 uses an in-memory fallback for local/test when Redis is not configured, and requires `REDIS_URL`
 when enabled in staging or production.
 
