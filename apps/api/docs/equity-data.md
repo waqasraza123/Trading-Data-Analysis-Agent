@@ -31,8 +31,10 @@ fundamentals snapshots, and earnings calendars.
 
 - `mock_equity_data`: deterministic local provider for demos and tests.
 - `csv_equity_import`: accepts JSON/CSV-like rows from the API.
-- `polygon`: registered provider skeleton using credential references.
-- `alpaca`: data/research-only skeleton with no account, order, or position behavior.
+- `polygon`: opt-in authenticated read-only provider for ticker reference, ticker overview,
+  financial ratio snapshots, and earnings calendar context.
+- `alpaca`: opt-in authenticated read-only provider for assets/universe discovery and asset
+  metadata lookup. No account, order, position, or broker workflow endpoints are called.
 - `generic_http`: future custom provider placeholder; it does not execute arbitrary URLs by default.
 
 ## Storage
@@ -159,6 +161,9 @@ EQUITY_DATA_MAX_METADATA_LOOKUPS=1000
 EQUITY_DATA_PROVIDER_TIMEOUT_SECONDS=20
 EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=false
 EQUITY_DATA_ENABLE_MOCK_PROVIDER=true
+EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=false
+POLYGON_REST_BASE_URL=https://api.polygon.io
+ALPACA_TRADING_BASE_URL=https://paper-api.alpaca.markets
 ```
 
 ## Credential References
@@ -168,16 +173,52 @@ Raw provider secrets are not accepted by equity data APIs, are not logged, and a
 equity data tables. Request and provider reference payloads are redacted for keys such as token,
 secret, api key, password, authorization, credential, private key, access key, and passwd.
 
-The equity credential resolver returns readiness status only. Mock and CSV providers are ready
-without credentials. Polygon, Alpaca, and generic HTTP remain not ready unless external requests and
-a safe secret-resolution path are configured. This milestone does not expose raw secret material to
-API responses.
+The environment secret resolver is disabled by default. To enable real read-only Polygon or Alpaca
+requests, configure both:
+
+```txt
+EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=true
+EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=true
+```
+
+Credential references can point at environment-managed secret material with these `secret_ref`
+formats:
+
+- `env:POLYGON_API_KEY`: single environment value, mapped to `api_key`.
+- `env-json:POLYGON_EQUITY_DATA_SECRET`: JSON object with `api_key` or `apiKey`.
+- `env-json:ALPACA_EQUITY_DATA_SECRET`: JSON object with `api_key_id`/`api_secret_key`,
+  `key_id`/`secret_key`, or Alpaca header-style keys.
+- `env-pair:ALPACA_API_KEY_ID,ALPACA_API_SECRET_KEY`: two environment variables mapped to
+  Alpaca API key id and secret key.
+
+Resolved secret values are passed only to provider adapters in memory. They are not returned by
+API responses, not written into provider request summaries, not stored in operation payloads, and
+not copied into import error rows.
+
+Polygon calls are limited to read-only market/reference data:
+
+- `GET /v3/reference/tickers`
+- `GET /v3/reference/tickers/{ticker}`
+- `GET /stocks/financials/v1/ratios`
+- `GET /benzinga/v1/earnings`
+
+Alpaca calls are limited to read-only asset metadata:
+
+- `GET /v2/assets`
+- `GET /v2/assets/{symbol}`
+
+Provider responses are normalized into the existing symbol metadata, fundamentals, earnings, and
+universe storage contracts. Unsupported plans, provider HTTP errors, invalid JSON, missing secret
+material, or incomplete credentials are persisted as typed provider request or operation failures
+without exposing raw credentials.
 
 ## Intentionally Deferred
 
-- Real Polygon/Alpaca network fetches remain deferred.
 - Persistent raw upload storage is not implemented.
-- Secret-manager value retrieval is not implemented unless a future safe secret provider is wired.
+- Managed secret-manager value retrieval beyond environment-backed secret references is not
+  implemented.
+- Alpaca fundamentals and earnings imports are not implemented because the current adapter uses only
+  the read-only assets surface.
 - External signal delivery, broker execution, auto-trading, copy trading, and financial-advice
   output remain outside the product boundary.
 

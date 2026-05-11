@@ -510,14 +510,17 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
 - Equity data provider foundations are implemented under `/equity-data` and
   `apps/api/app/modules/equity_data/` for deterministic mock import, CSV/JSON row import, stock
   symbol creation, universe attachment, metadata snapshots, fundamentals snapshots, earnings
-  events, provider request audit records, import errors, credential-reference-aware external
-  provider stubs, earnings-to-catalyst conversion, and `/equity-research` enrichment panels.
+  events, provider request audit records, import errors, credential-reference-aware external provider
+  requests, earnings-to-catalyst conversion, and `/equity-research` enrichment panels.
 - Equity data background operations are implemented with `equity_data_operations`, the
   `equity_data.operation` job queue type on the `equity_data` queue, operation progress/counters
   APIs, CSV file-upload parsing with sync/queued/auto modes, safe credential-reference readiness,
   and `/equity-research` panels for file import, queued enrichment, and operation history. Raw CSV
-  file bytes and raw provider secrets are not persisted; real Polygon/Alpaca fetches and
-  secret-manager value retrieval remain deferred.
+  file bytes and raw provider secrets are not persisted. Environment-backed secret references are
+  now opt-in through `EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=true` and
+  `EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=true`; Polygon read-only ticker/reference,
+  ratios/fundamentals, and earnings fetches plus Alpaca read-only asset metadata fetches are
+  implemented. Managed secret-manager value retrieval remains deferred.
 - Scope remains market intelligence only: no broker execution, auto-trading, copy trading,
   direct action instructions, signal-classification overrides, or financial advice.
 

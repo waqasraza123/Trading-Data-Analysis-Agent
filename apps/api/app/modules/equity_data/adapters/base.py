@@ -11,6 +11,8 @@ class EquityProviderContext:
     credential_ref_id: str | None
     external_requests_enabled: bool
     timeout_seconds: int
+    base_url: str | None = None
+    credential_secrets: dict[str, str] = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True)

@@ -15,6 +15,7 @@ from app.modules.equity_data.adapters.base import (
     EquityProviderContext,
     EquityProviderResult,
 )
+from app.modules.equity_data.credentials import EquityCredentialResolver
 from app.modules.equity_data.models import (
     EquityDataImportError,
     EquityDataProviderRequest,
@@ -71,6 +72,7 @@ class EquityDataService:
         self.symbol_repository = SymbolRepository(session)
         self.workspace_repository = WorkspaceRepository(session)
         self.credential_repository = ProviderCredentialRepository(session)
+        self.credential_resolver = EquityCredentialResolver(session, self.settings)
 
     async def list_providers(self) -> list[EquityDataProviderCapability]:
         capabilities: list[EquityDataProviderCapability] = []
@@ -141,9 +143,16 @@ class EquityDataService:
                 False,
             )
         if provider.requires_credential_ref():
+            resolution = await self.credential_resolver.resolve_credential_ref(
+                provider.key(),
+                credential_ref_id,
+                workspace_id,
+            )
+            if not resolution.ready:
+                return (EquityDataRequestStatus.PROVIDER_NOT_CONFIGURED, resolution.message, False)
             return (
-                EquityDataRequestStatus.PROVIDER_NOT_IMPLEMENTED,
-                "Provider adapter is registered but external fetch is not implemented",
+                EquityDataRequestStatus.COMPLETED,
+                "Provider credential material is available for read-only data requests",
                 True,
             )
         return (EquityDataRequestStatus.COMPLETED, "Provider configured", True)
@@ -171,7 +180,7 @@ class EquityDataService:
         await self.session.commit()
         rows = [row.model_dump(mode="python", by_alias=True) for row in payload.rows]
         result = await provider.import_universe(
-            self.provider_context(payload.workspace_id, None),
+            await self.provider_context(payload.workspace_id, provider.key(), None),
             {"rows": rows},
         )
         return await self.store_universe_import_result(
@@ -205,7 +214,11 @@ class EquityDataService:
         )
         await self.session.commit()
         result = await provider.import_universe(
-            self.provider_context(payload.workspace_id, payload.credential_ref_id),
+            await self.provider_context(
+                payload.workspace_id,
+                provider.key(),
+                payload.credential_ref_id,
+            ),
             payload.model_dump(mode="python", by_alias=True),
         )
         return await self.store_universe_import_result(
@@ -241,7 +254,11 @@ class EquityDataService:
         )
         await self.session.commit()
         result = await provider.lookup_symbol_metadata(
-            self.provider_context(payload.workspace_id, payload.credential_ref_id),
+            await self.provider_context(
+                payload.workspace_id,
+                provider.key(),
+                payload.credential_ref_id,
+            ),
             {"ticker": symbol.symbol, "filters": payload.filters},
         )
         return await self.store_metadata_result(request, result, {symbol.symbol: symbol})
@@ -272,7 +289,11 @@ class EquityDataService:
         )
         await self.session.commit()
         result = await provider.fetch_fundamentals_snapshot(
-            self.provider_context(payload.workspace_id, payload.credential_ref_id),
+            await self.provider_context(
+                payload.workspace_id,
+                provider.key(),
+                payload.credential_ref_id,
+            ),
             {"ticker": symbol.symbol, "filters": payload.filters},
         )
         return await self.store_fundamentals_result(request, result, {symbol.symbol: symbol})
@@ -303,7 +324,11 @@ class EquityDataService:
         )
         await self.session.commit()
         result = await provider.fetch_earnings_events(
-            self.provider_context(payload.workspace_id, payload.credential_ref_id),
+            await self.provider_context(
+                payload.workspace_id,
+                provider.key(),
+                payload.credential_ref_id,
+            ),
             {"ticker": symbol.symbol, "filters": payload.filters},
         )
         return await self.store_earnings_result(request, result, {symbol.symbol: symbol})
@@ -927,17 +952,32 @@ class EquityDataService:
             )
         return True
 
-    def provider_context(
+    async def provider_context(
         self,
         workspace_id: UUID,
+        provider: str,
         credential_ref_id: UUID | None,
     ) -> EquityProviderContext:
+        resolution = await self.credential_resolver.resolve_credential_ref(
+            provider,
+            credential_ref_id,
+            workspace_id,
+        )
         return EquityProviderContext(
             workspace_id=str(workspace_id),
             credential_ref_id=str(credential_ref_id) if credential_ref_id is not None else None,
             external_requests_enabled=self.settings.equity_data_allow_external_requests,
             timeout_seconds=self.settings.equity_data_provider_timeout_seconds,
+            base_url=self.provider_base_url(provider),
+            credential_secrets=resolution.secret_values if resolution.ready else {},
         )
+
+    def provider_base_url(self, provider: str) -> str | None:
+        if provider == "polygon":
+            return self.settings.polygon_rest_base_url
+        if provider == "alpaca":
+            return self.settings.alpaca_trading_base_url
+        return None
 
 
 def truncate(value: str | None, max_length: int) -> str | None:

@@ -1317,3 +1317,28 @@ changes. Preserve unrelated worktree changes unless explicitly asked.
 - Documented the reconnection strategy and max cap behavior in
   `apps/go/market-worker/README.md` and `apps/go/market-worker/OPERATIONS.md`.
 - No test/build commands were run in this pass, per instruction.
+
+## Equity Data External Provider Fetches
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added opt-in environment-backed provider secret resolution:
+  - `EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=false` by default;
+  - supported `secret_ref` formats are `env:NAME`, `env-json:NAME`, and
+    `env-pair:ALPACA_KEY_ID,ALPACA_SECRET_KEY`;
+  - secret material is passed only in memory to provider adapters and is not stored in request,
+    operation, or error payloads.
+- Implemented read-only external equity provider adapters:
+  - Polygon universe import, ticker metadata lookup, financial ratio/fundamentals snapshot, and
+    earnings calendar context;
+  - Alpaca asset universe import and asset metadata lookup only.
+- Added runtime settings:
+  - `POLYGON_REST_BASE_URL`;
+  - `ALPACA_TRADING_BASE_URL`.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/.env.example`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - touched backend Python files passed `py_compile` syntax checks via the API virtualenv;
+  - no tests, lint, typecheck, or build commands were run per user instruction.

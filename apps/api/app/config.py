@@ -390,6 +390,9 @@ class Settings(BaseSettings):
     equity_data_provider_timeout_seconds: int = Field(default=20, ge=1, le=120)
     equity_data_allow_external_requests: bool = False
     equity_data_enable_mock_provider: bool = True
+    equity_data_env_secret_resolution_enabled: bool = False
+    polygon_rest_base_url: str = "https://api.polygon.io"
+    alpaca_trading_base_url: str = "https://paper-api.alpaca.markets"
     equity_swing_scan_max_symbols: int = Field(default=500, ge=1, le=5000)
     equity_swing_min_average_volume: int = Field(default=500000, ge=0)
     equity_swing_min_setup_score: Decimal = Field(default=Decimal("0.6000"), ge=0, le=1)
