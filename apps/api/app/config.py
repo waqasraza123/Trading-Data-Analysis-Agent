@@ -388,6 +388,9 @@ class Settings(BaseSettings):
     equity_data_max_queued_import_rows: int = Field(default=5000, ge=1, le=50000)
     equity_data_max_metadata_lookups: int = Field(default=1000, ge=1, le=10000)
     equity_data_provider_timeout_seconds: int = Field(default=20, ge=1, le=120)
+    equity_data_provider_retry_attempts: int = Field(default=2, ge=1, le=5)
+    equity_data_provider_retry_backoff_seconds: float = Field(default=0.75, ge=0, le=30)
+    equity_data_provider_max_pages: int = Field(default=3, ge=1, le=20)
     equity_data_allow_external_requests: bool = False
     equity_data_enable_mock_provider: bool = True
     equity_data_env_secret_resolution_enabled: bool = False

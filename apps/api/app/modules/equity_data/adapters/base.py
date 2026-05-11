@@ -11,6 +11,9 @@ class EquityProviderContext:
     credential_ref_id: str | None
     external_requests_enabled: bool
     timeout_seconds: int
+    retry_attempts: int = 1
+    retry_backoff_seconds: float = 0.5
+    max_pages: int = 1
     base_url: str | None = None
     credential_secrets: dict[str, str] = field(default_factory=dict, repr=False)
 

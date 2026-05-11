@@ -520,7 +520,9 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   now opt-in through `EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=true` and
   `EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=true`; Polygon read-only ticker/reference,
   ratios/fundamentals, and earnings fetches plus Alpaca read-only asset metadata fetches are
-  implemented. Managed secret-manager value retrieval remains deferred.
+  implemented. Provider HTTP calls now use bounded retry/backoff for transient `429`/`5xx` failures,
+  and Polygon universe imports use cursor pagination bounded by `EQUITY_DATA_PROVIDER_MAX_PAGES`
+  without following arbitrary provider URLs. Managed secret-manager value retrieval remains deferred.
 - Scope remains market intelligence only: no broker execution, auto-trading, copy trading,
   direct action instructions, signal-classification overrides, or financial advice.
 

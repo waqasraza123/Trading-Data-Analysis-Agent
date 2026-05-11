@@ -159,6 +159,9 @@ EQUITY_DATA_SYNC_IMPORT_ROW_THRESHOLD=250
 EQUITY_DATA_MAX_QUEUED_IMPORT_ROWS=5000
 EQUITY_DATA_MAX_METADATA_LOOKUPS=1000
 EQUITY_DATA_PROVIDER_TIMEOUT_SECONDS=20
+EQUITY_DATA_PROVIDER_RETRY_ATTEMPTS=2
+EQUITY_DATA_PROVIDER_RETRY_BACKOFF_SECONDS=0.75
+EQUITY_DATA_PROVIDER_MAX_PAGES=3
 EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=false
 EQUITY_DATA_ENABLE_MOCK_PROVIDER=true
 EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=false
@@ -202,6 +205,13 @@ Polygon calls are limited to read-only market/reference data:
 - `GET /stocks/financials/v1/ratios`
 - `GET /benzinga/v1/earnings`
 
+Polygon universe imports follow Polygon cursor pagination through the `cursor` query parameter only.
+They never follow arbitrary provider URLs directly. Pagination is bounded by
+`EQUITY_DATA_PROVIDER_MAX_PAGES`; callers can request a lower `filters.maxPages`/`filters.max_pages`
+value for a smaller import. When a provider has more pages than the configured limit, the request
+completes with a `polygon_pagination_truncated` warning and records `truncated=true` in the response
+summary.
+
 Alpaca calls are limited to read-only asset metadata:
 
 - `GET /v2/assets`
@@ -211,6 +221,10 @@ Provider responses are normalized into the existing symbol metadata, fundamental
 universe storage contracts. Unsupported plans, provider HTTP errors, invalid JSON, missing secret
 material, or incomplete credentials are persisted as typed provider request or operation failures
 without exposing raw credentials.
+
+Provider HTTP requests retry transient `429` and `5xx` responses with bounded exponential backoff.
+`Retry-After` is honored up to 60 seconds when present. Request URLs, authorization headers, query
+API keys, and secret values are not written into provider request summaries or operation records.
 
 ## Intentionally Deferred
 

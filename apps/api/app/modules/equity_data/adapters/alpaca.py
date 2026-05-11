@@ -54,6 +54,8 @@ class AlpacaEquityDataProvider(EquityDataProvider):
                 query,
                 self.headers(context),
                 context.timeout_seconds,
+                context.retry_attempts,
+                context.retry_backoff_seconds,
             )
         except Exception as error:
             return provider_http_failure(self.key(), error)
@@ -83,6 +85,8 @@ class AlpacaEquityDataProvider(EquityDataProvider):
                 {},
                 self.headers(context),
                 context.timeout_seconds,
+                context.retry_attempts,
+                context.retry_backoff_seconds,
             )
         except Exception as error:
             return provider_http_failure(self.key(), error)

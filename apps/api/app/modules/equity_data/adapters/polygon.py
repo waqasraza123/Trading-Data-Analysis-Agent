@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote, urlsplit
 
 from app.modules.equity_data.adapters.base import (
     EquityDataProvider,
@@ -47,7 +47,9 @@ class PolygonEquityDataProvider(EquityDataProvider):
             return provider_not_configured(self.key())
         filters = dict_value(request.get("filters"))
         limit = bounded_limit(filters.get("limit"), 100, 1000)
-        query = {
+        max_pages = bounded_limit(filters.get("max_pages") or filters.get("maxPages"), 1, 20)
+        max_pages = min(max_pages, context.max_pages)
+        query: dict[str, object] = {
             "market": filters.get("market") or "stocks",
             "active": filters.get("active", "true"),
             "type": filters.get("type"),
@@ -57,32 +59,62 @@ class PolygonEquityDataProvider(EquityDataProvider):
             "sort": filters.get("sort") or "ticker",
             "apiKey": context.credential_secrets["api_key"],
         }
+        metadata: list[EquityMetadataItem] = []
+        total_received = 0
+        pages_fetched = 0
+        request_ids: list[object] = []
+        truncated = False
         try:
-            raw_payload = await get_json(
-                context.base_url or "https://api.polygon.io",
-                "/v3/reference/tickers",
-                query,
-                {},
-                context.timeout_seconds,
-            )
+            for page_number in range(1, max_pages + 1):
+                raw_payload = await get_json(
+                    context.base_url or "https://api.polygon.io",
+                    "/v3/reference/tickers",
+                    query,
+                    {},
+                    context.timeout_seconds,
+                    context.retry_attempts,
+                    context.retry_backoff_seconds,
+                )
+                payload = dict_value(raw_payload)
+                pages_fetched += 1
+                request_ids.append(payload.get("request_id"))
+                results = list_value(payload.get("results"))
+                total_received += len(results)
+                metadata.extend(
+                    metadata_from_ticker(item)
+                    for item in results
+                    if isinstance(item, dict) and item.get("ticker")
+                )
+                cursor = cursor_from_next_url(payload.get("next_url"))
+                if not cursor:
+                    break
+                if page_number >= max_pages:
+                    truncated = True
+                    break
+                query["cursor"] = cursor
         except Exception as error:
             return provider_http_failure(self.key(), error)
-        payload = dict_value(raw_payload)
-        results = list_value(payload.get("results"))
         return EquityProviderResult(
             status="completed",
-            metadata=[
-                metadata_from_ticker(item)
-                for item in results
-                if isinstance(item, dict) and item.get("ticker")
-            ],
+            metadata=metadata,
+            warnings=[
+                {
+                    "code": "polygon_pagination_truncated",
+                    "message": "Provider universe import reached the configured page limit",
+                    "maxPages": max_pages,
+                }
+            ]
+            if truncated
+            else [],
             summary={
                 "provider": self.key(),
                 "endpoint": "reference_tickers",
-                "received": len(results),
-                "count": payload.get("count"),
-                "requestId": payload.get("request_id"),
-                "hasNextPage": bool(payload.get("next_url")),
+                "received": total_received,
+                "storedCandidates": len(metadata),
+                "pagesFetched": pages_fetched,
+                "maxPages": max_pages,
+                "truncated": truncated,
+                "requestIds": [value for value in request_ids if value is not None],
             },
         )
 
@@ -103,6 +135,8 @@ class PolygonEquityDataProvider(EquityDataProvider):
                 query,
                 {},
                 context.timeout_seconds,
+                context.retry_attempts,
+                context.retry_backoff_seconds,
             )
         except Exception as error:
             return provider_http_failure(self.key(), error)
@@ -140,6 +174,8 @@ class PolygonEquityDataProvider(EquityDataProvider):
                 query,
                 {},
                 context.timeout_seconds,
+                context.retry_attempts,
+                context.retry_backoff_seconds,
             )
         except Exception as error:
             return provider_http_failure(self.key(), error)
@@ -187,6 +223,8 @@ class PolygonEquityDataProvider(EquityDataProvider):
                 query,
                 {},
                 context.timeout_seconds,
+                context.retry_attempts,
+                context.retry_backoff_seconds,
             )
         except Exception as error:
             return provider_http_failure(self.key(), error)
@@ -357,3 +395,15 @@ def status_from_polygon(item: dict[str, Any]) -> str:
 
 def provider_reference(provider: str, item: dict[str, Any]) -> dict[str, Any]:
     return {"provider": provider, "source": item}
+
+
+def cursor_from_next_url(value: object) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    parsed = urlsplit(value)
+    query = parse_qs(parsed.query)
+    cursor_values = query.get("cursor")
+    if not cursor_values:
+        return None
+    cursor = cursor_values[0].strip()
+    return cursor or None

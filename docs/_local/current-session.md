@@ -1342,3 +1342,26 @@ changes. Preserve unrelated worktree changes unless explicitly asked.
   - `git diff --check` passed;
   - touched backend Python files passed `py_compile` syntax checks via the API virtualenv;
   - no tests, lint, typecheck, or build commands were run per user instruction.
+
+## Equity Data Provider Resilience And Pagination
+
+- Started from a clean `main`; there was no current local work to commit before this pass.
+- Added shared provider HTTP retry behavior for transient `429` and `5xx` failures:
+  - `EQUITY_DATA_PROVIDER_RETRY_ATTEMPTS`;
+  - `EQUITY_DATA_PROVIDER_RETRY_BACKOFF_SECONDS`;
+  - `Retry-After` is honored up to 60 seconds when present.
+- Added bounded provider pagination:
+  - `EQUITY_DATA_PROVIDER_MAX_PAGES`;
+  - Polygon universe import now follows only the provider cursor value from `next_url`, never the
+    raw URL itself;
+  - callers can request a lower `filters.maxPages`/`filters.max_pages`;
+  - truncated provider imports record a `polygon_pagination_truncated` warning and
+    `truncated=true` summary metadata.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/.env.example`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - touched backend Python files passed `py_compile` syntax checks via the API virtualenv;
+  - no tests, lint, typecheck, or build commands were run per user instruction.

@@ -968,6 +968,9 @@ class EquityDataService:
             credential_ref_id=str(credential_ref_id) if credential_ref_id is not None else None,
             external_requests_enabled=self.settings.equity_data_allow_external_requests,
             timeout_seconds=self.settings.equity_data_provider_timeout_seconds,
+            retry_attempts=self.settings.equity_data_provider_retry_attempts,
+            retry_backoff_seconds=self.settings.equity_data_provider_retry_backoff_seconds,
+            max_pages=self.settings.equity_data_provider_max_pages,
             base_url=self.provider_base_url(provider),
             credential_secrets=resolution.secret_values if resolution.ready else {},
         )
