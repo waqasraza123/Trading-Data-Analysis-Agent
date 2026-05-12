@@ -6,6 +6,7 @@ This document classifies current route protection for auth hardening. Health and
 | --- | --- | --- |
 | `/health` | public | No identity required |
 | `/auth/me`, `/auth/context` | public/dev-aware | Returns resolved context; enforced modes require credentials for `/auth/me` |
+| `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/password/change`, `/auth/sessions*` | auth self-service | Credential exchange or session-authenticated user self-service |
 | `/auth/api-keys*` | admin | `require_admin` |
 | Workspace setup mutations | admin | `workspace.admin` |
 | Workspace and user mutations | admin/write | `workspace.admin`, `workspace.write`, `users.admin` |
@@ -57,10 +58,16 @@ All `POST`, `PUT`, `PATCH`, and `DELETE` routes under `app/modules/**/routes.py`
 
 ## Explicit Exemptions
 
-These `POST` routes intentionally do not declare `require_permission(...)` because they are write-free validation or preview operations. They remain covered by the global auth/API-key middleware behavior when auth enforcement is enabled for mutating methods.
+These `POST` routes intentionally do not declare `require_permission(...)` because they are either write-free validation/preview operations or auth self-service endpoints where route-level RBAC would block account bootstrap, credential exchange, or session-authenticated user credential/session maintenance. They remain covered by their local validation, session identity dependencies, or the global auth/API-key middleware behavior where applicable.
 
 | Route | Reason |
 | --- | --- |
+| `POST /auth/login` | Credential exchange endpoint |
+| `POST /auth/logout` | Self-service session revocation |
+| `POST /auth/password/change` | Self-service password credential rotation |
+| `POST /auth/register` | First-party account bootstrap endpoint |
+| `POST /auth/sessions/revoke-other` | Self-service session revocation |
+| `POST /auth/sessions/{session_id}/revoke` | Self-service session revocation |
 | `POST /chart-screenshot-runs/image/preview` | Write-free image extraction preview |
 | `POST /data-contracts/validate` | Payload validation only |
 | `POST /data-contracts/validate-source` | Source payload validation only |

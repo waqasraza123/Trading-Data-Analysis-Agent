@@ -1,5 +1,32 @@
 # Current Session
 
+## First-Party Password Rotation
+
+- Current worktree was clean before this task; no pending work needed a pre-implementation commit.
+- Added authenticated first-party password rotation:
+  - `POST /auth/password/change` requires a session-authenticated user;
+  - verifies the current password before hashing the replacement with the existing PBKDF2-SHA256 helper;
+  - rejects unchanged passwords;
+  - clears failed-attempt lock state after valid current-password verification;
+  - optionally revokes other active sessions while keeping the current bearer session.
+- Added `/account` password-change UI:
+  - current/new/confirm password fields;
+  - default-on option to revoke other active sessions;
+  - shared account API client call through the existing same-origin session proxy path.
+- Updated RBAC route-coverage policy for auth self-service exemptions:
+  - register/login/logout;
+  - password change;
+  - session revoke-one/revoke-other.
+- Updated docs and durable memory:
+  - `apps/api/docs/auth.md`;
+  - `apps/api/docs/rbac-route-coverage.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passes;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## First-Party Session Management
 
 - Committed and pushed the existing session-memory update first:

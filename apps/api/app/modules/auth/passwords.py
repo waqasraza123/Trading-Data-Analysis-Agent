@@ -155,6 +155,50 @@ class PasswordAuthService:
         auth_session.status = AuthSessionStatus.REVOKED.value
         await self.session.commit()
 
+    async def change_password(
+        self,
+        *,
+        user_id: UUID,
+        workspace_id: UUID,
+        current_password: str,
+        new_password: str,
+        revoke_other_sessions: bool,
+        current_token: str | None,
+    ) -> int:
+        if not self.settings.auth_password_enabled:
+            raise AppError(404, "password_auth_disabled", "Password authentication is disabled")
+        credential = await self.get_credential_by_user(
+            user_id=user_id,
+            workspace_id=workspace_id,
+        )
+        if credential is None or credential.status != AuthIdentityStatus.ACTIVE.value:
+            raise AppError(404, "password_credential_not_found", "Password credential was not found")
+        now = datetime.now(UTC)
+        if credential.locked_until is not None and credential.locked_until > now:
+            raise AppError(423, "account_locked", "Account is temporarily locked")
+        if not verify_password(current_password, credential.password_hash):
+            await self.record_failed_attempt(credential, now)
+            raise invalid_credentials_error()
+        if verify_password(new_password, credential.password_hash):
+            raise AppError(422, "password_unchanged", "New password must be different")
+        credential.password_hash = hash_password(new_password)
+        credential.failed_attempts = 0
+        credential.locked_until = None
+        revoked_count = 0
+        if revoke_other_sessions:
+            await self.expire_stale_user_sessions(
+                user_id=user_id,
+                workspace_id=workspace_id,
+                commit=False,
+            )
+            revoked_count = await self.mark_other_user_sessions_revoked(
+                user_id=user_id,
+                workspace_id=workspace_id,
+                current_token=current_token,
+            )
+        await self.session.commit()
+        return revoked_count
+
     async def list_user_sessions(
         self,
         *,
@@ -206,6 +250,22 @@ class PasswordAuthService:
         current_token: str | None,
     ) -> int:
         await self.expire_stale_user_sessions(user_id=user_id, workspace_id=workspace_id)
+        revoked_count = await self.mark_other_user_sessions_revoked(
+            user_id=user_id,
+            workspace_id=workspace_id,
+            current_token=current_token,
+        )
+        if revoked_count > 0:
+            await self.session.commit()
+        return revoked_count
+
+    async def mark_other_user_sessions_revoked(
+        self,
+        *,
+        user_id: UUID,
+        workspace_id: UUID,
+        current_token: str | None,
+    ) -> int:
         current_token_hash = hash_session_token(current_token) if current_token else None
         result = await self.session.execute(
             select(AuthSession).where(
@@ -220,8 +280,6 @@ class PasswordAuthService:
                 continue
             auth_session.status = AuthSessionStatus.REVOKED.value
             revoked_count += 1
-        if revoked_count > 0:
-            await self.session.commit()
         return revoked_count
 
     async def create_session(self, *, user: User, workspace: Workspace) -> CreatedSession:
@@ -255,6 +313,20 @@ class PasswordAuthService:
         )
         return result.scalar_one_or_none()
 
+    async def get_credential_by_user(
+        self,
+        *,
+        user_id: UUID,
+        workspace_id: UUID,
+    ) -> AuthPasswordCredential | None:
+        result = await self.session.execute(
+            select(AuthPasswordCredential).where(
+                AuthPasswordCredential.user_id == user_id,
+                AuthPasswordCredential.workspace_id == workspace_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def record_failed_attempt(
         self,
         credential: AuthPasswordCredential,
@@ -272,6 +344,7 @@ class PasswordAuthService:
         *,
         user_id: UUID,
         workspace_id: UUID,
+        commit: bool = True,
     ) -> int:
         now = datetime.now(UTC)
         result = await self.session.execute(
@@ -286,7 +359,7 @@ class PasswordAuthService:
         for auth_session in result.scalars().all():
             auth_session.status = AuthSessionStatus.EXPIRED.value
             expired_count += 1
-        if expired_count > 0:
+        if expired_count > 0 and commit:
             await self.session.commit()
         return expired_count
 

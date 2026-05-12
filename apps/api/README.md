@@ -801,7 +801,9 @@ BACKFILL_PLAN_MAX_LIMIT=10000
 before applying workspace membership and permission checks. For first-party UI login, set `DATABASE_URL`
 to a migrated Neon Postgres database, use `AUTH_MODE=session`, and keep `AUTH_PASSWORD_ENABLED=true`.
 Password sessions support `/auth/sessions` inventory plus user-owned revoke-one and revoke-other
-operations without exposing raw token hashes.
+operations without exposing raw token hashes. Session-authenticated users can rotate their password
+with `/auth/password/change`, which verifies the current password, hashes the replacement server-side,
+and can revoke other active sessions.
 The legacy `ADMIN_API_KEY` remains supported for compatibility. Health endpoints stay public. Rate limiting is disabled by default,
 uses an in-memory fallback for local/test when Redis is not configured, and requires `REDIS_URL`
 when enabled in staging or production.

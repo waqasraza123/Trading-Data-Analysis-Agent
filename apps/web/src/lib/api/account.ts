@@ -51,6 +51,11 @@ export type AuthSessionBulkRevoke = {
   revoked_count: number;
 };
 
+export type AuthPasswordChange = {
+  changed: boolean;
+  revoked_session_count: number;
+};
+
 export type AccountFailure = ApiError & {
   label: string;
 };
@@ -79,4 +84,20 @@ export function revokeOtherAuthSessions(): Promise<ApiResult<AuthSessionBulkRevo
   return apiPost<AuthSessionBulkRevoke>("/auth/sessions/revoke-other", undefined, {
     optional: true,
   });
+}
+
+export function changePassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+  revokeOtherSessions: boolean;
+}): Promise<ApiResult<AuthPasswordChange>> {
+  return apiPost<AuthPasswordChange>(
+    "/auth/password/change",
+    {
+      currentPassword: payload.currentPassword,
+      newPassword: payload.newPassword,
+      revokeOtherSessions: payload.revokeOtherSessions,
+    },
+    { optional: true },
+  );
 }

@@ -19,6 +19,8 @@ from app.modules.auth.schemas import (
     AuthContextRead,
     AuthLoginRequest,
     AuthLogoutRequest,
+    AuthPasswordChangeRead,
+    AuthPasswordChangeRequest,
     AuthRegisterRequest,
     AuthSessionCreated,
     AuthSessionBulkRevokeRead,
@@ -139,6 +141,28 @@ async def revoke_session_by_id(
         workspace_id=user.workspace_id,
     )
     return session_to_read(auth_session, current_session_token_hash(request))
+
+
+@router.post("/password/change", response_model=AuthPasswordChangeRead)
+async def change_password(
+    payload: AuthPasswordChangeRequest,
+    request: Request,
+    identity: Annotated[IdentityContext, Depends(require_session_user_identity)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> AuthPasswordChangeRead:
+    user = session_identity_user(identity)
+    revoked_count = await PasswordAuthService(
+        session=session,
+        settings=request.app.state.settings,
+    ).change_password(
+        user_id=user.id,
+        workspace_id=user.workspace_id,
+        current_password=payload.current_password,
+        new_password=payload.new_password,
+        revoke_other_sessions=payload.revoke_other_sessions,
+        current_token=bearer_token(request),
+    )
+    return AuthPasswordChangeRead(changed=True, revoked_session_count=revoked_count)
 
 
 @router.get("/me", response_model=CurrentIdentityRead)

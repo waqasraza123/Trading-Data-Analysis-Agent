@@ -7,6 +7,12 @@ ROUTE_METHODS = {method.lower() for method in MUTATING_METHODS}
 ROUTES_ROOT = Path(__file__).resolve().parents[2] / "modules"
 
 MUTATING_ROUTE_EXEMPTIONS: dict[tuple[str, str], str] = {
+    ("POST", "/auth/login"): "credential exchange endpoint",
+    ("POST", "/auth/logout"): "self-service session revocation",
+    ("POST", "/auth/password/change"): "self-service password credential rotation",
+    ("POST", "/auth/register"): "first-party account bootstrap endpoint",
+    ("POST", "/auth/sessions/revoke-other"): "self-service session revocation",
+    ("POST", "/auth/sessions/{session_id}/revoke"): "self-service session revocation",
     ("POST", "/chart-screenshot-runs/image/preview"): "write-free image extraction preview",
     ("POST", "/data-contracts/validate"): "payload validation only",
     ("POST", "/data-contracts/validate-source"): "source payload validation only",

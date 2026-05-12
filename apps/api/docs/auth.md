@@ -44,8 +44,9 @@ Session management endpoints are available for first-party password sessions:
 - `GET /auth/sessions` lists up to 100 authenticated-user session records by default, with `limit` bounded to 200, without exposing token hashes.
 - `POST /auth/sessions/{session_id}/revoke` revokes one session owned by the authenticated user.
 - `POST /auth/sessions/revoke-other` revokes the authenticated user's other active sessions while preserving the current bearer session when it can be resolved.
+- `POST /auth/password/change` verifies the current password, stores a new PBKDF2-SHA256 hash, clears failed-attempt lock state after a valid current password, and can revoke other active sessions while keeping the current session.
 
-These endpoints require a password-session identity. API keys and legacy admin keys are intentionally not a substitute for user-session management.
+These endpoints require a password-session identity. API keys and legacy admin keys are intentionally not a substitute for user-session and password management.
 
 Use a Neon Postgres `DATABASE_URL` and run Alembic migrations before enabling `AUTH_MODE=session` in deployed environments.
 

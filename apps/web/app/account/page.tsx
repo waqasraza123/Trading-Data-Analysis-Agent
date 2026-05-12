@@ -1,4 +1,5 @@
 import { AccountSessionControls, RevokeOtherSessionsButton } from "@/components/account/AccountSessionControls";
+import { PasswordChangePanel } from "@/components/account/PasswordChangePanel";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -53,19 +54,31 @@ export default async function AccountPage() {
         </AnimatedListItem>
 
         <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
-          <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "compact")}>
-            <ReviewSurfacePanel title="Identity" eyebrow="Context">
-              <div className="grid gap-3">
-                <ReviewFact label="Email" value={user?.email || "Not available"} />
-                <ReviewFact label="Role" value={user?.role || "Not available"} />
-                <ReviewFact label="User ID" value={user?.id ? shortIdentifier(user.id) : "Not available"} />
-                <ReviewFact label="Workspace ID" value={workspace?.id ? shortIdentifier(workspace.id) : "Not available"} />
-                <ReviewFact label="Permissions" value={identity?.permissions.length || 0} detail={identity?.admin ? "Admin context" : "Role-scoped context"} />
-              </div>
-            </ReviewSurfacePanel>
-          </AnimatedListItem>
+          <div className="space-y-5">
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(3, "compact")}>
+              <ReviewSurfacePanel title="Identity" eyebrow="Context">
+                <div className="grid gap-3">
+                  <ReviewFact label="Email" value={user?.email || "Not available"} />
+                  <ReviewFact label="Role" value={user?.role || "Not available"} />
+                  <ReviewFact label="User ID" value={user?.id ? shortIdentifier(user.id) : "Not available"} />
+                  <ReviewFact label="Workspace ID" value={workspace?.id ? shortIdentifier(workspace.id) : "Not available"} />
+                  <ReviewFact label="Permissions" value={identity?.permissions.length || 0} detail={identity?.admin ? "Admin context" : "Role-scoped context"} />
+                </div>
+              </ReviewSurfacePanel>
+            </AnimatedListItem>
 
-          <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
+              <ReviewSurfacePanel
+                title="Password"
+                eyebrow="Credential"
+                description="Change the password for this account and optionally revoke other active sessions."
+              >
+                <PasswordChangePanel />
+              </ReviewSurfacePanel>
+            </AnimatedListItem>
+          </div>
+
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
             <ReviewSurfacePanel
               title="Sessions"
               eyebrow="Security"

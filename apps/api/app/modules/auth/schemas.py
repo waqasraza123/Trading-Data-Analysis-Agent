@@ -116,6 +116,17 @@ class AuthLoginRequest(ApiSchema):
     password: str = Field(min_length=1, max_length=256)
 
 
+class AuthPasswordChangeRequest(ApiSchema):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=12, max_length=256)
+    revoke_other_sessions: bool = True
+
+
+class AuthPasswordChangeRead(ApiSchema):
+    changed: bool
+    revoked_session_count: int
+
+
 class AuthLogoutRequest(ApiSchema):
     token: str | None = Field(default=None, min_length=1, max_length=512)
 
