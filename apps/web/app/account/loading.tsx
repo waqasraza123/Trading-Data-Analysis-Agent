@@ -31,6 +31,12 @@ export default function AccountLoading() {
             ))}
           </section>
         </div>
+        <section className="space-y-3">
+          <ShimmerSkeleton className="h-12 rounded-lg" />
+          {Array.from({ length: 5 }).map((_, index) => (
+            <ShimmerSkeleton key={index} className="h-14 rounded-lg" />
+          ))}
+        </section>
       </section>
     </RouteLoadingShell>
   );

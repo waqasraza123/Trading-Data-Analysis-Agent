@@ -1,5 +1,30 @@
 # Current Session
 
+## First-Party Auth Activity Audit
+
+- Current worktree was clean before this task; no pending work needed a pre-implementation commit.
+- Added first-party auth activity persistence:
+  - `auth_activity_events` SQLAlchemy model and Alembic migration;
+  - bounded event/status enums for register, login, logout, password change, session revocation, and API-key administration;
+  - hashed email, client-host, and user-agent correlation values without storing raw passwords, bearer tokens, API keys, request bodies, IP addresses, or user agents;
+  - request ID, identity source, error code, and bounded metadata fields for operational traceability.
+- Added backend audit recording for:
+  - register/login success and known `AppError` failures;
+  - logout success;
+  - session revoke-one and revoke-other success;
+  - password change success;
+  - API-key create/revoke success.
+- Added `GET /auth/activity` for session-authenticated users to list recent activity for their own user/workspace.
+- Updated web account data loading and `/account` UI to show recent activity alongside password change and session inventory controls.
+- Updated docs and durable memory:
+  - `apps/api/docs/auth.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passes;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## First-Party Password Rotation
 
 - Current worktree was clean before this task; no pending work needed a pre-implementation commit.

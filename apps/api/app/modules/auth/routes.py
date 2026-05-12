@@ -6,12 +6,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.dependencies import database_session
+from app.modules.auth.activity import (
+    AuthActivityDraft,
+    AuthActivityEventType,
+    AuthActivityService,
+    AuthActivityStatus,
+    activity_context_from_request,
+)
 from app.modules.auth.api_keys import ApiKeyService
 from app.modules.auth.dependencies import optional_identity, require_admin
 from app.modules.auth.identity import IdentityContext, identity_to_read
-from app.modules.auth.models import AuthApiKey, AuthSession
+from app.modules.auth.models import AuthActivityEvent, AuthApiKey, AuthSession
 from app.modules.auth.passwords import PasswordAuthService, hash_session_token
 from app.modules.auth.schemas import (
+    AuthActivityEventRead,
+    AuthActivityEventTypeRead,
+    AuthActivityStatusRead,
     AuthApiKeyCreate,
     AuthApiKeyCreated,
     AuthApiKeyRead,
@@ -41,14 +51,33 @@ async def register(
     request: Request,
     session: Annotated[AsyncSession, Depends(database_session)],
 ) -> AuthSessionCreated:
-    created_session = await PasswordAuthService(
+    try:
+        created_session = await PasswordAuthService(
+            session=session,
+            settings=request.app.state.settings,
+        ).register(
+            workspace_name=payload.workspace_name,
+            name=payload.name,
+            email=payload.email,
+            password=payload.password,
+        )
+    except AppError as error:
+        await record_auth_activity(
+            request=request,
+            session=session,
+            event_type=AuthActivityEventType.REGISTER,
+            status=AuthActivityStatus.FAILURE,
+            email=payload.email,
+            error_code=error.code,
+        )
+        raise
+    await record_auth_activity(
+        request=request,
         session=session,
-        settings=request.app.state.settings,
-    ).register(
-        workspace_name=payload.workspace_name,
-        name=payload.name,
+        event_type=AuthActivityEventType.REGISTER,
+        status=AuthActivityStatus.SUCCESS,
+        identity=created_session.identity,
         email=payload.email,
-        password=payload.password,
     )
     return AuthSessionCreated(
         access_token=created_session.token,
@@ -63,10 +92,29 @@ async def login(
     request: Request,
     session: Annotated[AsyncSession, Depends(database_session)],
 ) -> AuthSessionCreated:
-    created_session = await PasswordAuthService(
+    try:
+        created_session = await PasswordAuthService(
+            session=session,
+            settings=request.app.state.settings,
+        ).login(email=payload.email, password=payload.password)
+    except AppError as error:
+        await record_auth_activity(
+            request=request,
+            session=session,
+            event_type=AuthActivityEventType.LOGIN,
+            status=AuthActivityStatus.FAILURE,
+            email=payload.email,
+            error_code=error.code,
+        )
+        raise
+    await record_auth_activity(
+        request=request,
         session=session,
-        settings=request.app.state.settings,
-    ).login(email=payload.email, password=payload.password)
+        event_type=AuthActivityEventType.LOGIN,
+        status=AuthActivityStatus.SUCCESS,
+        identity=created_session.identity,
+        email=payload.email,
+    )
     return AuthSessionCreated(
         access_token=created_session.token,
         expires_at=created_session.expires_at,
@@ -79,6 +127,7 @@ async def logout(
     payload: AuthLogoutRequest,
     request: Request,
     session: Annotated[AsyncSession, Depends(database_session)],
+    identity: Annotated[IdentityContext | None, Depends(optional_identity)] = None,
 ) -> None:
     token = payload.token or bearer_token(request)
     if token is not None:
@@ -86,6 +135,13 @@ async def logout(
             session=session,
             settings=request.app.state.settings,
         ).revoke_session(token)
+    await record_auth_activity(
+        request=request,
+        session=session,
+        event_type=AuthActivityEventType.LOGOUT,
+        status=AuthActivityStatus.SUCCESS,
+        identity=identity,
+    )
 
 
 @router.get("/sessions", response_model=list[AuthSessionRead])
@@ -121,6 +177,14 @@ async def revoke_other_sessions(
         workspace_id=user.workspace_id,
         current_token=bearer_token(request),
     )
+    await record_auth_activity(
+        request=request,
+        session=session,
+        event_type=AuthActivityEventType.SESSION_REVOKE_OTHER,
+        status=AuthActivityStatus.SUCCESS,
+        identity=identity,
+        metadata={"revokedSessionCount": revoked_count},
+    )
     return AuthSessionBulkRevokeRead(revoked_count=revoked_count)
 
 
@@ -139,6 +203,14 @@ async def revoke_session_by_id(
         session_id=session_id,
         user_id=user.id,
         workspace_id=user.workspace_id,
+    )
+    await record_auth_activity(
+        request=request,
+        session=session,
+        event_type=AuthActivityEventType.SESSION_REVOKE,
+        status=AuthActivityStatus.SUCCESS,
+        identity=identity,
+        metadata={"sessionId": str(session_id)},
     )
     return session_to_read(auth_session, current_session_token_hash(request))
 
@@ -162,7 +234,33 @@ async def change_password(
         revoke_other_sessions=payload.revoke_other_sessions,
         current_token=bearer_token(request),
     )
+    await record_auth_activity(
+        request=request,
+        session=session,
+        event_type=AuthActivityEventType.PASSWORD_CHANGE,
+        status=AuthActivityStatus.SUCCESS,
+        identity=identity,
+        metadata={
+            "revokedSessionCount": revoked_count,
+            "requestedOtherSessionRevocation": payload.revoke_other_sessions,
+        },
+    )
     return AuthPasswordChangeRead(changed=True, revoked_session_count=revoked_count)
+
+
+@router.get("/activity", response_model=list[AuthActivityEventRead])
+async def list_activity(
+    identity: Annotated[IdentityContext, Depends(require_session_user_identity)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
+) -> list[AuthActivityEventRead]:
+    user = session_identity_user(identity)
+    events = await AuthActivityService(session).list_for_user(
+        user_id=user.id,
+        workspace_id=user.workspace_id,
+        limit=limit,
+    )
+    return [activity_event_to_read(event) for event in events]
 
 
 @router.get("/me", response_model=CurrentIdentityRead)
@@ -203,6 +301,7 @@ async def create_api_key(
     payload: AuthApiKeyCreate,
     request: Request,
     session: Annotated[AsyncSession, Depends(database_session)],
+    identity: Annotated[IdentityContext | None, Depends(optional_identity)] = None,
 ) -> AuthApiKeyCreated:
     service = ApiKeyService(session=session, settings=request.app.state.settings)
     api_key, raw_key = await service.create(
@@ -210,6 +309,19 @@ async def create_api_key(
         workspace_id=payload.workspace_id,
         scopes=payload.scopes,
         expires_at=payload.expires_at,
+    )
+    await record_auth_activity(
+        request=request,
+        session=session,
+        event_type=AuthActivityEventType.API_KEY_CREATE,
+        status=AuthActivityStatus.SUCCESS,
+        identity=identity,
+        metadata={
+            "apiKeyId": str(api_key.id),
+            "workspaceId": str(api_key.workspace_id) if api_key.workspace_id else None,
+            "scopeCount": len(api_key.scopes_json),
+            "expiresAt": api_key.expires_at.isoformat() if api_key.expires_at else None,
+        },
     )
     return AuthApiKeyCreated(
         id=api_key.id,
@@ -249,9 +361,21 @@ async def revoke_api_key(
     key_id: UUID,
     request: Request,
     session: Annotated[AsyncSession, Depends(database_session)],
+    identity: Annotated[IdentityContext | None, Depends(optional_identity)] = None,
 ) -> AuthApiKeyRead:
     service = ApiKeyService(session=session, settings=request.app.state.settings)
     api_key = await service.revoke(key_id)
+    await record_auth_activity(
+        request=request,
+        session=session,
+        event_type=AuthActivityEventType.API_KEY_REVOKE,
+        status=AuthActivityStatus.SUCCESS,
+        identity=identity,
+        metadata={
+            "apiKeyId": str(api_key.id),
+            "workspaceId": str(api_key.workspace_id) if api_key.workspace_id else None,
+        },
+    )
     return api_key_to_read(api_key)
 
 
@@ -284,6 +408,46 @@ def session_to_read(
         created_at=auth_session.created_at,
         updated_at=auth_session.updated_at,
         current=current_token_hash is not None and auth_session.token_hash == current_token_hash,
+    )
+
+
+def activity_event_to_read(event: AuthActivityEvent) -> AuthActivityEventRead:
+    return AuthActivityEventRead(
+        id=event.id,
+        user_id=event.user_id,
+        workspace_id=event.workspace_id,
+        event_type=AuthActivityEventTypeRead(event.event_type),
+        status=AuthActivityStatusRead(event.status),
+        identity_source=event.identity_source,
+        request_id=event.request_id,
+        error_code=event.error_code,
+        metadata_json=event.metadata_json,
+        created_at=event.created_at,
+    )
+
+
+async def record_auth_activity(
+    *,
+    request: Request,
+    session: AsyncSession,
+    event_type: AuthActivityEventType,
+    status: AuthActivityStatus,
+    identity: IdentityContext | None = None,
+    email: str | None = None,
+    error_code: str | None = None,
+    metadata: dict[str, object] | None = None,
+) -> None:
+    await AuthActivityService(session).record(
+        AuthActivityDraft(
+            event_type=event_type,
+            status=status,
+            user_id=identity.user.id if identity is not None and identity.user is not None else None,
+            workspace_id=identity.workspace_id if identity is not None else None,
+            email=email,
+            error_code=error_code,
+            metadata=metadata or {},
+        ),
+        activity_context_from_request(request, identity),
     )
 
 

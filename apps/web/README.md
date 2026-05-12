@@ -39,7 +39,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Visual setup chart panels for compact final-candle, zone, signal-window, and observed-outcome context on signal detail pages.
 - Command center overview integration for one daily workspace payload, explicit backend-safe quick actions, missing-section fallback, and safe-copy labels.
 - First-run onboarding at `/onboarding` with product readiness gate, exact next step guidance, safe setup actions, demo workspace option, command center readiness banner, and workspace selector support.
-- Account credential/session management at `/account` for changing the first-party password, reviewing password-session inventory, and revoking current or other active sessions.
+- Account credential/session management at `/account` for changing the first-party password, reviewing password-session inventory and recent auth activity, and revoking current or other active sessions.
 
 ## Backend Endpoints Used
 
@@ -52,6 +52,7 @@ The client composes data from optional backend APIs:
 - `GET /auth/me`
 - `GET /auth/context`
 - `POST /auth/password/change`
+- `GET /auth/activity`
 - `GET /auth/sessions`
 - `POST /auth/sessions/{session_id}/revoke`
 - `POST /auth/sessions/revoke-other`
@@ -385,7 +386,7 @@ The onboarding workflow does not run hidden external calls, execute broker workf
 - `/review/outcomes` renders the outcome and journal review loop over recent signal outcomes.
 - `/quality` renders the read-only signal quality scoreboard over stored diagnostics, observed behavior, calibration, validation, drift, attribution, and backtest cohorts.
 - `/journal` and `/journal/[entryId]` render reflection note creation, editing, archival, and outcome review when supported by the journal API.
-- `/account` renders first-party password change, password-session inventory, current identity context, and safe session revocation controls.
+- `/account` renders first-party password change, password-session inventory, recent auth activity, current identity context, and safe session revocation controls.
 - `/preferences/strategy` renders personal strategy preference profiles for review filtering only.
 - `/data/onboarding` renders the live data onboarding and freshness workflow.
 - `/brief` renders the workspace daily brief, preferring the backend daily brief endpoint and falling back to web client composition from existing optional backend endpoints.

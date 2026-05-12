@@ -10,7 +10,13 @@ import {
   ReviewSurfacePanel,
   ReviewTable,
 } from "@/components/review-surfaces/ReviewSurface";
-import type { AccountFailure, AuthSession, AuthSessionStatus } from "@/lib/api/account";
+import type {
+  AccountFailure,
+  AuthActivityEvent,
+  AuthActivityStatus,
+  AuthSession,
+  AuthSessionStatus,
+} from "@/lib/api/account";
 import { getAccountData } from "@/lib/api/accountServer";
 import { formatDateTime, formatRelativeTime, shortIdentifier } from "@/lib/ui/formatters";
 import { AnimatedListItem, AnimatedSection, motionRevealDensityStyle } from "@/lib/ui/motion";
@@ -88,6 +94,16 @@ export default async function AccountPage() {
             </ReviewSurfacePanel>
           </AnimatedListItem>
         </div>
+
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
+          <ReviewSurfacePanel
+            title="Recent account activity"
+            eyebrow="Audit"
+            description="Recent first-party authentication events recorded for this user and workspace."
+          >
+            <ActivityTable events={data.activity} />
+          </ReviewSurfacePanel>
+        </AnimatedListItem>
       </AnimatedSection>
     </AppShell>
   );
@@ -138,6 +154,44 @@ function SessionTable({ sessions }: { sessions: AuthSession[] }) {
   );
 }
 
+function ActivityTable({ events }: { events: AuthActivityEvent[] }) {
+  if (events.length === 0) {
+    return (
+      <div className="muted-surface rounded-lg p-6">
+        <p className="text-sm font-medium text-[var(--strong)]">No account activity found.</p>
+      </div>
+    );
+  }
+  return (
+    <ReviewTable>
+      <thead className="bg-[var(--panel-muted)] text-xs uppercase tracking-wide text-slate-500">
+        <tr>
+          <th className="px-4 py-3 font-semibold">Event</th>
+          <th className="px-4 py-3 font-semibold">Status</th>
+          <th className="px-4 py-3 font-semibold">Source</th>
+          <th className="px-4 py-3 font-semibold">When</th>
+          <th className="px-4 py-3 font-semibold">Reference</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-[var(--line)]">
+        {events.map((event) => (
+          <tr key={event.id}>
+            <td className="px-4 py-3 font-medium text-[var(--strong)]">{activityLabel(event.event_type)}</td>
+            <td className="px-4 py-3">
+              <Badge value={event.status} tone={activityStatusTone(event.status)} dot />
+            </td>
+            <td className="px-4 py-3 text-sm text-[var(--text-muted)]">{event.identity_source || "Credential"}</td>
+            <td className="px-4 py-3 text-sm text-[var(--text-muted)]">{formatDateTime(event.created_at)}</td>
+            <td className="px-4 py-3 text-sm text-[var(--text-muted)]">
+              {event.request_id && event.request_id !== "unknown" ? shortIdentifier(event.request_id) : "Not available"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </ReviewTable>
+  );
+}
+
 function AccountFailurePanel({ failures }: { failures: AccountFailure[] }) {
   const visibleFailures = failures.filter((failure) => !failure.missing);
   if (visibleFailures.length === 0) {
@@ -155,6 +209,17 @@ function AccountFailurePanel({ failures }: { failures: AccountFailure[] }) {
       </div>
     </div>
   );
+}
+
+function activityLabel(value: string) {
+  return value
+    .split("_")
+    .map((segment) => segment.slice(0, 1).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function activityStatusTone(status: AuthActivityStatus) {
+  return status === "success" ? "good" : "danger";
 }
 
 function sessionStatusTone(status: AuthSessionStatus) {

@@ -34,6 +34,16 @@ export type AuthContext = {
 };
 
 export type AuthSessionStatus = "active" | "revoked" | "expired";
+export type AuthActivityStatus = "success" | "failure";
+export type AuthActivityEventType =
+  | "register"
+  | "login"
+  | "logout"
+  | "password_change"
+  | "session_revoke"
+  | "session_revoke_other"
+  | "api_key_create"
+  | "api_key_revoke";
 
 export type AuthSession = {
   id: UUID;
@@ -56,6 +66,19 @@ export type AuthPasswordChange = {
   revoked_session_count: number;
 };
 
+export type AuthActivityEvent = {
+  id: UUID;
+  user_id: UUID | null;
+  workspace_id: UUID | null;
+  event_type: AuthActivityEventType;
+  status: AuthActivityStatus;
+  identity_source: string | null;
+  request_id: string | null;
+  error_code: string | null;
+  metadata_json: Record<string, unknown>;
+  created_at: string;
+};
+
 export type AccountFailure = ApiError & {
   label: string;
 };
@@ -64,6 +87,7 @@ export type AccountData = {
   appName: string;
   authContext: AuthContext | null;
   sessions: AuthSession[];
+  activity: AuthActivityEvent[];
   failures: AccountFailure[];
   lastLoadedAt: string;
 };
@@ -74,6 +98,10 @@ export function getAuthContext(): Promise<ApiResult<AuthContext>> {
 
 export function listAuthSessions(): Promise<ApiResult<AuthSession[]>> {
   return apiGet<AuthSession[]>("/auth/sessions", { optional: true });
+}
+
+export function listAuthActivity(): Promise<ApiResult<AuthActivityEvent[]>> {
+  return apiGet<AuthActivityEvent[]>("/auth/activity", { optional: true });
 }
 
 export function revokeAuthSession(sessionId: UUID): Promise<ApiResult<AuthSession>> {

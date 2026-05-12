@@ -166,3 +166,42 @@ class AuthSession(Base):
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at = created_at_column()
     updated_at = updated_at_column()
+
+
+class AuthActivityEvent(Base):
+    __tablename__ = "auth_activity_events"
+    __table_args__ = (
+        CheckConstraint(
+            "event_type in ('register', 'login', 'logout', 'password_change', 'session_revoke', 'session_revoke_other', 'api_key_create', 'api_key_revoke')",
+            name="auth_activity_events_type_allowed",
+        ),
+        CheckConstraint(
+            "status in ('success', 'failure')",
+            name="auth_activity_events_status_allowed",
+        ),
+        Index("ix_auth_activity_events_user_created", "user_id", "created_at"),
+        Index("ix_auth_activity_events_workspace_created", "workspace_id", "created_at"),
+        Index("ix_auth_activity_events_type_status", "event_type", "status"),
+    )
+
+    id = uuid_primary_key()
+    user_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    workspace_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    identity_source: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    email_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    client_host_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    user_agent_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    metadata_json: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at = created_at_column()

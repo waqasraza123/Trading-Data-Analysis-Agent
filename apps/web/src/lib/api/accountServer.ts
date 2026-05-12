@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { getPublicEnv } from "@/config/env";
 import { getServerApiProxyEnv } from "@/config/serverEnv";
-import type { AccountData, AccountFailure, AuthContext, AuthSession } from "./account";
+import type { AccountData, AccountFailure, AuthActivityEvent, AuthContext, AuthSession } from "./account";
 import type { ApiResult } from "./types";
 
 export async function getAccountData(): Promise<AccountData> {
@@ -10,16 +10,19 @@ export async function getAccountData(): Promise<AccountData> {
   const cookieStore = await cookies();
   const token = cookieStore.get(serverEnv.authSessionCookieName)?.value || null;
   const failures: AccountFailure[] = [];
-  const [contextResult, sessionsResult] = await Promise.all([
+  const [contextResult, sessionsResult, activityResult] = await Promise.all([
     serverApiGet<AuthContext>("/auth/context", token),
     serverApiGet<AuthSession[]>("/auth/sessions", token),
+    serverApiGet<AuthActivityEvent[]>("/auth/activity", token),
   ]);
   const authContext = readResult("Auth context", contextResult, null, failures);
   const sessions = readResult("Session inventory", sessionsResult, [], failures);
+  const activity = readResult("Account activity", activityResult, [], failures);
   return {
     appName: publicEnv.appName,
     authContext,
     sessions,
+    activity,
     failures,
     lastLoadedAt: new Date().toISOString(),
   };

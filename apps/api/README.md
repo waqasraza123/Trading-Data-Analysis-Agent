@@ -803,7 +803,9 @@ to a migrated Neon Postgres database, use `AUTH_MODE=session`, and keep `AUTH_PA
 Password sessions support `/auth/sessions` inventory plus user-owned revoke-one and revoke-other
 operations without exposing raw token hashes. Session-authenticated users can rotate their password
 with `/auth/password/change`, which verifies the current password, hashes the replacement server-side,
-and can revoke other active sessions.
+and can revoke other active sessions. Account activity is persisted in `auth_activity_events` and
+available through `/auth/activity` with hashed client-host/user-agent correlation fields and no
+raw passwords, session tokens, API keys, token hashes, or request bodies.
 The legacy `ADMIN_API_KEY` remains supported for compatibility. Health endpoints stay public. Rate limiting is disabled by default,
 uses an in-memory fallback for local/test when Redis is not configured, and requires `REDIS_URL`
 when enabled in staging or production.

@@ -42,11 +42,16 @@ Password credentials are stored in `auth_password_credentials` with PBKDF2-SHA25
 Session management endpoints are available for first-party password sessions:
 
 - `GET /auth/sessions` lists up to 100 authenticated-user session records by default, with `limit` bounded to 200, without exposing token hashes.
+- `GET /auth/activity` lists up to 100 authenticated-user activity events by default, with `limit` bounded to 200, without exposing raw IP addresses, user agents, passwords, tokens, or token hashes.
 - `POST /auth/sessions/{session_id}/revoke` revokes one session owned by the authenticated user.
 - `POST /auth/sessions/revoke-other` revokes the authenticated user's other active sessions while preserving the current bearer session when it can be resolved.
 - `POST /auth/password/change` verifies the current password, stores a new PBKDF2-SHA256 hash, clears failed-attempt lock state after a valid current password, and can revoke other active sessions while keeping the current session.
 
 These endpoints require a password-session identity. API keys and legacy admin keys are intentionally not a substitute for user-session and password management.
+
+## Activity Audit
+
+Authentication activity is persisted in `auth_activity_events` for account traceability. The event log records bounded metadata for registration, login, logout, password changes, session revocation, and API-key administration events. It stores request IDs plus SHA-256 hashes of client host and user agent values for correlation without storing raw network identifiers. It never stores passwords, session tokens, API keys, raw token hashes, request bodies, or provider secrets.
 
 Use a Neon Postgres `DATABASE_URL` and run Alembic migrations before enabling `AUTH_MODE=session` in deployed environments.
 

@@ -17,7 +17,13 @@ from app.modules.artifact_graph.models import (
     IntelligenceArtifact,
     IntelligenceArtifactDependency,
 )
-from app.modules.auth.models import AuthApiKey, AuthIdentity, AuthPasswordCredential, AuthSession
+from app.modules.auth.models import (
+    AuthActivityEvent,
+    AuthApiKey,
+    AuthIdentity,
+    AuthPasswordCredential,
+    AuthSession,
+)
 from app.modules.backfill_plans.models import IntelligenceBackfillItem, IntelligenceBackfillPlan
 from app.modules.backtest_experiments.models import (
     BacktestExperimentCohort,
@@ -220,6 +226,7 @@ __all__ = [
     "AnalysisRun",
     "ArtifactInvalidationEvent",
     "ArtifactInvalidationItem",
+    "AuthActivityEvent",
     "AuthApiKey",
     "AuthIdentity",
     "AuthPasswordCredential",

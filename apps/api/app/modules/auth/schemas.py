@@ -36,6 +36,22 @@ class AuthSessionStatusRead(StrEnum):
     EXPIRED = "expired"
 
 
+class AuthActivityEventTypeRead(StrEnum):
+    REGISTER = "register"
+    LOGIN = "login"
+    LOGOUT = "logout"
+    PASSWORD_CHANGE = "password_change"
+    SESSION_REVOKE = "session_revoke"
+    SESSION_REVOKE_OTHER = "session_revoke_other"
+    API_KEY_CREATE = "api_key_create"
+    API_KEY_REVOKE = "api_key_revoke"
+
+
+class AuthActivityStatusRead(StrEnum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+
 class AuthUserRead(ApiSchema):
     id: UUID
     workspace_id: UUID
@@ -152,3 +168,16 @@ class AuthSessionRead(ApiReadSchema):
 
 class AuthSessionBulkRevokeRead(ApiSchema):
     revoked_count: int
+
+
+class AuthActivityEventRead(ApiReadSchema):
+    id: UUID
+    user_id: UUID | None
+    workspace_id: UUID | None
+    event_type: AuthActivityEventTypeRead
+    status: AuthActivityStatusRead
+    identity_source: str | None
+    request_id: str | None
+    error_code: str | None
+    metadata_json: dict[str, object]
+    created_at: datetime
