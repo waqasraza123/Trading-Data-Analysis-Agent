@@ -60,8 +60,9 @@ operations can be retried from replayable persisted request payloads while prese
 operation as audit history. The operation review queue highlights failed, warning, cancelled, and
 stale active operations with safe operator next steps. Operation diagnostics compose linked job
 events, provider request state, recent import errors, and timeline events from existing persisted
-records. External provider calls are disabled by default, raw uploaded files are not persisted, and
-raw provider secrets are not stored. See `docs/equity-data.md`.
+records. Retry lineage composes source and downstream retry operations from existing operation
+request summaries. External provider calls are disabled by default, raw uploaded files are not
+persisted, and raw provider secrets are not stored. See `docs/equity-data.md`.
 
 Product readiness is implemented under `/product-readiness`. It persists an operator-facing
 checklist run for API reachability, database/migration detectability, seed/workspace/user setup,

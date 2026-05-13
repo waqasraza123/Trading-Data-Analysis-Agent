@@ -7,6 +7,7 @@ import type {
   EquityDataOperationDetail,
   EquityDataOperationDiagnostics,
   EquityDataOperationInput,
+  EquityDataOperationLineage,
   EquityDataOperationList,
   EquityDataOperationRetryInput,
   EquityDataOperationReviewQueue,
@@ -92,6 +93,15 @@ export function getEquityDataOperationDiagnostics(
 ): Promise<ApiResult<EquityDataOperationDiagnostics>> {
   return apiGet<EquityDataOperationDiagnostics>(
     `/equity-data/operations/${operationId}/diagnostics`,
+    { optional: true },
+  );
+}
+
+export function getEquityDataOperationLineage(
+  operationId: UUID,
+): Promise<ApiResult<EquityDataOperationLineage>> {
+  return apiGet<EquityDataOperationLineage>(
+    `/equity-data/operations/${operationId}/lineage`,
     { optional: true },
   );
 }

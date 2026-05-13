@@ -177,6 +177,9 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
             <JsonSummary title="Request summary" value={data.selectedOperation.request_summary_json} />
             <JsonSummary title="Result summary" value={data.selectedOperation.result_summary_json} />
           </div>
+          {data.selectedOperationLineage && (
+            <OperationLineage lineage={data.selectedOperationLineage} searchParams={searchParams} />
+          )}
           {data.selectedOperationDiagnostics && (
             <OperationDiagnostics diagnostics={data.selectedOperationDiagnostics} />
           )}
@@ -262,6 +265,69 @@ function OperationReviewQueue({
             </p>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function OperationLineage({
+  lineage,
+  searchParams,
+}: {
+  lineage: NonNullable<EquityResearchData["selectedOperationLineage"]>;
+  searchParams: URLSearchParams | ReadonlyURLSearchParamsLike;
+}) {
+  return (
+    <div className="mt-4 rounded-md border border-[var(--line)] bg-[var(--panel-muted)] px-3 py-2">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Retry lineage
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            {lineage.source_operations.length} source operations ·{" "}
+            {lineage.retry_operations.length} retry attempts · scanned {lineage.scanned_count} of{" "}
+            {lineage.scan_limit}
+          </p>
+        </div>
+        <Badge value={`Root ${shortId(lineage.root_operation.id)}`} tone="info" />
+      </div>
+      <div className="mt-3 grid gap-2">
+        {lineage.lineage.slice(0, 12).map((node) => (
+          <div
+            key={`${node.operation.id}-${node.relationship}`}
+            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs"
+            style={{ marginLeft: `${Math.min(node.depth, 4) * 10}px` }}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="font-semibold text-[var(--strong)]">
+                  {equityDataLabel(node.relationship)} ·{" "}
+                  {equityDataLabel(node.operation.operation_type)}
+                </div>
+                <p className="mt-1 text-slate-500">
+                  {shortId(node.operation.id)} · {equityDataLabel(node.operation.status)} ·{" "}
+                  {formatContextDate(node.operation.created_at)}
+                </p>
+                {node.retry_reason && (
+                  <p className="mt-1 text-slate-500">{node.retry_reason}</p>
+                )}
+              </div>
+              <ButtonLink
+                href={operationHref(searchParams, node.operation.id)}
+                size="sm"
+                variant="quiet"
+              >
+                Open
+              </ButtonLink>
+            </div>
+          </div>
+        ))}
+        {lineage.lineage.length === 0 && (
+          <p className="rounded-md bg-[var(--panel)] px-3 py-2 text-xs text-slate-500">
+            No retry lineage entries were returned.
+          </p>
+        )}
       </div>
     </div>
   );

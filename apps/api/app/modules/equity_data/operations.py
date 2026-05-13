@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -21,6 +22,8 @@ from app.modules.equity_data.schemas import (
     EquityCatalystOperationRequest,
     EquityDataOperationDiagnosticsRead,
     EquityDataOperationDiagnosticItem,
+    EquityDataOperationLineageNodeRead,
+    EquityDataOperationLineageRead,
     EquityDataOperationRead,
     EquityDataOperationReviewItemRead,
     EquityDataOperationReviewQueueRead,
@@ -158,6 +161,85 @@ class EquityDataOperationService:
             cancellable_count=sum(1 for item in items if item.can_cancel),
             items=items,
         )
+
+    async def get_operation_lineage(
+        self,
+        operation_id: UUID,
+        scan_limit: int,
+    ) -> EquityDataOperationLineageRead:
+        operation = await self.get_operation(operation_id)
+        scanned_operations = await self.repository.list_operations(
+            operation.workspace_id,
+            status=None,
+            operation_type=None,
+            provider_name=None,
+            limit=scan_limit,
+            offset=0,
+        )
+        operations_by_id = {candidate.id: candidate for candidate in scanned_operations}
+        operations_by_id[operation.id] = operation
+        source_operations = await self.resolve_retry_sources(operation, operations_by_id)
+        root_operation = source_operations[-1] if source_operations else operation
+        children_by_parent = retry_children_by_parent(operations_by_id.values())
+        retry_operations = collect_retry_descendants(operation.id, children_by_parent)
+        lineage_operations = build_retry_lineage(root_operation, children_by_parent)
+        return EquityDataOperationLineageRead(
+            operation=EquityDataOperationRead.model_validate(operation),
+            rootOperation=EquityDataOperationRead.model_validate(root_operation),
+            sourceOperations=[
+                operation_lineage_node(
+                    source_operation,
+                    relationship="source",
+                    depth=index,
+                )
+                for index, source_operation in enumerate(reversed(source_operations))
+            ],
+            retryOperations=[
+                operation_lineage_node(
+                    retry_operation,
+                    relationship="retry",
+                    depth=depth,
+                )
+                for retry_operation, depth in retry_operations
+            ],
+            lineage=[
+                operation_lineage_node(
+                    lineage_operation,
+                    relationship="selected"
+                    if lineage_operation.id == operation.id
+                    else "source"
+                    if operation_retry_source_id(lineage_operation) is None
+                    else "retry",
+                    depth=depth,
+                )
+                for lineage_operation, depth in lineage_operations
+            ],
+            scannedCount=len(scanned_operations),
+            scanLimit=scan_limit,
+        )
+
+    async def resolve_retry_sources(
+        self,
+        operation: EquityDataOperation,
+        operations_by_id: dict[UUID, EquityDataOperation],
+    ) -> list[EquityDataOperation]:
+        sources: list[EquityDataOperation] = []
+        seen = {operation.id}
+        current = operation
+        for _ in range(20):
+            source_id = operation_retry_source_id(current)
+            if source_id is None or source_id in seen:
+                break
+            source = operations_by_id.get(source_id) or await self.repository.get_operation(
+                source_id
+            )
+            if source is None or source.workspace_id != operation.workspace_id:
+                break
+            operations_by_id[source.id] = source
+            sources.append(source)
+            seen.add(source.id)
+            current = source
+        return sources
 
     async def get_operation(self, operation_id: UUID) -> EquityDataOperation:
         operation = await self.repository.get_operation(operation_id)
@@ -1031,6 +1113,82 @@ def operation_review_item(
         canCancel=can_cancel,
         staleAfterMinutes=stale_after_minutes,
         lastUpdateAt=operation.updated_at,
+    )
+
+
+def operation_retry_source_id(operation: EquityDataOperation) -> UUID | None:
+    payload = operation.request_summary_json or {}
+    return coerce_uuid(payload.get("retryOfOperationId"))
+
+
+def operation_retry_reason(operation: EquityDataOperation) -> str | None:
+    payload = operation.request_summary_json or {}
+    reason = payload.get("retryReason")
+    if reason is None:
+        return None
+    normalized = str(reason).strip()
+    return normalized or None
+
+
+def retry_children_by_parent(
+    operations: Iterable[EquityDataOperation],
+) -> dict[UUID, list[EquityDataOperation]]:
+    children: dict[UUID, list[EquityDataOperation]] = {}
+    for operation in operations:
+        source_id = operation_retry_source_id(operation)
+        if source_id is None:
+            continue
+        children.setdefault(source_id, []).append(operation)
+    for candidates in children.values():
+        candidates.sort(key=lambda item: item.created_at)
+    return children
+
+
+def collect_retry_descendants(
+    operation_id: UUID,
+    children_by_parent: dict[UUID, list[EquityDataOperation]],
+) -> list[tuple[EquityDataOperation, int]]:
+    descendants: list[tuple[EquityDataOperation, int]] = []
+    stack = [
+        (child, 1)
+        for child in reversed(children_by_parent.get(operation_id, []))
+    ]
+    seen = {operation_id}
+    while stack:
+        operation, depth = stack.pop()
+        if operation.id in seen:
+            continue
+        seen.add(operation.id)
+        descendants.append((operation, depth))
+        stack.extend(
+            (child, depth + 1)
+            for child in reversed(children_by_parent.get(operation.id, []))
+        )
+    return descendants
+
+
+def build_retry_lineage(
+    root_operation: EquityDataOperation,
+    children_by_parent: dict[UUID, list[EquityDataOperation]],
+) -> list[tuple[EquityDataOperation, int]]:
+    lineage: list[tuple[EquityDataOperation, int]] = [(root_operation, 0)]
+    lineage.extend(collect_retry_descendants(root_operation.id, children_by_parent))
+    return lineage
+
+
+def operation_lineage_node(
+    operation: EquityDataOperation,
+    relationship: str,
+    depth: int,
+) -> EquityDataOperationLineageNodeRead:
+    return EquityDataOperationLineageNodeRead(
+        operation=EquityDataOperationRead.model_validate(operation),
+        relationship=relationship,
+        depth=depth,
+        retryOfOperationId=operation_retry_source_id(operation),
+        retryReason=operation_retry_reason(operation),
+        canRetry=operation.status in retryable_operation_statuses(),
+        canCancel=operation.status in active_operation_statuses(),
     )
 
 

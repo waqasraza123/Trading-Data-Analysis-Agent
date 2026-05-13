@@ -81,6 +81,7 @@ GET /equity-data/operations/summary
 GET /equity-data/operations/review-queue
 GET /equity-data/operations/{operation_id}
 GET /equity-data/operations/{operation_id}/diagnostics
+GET /equity-data/operations/{operation_id}/lineage
 POST /equity-data/operations/{operation_id}/cancel
 POST /equity-data/operations/{operation_id}/retry
 POST /equity-data/operations/universe-import
@@ -139,6 +140,13 @@ view from existing persisted records. The response includes the operation, linke
 linked job events, linked provider request, recent import errors, and a chronological timeline
 covering operation, job, provider request, and row-error events. It does not create events, claim or
 retry jobs, cancel work, call external providers, expose raw provider secrets, or mutate artifacts.
+
+`GET /equity-data/operations/{operation_id}/lineage` composes retry lineage from existing operation
+request summaries. It returns the selected operation, root operation, source chain, downstream retry
+operations, and a bounded tree of lineage nodes. The endpoint scans a bounded recent workspace
+operation window controlled by `scan_limit`; it may omit very old retry siblings outside that
+window, but it still fetches direct source ancestors by id when present. It does not create retry
+records, enqueue jobs, execute work, call providers, or mutate artifacts.
 
 Operation submission accepts optional `idempotencyKey` values on JSON operation requests. Repeating
 the same workspace key returns the existing operation when the operation type, provider, and dry-run

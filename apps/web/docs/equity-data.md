@@ -17,8 +17,8 @@ account actions, direct buy/sell wording, or financial-advice language.
   operations, and retry controls for warning, failed, or cancelled operations with replayable
   payloads. It can also open one selected operation detail view with request/result summaries and
   recent row-level import errors plus a diagnostics view for linked job state, provider request
-  state, and timeline events. The panel includes a backend-composed operations summary and review
-  queue for failed, warning, cancelled, or stale active operations.
+  state, timeline events, and retry lineage. The panel includes a backend-composed operations
+  summary and review queue for failed, warning, cancelled, or stale active operations.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -78,10 +78,12 @@ start, stop, retry, or hide operations.
 
 Selecting operation details appends `operationId` to `/equity-research` and loads
 `GET /equity-data/operations/{operation_id}` and
-`GET /equity-data/operations/{operation_id}/diagnostics` server-side. The detail view shows bounded
-request and result summaries, linked job/provider state, a chronological diagnostic timeline, and
-recent import errors already redacted by the backend. It does not expose raw provider secrets, raw
-upload bytes, or hidden retry/worker actions.
+`GET /equity-data/operations/{operation_id}/diagnostics` server-side. It also loads
+`GET /equity-data/operations/{operation_id}/lineage` to show source operations and downstream retry
+attempts derived from persisted retry metadata. The detail view shows bounded request and result
+summaries, linked job/provider state, retry lineage, a chronological diagnostic timeline, and recent
+import errors already redacted by the backend. It does not expose raw provider secrets, raw upload
+bytes, or hidden retry/worker actions.
 
 ## CSV File Import
 

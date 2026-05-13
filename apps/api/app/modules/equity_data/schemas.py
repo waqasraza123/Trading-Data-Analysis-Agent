@@ -382,6 +382,32 @@ class EquityDataOperationReviewQueueRead(ApiSchema):
     items: list[EquityDataOperationReviewItemRead] = Field(default_factory=list)
 
 
+class EquityDataOperationLineageNodeRead(ApiSchema):
+    operation: EquityDataOperationRead
+    relationship: str
+    depth: int
+    retry_of_operation_id: UUID | None = Field(default=None, alias="retryOfOperationId")
+    retry_reason: str | None = Field(default=None, alias="retryReason")
+    can_retry: bool = Field(alias="canRetry")
+    can_cancel: bool = Field(alias="canCancel")
+
+
+class EquityDataOperationLineageRead(ApiSchema):
+    operation: EquityDataOperationRead
+    root_operation: EquityDataOperationRead = Field(alias="rootOperation")
+    source_operations: list[EquityDataOperationLineageNodeRead] = Field(
+        default_factory=list,
+        alias="sourceOperations",
+    )
+    retry_operations: list[EquityDataOperationLineageNodeRead] = Field(
+        default_factory=list,
+        alias="retryOperations",
+    )
+    lineage: list[EquityDataOperationLineageNodeRead] = Field(default_factory=list)
+    scanned_count: int = Field(alias="scannedCount")
+    scan_limit: int = Field(alias="scanLimit")
+
+
 class EquityDataOperationCancelRequest(ApiSchema):
     reason: str | None = Field(default=None, max_length=500)
 

@@ -1,5 +1,34 @@
 # Current Session
 
+## Equity Data Operation Retry Lineage
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added backend retry lineage for equity data operations:
+  - `GET /equity-data/operations/{operation_id}/lineage` returns the selected operation, root
+    operation, source chain, downstream retry attempts, and a bounded lineage tree;
+  - lineage is derived from persisted `retryOfOperationId` and `retryReason` request-summary
+    metadata created by guarded retry operations;
+  - the endpoint scans recent workspace operations up to `scan_limit` for siblings/descendants and
+    fetches direct source ancestors by id when present;
+  - it is read-only and does not create retry records, enqueue jobs, execute work, cancel work, call
+    providers, expose secrets, mutate artifacts, or provide financial advice.
+- Added web lineage composition:
+  - shared API client function and typed lineage contracts;
+  - `selectedOperationLineage` on `EquityResearchData`;
+  - selected operation detail now shows source count, retry count, root operation, retry reasons,
+    status, creation time, and links to open related operation details.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Review Queue
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

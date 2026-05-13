@@ -3,6 +3,7 @@ import { apiDelete, apiGet, apiPost } from "./client";
 import {
   getEquityDataOperation,
   getEquityDataOperationDiagnostics,
+  getEquityDataOperationLineage,
   getEquityDataOperationReviewQueue,
   getEquityDataOperationSummary,
   getLatestEquityFundamentals,
@@ -226,6 +227,7 @@ export async function getEquityResearchData(params: {
     earningsResult,
     operationResult,
     operationDiagnosticsResult,
+    operationLineageResult,
   ] = await Promise.all([
     selectedSymbolId
       ? getLatestEquityMetadata(workspace.id, selectedSymbolId)
@@ -236,6 +238,7 @@ export async function getEquityResearchData(params: {
     selectedSymbolId ? listEquityEarnings(workspace.id, selectedSymbolId) : emptyResult([]),
     params.operationId ? getEquityDataOperation(params.operationId) : emptyResult(null),
     params.operationId ? getEquityDataOperationDiagnostics(params.operationId) : emptyResult(null),
+    params.operationId ? getEquityDataOperationLineage(params.operationId) : emptyResult(null),
   ]);
   const equityDataFailures: EquityDataFailure[] = [];
   return {
@@ -292,6 +295,12 @@ export async function getEquityResearchData(params: {
     selectedOperationDiagnostics: readEquityDataResult(
       "Equity data operation diagnostics",
       operationDiagnosticsResult,
+      null,
+      equityDataFailures,
+    ),
+    selectedOperationLineage: readEquityDataResult(
+      "Equity data operation lineage",
+      operationLineageResult,
       null,
       equityDataFailures,
     ),
@@ -366,6 +375,7 @@ function emptyEquityData(
     operationReviewQueue: null,
     selectedOperation: null,
     selectedOperationDiagnostics: null,
+    selectedOperationLineage: null,
     selectedMetadata: null,
     selectedFundamentals: null,
     selectedEarnings: [],

@@ -129,6 +129,26 @@ export type EquityDataOperationDiagnostics = {
   timeline: EquityDataOperationDiagnosticItem[];
 };
 
+export type EquityDataOperationLineageNode = {
+  operation: EquityDataOperation;
+  relationship: string;
+  depth: number;
+  retry_of_operation_id: UUID | null;
+  retry_reason: string | null;
+  can_retry: boolean;
+  can_cancel: boolean;
+};
+
+export type EquityDataOperationLineage = {
+  operation: EquityDataOperation;
+  root_operation: EquityDataOperation;
+  source_operations: EquityDataOperationLineageNode[];
+  retry_operations: EquityDataOperationLineageNode[];
+  lineage: EquityDataOperationLineageNode[];
+  scanned_count: number;
+  scan_limit: number;
+};
+
 export type EquityDataOperationSummary = {
   workspace_id: UUID;
   total_count: number;

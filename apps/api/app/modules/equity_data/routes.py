@@ -19,6 +19,7 @@ from app.modules.equity_data.schemas import (
     EquityDataImportErrorRead,
     EquityDataOperationDetailRead,
     EquityDataOperationDiagnosticsRead,
+    EquityDataOperationLineageRead,
     EquityDataOperationListRead,
     EquityDataOperationRead,
     EquityDataOperationReviewQueueRead,
@@ -219,6 +220,15 @@ async def get_operation_review_queue(
         limit=limit,
         stale_after_minutes=stale_after_minutes,
     )
+
+
+@router.get("/operations/{operation_id}/lineage", response_model=EquityDataOperationLineageRead)
+async def get_operation_lineage(
+    operation_id: UUID,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    scan_limit: Annotated[int, Query(ge=25, le=500)] = 250,
+) -> EquityDataOperationLineageRead:
+    return await service.get_operation_lineage(operation_id, scan_limit)
 
 
 @router.get("/operations/{operation_id}", response_model=EquityDataOperationDetailRead)
