@@ -4,6 +4,7 @@ import type {
   EquityDataProviderCapability,
   EquityDataOperation,
   EquityDataOperationCancelInput,
+  EquityDataOperationDetail,
   EquityDataOperationInput,
   EquityDataOperationList,
   EquityDataProviderRequest,
@@ -52,6 +53,14 @@ export function listEquityDataOperations(
 ): Promise<ApiResult<EquityDataOperationList>> {
   return apiGet<EquityDataOperationList>("/equity-data/operations", {
     query: { workspace_id: workspaceId, limit: 25 },
+    optional: true,
+  });
+}
+
+export function getEquityDataOperation(
+  operationId: UUID,
+): Promise<ApiResult<EquityDataOperationDetail>> {
+  return apiGet<EquityDataOperationDetail>(`/equity-data/operations/${operationId}`, {
     optional: true,
   });
 }

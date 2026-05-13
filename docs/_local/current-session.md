@@ -1,5 +1,23 @@
 # Current Session
 
+## Equity Data Operation Detail Review
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added selected operation detail review to the equity research surface:
+  - `/equity-research` now accepts `operationId`;
+  - shared equity data API client now loads `GET /equity-data/operations/{operation_id}`;
+  - typed operation detail and import-error contracts were added in the web equity data types;
+  - `EquityDataOperationsPanel` now links each row to a server-loaded detail view with counters,
+    request/result summaries, linked job/provider context, cancellation reasons, and recent row
+    import errors.
+- Updated docs and durable memory:
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Controls UI
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

@@ -62,6 +62,21 @@ export type EquityDataOperation = {
   updated_at: string;
 };
 
+export type EquityDataImportError = {
+  id: UUID;
+  workspace_id: UUID;
+  provider_request_id: UUID;
+  row_number: number | null;
+  error_code: string;
+  error_message: string;
+  raw_item_json: JsonRecord | null;
+  created_at: string;
+};
+
+export type EquityDataOperationDetail = EquityDataOperation & {
+  recent_errors: EquityDataImportError[];
+};
+
 export type EquityDataOperationList = {
   operations: EquityDataOperation[];
 };

@@ -27,6 +27,7 @@ type EquityResearchPageProps = {
     universeId?: string;
     scanRunId?: string;
     candidateId?: string;
+    operationId?: string;
   }>;
 };
 

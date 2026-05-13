@@ -14,7 +14,8 @@ account actions, direct buy/sell wording, or financial-advice language.
 - `EquityUniverseFileImportPanel`: uploads CSV files with auto, sync, or queued import mode.
 - `EquityDataOperationsPanel`: lists recent background operations with status, progress, counters,
   linked job/provider request context, safe error summaries, and stop controls for pending or
-  running operations.
+  running operations. It can also open one selected operation detail view with request/result
+  summaries and recent row-level import errors.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -60,6 +61,11 @@ so the persisted status, progress, linked job, linked provider request, and canc
 shown from backend state. Stop controls are shown only for `pending` and `running` operations.
 Already written research artifacts remain visible as audit context; the UI does not imply rollback,
 broker execution, alerts, or advice.
+
+Selecting operation details appends `operationId` to `/equity-research` and loads
+`GET /equity-data/operations/{operation_id}` server-side. The detail view shows bounded request and
+result summaries plus recent import errors already redacted by the backend. It does not expose raw
+provider secrets, raw upload bytes, or hidden retry/worker actions.
 
 ## CSV File Import
 

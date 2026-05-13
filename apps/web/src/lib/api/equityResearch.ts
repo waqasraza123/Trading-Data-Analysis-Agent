@@ -1,6 +1,7 @@
 import { getPublicEnv } from "@/config/env";
 import { apiDelete, apiGet, apiPost } from "./client";
 import {
+  getEquityDataOperation,
   getLatestEquityFundamentals,
   getLatestEquityMetadata,
   listEquityDataOperations,
@@ -152,6 +153,7 @@ export async function getEquityResearchData(params: {
   universeId?: string;
   scanRunId?: string;
   candidateId?: string;
+  operationId?: string;
 }): Promise<EquityResearchData> {
   const env = getPublicEnv();
   const failures: EquityResearchFailure[] = [];
@@ -203,7 +205,7 @@ export async function getEquityResearchData(params: {
     candidates.find((candidate) => candidate.id === params.candidateId) || candidates[0] || null;
   const selectedSymbolId =
     selectedCandidate?.symbol_id || selectedUniverseMembers[0]?.symbol_id || stockSymbols[0]?.id || null;
-  const [metadataResult, fundamentalsResult, earningsResult] = await Promise.all([
+  const [metadataResult, fundamentalsResult, earningsResult, operationResult] = await Promise.all([
     selectedSymbolId
       ? getLatestEquityMetadata(workspace.id, selectedSymbolId)
       : emptyResult(null),
@@ -211,6 +213,7 @@ export async function getEquityResearchData(params: {
       ? getLatestEquityFundamentals(workspace.id, selectedSymbolId)
       : emptyResult(null),
     selectedSymbolId ? listEquityEarnings(workspace.id, selectedSymbolId) : emptyResult([]),
+    params.operationId ? getEquityDataOperation(params.operationId) : emptyResult(null),
   ]);
   const equityDataFailures: EquityDataFailure[] = [];
   return {
@@ -246,6 +249,12 @@ export async function getEquityResearchData(params: {
       { operations: [] },
       equityDataFailures,
     ).operations,
+    selectedOperation: readEquityDataResult(
+      "Equity data operation detail",
+      operationResult,
+      null,
+      equityDataFailures,
+    ),
     selectedMetadata: readEquityDataResult(
       "Symbol metadata",
       metadataResult,
@@ -313,6 +322,7 @@ function emptyEquityData(
     equityDataProviders: [],
     providerRequests: [],
     operations: [],
+    selectedOperation: null,
     selectedMetadata: null,
     selectedFundamentals: null,
     selectedEarnings: [],
