@@ -1,5 +1,32 @@
 # Current Session
 
+## Equity Data Operation Review Queue
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added a backend operation review queue for equity data operations:
+  - `GET /equity-data/operations/review-queue` returns failed, warning, cancelled, and stale
+    pending/running operations for a workspace;
+  - each item includes review reason, severity, safe recommended action, retry eligibility, stop
+    eligibility, stale threshold, and last update timestamp;
+  - stale detection is read-only through `stale_after_minutes` and does not claim jobs, retry work,
+    cancel work, enqueue work, call providers, expose provider secrets, or mutate artifacts.
+- Added web review queue composition:
+  - shared API client function and typed review queue contracts;
+  - `operationReviewQueue` on `EquityResearchData`;
+  - `EquityDataOperationsPanel` now shows a bounded operation review queue with review links and
+    backend-provided safe action text.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/repository.py apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Diagnostics
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

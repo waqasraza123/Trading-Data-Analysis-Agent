@@ -78,6 +78,7 @@ POST /equity-data/earnings/import-rows
 POST /equity-data/earnings/{event_id}/create-catalyst-context
 GET /equity-data/operations
 GET /equity-data/operations/summary
+GET /equity-data/operations/review-queue
 GET /equity-data/operations/{operation_id}
 GET /equity-data/operations/{operation_id}/diagnostics
 POST /equity-data/operations/{operation_id}/cancel
@@ -126,6 +127,12 @@ data queue: total operations, active operations, terminal operations, warning, f
 counts, grouped status/type/provider counts, the latest operation timestamp, and a bounded list of
 recent warning/failed/cancelled operations. It reads only `equity_data_operations` and does not
 claim jobs, retry work, cancel work, call providers, or mutate artifacts.
+
+`GET /equity-data/operations/review-queue` returns a bounded workspace review queue for operations
+that need operator attention. It includes failed, warning, cancelled, and stale pending/running
+operations, plus a review reason, severity, safe recommended action, retry eligibility, stop
+eligibility, and last update timestamp. Stale detection is read-only and controlled by the
+`stale_after_minutes` query parameter. The endpoint does not stop, retry, claim, or enqueue work.
 
 `GET /equity-data/operations/{operation_id}/diagnostics` composes a bounded operator diagnostic
 view from existing persisted records. The response includes the operation, linked job queue item,

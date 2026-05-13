@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -22,6 +22,8 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationDiagnosticsRead,
     EquityDataOperationDiagnosticItem,
     EquityDataOperationRead,
+    EquityDataOperationReviewItemRead,
+    EquityDataOperationReviewQueueRead,
     EquityDataOperationRunMode,
     EquityDataOperationRetryRequest,
     EquityDataImportErrorRead,
@@ -130,6 +132,32 @@ class EquityDataOperationService:
             "provider_counts": provider_counts,
             "recentProblemOperations": recent_problem_operations,
         }
+
+    async def get_operation_review_queue(
+        self,
+        workspace_id: UUID,
+        limit: int,
+        stale_after_minutes: int,
+    ) -> EquityDataOperationReviewQueueRead:
+        await self.data_service.validate_workspace(workspace_id)
+        active_stale_before = datetime.now(UTC) - timedelta(minutes=stale_after_minutes)
+        operations = await self.repository.list_operations_for_review(
+            workspace_id,
+            active_stale_before,
+            limit,
+        )
+        items = [
+            operation_review_item(operation, stale_after_minutes)
+            for operation in operations
+        ]
+        return EquityDataOperationReviewQueueRead(
+            workspace_id=workspace_id,
+            staleAfterMinutes=stale_after_minutes,
+            total_count=len(items),
+            retryable_count=sum(1 for item in items if item.can_retry),
+            cancellable_count=sum(1 for item in items if item.can_cancel),
+            items=items,
+        )
 
     async def get_operation(self, operation_id: UUID) -> EquityDataOperation:
         operation = await self.repository.get_operation(operation_id)
@@ -965,6 +993,45 @@ def retryable_operation_statuses() -> set[str]:
         EquityDataOperationStatus.FAILED.value,
         EquityDataOperationStatus.CANCELLED.value,
     }
+
+
+def operation_review_item(
+    operation: EquityDataOperation,
+    stale_after_minutes: int,
+) -> EquityDataOperationReviewItemRead:
+    status = operation.status
+    can_retry = status in retryable_operation_statuses()
+    can_cancel = status in active_operation_statuses()
+    if status == EquityDataOperationStatus.FAILED.value:
+        review_reason = "Operation failed before completion"
+        recommended_action = "Open diagnostics, inspect the failure, then retry if the stored payload is replayable"
+        severity = "danger"
+    elif status == EquityDataOperationStatus.COMPLETED_WITH_WARNINGS.value:
+        review_reason = "Operation completed with warnings"
+        recommended_action = "Review row errors and provider summaries before deciding whether to retry"
+        severity = "warning"
+    elif status == EquityDataOperationStatus.CANCELLED.value:
+        review_reason = "Operation was stopped before completion"
+        recommended_action = "Review cancellation context and retry only if the remaining work is still needed"
+        severity = "warning"
+    elif status == EquityDataOperationStatus.RUNNING.value:
+        review_reason = f"Operation has not updated within {stale_after_minutes} minutes"
+        recommended_action = "Open diagnostics and stop the operation if the worker is no longer progressing"
+        severity = "danger"
+    else:
+        review_reason = f"Operation has remained pending for {stale_after_minutes} minutes"
+        recommended_action = "Review linked job state and stop the operation if it should leave the queue"
+        severity = "warning"
+    return EquityDataOperationReviewItemRead(
+        operation=EquityDataOperationRead.model_validate(operation),
+        reviewReason=review_reason,
+        recommendedAction=recommended_action,
+        severity=severity,
+        canRetry=can_retry,
+        canCancel=can_cancel,
+        staleAfterMinutes=stale_after_minutes,
+        lastUpdateAt=operation.updated_at,
+    )
 
 
 def operation_diagnostic_timeline(

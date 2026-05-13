@@ -21,6 +21,7 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationDiagnosticsRead,
     EquityDataOperationListRead,
     EquityDataOperationRead,
+    EquityDataOperationReviewQueueRead,
     EquityDataOperationRetryRequest,
     EquityDataOperationRunMode,
     EquityDataOperationSummaryRead,
@@ -204,6 +205,20 @@ async def get_operation_summary(
             for operation in recent_problem_operations
         ]
     return EquityDataOperationSummaryRead.model_validate(summary)
+
+
+@router.get("/operations/review-queue", response_model=EquityDataOperationReviewQueueRead)
+async def get_operation_review_queue(
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    workspace_id: UUID,
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
+    stale_after_minutes: Annotated[int, Query(ge=5, le=1440)] = 30,
+) -> EquityDataOperationReviewQueueRead:
+    return await service.get_operation_review_queue(
+        workspace_id=workspace_id,
+        limit=limit,
+        stale_after_minutes=stale_after_minutes,
+    )
 
 
 @router.get("/operations/{operation_id}", response_model=EquityDataOperationDetailRead)

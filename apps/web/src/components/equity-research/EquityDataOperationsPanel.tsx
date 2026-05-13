@@ -71,24 +71,11 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
           <OperationSummaryCard label="Failed" value={data.operationSummary.failed_count} />
         </div>
       )}
-      {data.operationSummary && data.operationSummary.recent_problem_operations.length > 0 && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-100">
-            Recent operations needing review
-          </h3>
-          <div className="mt-2 grid gap-2">
-            {data.operationSummary.recent_problem_operations.map((operation) => (
-              <div key={operation.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-amber-900 dark:text-amber-100">
-                <span>
-                  {equityDataLabel(operation.operation_type)} · {equityDataLabel(operation.status)} · {formatContextDate(operation.updated_at)}
-                </span>
-                <ButtonLink href={operationHref(searchParams, operation.id)} size="sm" variant="quiet">
-                  Review
-                </ButtonLink>
-              </div>
-            ))}
-          </div>
-        </div>
+      {data.operationReviewQueue && data.operationReviewQueue.items.length > 0 && (
+        <OperationReviewQueue
+          data={data}
+          searchParams={searchParams}
+        />
       )}
       <div className="grid gap-3">
         {data.operations.map((operation) => (
@@ -221,6 +208,65 @@ function OperationSummaryCard({ label, value }: { label: string; value: number }
   );
 }
 
+function OperationReviewQueue({
+  data,
+  searchParams,
+}: {
+  data: EquityResearchData;
+  searchParams: URLSearchParams | ReadonlyURLSearchParamsLike;
+}) {
+  const queue = data.operationReviewQueue;
+  if (!queue) {
+    return null;
+  }
+  return (
+    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-100">
+            Operation review queue
+          </h3>
+          <p className="mt-1 text-xs text-amber-900 dark:text-amber-100">
+            {queue.total_count} to review · {queue.retryable_count} retryable ·{" "}
+            {queue.cancellable_count} stoppable
+          </p>
+        </div>
+        <Badge value={`Stale after ${queue.stale_after_minutes}m`} tone="warning" />
+      </div>
+      <div className="mt-3 grid gap-2">
+        {queue.items.map((item) => (
+          <div
+            key={item.operation.id}
+            className="rounded-md border border-amber-200 bg-white/70 px-3 py-2 text-xs text-amber-950 dark:border-amber-900 dark:bg-slate-950/40 dark:text-amber-100"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="font-semibold">
+                  {equityDataLabel(item.operation.operation_type)} ·{" "}
+                  {equityDataLabel(item.operation.status)}
+                </div>
+                <p className="mt-1">{item.review_reason}</p>
+                <p className="mt-1 text-amber-800 dark:text-amber-200">
+                  {item.recommended_action}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Badge value={equityDataLabel(item.severity)} tone={reviewSeverityTone(item.severity)} />
+                <ButtonLink href={operationHref(searchParams, item.operation.id)} size="sm" variant="quiet">
+                  Review
+                </ButtonLink>
+              </div>
+            </div>
+            <p className="mt-2 text-amber-800 dark:text-amber-200">
+              Last update {formatContextDate(item.last_update_at)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function OperationMeta({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -344,6 +390,16 @@ function canRetryOperation(operation: EquityDataOperation): boolean {
     operation.status === "failed" ||
     operation.status === "cancelled"
   );
+}
+
+function reviewSeverityTone(severity: string): "neutral" | "good" | "warning" | "danger" | "info" {
+  if (severity === "danger") {
+    return "danger";
+  }
+  if (severity === "warning") {
+    return "warning";
+  }
+  return "info";
 }
 
 function operationHref(searchParams: URLSearchParams | ReadonlyURLSearchParamsLike, operationId: string | null): string {

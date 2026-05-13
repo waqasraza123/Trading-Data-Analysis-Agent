@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.equity_data.models import (
@@ -171,6 +171,32 @@ class EquityDataRepository:
                 EquityDataOperation.workspace_id == workspace_id,
                 EquityDataOperation.status.in_(
                     ["completed_with_warnings", "failed", "cancelled"]
+                ),
+            )
+            .order_by(EquityDataOperation.updated_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_operations_for_review(
+        self,
+        workspace_id: UUID,
+        active_stale_before: datetime,
+        limit: int,
+    ) -> list[EquityDataOperation]:
+        statement = (
+            select(EquityDataOperation)
+            .where(
+                EquityDataOperation.workspace_id == workspace_id,
+                or_(
+                    EquityDataOperation.status.in_(
+                        ["completed_with_warnings", "failed", "cancelled"]
+                    ),
+                    (
+                        EquityDataOperation.status.in_(["pending", "running"])
+                        & (EquityDataOperation.updated_at <= active_stale_before)
+                    ),
                 ),
             )
             .order_by(EquityDataOperation.updated_at.desc())

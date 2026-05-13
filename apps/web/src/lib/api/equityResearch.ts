@@ -3,6 +3,7 @@ import { apiDelete, apiGet, apiPost } from "./client";
 import {
   getEquityDataOperation,
   getEquityDataOperationDiagnostics,
+  getEquityDataOperationReviewQueue,
   getEquityDataOperationSummary,
   getLatestEquityFundamentals,
   getLatestEquityMetadata,
@@ -168,7 +169,17 @@ export async function getEquityResearchData(params: {
   if (!workspace) {
     return emptyEquityData(env.appName, env.apiBaseUrl, params.workspaceId || null, failures);
   }
-  const [universesResult, runsResult, catalystsResult, providersResult, requestsResult, operationsResult, operationSummaryResult, credentialsResult] = await Promise.all([
+  const [
+    universesResult,
+    runsResult,
+    catalystsResult,
+    providersResult,
+    requestsResult,
+    operationsResult,
+    operationSummaryResult,
+    operationReviewQueueResult,
+    credentialsResult,
+  ] = await Promise.all([
     listEquityUniverses(workspace.id),
     listEquitySwingScans(workspace.id),
     listEquityCatalysts(workspace.id),
@@ -176,6 +187,7 @@ export async function getEquityResearchData(params: {
     listEquityDataProviderRequests(workspace.id),
     listEquityDataOperations(workspace.id),
     getEquityDataOperationSummary(workspace.id),
+    getEquityDataOperationReviewQueue(workspace.id),
     listProviderCredentialRefs(workspace.id),
   ]);
   const universes = readResult("Equity universes", universesResult, [], failures);
@@ -265,6 +277,12 @@ export async function getEquityResearchData(params: {
       null,
       equityDataFailures,
     ),
+    operationReviewQueue: readEquityDataResult(
+      "Equity data operation review queue",
+      operationReviewQueueResult,
+      null,
+      equityDataFailures,
+    ),
     selectedOperation: readEquityDataResult(
       "Equity data operation detail",
       operationResult,
@@ -345,6 +363,7 @@ function emptyEquityData(
     providerRequests: [],
     operations: [],
     operationSummary: null,
+    operationReviewQueue: null,
     selectedOperation: null,
     selectedOperationDiagnostics: null,
     selectedMetadata: null,

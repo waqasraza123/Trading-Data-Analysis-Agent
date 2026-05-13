@@ -362,6 +362,26 @@ class EquityDataOperationSummaryRead(ApiSchema):
     )
 
 
+class EquityDataOperationReviewItemRead(ApiSchema):
+    operation: EquityDataOperationRead
+    review_reason: str = Field(alias="reviewReason")
+    recommended_action: str = Field(alias="recommendedAction")
+    severity: str
+    can_retry: bool = Field(alias="canRetry")
+    can_cancel: bool = Field(alias="canCancel")
+    stale_after_minutes: int = Field(alias="staleAfterMinutes")
+    last_update_at: datetime = Field(alias="lastUpdateAt")
+
+
+class EquityDataOperationReviewQueueRead(ApiSchema):
+    workspace_id: UUID
+    stale_after_minutes: int = Field(alias="staleAfterMinutes")
+    total_count: int
+    retryable_count: int
+    cancellable_count: int
+    items: list[EquityDataOperationReviewItemRead] = Field(default_factory=list)
+
+
 class EquityDataOperationCancelRequest(ApiSchema):
     reason: str | None = Field(default=None, max_length=500)
 

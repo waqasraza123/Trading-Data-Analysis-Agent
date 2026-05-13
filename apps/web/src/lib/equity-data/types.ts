@@ -144,6 +144,26 @@ export type EquityDataOperationSummary = {
   recent_problem_operations: EquityDataOperation[];
 };
 
+export type EquityDataOperationReviewItem = {
+  operation: EquityDataOperation;
+  review_reason: string;
+  recommended_action: string;
+  severity: string;
+  can_retry: boolean;
+  can_cancel: boolean;
+  stale_after_minutes: number;
+  last_update_at: string;
+};
+
+export type EquityDataOperationReviewQueue = {
+  workspace_id: UUID;
+  stale_after_minutes: number;
+  total_count: number;
+  retryable_count: number;
+  cancellable_count: number;
+  items: EquityDataOperationReviewItem[];
+};
+
 export type EquityDataOperationList = {
   operations: EquityDataOperation[];
 };

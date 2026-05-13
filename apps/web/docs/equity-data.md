@@ -17,8 +17,8 @@ account actions, direct buy/sell wording, or financial-advice language.
   operations, and retry controls for warning, failed, or cancelled operations with replayable
   payloads. It can also open one selected operation detail view with request/result summaries and
   recent row-level import errors plus a diagnostics view for linked job state, provider request
-  state, and timeline events. The panel includes a backend-composed operations summary for total,
-  active, warning, failed, and recent problem-operation counts.
+  state, and timeline events. The panel includes a backend-composed operations summary and review
+  queue for failed, warning, cancelled, or stale active operations.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -49,9 +49,9 @@ src/components/equity-research/EquityDataReadinessPanel.tsx
 ## Data Flow
 
 The equity research page loads provider capabilities, provider credential references, recent
-provider requests, operations summary, recent operations, and enrichment snapshots for the selected
-candidate symbol or first selected universe member. Optional endpoint failures are rendered as
-unavailable state instead of crashing the page.
+provider requests, operations summary, operation review queue, recent operations, and enrichment
+snapshots for the selected candidate symbol or first selected universe member. Optional endpoint
+failures are rendered as unavailable state instead of crashing the page.
 
 Import and enrichment actions call `/equity-data` APIs explicitly from client panels. Mock provider
 actions work without credentials. External providers show provider configured or provider not
@@ -70,6 +70,11 @@ The panel also calls `POST /equity-data/operations/{operation_id}/retry` for ope
 and create a new operation from backend-persisted request context. If the backend rejects retry
 because a compacted row payload is no longer replayable, the row shows that typed error message
 without hiding the original operation history.
+
+The review queue is loaded from `GET /equity-data/operations/review-queue`. It highlights failed,
+warning, cancelled, and stale active operations with a backend-provided reason and safe recommended
+operator action. Review queue buttons only open the existing detail/diagnostics view; they do not
+start, stop, retry, or hide operations.
 
 Selecting operation details appends `operationId` to `/equity-research` and loads
 `GET /equity-data/operations/{operation_id}` and

@@ -57,10 +57,11 @@ skeletons, earnings-to-catalyst conversion, CSV file uploads, and queued backgro
 larger import/enrichment work. Operation submissions support idempotency keys and operator
 cancellation through the linked job queue where applicable. Warning, failed, and cancelled
 operations can be retried from replayable persisted request payloads while preserving the original
-operation as audit history. Operation diagnostics compose linked job events, provider request state,
-recent import errors, and timeline events from existing persisted records. External provider calls
-are disabled by default, raw uploaded files are not persisted, and raw provider secrets are not
-stored. See `docs/equity-data.md`.
+operation as audit history. The operation review queue highlights failed, warning, cancelled, and
+stale active operations with safe operator next steps. Operation diagnostics compose linked job
+events, provider request state, recent import errors, and timeline events from existing persisted
+records. External provider calls are disabled by default, raw uploaded files are not persisted, and
+raw provider secrets are not stored. See `docs/equity-data.md`.
 
 Product readiness is implemented under `/product-readiness`. It persists an operator-facing
 checklist run for API reachability, database/migration detectability, seed/workspace/user setup,
