@@ -20,6 +20,7 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationDetailRead,
     EquityDataOperationListRead,
     EquityDataOperationRead,
+    EquityDataOperationRetryRequest,
     EquityDataOperationRunMode,
     EquityDataOperationSummaryRead,
     EquityDataProviderCapability,
@@ -229,6 +230,21 @@ async def cancel_operation(
     service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
 ) -> EquityDataOperationRead:
     operation = await service.cancel_operation(operation_id, payload.reason)
+    return EquityDataOperationRead.model_validate(operation)
+
+
+@router.post(
+    "/operations/{operation_id}/retry",
+    response_model=EquityDataOperationRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def retry_operation(
+    operation_id: UUID,
+    payload: EquityDataOperationRetryRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.retry_operation(operation_id, payload)
     return EquityDataOperationRead.model_validate(operation)
 
 

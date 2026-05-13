@@ -20,6 +20,7 @@ from app.modules.equity_data.repository import EquityDataRepository
 from app.modules.equity_data.schemas import (
     EquityCatalystOperationRequest,
     EquityDataOperationRunMode,
+    EquityDataOperationRetryRequest,
     EquityEnrichmentOperationRequest,
     EquityOperationUniverseImportRequest,
     EquityProviderUniverseImportRequest,
@@ -344,6 +345,120 @@ class EquityDataOperationService:
         updated = await self.repository.update_operation(operation)
         await self.session.commit()
         return updated
+
+    async def retry_operation(
+        self,
+        operation_id: UUID,
+        payload: EquityDataOperationRetryRequest,
+    ) -> EquityDataOperation:
+        original = await self.get_operation(operation_id)
+        await self.data_service.validate_workspace(original.workspace_id)
+        if original.status not in retryable_operation_statuses():
+            raise AppError(
+                422,
+                "equity_data_operation_retry_not_allowed",
+                "Only warning, failed, and cancelled equity data operations can be retried",
+            )
+        operation_type = coerce_operation_type(original.operation_type)
+        request_payload = await self.get_replayable_operation_payload(original)
+        request_payload = request_payload | {
+            "runMode": payload.run_mode.value,
+            "retryOfOperationId": str(original.id),
+        }
+        if payload.reason is not None:
+            request_payload["retryReason"] = payload.reason
+        existing = await self.get_existing_idempotent_operation(
+            original.workspace_id,
+            payload.idempotency_key,
+            operation_type,
+            original.provider_name,
+            original.dry_run,
+        )
+        if existing is not None:
+            return existing
+        retry = await self.create_operation(
+            workspace_id=original.workspace_id,
+            operation_type=operation_type,
+            provider_name=original.provider_name,
+            request_payload=request_payload,
+            dry_run=original.dry_run,
+            idempotency_key=payload.idempotency_key,
+        )
+        if self.should_retry_sync(payload.run_mode, operation_type, request_payload):
+            await self.execute_operation(retry.id, request_payload)
+            return await self.get_operation(retry.id)
+        return await self.enqueue_operation(retry, request_payload)
+
+    async def get_replayable_operation_payload(
+        self,
+        operation: EquityDataOperation,
+    ) -> dict[str, Any]:
+        payload = await self.get_replayable_job_payload(operation)
+        if payload is None:
+            payload = dict(operation.request_summary_json or {})
+        if not payload:
+            raise AppError(
+                422,
+                "equity_data_operation_retry_payload_missing",
+                "Operation does not have a retryable request payload",
+            )
+        if str(payload.get("workspaceId") or "") != str(operation.workspace_id):
+            raise AppError(
+                422,
+                "equity_data_operation_retry_payload_invalid",
+                "Operation request payload does not match its workspace",
+            )
+        if operation.operation_type in {
+            EquityDataOperationType.UNIVERSE_IMPORT_ROWS.value,
+            EquityDataOperationType.UNIVERSE_IMPORT_FILE.value,
+        } and not isinstance(payload.get("rows"), list):
+            raise AppError(
+                422,
+                "equity_data_operation_retry_rows_unavailable",
+                "Operation row payload is not available for retry",
+            )
+        safe_payload = safe_reference(payload)
+        if safe_payload.get("truncated") is True:
+            raise AppError(
+                422,
+                "equity_data_operation_retry_payload_too_large",
+                "Operation request payload is too large to retry safely",
+            )
+        return safe_payload
+
+    async def get_replayable_job_payload(
+        self,
+        operation: EquityDataOperation,
+    ) -> dict[str, Any] | None:
+        if operation.linked_job_id is None:
+            return None
+        try:
+            job = await self.job_service.get_job(operation.linked_job_id)
+        except AppError as error:
+            if error.code == "job_queue_job_not_found":
+                return None
+            raise
+        request = job.payload_json.get("request")
+        return dict(request) if isinstance(request, dict) else None
+
+    def should_retry_sync(
+        self,
+        run_mode: EquityDataOperationRunMode,
+        operation_type: EquityDataOperationType,
+        payload: dict[str, Any],
+    ) -> bool:
+        if run_mode == EquityDataOperationRunMode.SYNC:
+            return True
+        if run_mode == EquityDataOperationRunMode.QUEUED:
+            return False
+        if operation_type in {
+            EquityDataOperationType.UNIVERSE_IMPORT_ROWS,
+            EquityDataOperationType.UNIVERSE_IMPORT_FILE,
+        }:
+            rows = payload.get("rows")
+            row_count = len(rows) if isinstance(rows, list) else 0
+            return self.should_run_sync(run_mode, row_count)
+        return False
 
     async def execute_operation(
         self,
@@ -755,6 +870,17 @@ def coerce_uuid(value: object) -> UUID | None:
         return None
 
 
+def coerce_operation_type(value: str) -> EquityDataOperationType:
+    try:
+        return EquityDataOperationType(value)
+    except ValueError as error:
+        raise AppError(
+            422,
+            "equity_data_operation_type_unsupported",
+            "Equity data operation type is not supported",
+        ) from error
+
+
 def terminal_operation_statuses() -> set[str]:
     return {
         EquityDataOperationStatus.COMPLETED.value,
@@ -768,4 +894,12 @@ def active_operation_statuses() -> set[str]:
     return {
         EquityDataOperationStatus.PENDING.value,
         EquityDataOperationStatus.RUNNING.value,
+    }
+
+
+def retryable_operation_statuses() -> set[str]:
+    return {
+        EquityDataOperationStatus.COMPLETED_WITH_WARNINGS.value,
+        EquityDataOperationStatus.FAILED.value,
+        EquityDataOperationStatus.CANCELLED.value,
     }

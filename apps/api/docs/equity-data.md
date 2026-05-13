@@ -80,6 +80,7 @@ GET /equity-data/operations
 GET /equity-data/operations/summary
 GET /equity-data/operations/{operation_id}
 POST /equity-data/operations/{operation_id}/cancel
+POST /equity-data/operations/{operation_id}/retry
 POST /equity-data/operations/universe-import
 POST /equity-data/operations/universe-import-file
 POST /equity-data/operations/metadata-enrichment
@@ -137,6 +138,17 @@ conversion operations check the operation status between item-level steps and st
 when an operator cancels the operation. Already persisted provider requests, snapshots, earnings
 events, or catalyst contexts are retained as audit artifacts; cancellation does not roll back prior
 successful item writes and does not execute provider, broker, notification, or trading workflows.
+
+Operations can be retried through `POST /equity-data/operations/{operation_id}/retry` when the
+source operation is `completed_with_warnings`, `failed`, or `cancelled`. Retry creates a new
+operation record and enqueues or synchronously runs it from the persisted request payload; the
+source operation remains unchanged as audit history. The request accepts optional `runMode`,
+`idempotencyKey`, and `reason` fields. When an idempotency key is supplied, reuse is scoped to the
+new retry operation type, provider, workspace, and dry-run mode. Retry is intentionally rejected
+when the operation only has a compacted request summary, such as a row import whose original row
+payload is no longer present in the linked job payload. The endpoint does not roll back prior
+artifacts, restore cancelled jobs, execute broker workflows, send alerts, or bypass provider
+credential readiness checks.
 
 ## CSV File Imports
 

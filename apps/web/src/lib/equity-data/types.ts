@@ -100,6 +100,12 @@ export type EquityDataOperationCancelInput = {
   reason?: string;
 };
 
+export type EquityDataOperationRetryInput = {
+  runMode?: "sync" | "queued" | "auto";
+  idempotencyKey?: string;
+  reason?: string;
+};
+
 export type EquityDataOperationInput = {
   workspaceId: UUID;
   provider?: string;

@@ -7,6 +7,7 @@ import type {
   EquityDataOperationDetail,
   EquityDataOperationInput,
   EquityDataOperationList,
+  EquityDataOperationRetryInput,
   EquityDataOperationSummary,
   EquityDataProviderRequest,
   EquityEarningsEvent,
@@ -83,6 +84,17 @@ export function cancelEquityDataOperation(
     `/equity-data/operations/${operationId}/cancel`,
     input,
     { optional: true, timeoutMs: 15000 },
+  );
+}
+
+export function retryEquityDataOperation(
+  operationId: UUID,
+  input: EquityDataOperationRetryInput = {},
+): Promise<ApiResult<EquityDataOperation>> {
+  return apiPost<EquityDataOperation>(
+    `/equity-data/operations/${operationId}/retry`,
+    input,
+    { optional: true, timeoutMs: 30000 },
   );
 }
 

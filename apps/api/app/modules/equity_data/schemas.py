@@ -349,6 +349,23 @@ class EquityDataOperationCancelRequest(ApiSchema):
         return normalized or None
 
 
+class EquityDataOperationRetryRequest(ApiSchema):
+    run_mode: EquityDataOperationRunMode = Field(
+        default=EquityDataOperationRunMode.QUEUED,
+        alias="runMode",
+    )
+    idempotency_key: str | None = Field(default=None, alias="idempotencyKey", max_length=240)
+    reason: str | None = Field(default=None, max_length=500)
+
+    @field_validator("idempotency_key", "reason")
+    @classmethod
+    def normalize_retry_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
 class EquityOperationUniverseImportRequest(ApiSchema):
     workspace_id: UUID = Field(alias="workspaceId")
     universe_id: UUID | None = Field(default=None, alias="universeId")

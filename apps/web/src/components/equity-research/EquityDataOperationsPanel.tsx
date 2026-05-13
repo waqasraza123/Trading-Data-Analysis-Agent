@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Panel } from "@/components/layout/panel";
 import { Badge } from "@/components/status/badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { cancelEquityDataOperation } from "@/lib/api/equityData";
+import { cancelEquityDataOperation, retryEquityDataOperation } from "@/lib/api/equityData";
 import { equityDataLabel, equityDataStatusTone, formatContextDate } from "@/lib/equity-data/labels";
 import type { EquityDataImportError, EquityDataOperation } from "@/lib/equity-data/types";
 import type { EquityResearchData } from "@/lib/equity-research/types";
@@ -14,6 +14,7 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
   const router = useRouter();
   const searchParams = useSearchParams();
   const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
+  const [pendingRetryId, setPendingRetryId] = useState<string | null>(null);
   const [rowMessage, setRowMessage] = useState<Record<string, string>>({});
 
   async function cancelOperation(operation: EquityDataOperation) {
@@ -30,6 +31,26 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
     setRowMessage((current) => ({ ...current, [operation.id]: "Operation stop requested." }));
     router.refresh();
     setPendingCancelId(null);
+  }
+
+  async function retryOperation(operation: EquityDataOperation) {
+    setPendingRetryId(operation.id);
+    setRowMessage((current) => ({ ...current, [operation.id]: "" }));
+    const result = await retryEquityDataOperation(operation.id, {
+      runMode: "queued",
+      reason: "Retried from the equity research operations panel",
+    });
+    if (!result.ok) {
+      setRowMessage((current) => ({ ...current, [operation.id]: result.error.message }));
+      setPendingRetryId(null);
+      return;
+    }
+    setRowMessage((current) => ({
+      ...current,
+      [operation.id]: `Retry queued as ${result.data.id.slice(0, 8)}.`,
+    }));
+    router.refresh();
+    setPendingRetryId(null);
   }
 
   return (
@@ -84,6 +105,18 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
                 <ButtonLink href={operationHref(searchParams, operation.id)} size="sm">
                   Details
                 </ButtonLink>
+                {canRetryOperation(operation) && (
+                  <Button
+                    size="sm"
+                    variant="quiet"
+                    type="button"
+                    loading={pendingRetryId === operation.id}
+                    disabled={pendingRetryId !== null && pendingRetryId !== operation.id}
+                    onClick={() => retryOperation(operation)}
+                  >
+                    Retry
+                  </Button>
+                )}
                 {canCancelOperation(operation) && (
                   <Button
                     size="sm"
@@ -228,6 +261,14 @@ function JsonSummary({ title, value }: { title: string; value: Record<string, un
 
 function canCancelOperation(operation: EquityDataOperation): boolean {
   return operation.status === "pending" || operation.status === "running";
+}
+
+function canRetryOperation(operation: EquityDataOperation): boolean {
+  return (
+    operation.status === "completed_with_warnings" ||
+    operation.status === "failed" ||
+    operation.status === "cancelled"
+  );
 }
 
 function operationHref(searchParams: URLSearchParams | ReadonlyURLSearchParamsLike, operationId: string | null): string {

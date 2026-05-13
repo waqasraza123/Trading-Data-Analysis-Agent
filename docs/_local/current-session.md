@@ -1,5 +1,34 @@
 # Current Session
 
+## Equity Data Operation Retry Controls
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added guarded backend retry support for equity data operations:
+  - `POST /equity-data/operations/{operation_id}/retry` accepts optional `runMode`,
+    `idempotencyKey`, and `reason`;
+  - only `completed_with_warnings`, `failed`, and `cancelled` operations are retryable;
+  - retry creates a new operation from replayable persisted request payloads and leaves the source
+    operation unchanged as audit history;
+  - compacted or oversized row payload summaries are rejected with typed errors instead of creating
+    unusable retry jobs;
+  - retry preserves credential readiness checks and does not roll back prior artifacts, restore
+    cancelled jobs, call brokers, send alerts, or provide financial advice.
+- Added web retry composition:
+  - `retryEquityDataOperation` in the shared equity data API client;
+  - typed retry input contract;
+  - retry buttons and row-level success/error messages in `EquityDataOperationsPanel`.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Summary
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

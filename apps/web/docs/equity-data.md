@@ -13,10 +13,11 @@ account actions, direct buy/sell wording, or financial-advice language.
 - `EquityUniverseImportPanel`: imports CSV-like ticker rows or the deterministic mock universe.
 - `EquityUniverseFileImportPanel`: uploads CSV files with auto, sync, or queued import mode.
 - `EquityDataOperationsPanel`: lists recent background operations with status, progress, counters,
-  linked job/provider request context, safe error summaries, and stop controls for pending or
-  running operations. It can also open one selected operation detail view with request/result
-  summaries and recent row-level import errors. The panel includes a backend-composed operations
-  summary for total, active, warning, failed, and recent problem-operation counts.
+  linked job/provider request context, safe error summaries, stop controls for pending or running
+  operations, and retry controls for warning, failed, or cancelled operations with replayable
+  payloads. It can also open one selected operation detail view with request/result summaries and
+  recent row-level import errors. The panel includes a backend-composed operations summary for
+  total, active, warning, failed, and recent problem-operation counts.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -62,6 +63,12 @@ so the persisted status, progress, linked job, linked provider request, and canc
 shown from backend state. Stop controls are shown only for `pending` and `running` operations.
 Already written research artifacts remain visible as audit context; the UI does not imply rollback,
 broker execution, alerts, or advice.
+
+The panel also calls `POST /equity-data/operations/{operation_id}/retry` for operations in
+`completed_with_warnings`, `failed`, or `cancelled` status. Retry requests default to queued mode
+and create a new operation from backend-persisted request context. If the backend rejects retry
+because a compacted row payload is no longer replayable, the row shows that typed error message
+without hiding the original operation history.
 
 Selecting operation details appends `operationId` to `/equity-research` and loads
 `GET /equity-data/operations/{operation_id}` server-side. The detail view shows bounded request and

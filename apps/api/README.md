@@ -55,9 +55,10 @@ mock universe import, CSV/JSON row import, symbol metadata snapshots, fundamenta
 earnings events, provider request audit rows, import errors, credential-reference-aware provider
 skeletons, earnings-to-catalyst conversion, CSV file uploads, and queued background operations for
 larger import/enrichment work. Operation submissions support idempotency keys and operator
-cancellation through the linked job queue where applicable. External provider calls are disabled by
-default, raw uploaded files are not persisted, and raw provider secrets are not stored. See
-`docs/equity-data.md`.
+cancellation through the linked job queue where applicable. Warning, failed, and cancelled
+operations can be retried from replayable persisted request payloads while preserving the original
+operation as audit history. External provider calls are disabled by default, raw uploaded files are
+not persisted, and raw provider secrets are not stored. See `docs/equity-data.md`.
 
 Product readiness is implemented under `/product-readiness`. It persists an operator-facing
 checklist run for API reachability, database/migration detectability, seed/workspace/user setup,
