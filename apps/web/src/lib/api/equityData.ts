@@ -3,6 +3,7 @@ import type { ApiResult, UUID } from "./types";
 import type {
   EquityDataProviderCapability,
   EquityDataOperation,
+  EquityDataOperationAuditBundle,
   EquityDataOperationCancelInput,
   EquityDataOperationDetail,
   EquityDataOperationDiagnostics,
@@ -102,6 +103,15 @@ export function getEquityDataOperationLineage(
 ): Promise<ApiResult<EquityDataOperationLineage>> {
   return apiGet<EquityDataOperationLineage>(
     `/equity-data/operations/${operationId}/lineage`,
+    { optional: true },
+  );
+}
+
+export function getEquityDataOperationAuditBundle(
+  operationId: UUID,
+): Promise<ApiResult<EquityDataOperationAuditBundle>> {
+  return apiGet<EquityDataOperationAuditBundle>(
+    `/equity-data/operations/${operationId}/audit-bundle`,
     { optional: true },
   );
 }

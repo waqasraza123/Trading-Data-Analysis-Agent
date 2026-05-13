@@ -184,6 +184,26 @@ export type EquityDataOperationReviewQueue = {
   items: EquityDataOperationReviewItem[];
 };
 
+export type EquityDataOperationAuditSection = {
+  key: string;
+  label: string;
+  status: string;
+  summary: string;
+  count: number | null;
+};
+
+export type EquityDataOperationAuditBundle = {
+  generated_at: string;
+  operation: EquityDataOperationDetail;
+  diagnostics: EquityDataOperationDiagnostics;
+  lineage: EquityDataOperationLineage;
+  review_item: EquityDataOperationReviewItem | null;
+  sections: EquityDataOperationAuditSection[];
+  error_limit: number;
+  scan_limit: number;
+  stale_after_minutes: number;
+};
+
 export type EquityDataOperationList = {
   operations: EquityDataOperation[];
 };

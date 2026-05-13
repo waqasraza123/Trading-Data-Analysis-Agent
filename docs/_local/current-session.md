@@ -1,5 +1,32 @@
 # Current Session
 
+## Equity Data Operation Audit Bundle
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added backend operation audit bundles for equity data operations:
+  - `GET /equity-data/operations/{operation_id}/audit-bundle` composes selected operation detail,
+    recent row errors, diagnostics, retry lineage, optional review-queue context, and bounded audit
+    section summaries;
+  - query controls include `error_limit`, `scan_limit`, and `stale_after_minutes`;
+  - the bundle is read-only and does not retry, cancel, enqueue, claim jobs, execute workers, call
+    providers, expose secrets, mutate artifacts, or provide financial advice.
+- Added web audit bundle composition:
+  - shared API client function and typed bundle/section contracts;
+  - `selectedOperationAuditBundle` on `EquityResearchData`;
+  - selected operation detail now hydrates from the bundle and shows bundle section health before
+    request/result summaries, diagnostics, retry lineage, and row errors.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Retry Lineage
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

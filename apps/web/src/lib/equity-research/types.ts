@@ -2,6 +2,7 @@ import type { ApiFailure, JsonRecord, SymbolRead, UUID, Workspace } from "@/lib/
 import type {
   EquityDataFailure,
   EquityDataOperation,
+  EquityDataOperationAuditBundle,
   EquityDataOperationDetail,
   EquityDataOperationDiagnostics,
   EquityDataOperationLineage,
@@ -138,6 +139,7 @@ export type EquityResearchData = {
   operations: EquityDataOperation[];
   operationSummary: EquityDataOperationSummary | null;
   operationReviewQueue: EquityDataOperationReviewQueue | null;
+  selectedOperationAuditBundle: EquityDataOperationAuditBundle | null;
   selectedOperation: EquityDataOperationDetail | null;
   selectedOperationDiagnostics: EquityDataOperationDiagnostics | null;
   selectedOperationLineage: EquityDataOperationLineage | null;

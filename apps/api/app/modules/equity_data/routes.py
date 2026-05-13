@@ -16,6 +16,7 @@ from app.modules.equity_data.operations import EquityDataOperationService
 from app.modules.equity_data.schemas import (
     EquityCatalystOperationRequest,
     EquityDataOperationCancelRequest,
+    EquityDataOperationAuditBundleRead,
     EquityDataImportErrorRead,
     EquityDataOperationDetailRead,
     EquityDataOperationDiagnosticsRead,
@@ -231,18 +232,31 @@ async def get_operation_lineage(
     return await service.get_operation_lineage(operation_id, scan_limit)
 
 
+@router.get(
+    "/operations/{operation_id}/audit-bundle",
+    response_model=EquityDataOperationAuditBundleRead,
+)
+async def get_operation_audit_bundle(
+    operation_id: UUID,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    error_limit: Annotated[int, Query(ge=0, le=100)] = 25,
+    scan_limit: Annotated[int, Query(ge=25, le=500)] = 250,
+    stale_after_minutes: Annotated[int, Query(ge=5, le=1440)] = 30,
+) -> EquityDataOperationAuditBundleRead:
+    return await service.get_operation_audit_bundle(
+        operation_id=operation_id,
+        error_limit=error_limit,
+        scan_limit=scan_limit,
+        stale_after_minutes=stale_after_minutes,
+    )
+
+
 @router.get("/operations/{operation_id}", response_model=EquityDataOperationDetailRead)
 async def get_operation(
     operation_id: UUID,
     service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
 ) -> EquityDataOperationDetailRead:
-    operation = await service.get_operation(operation_id)
-    errors = await service.list_operation_errors(operation)
-    data = EquityDataOperationRead.model_validate(operation).model_dump(mode="python")
-    return EquityDataOperationDetailRead.model_validate(
-        data
-        | {"recentErrors": [EquityDataImportErrorRead.model_validate(error) for error in errors]}
-    )
+    return await service.get_operation_detail(operation_id)
 
 
 @router.get(

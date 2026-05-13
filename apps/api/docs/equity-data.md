@@ -82,6 +82,7 @@ GET /equity-data/operations/review-queue
 GET /equity-data/operations/{operation_id}
 GET /equity-data/operations/{operation_id}/diagnostics
 GET /equity-data/operations/{operation_id}/lineage
+GET /equity-data/operations/{operation_id}/audit-bundle
 POST /equity-data/operations/{operation_id}/cancel
 POST /equity-data/operations/{operation_id}/retry
 POST /equity-data/operations/universe-import
@@ -147,6 +148,13 @@ operations, and a bounded tree of lineage nodes. The endpoint scans a bounded re
 operation window controlled by `scan_limit`; it may omit very old retry siblings outside that
 window, but it still fetches direct source ancestors by id when present. It does not create retry
 records, enqueue jobs, execute work, call providers, or mutate artifacts.
+
+`GET /equity-data/operations/{operation_id}/audit-bundle` returns a single read-only operator audit
+package for the selected operation. The package includes operation detail, recent import errors,
+diagnostics, retry lineage, an optional review-queue item, and section summaries with bounded
+`error_limit`, `scan_limit`, and `stale_after_minutes` controls. It exists for cockpit review and
+documentation handoff only; it does not retry, cancel, enqueue, claim jobs, call providers, expose
+secrets, mutate artifacts, or provide financial advice.
 
 Operation submission accepts optional `idempotencyKey` values on JSON operation requests. Repeating
 the same workspace key returns the existing operation when the operation type, provider, and dry-run

@@ -1,9 +1,7 @@
 import { getPublicEnv } from "@/config/env";
 import { apiDelete, apiGet, apiPost } from "./client";
 import {
-  getEquityDataOperation,
-  getEquityDataOperationDiagnostics,
-  getEquityDataOperationLineage,
+  getEquityDataOperationAuditBundle,
   getEquityDataOperationReviewQueue,
   getEquityDataOperationSummary,
   getLatestEquityFundamentals,
@@ -225,9 +223,7 @@ export async function getEquityResearchData(params: {
     metadataResult,
     fundamentalsResult,
     earningsResult,
-    operationResult,
-    operationDiagnosticsResult,
-    operationLineageResult,
+    operationAuditBundleResult,
   ] = await Promise.all([
     selectedSymbolId
       ? getLatestEquityMetadata(workspace.id, selectedSymbolId)
@@ -236,11 +232,15 @@ export async function getEquityResearchData(params: {
       ? getLatestEquityFundamentals(workspace.id, selectedSymbolId)
       : emptyResult(null),
     selectedSymbolId ? listEquityEarnings(workspace.id, selectedSymbolId) : emptyResult([]),
-    params.operationId ? getEquityDataOperation(params.operationId) : emptyResult(null),
-    params.operationId ? getEquityDataOperationDiagnostics(params.operationId) : emptyResult(null),
-    params.operationId ? getEquityDataOperationLineage(params.operationId) : emptyResult(null),
+    params.operationId ? getEquityDataOperationAuditBundle(params.operationId) : emptyResult(null),
   ]);
   const equityDataFailures: EquityDataFailure[] = [];
+  const selectedOperationAuditBundle = readEquityDataResult(
+    "Equity data operation audit bundle",
+    operationAuditBundleResult,
+    null,
+    equityDataFailures,
+  );
   return {
     appName: env.appName,
     apiBaseUrl: env.apiBaseUrl,
@@ -286,24 +286,10 @@ export async function getEquityResearchData(params: {
       null,
       equityDataFailures,
     ),
-    selectedOperation: readEquityDataResult(
-      "Equity data operation detail",
-      operationResult,
-      null,
-      equityDataFailures,
-    ),
-    selectedOperationDiagnostics: readEquityDataResult(
-      "Equity data operation diagnostics",
-      operationDiagnosticsResult,
-      null,
-      equityDataFailures,
-    ),
-    selectedOperationLineage: readEquityDataResult(
-      "Equity data operation lineage",
-      operationLineageResult,
-      null,
-      equityDataFailures,
-    ),
+    selectedOperationAuditBundle,
+    selectedOperation: selectedOperationAuditBundle?.operation ?? null,
+    selectedOperationDiagnostics: selectedOperationAuditBundle?.diagnostics ?? null,
+    selectedOperationLineage: selectedOperationAuditBundle?.lineage ?? null,
     selectedMetadata: readEquityDataResult(
       "Symbol metadata",
       metadataResult,
@@ -373,6 +359,7 @@ function emptyEquityData(
     operations: [],
     operationSummary: null,
     operationReviewQueue: null,
+    selectedOperationAuditBundle: null,
     selectedOperation: null,
     selectedOperationDiagnostics: null,
     selectedOperationLineage: null,

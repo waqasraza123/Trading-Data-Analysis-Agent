@@ -20,6 +20,9 @@ from app.modules.equity_data.normalizer import normalize_provider, safe_referenc
 from app.modules.equity_data.repository import EquityDataRepository
 from app.modules.equity_data.schemas import (
     EquityCatalystOperationRequest,
+    EquityDataOperationAuditBundleRead,
+    EquityDataOperationAuditSectionRead,
+    EquityDataOperationDetailRead,
     EquityDataOperationDiagnosticsRead,
     EquityDataOperationDiagnosticItem,
     EquityDataOperationLineageNodeRead,
@@ -218,6 +221,35 @@ class EquityDataOperationService:
             scanLimit=scan_limit,
         )
 
+    async def get_operation_audit_bundle(
+        self,
+        operation_id: UUID,
+        error_limit: int,
+        scan_limit: int,
+        stale_after_minutes: int,
+    ) -> EquityDataOperationAuditBundleRead:
+        operation = await self.get_operation(operation_id)
+        detail = await self.build_operation_detail(operation, error_limit)
+        diagnostics = await self.get_operation_diagnostics(operation.id, error_limit)
+        lineage = await self.get_operation_lineage(operation.id, scan_limit)
+        review_item = operation_audit_review_item(operation, stale_after_minutes)
+        return EquityDataOperationAuditBundleRead(
+            generatedAt=datetime.now(UTC),
+            operation=detail,
+            diagnostics=diagnostics,
+            lineage=lineage,
+            reviewItem=review_item,
+            sections=operation_audit_sections(
+                operation=detail,
+                diagnostics=diagnostics,
+                lineage=lineage,
+                review_item=review_item,
+            ),
+            errorLimit=error_limit,
+            scanLimit=scan_limit,
+            staleAfterMinutes=stale_after_minutes,
+        )
+
     async def resolve_retry_sources(
         self,
         operation: EquityDataOperation,
@@ -250,6 +282,22 @@ class EquityDataOperationService:
                 "Equity data operation not found",
             )
         return operation
+
+    async def get_operation_detail(
+        self,
+        operation_id: UUID,
+        error_limit: int = 25,
+    ) -> EquityDataOperationDetailRead:
+        operation = await self.get_operation(operation_id)
+        return await self.build_operation_detail(operation, error_limit)
+
+    async def build_operation_detail(
+        self,
+        operation: EquityDataOperation,
+        error_limit: int,
+    ) -> EquityDataOperationDetailRead:
+        errors = await self.list_operation_errors(operation, error_limit)
+        return operation_detail_read(operation, errors)
 
     async def list_operation_errors(
         self,
@@ -1077,6 +1125,22 @@ def retryable_operation_statuses() -> set[str]:
     }
 
 
+def operation_detail_read(
+    operation: EquityDataOperation,
+    errors: list[EquityDataImportError],
+) -> EquityDataOperationDetailRead:
+    data = EquityDataOperationRead.model_validate(operation).model_dump(mode="python")
+    return EquityDataOperationDetailRead.model_validate(
+        data
+        | {
+            "recentErrors": [
+                EquityDataImportErrorRead.model_validate(error)
+                for error in errors
+            ],
+        }
+    )
+
+
 def operation_review_item(
     operation: EquityDataOperation,
     stale_after_minutes: int,
@@ -1114,6 +1178,91 @@ def operation_review_item(
         staleAfterMinutes=stale_after_minutes,
         lastUpdateAt=operation.updated_at,
     )
+
+
+def operation_audit_review_item(
+    operation: EquityDataOperation,
+    stale_after_minutes: int,
+) -> EquityDataOperationReviewItemRead | None:
+    if operation.status in retryable_operation_statuses():
+        return operation_review_item(operation, stale_after_minutes)
+    if operation.status not in active_operation_statuses():
+        return None
+    stale_after = datetime.now(UTC) - timedelta(minutes=stale_after_minutes)
+    if operation.updated_at > stale_after:
+        return None
+    return operation_review_item(operation, stale_after_minutes)
+
+
+def operation_audit_sections(
+    operation: EquityDataOperationDetailRead,
+    diagnostics: EquityDataOperationDiagnosticsRead,
+    lineage: EquityDataOperationLineageRead,
+    review_item: EquityDataOperationReviewItemRead | None,
+) -> list[EquityDataOperationAuditSectionRead]:
+    provider_request_count = 1 if diagnostics.linked_provider_request is not None else 0
+    job_count = 1 if diagnostics.linked_job is not None else 0
+    review_status = "attention" if review_item is not None else "current"
+    review_summary = (
+        review_item.review_reason
+        if review_item is not None
+        else "No active review queue item for this operation"
+    )
+    return [
+        EquityDataOperationAuditSectionRead(
+            key="operation",
+            label="Operation",
+            status=str(operation.status),
+            summary=operation.progress_message or "Operation status and counters are recorded",
+            count=operation.progress_current,
+        ),
+        EquityDataOperationAuditSectionRead(
+            key="job",
+            label="Linked job",
+            status=str(diagnostics.linked_job.status) if diagnostics.linked_job else "missing",
+            summary="Linked job queue state is included"
+            if diagnostics.linked_job
+            else "No linked job queue item was recorded",
+            count=job_count,
+        ),
+        EquityDataOperationAuditSectionRead(
+            key="provider_request",
+            label="Provider request",
+            status=str(diagnostics.linked_provider_request.status)
+            if diagnostics.linked_provider_request
+            else "missing",
+            summary="Linked provider request state is included"
+            if diagnostics.linked_provider_request
+            else "No linked provider request was recorded",
+            count=provider_request_count,
+        ),
+        EquityDataOperationAuditSectionRead(
+            key="row_errors",
+            label="Row errors",
+            status="present" if operation.recent_errors else "empty",
+            summary="Recent import errors are included"
+            if operation.recent_errors
+            else "No recent import errors were recorded",
+            count=len(operation.recent_errors),
+        ),
+        EquityDataOperationAuditSectionRead(
+            key="retry_lineage",
+            label="Retry lineage",
+            status="present" if lineage.lineage else "empty",
+            summary=(
+                f"{len(lineage.source_operations)} source operations and "
+                f"{len(lineage.retry_operations)} retry attempts"
+            ),
+            count=len(lineage.lineage),
+        ),
+        EquityDataOperationAuditSectionRead(
+            key="review_queue",
+            label="Review queue",
+            status=review_status,
+            summary=review_summary,
+            count=1 if review_item is not None else 0,
+        ),
+    ]
 
 
 def operation_retry_source_id(operation: EquityDataOperation) -> UUID | None:

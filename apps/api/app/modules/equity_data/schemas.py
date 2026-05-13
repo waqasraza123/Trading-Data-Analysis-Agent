@@ -408,6 +408,29 @@ class EquityDataOperationLineageRead(ApiSchema):
     scan_limit: int = Field(alias="scanLimit")
 
 
+class EquityDataOperationAuditSectionRead(ApiSchema):
+    key: str
+    label: str
+    status: str
+    summary: str
+    count: int | None = None
+
+
+class EquityDataOperationAuditBundleRead(ApiSchema):
+    generated_at: datetime = Field(alias="generatedAt")
+    operation: EquityDataOperationDetailRead
+    diagnostics: EquityDataOperationDiagnosticsRead
+    lineage: EquityDataOperationLineageRead
+    review_item: EquityDataOperationReviewItemRead | None = Field(
+        default=None,
+        alias="reviewItem",
+    )
+    sections: list[EquityDataOperationAuditSectionRead] = Field(default_factory=list)
+    error_limit: int = Field(alias="errorLimit")
+    scan_limit: int = Field(alias="scanLimit")
+    stale_after_minutes: int = Field(alias="staleAfterMinutes")
+
+
 class EquityDataOperationCancelRequest(ApiSchema):
     reason: str | None = Field(default=None, max_length=500)
 

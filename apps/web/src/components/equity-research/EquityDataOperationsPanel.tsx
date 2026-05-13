@@ -173,6 +173,9 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
             <OperationSummaryCard label="Rows processed" value={counter(data.selectedOperation, "rows_processed")} />
             <OperationSummaryCard label="Warnings" value={counter(data.selectedOperation, "warnings_count")} />
           </div>
+          {data.selectedOperationAuditBundle && (
+            <OperationAuditBundle bundle={data.selectedOperationAuditBundle} />
+          )}
           <div className="mt-4 grid gap-3 text-xs text-slate-500">
             <JsonSummary title="Request summary" value={data.selectedOperation.request_summary_json} />
             <JsonSummary title="Result summary" value={data.selectedOperation.result_summary_json} />
@@ -266,6 +269,58 @@ function OperationReviewQueue({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function OperationAuditBundle({
+  bundle,
+}: {
+  bundle: NonNullable<EquityResearchData["selectedOperationAuditBundle"]>;
+}) {
+  return (
+    <div className="mt-4 rounded-md border border-[var(--line)] bg-[var(--panel-muted)] px-3 py-2">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Audit bundle
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Generated {formatContextDate(bundle.generated_at)} · errors {bundle.error_limit} ·
+            lineage scan {bundle.scan_limit}
+          </p>
+        </div>
+        {bundle.review_item ? (
+          <Badge
+            value={equityDataLabel(bundle.review_item.severity)}
+            tone={reviewSeverityTone(bundle.review_item.severity)}
+          />
+        ) : (
+          <Badge value="Current" tone="good" />
+        )}
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {bundle.sections.map((section) => (
+          <div
+            key={section.key}
+            className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-[var(--strong)]">{section.label}</span>
+              <span className="text-slate-500">{equityDataLabel(section.status)}</span>
+            </div>
+            <p className="mt-1 text-slate-500">{section.summary}</p>
+            {section.count !== null && (
+              <p className="mt-1 text-slate-500">Count {section.count}</p>
+            )}
+          </div>
+        ))}
+      </div>
+      {bundle.review_item && (
+        <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-100">
+          {bundle.review_item.recommended_action}
+        </p>
+      )}
     </div>
   );
 }
