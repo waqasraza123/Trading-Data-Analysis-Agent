@@ -23,6 +23,7 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationLineageRead,
     EquityDataOperationListRead,
     EquityDataOperationRead,
+    EquityDataOperationRecoveryPlanRead,
     EquityDataOperationRetryReadinessRead,
     EquityDataOperationReviewQueueRead,
     EquityDataOperationRetryRequest,
@@ -262,6 +263,18 @@ async def get_operation_retry_readiness(
     run_mode: EquityDataOperationRunMode = EquityDataOperationRunMode.QUEUED,
 ) -> EquityDataOperationRetryReadinessRead:
     return await service.get_operation_retry_readiness(operation_id, run_mode)
+
+
+@router.get(
+    "/operations/{operation_id}/recovery-plan",
+    response_model=EquityDataOperationRecoveryPlanRead,
+)
+async def get_operation_recovery_plan(
+    operation_id: UUID,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    stale_after_minutes: Annotated[int, Query(ge=5, le=1440)] = 30,
+) -> EquityDataOperationRecoveryPlanRead:
+    return await service.get_operation_recovery_plan(operation_id, stale_after_minutes)
 
 
 @router.get("/operations/{operation_id}", response_model=EquityDataOperationDetailRead)

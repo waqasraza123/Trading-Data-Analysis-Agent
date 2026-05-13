@@ -209,12 +209,37 @@ export type EquityDataOperationRetryReadiness = {
   warnings: string[];
 };
 
+export type EquityDataOperationRecoveryStep = {
+  key: string;
+  label: string;
+  priority: number;
+  status: string;
+  action_type: string;
+  target: string | null;
+  enabled: boolean;
+  summary: string;
+  details: string[];
+};
+
+export type EquityDataOperationRecoveryPlan = {
+  operation: EquityDataOperation;
+  generated_at: string;
+  overall_status: string;
+  recommended_action: string;
+  can_retry: boolean;
+  can_cancel: boolean;
+  blockers: string[];
+  warnings: string[];
+  steps: EquityDataOperationRecoveryStep[];
+};
+
 export type EquityDataOperationAuditBundle = {
   generated_at: string;
   operation: EquityDataOperationDetail;
   diagnostics: EquityDataOperationDiagnostics;
   lineage: EquityDataOperationLineage;
   retry_readiness: EquityDataOperationRetryReadiness;
+  recovery_plan: EquityDataOperationRecoveryPlan;
   review_item: EquityDataOperationReviewItem | null;
   sections: EquityDataOperationAuditSection[];
   error_limit: number;

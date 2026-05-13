@@ -16,10 +16,10 @@ account actions, direct buy/sell wording, or financial-advice language.
   linked job/provider request context, safe error summaries, stop controls for pending or running
   operations, and retry controls for warning, failed, or cancelled operations with replayable
   payloads. It can also open one selected operation detail view with request/result summaries and
-  recent row-level import errors plus a backend audit bundle, retry readiness, diagnostics view for
-  linked job state, provider request state, timeline events, and retry lineage. The panel includes a
-  backend-composed operations summary and review queue for failed, warning, cancelled, or stale
-  active operations.
+  recent row-level import errors plus a backend audit bundle, recovery plan, retry readiness,
+  diagnostics view for linked job state, provider request state, timeline events, and retry lineage.
+  The panel includes a backend-composed operations summary and review queue for failed, warning,
+  cancelled, or stale active operations.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -79,11 +79,12 @@ start, stop, retry, or hide operations.
 
 Selecting operation details appends `operationId` to `/equity-research` and loads
 `GET /equity-data/operations/{operation_id}/audit-bundle` server-side. The bundle composes operation
-detail, diagnostics, retry lineage, retry readiness, recent row errors, and optional review-queue
-context into one read-only package. The detail view shows bundle section health, retry preflight
-blockers/warnings, bounded request and result summaries, linked job/provider state, retry lineage, a
-chronological diagnostic timeline, and recent import errors already redacted by the backend. It does
-not expose raw provider secrets, raw upload bytes, or hidden retry/worker actions.
+detail, diagnostics, retry lineage, retry readiness, recovery plan, recent row errors, and optional
+review-queue context into one read-only package. The detail view shows bundle section health, safe
+recovery steps, retry preflight blockers/warnings, bounded request and result summaries, linked
+job/provider state, retry lineage, a chronological diagnostic timeline, and recent import errors
+already redacted by the backend. It does not expose raw provider secrets, raw upload bytes, or hidden
+retry/worker actions.
 
 ## CSV File Import
 

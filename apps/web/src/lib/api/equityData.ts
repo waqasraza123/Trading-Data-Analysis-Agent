@@ -10,6 +10,7 @@ import type {
   EquityDataOperationInput,
   EquityDataOperationLineage,
   EquityDataOperationList,
+  EquityDataOperationRecoveryPlan,
   EquityDataOperationRetryReadiness,
   EquityDataOperationRetryInput,
   EquityDataOperationReviewQueue,
@@ -123,6 +124,15 @@ export function getEquityDataOperationRetryReadiness(
   return apiGet<EquityDataOperationRetryReadiness>(
     `/equity-data/operations/${operationId}/retry-readiness`,
     { query: { run_mode: "queued" }, optional: true },
+  );
+}
+
+export function getEquityDataOperationRecoveryPlan(
+  operationId: UUID,
+): Promise<ApiResult<EquityDataOperationRecoveryPlan>> {
+  return apiGet<EquityDataOperationRecoveryPlan>(
+    `/equity-data/operations/${operationId}/recovery-plan`,
+    { optional: true },
   );
 }
 

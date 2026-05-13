@@ -28,6 +28,8 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationLineageNodeRead,
     EquityDataOperationLineageRead,
     EquityDataOperationRead,
+    EquityDataOperationRecoveryPlanRead,
+    EquityDataOperationRecoveryStepRead,
     EquityDataOperationRetryReadinessRead,
     EquityDataOperationReviewItemRead,
     EquityDataOperationReviewQueueRead,
@@ -238,23 +240,50 @@ class EquityDataOperationService:
             EquityDataOperationRunMode.QUEUED,
         )
         review_item = operation_audit_review_item(operation, stale_after_minutes)
+        recovery_plan = operation_recovery_plan(
+            operation=operation,
+            diagnostics=diagnostics,
+            retry_readiness=retry_readiness,
+            review_item=review_item,
+        )
         return EquityDataOperationAuditBundleRead(
             generatedAt=datetime.now(UTC),
             operation=detail,
             diagnostics=diagnostics,
             lineage=lineage,
             retryReadiness=retry_readiness,
+            recoveryPlan=recovery_plan,
             reviewItem=review_item,
             sections=operation_audit_sections(
                 operation=detail,
                 diagnostics=diagnostics,
                 lineage=lineage,
                 retry_readiness=retry_readiness,
+                recovery_plan=recovery_plan,
                 review_item=review_item,
             ),
             errorLimit=error_limit,
             scanLimit=scan_limit,
             staleAfterMinutes=stale_after_minutes,
+        )
+
+    async def get_operation_recovery_plan(
+        self,
+        operation_id: UUID,
+        stale_after_minutes: int,
+    ) -> EquityDataOperationRecoveryPlanRead:
+        operation = await self.get_operation(operation_id)
+        diagnostics = await self.get_operation_diagnostics(operation.id, 25)
+        retry_readiness = await self.build_operation_retry_readiness(
+            operation,
+            EquityDataOperationRunMode.QUEUED,
+        )
+        review_item = operation_audit_review_item(operation, stale_after_minutes)
+        return operation_recovery_plan(
+            operation=operation,
+            diagnostics=diagnostics,
+            retry_readiness=retry_readiness,
+            review_item=review_item,
         )
 
     async def get_operation_retry_readiness(
@@ -1328,6 +1357,7 @@ def operation_audit_sections(
     diagnostics: EquityDataOperationDiagnosticsRead,
     lineage: EquityDataOperationLineageRead,
     retry_readiness: EquityDataOperationRetryReadinessRead,
+    recovery_plan: EquityDataOperationRecoveryPlanRead,
     review_item: EquityDataOperationReviewItemRead | None,
 ) -> list[EquityDataOperationAuditSectionRead]:
     provider_request_count = 1 if diagnostics.linked_provider_request is not None else 0
@@ -1401,7 +1431,220 @@ def operation_audit_sections(
             else "; ".join(retry_readiness.blockers[:2]) or "Retry preflight is blocked",
             count=len(retry_readiness.blockers),
         ),
+        EquityDataOperationAuditSectionRead(
+            key="recovery_plan",
+            label="Recovery plan",
+            status=recovery_plan.overall_status,
+            summary=recovery_plan.recommended_action,
+            count=len(recovery_plan.steps),
+        ),
     ]
+
+
+def operation_recovery_plan(
+    operation: EquityDataOperation,
+    diagnostics: EquityDataOperationDiagnosticsRead,
+    retry_readiness: EquityDataOperationRetryReadinessRead,
+    review_item: EquityDataOperationReviewItemRead | None,
+) -> EquityDataOperationRecoveryPlanRead:
+    can_cancel = operation.status in active_operation_statuses()
+    can_retry = retry_readiness.can_retry
+    blockers = list(retry_readiness.blockers)
+    warnings = list(retry_readiness.warnings)
+    steps = operation_recovery_steps(
+        operation=operation,
+        diagnostics=diagnostics,
+        retry_readiness=retry_readiness,
+        review_item=review_item,
+        can_cancel=can_cancel,
+        can_retry=can_retry,
+    )
+    overall_status = operation_recovery_status(operation, can_retry, can_cancel, blockers)
+    return EquityDataOperationRecoveryPlanRead(
+        operation=EquityDataOperationRead.model_validate(operation),
+        generatedAt=datetime.now(UTC),
+        overallStatus=overall_status,
+        recommendedAction=operation_recovery_recommendation(
+            operation,
+            overall_status,
+            can_retry,
+            can_cancel,
+            blockers,
+        ),
+        canRetry=can_retry,
+        canCancel=can_cancel,
+        blockers=blockers,
+        warnings=warnings,
+        steps=steps,
+    )
+
+
+def operation_recovery_status(
+    operation: EquityDataOperation,
+    can_retry: bool,
+    can_cancel: bool,
+    blockers: list[str],
+) -> str:
+    if can_cancel:
+        return "active"
+    if can_retry:
+        return "retry_ready"
+    if operation.status == EquityDataOperationStatus.COMPLETED.value:
+        return "complete"
+    if blockers:
+        return "blocked"
+    if operation.status in terminal_operation_statuses():
+        return "review"
+    return "monitor"
+
+
+def operation_recovery_recommendation(
+    operation: EquityDataOperation,
+    overall_status: str,
+    can_retry: bool,
+    can_cancel: bool,
+    blockers: list[str],
+) -> str:
+    if can_cancel:
+        return "Monitor linked job progress and stop the operation only if it is no longer progressing"
+    if can_retry:
+        return "Review diagnostics and retry from persisted context if the remaining work is still needed"
+    if blockers:
+        return "Resolve retry blockers before creating another operation"
+    if overall_status == "complete":
+        return "No recovery action is required for this completed operation"
+    if operation.status == EquityDataOperationStatus.COMPLETED_WITH_WARNINGS.value:
+        return "Review row errors and provider summaries before deciding whether follow-up work is needed"
+    return "Review diagnostics and preserve the operation as audit history"
+
+
+def operation_recovery_steps(
+    operation: EquityDataOperation,
+    diagnostics: EquityDataOperationDiagnosticsRead,
+    retry_readiness: EquityDataOperationRetryReadinessRead,
+    review_item: EquityDataOperationReviewItemRead | None,
+    can_cancel: bool,
+    can_retry: bool,
+) -> list[EquityDataOperationRecoveryStepRead]:
+    steps = [
+        EquityDataOperationRecoveryStepRead(
+            key="inspect_diagnostics",
+            label="Inspect diagnostics",
+            priority=10,
+            status="available",
+            actionType="open_diagnostics",
+            target=str(operation.id),
+            enabled=True,
+            summary="Review linked job, provider request, row errors, and timeline context",
+            details=operation_recovery_diagnostic_details(diagnostics),
+        )
+    ]
+    if review_item is not None:
+        steps.append(
+            EquityDataOperationRecoveryStepRead(
+                key="review_attention",
+                label="Review attention item",
+                priority=20,
+                status=review_item.severity,
+                actionType="review_context",
+                target=str(operation.id),
+                enabled=True,
+                summary=review_item.review_reason,
+                details=[review_item.recommended_action],
+            )
+        )
+    if can_cancel:
+        steps.append(
+            EquityDataOperationRecoveryStepRead(
+                key="optional_stop",
+                label="Optional stop",
+                priority=30,
+                status="available",
+                actionType="cancel_operation",
+                target=str(operation.id),
+                enabled=True,
+                summary="Stop only if the linked worker is stale or the queued work is no longer wanted",
+                details=["Stopping preserves already written audit artifacts"],
+            )
+        )
+    if can_retry:
+        steps.append(
+            EquityDataOperationRecoveryStepRead(
+                key="optional_retry",
+                label="Optional retry",
+                priority=40,
+                status="available",
+                actionType="retry_operation",
+                target=str(operation.id),
+                enabled=True,
+                summary="Retry from persisted request context after reviewing diagnostics",
+                details=operation_recovery_retry_details(retry_readiness),
+            )
+        )
+    elif retry_readiness.blockers:
+        steps.append(
+            EquityDataOperationRecoveryStepRead(
+                key="resolve_retry_blockers",
+                label="Resolve retry blockers",
+                priority=40,
+                status="blocked",
+                actionType="resolve_blockers",
+                target=str(operation.id),
+                enabled=False,
+                summary="Retry cannot be queued until blockers are resolved",
+                details=retry_readiness.blockers,
+            )
+        )
+    if diagnostics.recent_errors:
+        steps.append(
+            EquityDataOperationRecoveryStepRead(
+                key="inspect_row_errors",
+                label="Inspect row errors",
+                priority=50,
+                status="available",
+                actionType="review_row_errors",
+                target=str(operation.id),
+                enabled=True,
+                summary="Review recent row-level import errors before retrying or re-uploading data",
+                details=[
+                    f"{len(diagnostics.recent_errors)} recent row errors are included"
+                ],
+            )
+        )
+    return sorted(steps, key=lambda step: step.priority)
+
+
+def operation_recovery_diagnostic_details(
+    diagnostics: EquityDataOperationDiagnosticsRead,
+) -> list[str]:
+    details: list[str] = []
+    details.append(
+        "Linked job is present"
+        if diagnostics.linked_job is not None
+        else "No linked job was recorded"
+    )
+    details.append(
+        "Linked provider request is present"
+        if diagnostics.linked_provider_request is not None
+        else "No linked provider request was recorded"
+    )
+    if diagnostics.timeline:
+        details.append(f"{len(diagnostics.timeline)} diagnostic timeline events are available")
+    return details
+
+
+def operation_recovery_retry_details(
+    retry_readiness: EquityDataOperationRetryReadinessRead,
+) -> list[str]:
+    details = [
+        f"Replay source: {retry_readiness.replay_source}",
+        f"Requested mode: {retry_readiness.requested_run_mode.value}",
+    ]
+    if retry_readiness.row_count is not None:
+        details.append(f"Rows available: {retry_readiness.row_count}")
+    if retry_readiness.warnings:
+        details.extend(retry_readiness.warnings)
+    return details
 
 
 def operation_retry_source_id(operation: EquityDataOperation) -> UUID | None:

@@ -321,6 +321,7 @@ function OperationAuditBundle({
           {bundle.review_item.recommended_action}
         </p>
       )}
+      <OperationRecoveryPlan bundle={bundle} />
       <div className="mt-3 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-semibold text-[var(--strong)]">Retry readiness</span>
@@ -349,6 +350,42 @@ function OperationAuditBundle({
             ))}
           </ul>
         )}
+      </div>
+    </div>
+  );
+}
+
+function OperationRecoveryPlan({
+  bundle,
+}: {
+  bundle: NonNullable<EquityResearchData["selectedOperationAuditBundle"]>;
+}) {
+  const plan = bundle.recovery_plan;
+  return (
+    <div className="mt-3 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <div className="font-semibold text-[var(--strong)]">Recovery plan</div>
+          <p className="mt-1 text-slate-500">{plan.recommended_action}</p>
+        </div>
+        <Badge value={equityDataLabel(plan.overall_status)} tone={recoveryStatusTone(plan.overall_status)} />
+      </div>
+      <div className="mt-3 grid gap-2">
+        {plan.steps.slice(0, 5).map((step) => (
+          <div
+            key={step.key}
+            className="rounded-md border border-[var(--line)] bg-[var(--panel-muted)] px-3 py-2"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-semibold text-[var(--strong)]">{step.label}</span>
+              <span className="text-slate-500">{equityDataLabel(step.status)}</span>
+            </div>
+            <p className="mt-1 text-slate-500">{step.summary}</p>
+            {step.details.length > 0 && (
+              <p className="mt-1 text-slate-500">{step.details.slice(0, 2).join(" · ")}</p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -550,6 +587,19 @@ function reviewSeverityTone(severity: string): "neutral" | "good" | "warning" | 
     return "warning";
   }
   return "info";
+}
+
+function recoveryStatusTone(status: string): "neutral" | "good" | "warning" | "danger" | "info" {
+  if (status === "retry_ready" || status === "complete") {
+    return "good";
+  }
+  if (status === "blocked") {
+    return "warning";
+  }
+  if (status === "active") {
+    return "info";
+  }
+  return "neutral";
 }
 
 function operationHref(searchParams: URLSearchParams | ReadonlyURLSearchParamsLike, operationId: string | null): string {

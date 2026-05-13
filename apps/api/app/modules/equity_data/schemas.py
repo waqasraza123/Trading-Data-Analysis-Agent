@@ -433,12 +433,37 @@ class EquityDataOperationRetryReadinessRead(ApiSchema):
     warnings: list[str] = Field(default_factory=list)
 
 
+class EquityDataOperationRecoveryStepRead(ApiSchema):
+    key: str
+    label: str
+    priority: int
+    status: str
+    action_type: str = Field(alias="actionType")
+    target: str | None = None
+    enabled: bool
+    summary: str
+    details: list[str] = Field(default_factory=list)
+
+
+class EquityDataOperationRecoveryPlanRead(ApiSchema):
+    operation: EquityDataOperationRead
+    generated_at: datetime = Field(alias="generatedAt")
+    overall_status: str = Field(alias="overallStatus")
+    recommended_action: str = Field(alias="recommendedAction")
+    can_retry: bool = Field(alias="canRetry")
+    can_cancel: bool = Field(alias="canCancel")
+    blockers: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    steps: list[EquityDataOperationRecoveryStepRead] = Field(default_factory=list)
+
+
 class EquityDataOperationAuditBundleRead(ApiSchema):
     generated_at: datetime = Field(alias="generatedAt")
     operation: EquityDataOperationDetailRead
     diagnostics: EquityDataOperationDiagnosticsRead
     lineage: EquityDataOperationLineageRead
     retry_readiness: EquityDataOperationRetryReadinessRead = Field(alias="retryReadiness")
+    recovery_plan: EquityDataOperationRecoveryPlanRead = Field(alias="recoveryPlan")
     review_item: EquityDataOperationReviewItemRead | None = Field(
         default=None,
         alias="reviewItem",

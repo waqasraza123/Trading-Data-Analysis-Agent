@@ -26,7 +26,7 @@ The dashboard makes the first usable product surface over the FastAPI backend:
   upload, background operation progress, metadata, fundamentals, earnings context, catalyst
   enrichment, provider request history, safe stop controls for pending/running background
   operations, guarded retry controls for warning/failed/cancelled operations, operation summary,
-  review queue, selected operation detail, audit bundle, retry readiness, retry lineage,
+  review queue, selected operation detail, audit bundle, recovery plan, retry readiness, retry lineage,
   diagnostics timeline, and recent row-level import error review.
 - Guided scanner workflow with hero health metrics, preset gallery, watchlist manager, scan config builder, explicit run-now confirmation, scan history, and generated signal review.
 - Guided data onboarding workflow with source, credentials/config, symbols/timeframes, freshness check, gap detection, recovery plan, and ready summary steps.
@@ -102,6 +102,7 @@ The client composes data from optional backend APIs:
 - `GET /equity-data/operations/{operation_id}/lineage`
 - `GET /equity-data/operations/{operation_id}/audit-bundle`
 - `GET /equity-data/operations/{operation_id}/retry-readiness`
+- `GET /equity-data/operations/{operation_id}/recovery-plan`
 - `POST /equity-data/operations/{operation_id}/cancel`
 - `POST /equity-data/operations/{operation_id}/retry`
 - `POST /equity-data/operations/universe-import`

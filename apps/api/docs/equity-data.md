@@ -84,6 +84,7 @@ GET /equity-data/operations/{operation_id}/diagnostics
 GET /equity-data/operations/{operation_id}/lineage
 GET /equity-data/operations/{operation_id}/audit-bundle
 GET /equity-data/operations/{operation_id}/retry-readiness
+GET /equity-data/operations/{operation_id}/recovery-plan
 POST /equity-data/operations/{operation_id}/cancel
 POST /equity-data/operations/{operation_id}/retry
 POST /equity-data/operations/universe-import
@@ -152,10 +153,10 @@ records, enqueue jobs, execute work, call providers, or mutate artifacts.
 
 `GET /equity-data/operations/{operation_id}/audit-bundle` returns a single read-only operator audit
 package for the selected operation. The package includes operation detail, recent import errors,
-diagnostics, retry lineage, retry readiness, an optional review-queue item, and section summaries
-with bounded `error_limit`, `scan_limit`, and `stale_after_minutes` controls. It exists for cockpit
-review and documentation handoff only; it does not retry, cancel, enqueue, claim jobs, call
-providers, expose secrets, mutate artifacts, or provide financial advice.
+diagnostics, retry lineage, retry readiness, recovery plan, an optional review-queue item, and
+section summaries with bounded `error_limit`, `scan_limit`, and `stale_after_minutes` controls. It
+exists for cockpit review and documentation handoff only; it does not retry, cancel, enqueue, claim
+jobs, call providers, expose secrets, mutate artifacts, or provide financial advice.
 
 `GET /equity-data/operations/{operation_id}/retry-readiness` inspects whether a terminal warning,
 failed, or cancelled operation can be retried from stored backend context. It reports retryable
@@ -163,6 +164,12 @@ status, payload replayability, provider credential readiness, queued/sync mode f
 source, row count, blockers, and warnings. This is a preflight only; it does not create operations,
 enqueue jobs, retry work, cancel work, call providers for market data, mutate artifacts, or expose
 raw provider secrets.
+
+`GET /equity-data/operations/{operation_id}/recovery-plan` composes safe operator next steps from
+the selected operation, diagnostics, retry readiness, and optional review-queue context. It can
+recommend inspection, resolving blockers, optional retry, optional stop, or row-error review, but it
+does not perform any action. The endpoint does not create operations, enqueue jobs, retry work,
+cancel work, claim jobs, call providers, mutate artifacts, or provide financial advice.
 
 Operation submission accepts optional `idempotencyKey` values on JSON operation requests. Repeating
 the same workspace key returns the existing operation when the operation type, provider, and dry-run

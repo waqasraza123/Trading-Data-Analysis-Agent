@@ -1,5 +1,33 @@
 # Current Session
 
+## Equity Data Operation Recovery Plan
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added backend recovery plans for equity data operations:
+  - `GET /equity-data/operations/{operation_id}/recovery-plan` composes safe operator next steps
+    from operation status, diagnostics, retry readiness, row errors, and optional review context;
+  - plans include overall status, recommended action, retry/stop availability, blockers, warnings,
+    and ordered steps for diagnostics review, attention review, optional stop, optional retry,
+    retry-blocker resolution, and row-error review;
+  - audit bundles now include the recovery plan and a recovery-plan section summary;
+  - the endpoint is read-only and does not create operations, enqueue jobs, retry work, cancel work,
+    claim jobs, call providers, mutate artifacts, expose secrets, or provide financial advice.
+- Added web recovery plan composition:
+  - shared API client function and typed recovery plan/step contracts;
+  - selected operation audit bundle panel now shows the recovery recommendation and top ordered
+    steps before retry readiness, lineage, diagnostics, and row errors.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Retry Readiness
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.
