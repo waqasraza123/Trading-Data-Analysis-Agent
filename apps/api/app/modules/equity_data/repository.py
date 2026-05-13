@@ -1,6 +1,7 @@
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.equity_data.models import (
@@ -119,6 +120,62 @@ class EquityDataRepository:
             statement = statement.where(EquityDataOperation.operation_type == operation_type)
         if provider_name is not None:
             statement = statement.where(EquityDataOperation.provider_name == provider_name)
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    async def count_operations_by_status(self, workspace_id: UUID) -> dict[str, int]:
+        statement = (
+            select(EquityDataOperation.status, func.count())
+            .where(EquityDataOperation.workspace_id == workspace_id)
+            .group_by(EquityDataOperation.status)
+        )
+        result = await self.session.execute(statement)
+        return {str(status): int(count) for status, count in result.all()}
+
+    async def count_operations_by_type(self, workspace_id: UUID) -> dict[str, int]:
+        statement = (
+            select(EquityDataOperation.operation_type, func.count())
+            .where(EquityDataOperation.workspace_id == workspace_id)
+            .group_by(EquityDataOperation.operation_type)
+        )
+        result = await self.session.execute(statement)
+        return {str(operation_type): int(count) for operation_type, count in result.all()}
+
+    async def count_operations_by_provider(self, workspace_id: UUID) -> dict[str, int]:
+        statement = (
+            select(EquityDataOperation.provider_name, func.count())
+            .where(EquityDataOperation.workspace_id == workspace_id)
+            .group_by(EquityDataOperation.provider_name)
+        )
+        result = await self.session.execute(statement)
+        return {
+            str(provider_name or "internal"): int(count)
+            for provider_name, count in result.all()
+        }
+
+    async def get_latest_operation_timestamp(self, workspace_id: UUID) -> datetime | None:
+        statement = select(func.max(EquityDataOperation.created_at)).where(
+            EquityDataOperation.workspace_id == workspace_id
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
+    async def list_recent_problem_operations(
+        self,
+        workspace_id: UUID,
+        limit: int,
+    ) -> list[EquityDataOperation]:
+        statement = (
+            select(EquityDataOperation)
+            .where(
+                EquityDataOperation.workspace_id == workspace_id,
+                EquityDataOperation.status.in_(
+                    ["completed_with_warnings", "failed", "cancelled"]
+                ),
+            )
+            .order_by(EquityDataOperation.updated_at.desc())
+            .limit(limit)
+        )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

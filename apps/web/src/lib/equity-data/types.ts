@@ -77,6 +77,21 @@ export type EquityDataOperationDetail = EquityDataOperation & {
   recent_errors: EquityDataImportError[];
 };
 
+export type EquityDataOperationSummary = {
+  workspace_id: UUID;
+  total_count: number;
+  active_count: number;
+  terminal_count: number;
+  warning_count: number;
+  failed_count: number;
+  cancelled_count: number;
+  latest_operation_at: string | null;
+  status_counts: Record<string, number>;
+  operation_type_counts: Record<string, number>;
+  provider_counts: Record<string, number>;
+  recent_problem_operations: EquityDataOperation[];
+};
+
 export type EquityDataOperationList = {
   operations: EquityDataOperation[];
 };

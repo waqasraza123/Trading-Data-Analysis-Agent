@@ -42,6 +42,33 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
           Refresh
         </Button>
       </div>
+      {data.operationSummary && (
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <OperationSummaryCard label="Total" value={data.operationSummary.total_count} />
+          <OperationSummaryCard label="Active" value={data.operationSummary.active_count} />
+          <OperationSummaryCard label="Warnings" value={data.operationSummary.warning_count} />
+          <OperationSummaryCard label="Failed" value={data.operationSummary.failed_count} />
+        </div>
+      )}
+      {data.operationSummary && data.operationSummary.recent_problem_operations.length > 0 && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-100">
+            Recent operations needing review
+          </h3>
+          <div className="mt-2 grid gap-2">
+            {data.operationSummary.recent_problem_operations.map((operation) => (
+              <div key={operation.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-amber-900 dark:text-amber-100">
+                <span>
+                  {equityDataLabel(operation.operation_type)} · {equityDataLabel(operation.status)} · {formatContextDate(operation.updated_at)}
+                </span>
+                <ButtonLink href={operationHref(searchParams, operation.id)} size="sm" variant="quiet">
+                  Review
+                </ButtonLink>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid gap-3">
         {data.operations.map((operation) => (
           <div key={operation.id} className="rounded-lg border border-[var(--line)] bg-[var(--panel-muted)] p-4">

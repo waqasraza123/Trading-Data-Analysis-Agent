@@ -2,6 +2,7 @@ import { getPublicEnv } from "@/config/env";
 import { apiDelete, apiGet, apiPost } from "./client";
 import {
   getEquityDataOperation,
+  getEquityDataOperationSummary,
   getLatestEquityFundamentals,
   getLatestEquityMetadata,
   listEquityDataOperations,
@@ -166,13 +167,14 @@ export async function getEquityResearchData(params: {
   if (!workspace) {
     return emptyEquityData(env.appName, env.apiBaseUrl, params.workspaceId || null, failures);
   }
-  const [universesResult, runsResult, catalystsResult, providersResult, requestsResult, operationsResult, credentialsResult] = await Promise.all([
+  const [universesResult, runsResult, catalystsResult, providersResult, requestsResult, operationsResult, operationSummaryResult, credentialsResult] = await Promise.all([
     listEquityUniverses(workspace.id),
     listEquitySwingScans(workspace.id),
     listEquityCatalysts(workspace.id),
     listEquityDataProviders(),
     listEquityDataProviderRequests(workspace.id),
     listEquityDataOperations(workspace.id),
+    getEquityDataOperationSummary(workspace.id),
     listProviderCredentialRefs(workspace.id),
   ]);
   const universes = readResult("Equity universes", universesResult, [], failures);
@@ -249,6 +251,12 @@ export async function getEquityResearchData(params: {
       { operations: [] },
       equityDataFailures,
     ).operations,
+    operationSummary: readEquityDataResult(
+      "Equity data operation summary",
+      operationSummaryResult,
+      null,
+      equityDataFailures,
+    ),
     selectedOperation: readEquityDataResult(
       "Equity data operation detail",
       operationResult,
@@ -322,6 +330,7 @@ function emptyEquityData(
     equityDataProviders: [],
     providerRequests: [],
     operations: [],
+    operationSummary: null,
     selectedOperation: null,
     selectedMetadata: null,
     selectedFundamentals: null,

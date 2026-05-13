@@ -25,7 +25,8 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Equity data setup panels for provider capability review, mock/CSV universe import, CSV file
   upload, background operation progress, metadata, fundamentals, earnings context, catalyst
   enrichment, provider request history, and safe stop controls for pending/running background
-  operations, with selected operation detail and recent row-level import error review.
+  operations, with operation summary, selected operation detail, and recent row-level import error
+  review.
 - Guided scanner workflow with hero health metrics, preset gallery, watchlist manager, scan config builder, explicit run-now confirmation, scan history, and generated signal review.
 - Guided data onboarding workflow with source, credentials/config, symbols/timeframes, freshness check, gap detection, recovery plan, and ready summary steps.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
@@ -93,6 +94,7 @@ The client composes data from optional backend APIs:
 - `GET /equity-data/providers`
 - `GET /equity-data/provider-requests`
 - `GET /equity-data/operations`
+- `GET /equity-data/operations/summary`
 - `GET /equity-data/operations/{operation_id}`
 - `POST /equity-data/operations/{operation_id}/cancel`
 - `POST /equity-data/operations/universe-import`

@@ -77,6 +77,7 @@ GET /equity-data/symbols/{symbol_id}/earnings
 POST /equity-data/earnings/import-rows
 POST /equity-data/earnings/{event_id}/create-catalyst-context
 GET /equity-data/operations
+GET /equity-data/operations/summary
 GET /equity-data/operations/{operation_id}
 POST /equity-data/operations/{operation_id}/cancel
 POST /equity-data/operations/universe-import
@@ -117,6 +118,12 @@ python -m app.workers.job_queue_worker --queue equity_data
 
 Small row imports can run synchronously. Larger imports and enrichment requests can be queued and
 will update operation progress and counters as the worker runs.
+
+`GET /equity-data/operations/summary` returns workspace-scoped operational rollups for the equity
+data queue: total operations, active operations, terminal operations, warning, failed, and cancelled
+counts, grouped status/type/provider counts, the latest operation timestamp, and a bounded list of
+recent warning/failed/cancelled operations. It reads only `equity_data_operations` and does not
+claim jobs, retry work, cancel work, call providers, or mutate artifacts.
 
 Operation submission accepts optional `idempotencyKey` values on JSON operation requests. Repeating
 the same workspace key returns the existing operation when the operation type, provider, and dry-run

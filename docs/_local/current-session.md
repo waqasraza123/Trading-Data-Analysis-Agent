@@ -1,5 +1,28 @@
 # Current Session
 
+## Equity Data Operation Summary
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added backend operation summary support for equity data operations:
+  - `GET /equity-data/operations/summary` returns total, active, terminal, warning, failed, and
+    cancelled counts;
+  - grouped status, operation type, and provider counts are exposed for cockpit health review;
+  - a bounded recent problem-operation list surfaces warning/failed/cancelled operations without
+    claiming jobs, retrying work, calling providers, or mutating artifacts.
+- Added web operation summary composition:
+  - `getEquityDataOperationSummary` in the shared equity data client;
+  - `operationSummary` on `EquityResearchData`;
+  - summary cards and recent problem-operation review links in `EquityDataOperationsPanel`.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/repository.py apps/api/app/modules/equity_data/schemas.py apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Detail Review
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

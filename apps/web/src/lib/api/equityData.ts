@@ -7,6 +7,7 @@ import type {
   EquityDataOperationDetail,
   EquityDataOperationInput,
   EquityDataOperationList,
+  EquityDataOperationSummary,
   EquityDataProviderRequest,
   EquityEarningsEvent,
   EquityFileImportResult,
@@ -53,6 +54,15 @@ export function listEquityDataOperations(
 ): Promise<ApiResult<EquityDataOperationList>> {
   return apiGet<EquityDataOperationList>("/equity-data/operations", {
     query: { workspace_id: workspaceId, limit: 25 },
+    optional: true,
+  });
+}
+
+export function getEquityDataOperationSummary(
+  workspaceId: UUID,
+): Promise<ApiResult<EquityDataOperationSummary>> {
+  return apiGet<EquityDataOperationSummary>("/equity-data/operations/summary", {
+    query: { workspace_id: workspaceId, problem_limit: 5 },
     optional: true,
   });
 }

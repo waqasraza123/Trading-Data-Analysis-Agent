@@ -319,6 +319,24 @@ class EquityDataOperationListRead(ApiSchema):
     operations: list[EquityDataOperationRead]
 
 
+class EquityDataOperationSummaryRead(ApiSchema):
+    workspace_id: UUID
+    total_count: int
+    active_count: int
+    terminal_count: int
+    warning_count: int
+    failed_count: int
+    cancelled_count: int
+    latest_operation_at: datetime | None
+    status_counts: dict[str, int]
+    operation_type_counts: dict[str, int]
+    provider_counts: dict[str, int]
+    recent_problem_operations: list[EquityDataOperationRead] = Field(
+        default_factory=list,
+        alias="recentProblemOperations",
+    )
+
+
 class EquityDataOperationCancelRequest(ApiSchema):
     reason: str | None = Field(default=None, max_length=500)
 

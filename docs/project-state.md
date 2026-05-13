@@ -516,9 +516,9 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   `equity_data.operation` job queue type on the `equity_data` queue, operation progress/counters
   APIs, CSV file-upload parsing with sync/queued/auto modes, safe credential-reference readiness,
   idempotent JSON operation submissions, cooperative operator cancellation, and `/equity-research`
-  panels for file import, queued enrichment, operation history, linked job/provider request context,
-  selected operation detail, row-level import error review, and safe stop controls for
-  pending/running operations. Raw CSV file bytes and raw provider secrets are not persisted.
+  panels for file import, queued enrichment, operation history, backend operation summary, linked
+  job/provider request context, selected operation detail, row-level import error review, and safe
+  stop controls for pending/running operations. Raw CSV file bytes and raw provider secrets are not persisted.
   Environment-backed secret references are now opt-in through
   `EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=true` and
   `EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=true`; Polygon read-only ticker/reference,

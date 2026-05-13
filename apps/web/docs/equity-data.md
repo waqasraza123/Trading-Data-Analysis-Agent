@@ -15,7 +15,8 @@ account actions, direct buy/sell wording, or financial-advice language.
 - `EquityDataOperationsPanel`: lists recent background operations with status, progress, counters,
   linked job/provider request context, safe error summaries, and stop controls for pending or
   running operations. It can also open one selected operation detail view with request/result
-  summaries and recent row-level import errors.
+  summaries and recent row-level import errors. The panel includes a backend-composed operations
+  summary for total, active, warning, failed, and recent problem-operation counts.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -46,9 +47,9 @@ src/components/equity-research/EquityDataReadinessPanel.tsx
 ## Data Flow
 
 The equity research page loads provider capabilities, provider credential references, recent
-provider requests, and enrichment snapshots for the selected candidate symbol or first selected
-universe member. It also loads recent equity data operations. Optional endpoint failures are
-rendered as unavailable state instead of crashing the page.
+provider requests, operations summary, recent operations, and enrichment snapshots for the selected
+candidate symbol or first selected universe member. Optional endpoint failures are rendered as
+unavailable state instead of crashing the page.
 
 Import and enrichment actions call `/equity-data` APIs explicitly from client panels. Mock provider
 actions work without credentials. External providers show provider configured or provider not

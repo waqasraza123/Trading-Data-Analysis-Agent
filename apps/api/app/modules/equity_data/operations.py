@@ -83,6 +83,48 @@ class EquityDataOperationService:
             offset,
         )
 
+    async def get_operation_summary(
+        self,
+        workspace_id: UUID,
+        problem_limit: int,
+    ) -> dict[str, object]:
+        await self.data_service.validate_workspace(workspace_id)
+        status_counts = await self.repository.count_operations_by_status(workspace_id)
+        operation_type_counts = await self.repository.count_operations_by_type(workspace_id)
+        provider_counts = await self.repository.count_operations_by_provider(workspace_id)
+        recent_problem_operations = await self.repository.list_recent_problem_operations(
+            workspace_id,
+            problem_limit,
+        )
+        return {
+            "workspace_id": workspace_id,
+            "total_count": sum(status_counts.values()),
+            "active_count": sum(
+                status_counts.get(status, 0)
+                for status in active_operation_statuses()
+            ),
+            "terminal_count": sum(
+                status_counts.get(status, 0)
+                for status in terminal_operation_statuses()
+            ),
+            "warning_count": status_counts.get(
+                EquityDataOperationStatus.COMPLETED_WITH_WARNINGS.value,
+                0,
+            ),
+            "failed_count": status_counts.get(EquityDataOperationStatus.FAILED.value, 0),
+            "cancelled_count": status_counts.get(
+                EquityDataOperationStatus.CANCELLED.value,
+                0,
+            ),
+            "latest_operation_at": await self.repository.get_latest_operation_timestamp(
+                workspace_id
+            ),
+            "status_counts": status_counts,
+            "operation_type_counts": operation_type_counts,
+            "provider_counts": provider_counts,
+            "recentProblemOperations": recent_problem_operations,
+        }
+
     async def get_operation(self, operation_id: UUID) -> EquityDataOperation:
         operation = await self.repository.get_operation(operation_id)
         if operation is None:
@@ -719,4 +761,11 @@ def terminal_operation_statuses() -> set[str]:
         EquityDataOperationStatus.COMPLETED_WITH_WARNINGS.value,
         EquityDataOperationStatus.FAILED.value,
         EquityDataOperationStatus.CANCELLED.value,
+    }
+
+
+def active_operation_statuses() -> set[str]:
+    return {
+        EquityDataOperationStatus.PENDING.value,
+        EquityDataOperationStatus.RUNNING.value,
     }
