@@ -319,6 +319,18 @@ class EquityDataOperationListRead(ApiSchema):
     operations: list[EquityDataOperationRead]
 
 
+class EquityDataOperationCancelRequest(ApiSchema):
+    reason: str | None = Field(default=None, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def normalize_reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
 class EquityOperationUniverseImportRequest(ApiSchema):
     workspace_id: UUID = Field(alias="workspaceId")
     universe_id: UUID | None = Field(default=None, alias="universeId")

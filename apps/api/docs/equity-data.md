@@ -78,6 +78,7 @@ POST /equity-data/earnings/import-rows
 POST /equity-data/earnings/{event_id}/create-catalyst-context
 GET /equity-data/operations
 GET /equity-data/operations/{operation_id}
+POST /equity-data/operations/{operation_id}/cancel
 POST /equity-data/operations/universe-import
 POST /equity-data/operations/universe-import-file
 POST /equity-data/operations/metadata-enrichment
@@ -116,6 +117,19 @@ python -m app.workers.job_queue_worker --queue equity_data
 
 Small row imports can run synchronously. Larger imports and enrichment requests can be queued and
 will update operation progress and counters as the worker runs.
+
+Operation submission accepts optional `idempotencyKey` values on JSON operation requests. Repeating
+the same workspace key returns the existing operation when the operation type, provider, and dry-run
+mode match. Reusing the key for a different operation returns a conflict instead of creating
+ambiguous duplicate work.
+
+Operations can be cancelled through `POST /equity-data/operations/{operation_id}/cancel` with an
+optional `reason`. Cancellation is idempotent for terminal operations. For queued work, the linked
+job queue item is cancelled in the same transaction when present. Running enrichment and catalyst
+conversion operations check the operation status between item-level steps and stop cooperatively
+when an operator cancels the operation. Already persisted provider requests, snapshots, earnings
+events, or catalyst contexts are retained as audit artifacts; cancellation does not roll back prior
+successful item writes and does not execute provider, broker, notification, or trading workflows.
 
 ## CSV File Imports
 

@@ -45,6 +45,10 @@ COUNTER_KEYS = (
 )
 
 
+class EquityDataOperationCancelled(Exception):
+    pass
+
+
 class EquityDataOperationService:
     def __init__(
         self,
@@ -113,6 +117,15 @@ class EquityDataOperationService:
             else EquityDataOperationType.UNIVERSE_IMPORT_ROWS
         )
         request_payload = payload.model_dump(mode="json", by_alias=True)
+        existing = await self.get_existing_idempotent_operation(
+            payload.workspace_id,
+            payload.idempotency_key,
+            operation_type,
+            payload.provider,
+            payload.dry_run,
+        )
+        if existing is not None:
+            return existing
         operation = await self.create_operation(
             workspace_id=payload.workspace_id,
             operation_type=operation_type,
@@ -132,6 +145,15 @@ class EquityDataOperationService:
         payload: EquityEnrichmentOperationRequest,
     ) -> EquityDataOperation:
         await self.data_service.validate_workspace(payload.workspace_id)
+        existing = await self.get_existing_idempotent_operation(
+            payload.workspace_id,
+            payload.idempotency_key,
+            operation_type,
+            payload.provider,
+            payload.dry_run,
+        )
+        if existing is not None:
+            return existing
         await self.ensure_provider_ready(
             payload.workspace_id,
             payload.provider,
@@ -161,6 +183,15 @@ class EquityDataOperationService:
         request_payload = payload.model_dump(mode="json", by_alias=True) | {
             "operationType": EquityDataOperationType.EARNINGS_TO_CATALYSTS.value
         }
+        existing = await self.get_existing_idempotent_operation(
+            payload.workspace_id,
+            payload.idempotency_key,
+            EquityDataOperationType.EARNINGS_TO_CATALYSTS,
+            None,
+            payload.dry_run,
+        )
+        if existing is not None:
+            return existing
         operation = await self.create_operation(
             workspace_id=payload.workspace_id,
             operation_type=EquityDataOperationType.EARNINGS_TO_CATALYSTS,
@@ -254,15 +285,36 @@ class EquityDataOperationService:
         await self.session.commit()
         return updated
 
+    async def cancel_operation(
+        self,
+        operation_id: UUID,
+        reason: str | None,
+    ) -> EquityDataOperation:
+        operation = await self.get_operation(operation_id)
+        if operation.status in terminal_operation_statuses():
+            return operation
+        if operation.linked_job_id is not None:
+            await self.job_service.cancel_job(operation.linked_job_id, reason=reason, commit=False)
+        operation.status = EquityDataOperationStatus.CANCELLED.value
+        operation.finished_at = datetime.now(UTC)
+        operation.progress_message = "Operation cancelled"
+        operation.error_summary_json = safe_reference({"reason": reason} if reason else {})
+        updated = await self.repository.update_operation(operation)
+        await self.session.commit()
+        return updated
+
     async def execute_operation(
         self,
         operation_id: UUID,
         request_payload: dict[str, Any] | None = None,
     ) -> EquityDataOperation:
         operation = await self.get_operation(operation_id)
+        if operation.status == EquityDataOperationStatus.CANCELLED.value:
+            return operation
         payload = request_payload or operation.request_summary_json
-        await self.start_operation(operation, payload)
         try:
+            await self.start_operation(operation, payload)
+            await self.ensure_operation_not_cancelled(operation)
             if operation.operation_type in {
                 EquityDataOperationType.UNIVERSE_IMPORT_ROWS.value,
                 EquityDataOperationType.UNIVERSE_IMPORT_FILE.value,
@@ -284,6 +336,8 @@ class EquityDataOperationService:
                     "equity_data_operation_type_unsupported",
                     "Equity data operation type is not supported",
                 )
+        except EquityDataOperationCancelled:
+            return await self.get_operation(operation.id)
         except Exception as error:
             return await self.fail_operation(operation, error)
         return await self.complete_operation(operation, result)
@@ -353,6 +407,7 @@ class EquityDataOperationService:
         errors = 0
         linked_request_id: UUID | None = None
         for index, symbol_id in enumerate(symbol_ids, start=1):
+            await self.ensure_operation_not_cancelled(operation)
             try:
                 request_payload = EquitySymbolProviderRequest(
                     workspaceId=operation.workspace_id,
@@ -422,6 +477,7 @@ class EquityDataOperationService:
         skipped = 0
         if not operation.dry_run:
             for index, event in enumerate(events, start=1):
+                await self.ensure_operation_not_cancelled(operation)
                 existing = await self.repository.get_catalyst_for_earnings_event(
                     operation.workspace_id,
                     event.id,
@@ -480,6 +536,7 @@ class EquityDataOperationService:
         operation: EquityDataOperation,
         payload: dict[str, Any],
     ) -> None:
+        await self.ensure_operation_not_cancelled(operation)
         operation.status = EquityDataOperationStatus.RUNNING.value
         operation.started_at = operation.started_at or datetime.now(UTC)
         operation.progress_message = "Operation running"
@@ -500,11 +557,18 @@ class EquityDataOperationService:
         await self.repository.update_operation(operation)
         await self.session.commit()
 
+    async def ensure_operation_not_cancelled(self, operation: EquityDataOperation) -> None:
+        await self.session.refresh(operation)
+        if operation.status == EquityDataOperationStatus.CANCELLED.value:
+            raise EquityDataOperationCancelled
+
     async def complete_operation(
         self,
         operation: EquityDataOperation,
         result: EquityDataProviderRequest | dict[str, Any],
     ) -> EquityDataOperation:
+        if operation.status == EquityDataOperationStatus.CANCELLED.value:
+            return operation
         if isinstance(result, EquityDataProviderRequest):
             completed_with_warnings = result.failed_count > 0
             operation.result_summary_json = safe_reference(result.response_summary_json)
@@ -586,6 +650,34 @@ class EquityDataOperationService:
             )
         await self.session.commit()
 
+    async def get_existing_idempotent_operation(
+        self,
+        workspace_id: UUID,
+        idempotency_key: str | None,
+        operation_type: EquityDataOperationType,
+        provider_name: str | None,
+        dry_run: bool,
+    ) -> EquityDataOperation | None:
+        if idempotency_key is None:
+            return None
+        existing = await self.repository.get_operation_by_idempotency_key(
+            workspace_id,
+            idempotency_key,
+        )
+        if existing is None:
+            return None
+        if (
+            existing.operation_type != operation_type.value
+            or existing.provider_name != provider_name
+            or existing.dry_run != dry_run
+        ):
+            raise AppError(
+                409,
+                "equity_data_operation_idempotency_conflict",
+                "Idempotency key is already used by a different equity data operation",
+            )
+        return existing
+
     def should_run_sync(self, run_mode: EquityDataOperationRunMode, row_count: int) -> bool:
         if run_mode == EquityDataOperationRunMode.SYNC:
             return True
@@ -619,3 +711,12 @@ def coerce_uuid(value: object) -> UUID | None:
         return UUID(str(value))
     except ValueError:
         return None
+
+
+def terminal_operation_statuses() -> set[str]:
+    return {
+        EquityDataOperationStatus.COMPLETED.value,
+        EquityDataOperationStatus.COMPLETED_WITH_WARNINGS.value,
+        EquityDataOperationStatus.FAILED.value,
+        EquityDataOperationStatus.CANCELLED.value,
+    }

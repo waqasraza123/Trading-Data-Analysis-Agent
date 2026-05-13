@@ -80,6 +80,23 @@ class EquityDataRepository:
     async def get_operation(self, operation_id: UUID) -> EquityDataOperation | None:
         return await self.session.get(EquityDataOperation, operation_id)
 
+    async def get_operation_by_idempotency_key(
+        self,
+        workspace_id: UUID,
+        idempotency_key: str,
+    ) -> EquityDataOperation | None:
+        statement: Select[tuple[EquityDataOperation]] = (
+            select(EquityDataOperation)
+            .where(
+                EquityDataOperation.workspace_id == workspace_id,
+                EquityDataOperation.idempotency_key == idempotency_key,
+            )
+            .order_by(EquityDataOperation.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def list_operations(
         self,
         workspace_id: UUID,

@@ -15,6 +15,7 @@ from app.modules.equity_data.models import (
 from app.modules.equity_data.operations import EquityDataOperationService
 from app.modules.equity_data.schemas import (
     EquityCatalystOperationRequest,
+    EquityDataOperationCancelRequest,
     EquityDataImportErrorRead,
     EquityDataOperationDetailRead,
     EquityDataOperationListRead,
@@ -195,6 +196,20 @@ async def get_operation(
         data
         | {"recentErrors": [EquityDataImportErrorRead.model_validate(error) for error in errors]}
     )
+
+
+@router.post(
+    "/operations/{operation_id}/cancel",
+    response_model=EquityDataOperationRead,
+    dependencies=[Depends(require_permission(Permission.MARKET_DATA_WRITE))],
+)
+async def cancel_operation(
+    operation_id: UUID,
+    payload: EquityDataOperationCancelRequest,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+) -> EquityDataOperationRead:
+    operation = await service.cancel_operation(operation_id, payload.reason)
+    return EquityDataOperationRead.model_validate(operation)
 
 
 @router.post(

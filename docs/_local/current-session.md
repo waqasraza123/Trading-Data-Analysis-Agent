@@ -1,5 +1,27 @@
 # Current Session
 
+## Equity Data Operation Idempotency And Cancellation
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Implemented production-grade equity data operation control:
+  - JSON operation submissions now reuse an existing operation when `idempotencyKey`, workspace,
+    operation type, provider, and dry-run mode match;
+  - conflicting reuse of an idempotency key now returns a typed conflict instead of creating
+    ambiguous duplicate operation records;
+  - `POST /equity-data/operations/{operation_id}/cancel` cancels non-terminal operations and linked
+    job queue items in the same transaction when present;
+  - running enrichment and earnings-to-catalyst operations now check cancellation between item-level
+    steps and stop cooperatively without rewriting already persisted audit artifacts.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/repository.py apps/api/app/modules/equity_data/schemas.py apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## First-Party Auth Activity Audit
 
 - Current worktree was clean before this task; no pending work needed a pre-implementation commit.

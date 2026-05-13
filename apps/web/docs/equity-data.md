@@ -13,7 +13,7 @@ account actions, direct buy/sell wording, or financial-advice language.
 - `EquityUniverseImportPanel`: imports CSV-like ticker rows or the deterministic mock universe.
 - `EquityUniverseFileImportPanel`: uploads CSV files with auto, sync, or queued import mode.
 - `EquityDataOperationsPanel`: lists recent background operations with status, progress, counters,
-  and safe error summaries.
+  safe error summaries, and cancellation status when an operation has been stopped.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -51,6 +51,12 @@ rendered as unavailable state instead of crashing the page.
 Import and enrichment actions call `/equity-data` APIs explicitly from client panels. Mock provider
 actions work without credentials. External providers show provider configured or provider not
 configured state based on backend settings and credential references.
+
+The backend operation API supports idempotency keys for JSON operation submissions and
+`POST /equity-data/operations/{operation_id}/cancel` for operator stops. The current UI lists the
+resulting operation status and progress from the same operations endpoint; adding a visible cancel
+button should call that endpoint through the shared mutation proxy and preserve the existing
+non-advisory copy.
 
 ## CSV File Import
 
