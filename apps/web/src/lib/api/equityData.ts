@@ -10,6 +10,7 @@ import type {
   EquityDataOperationInput,
   EquityDataOperationLineage,
   EquityDataOperationList,
+  EquityDataOperationRetryReadiness,
   EquityDataOperationRetryInput,
   EquityDataOperationReviewQueue,
   EquityDataOperationSummary,
@@ -113,6 +114,15 @@ export function getEquityDataOperationAuditBundle(
   return apiGet<EquityDataOperationAuditBundle>(
     `/equity-data/operations/${operationId}/audit-bundle`,
     { optional: true },
+  );
+}
+
+export function getEquityDataOperationRetryReadiness(
+  operationId: UUID,
+): Promise<ApiResult<EquityDataOperationRetryReadiness>> {
+  return apiGet<EquityDataOperationRetryReadiness>(
+    `/equity-data/operations/${operationId}/retry-readiness`,
+    { query: { run_mode: "queued" }, optional: true },
   );
 }
 

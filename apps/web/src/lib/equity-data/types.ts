@@ -192,11 +192,29 @@ export type EquityDataOperationAuditSection = {
   count: number | null;
 };
 
+export type EquityDataOperationRetryReadiness = {
+  operation: EquityDataOperation;
+  inspected_at: string;
+  requested_run_mode: "sync" | "queued" | "auto";
+  can_retry: boolean;
+  retryable_status: boolean;
+  payload_replayable: boolean;
+  provider_ready: boolean;
+  can_run_sync: boolean;
+  replay_source: string;
+  operation_type: string | null;
+  provider_name: string | null;
+  row_count: number | null;
+  blockers: string[];
+  warnings: string[];
+};
+
 export type EquityDataOperationAuditBundle = {
   generated_at: string;
   operation: EquityDataOperationDetail;
   diagnostics: EquityDataOperationDiagnostics;
   lineage: EquityDataOperationLineage;
+  retry_readiness: EquityDataOperationRetryReadiness;
   review_item: EquityDataOperationReviewItem | null;
   sections: EquityDataOperationAuditSection[];
   error_limit: number;

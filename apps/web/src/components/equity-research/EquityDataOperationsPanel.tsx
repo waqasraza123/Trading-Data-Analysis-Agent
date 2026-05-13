@@ -321,6 +321,35 @@ function OperationAuditBundle({
           {bundle.review_item.recommended_action}
         </p>
       )}
+      <div className="mt-3 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-semibold text-[var(--strong)]">Retry readiness</span>
+          <Badge
+            value={bundle.retry_readiness.can_retry ? "Ready" : "Blocked"}
+            tone={bundle.retry_readiness.can_retry ? "good" : "warning"}
+          />
+        </div>
+        <p className="mt-1 text-slate-500">
+          {equityDataLabel(bundle.retry_readiness.replay_source)} ·{" "}
+          {bundle.retry_readiness.row_count !== null
+            ? `${bundle.retry_readiness.row_count} rows`
+            : "No row payload count"} · {equityDataLabel(bundle.retry_readiness.requested_run_mode)}
+        </p>
+        {bundle.retry_readiness.blockers.length > 0 && (
+          <ul className="mt-2 grid gap-1 text-amber-700 dark:text-amber-200">
+            {bundle.retry_readiness.blockers.slice(0, 3).map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        )}
+        {bundle.retry_readiness.warnings.length > 0 && (
+          <ul className="mt-2 grid gap-1 text-slate-500">
+            {bundle.retry_readiness.warnings.slice(0, 2).map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

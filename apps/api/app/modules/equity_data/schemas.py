@@ -416,11 +416,29 @@ class EquityDataOperationAuditSectionRead(ApiSchema):
     count: int | None = None
 
 
+class EquityDataOperationRetryReadinessRead(ApiSchema):
+    operation: EquityDataOperationRead
+    inspected_at: datetime = Field(alias="inspectedAt")
+    requested_run_mode: EquityDataOperationRunMode = Field(alias="requestedRunMode")
+    can_retry: bool = Field(alias="canRetry")
+    retryable_status: bool = Field(alias="retryableStatus")
+    payload_replayable: bool = Field(alias="payloadReplayable")
+    provider_ready: bool = Field(alias="providerReady")
+    can_run_sync: bool = Field(alias="canRunSync")
+    replay_source: str = Field(alias="replaySource")
+    operation_type: EquityDataOperationType | None = Field(default=None, alias="operationType")
+    provider_name: str | None = Field(default=None, alias="providerName")
+    row_count: int | None = Field(default=None, alias="rowCount")
+    blockers: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class EquityDataOperationAuditBundleRead(ApiSchema):
     generated_at: datetime = Field(alias="generatedAt")
     operation: EquityDataOperationDetailRead
     diagnostics: EquityDataOperationDiagnosticsRead
     lineage: EquityDataOperationLineageRead
+    retry_readiness: EquityDataOperationRetryReadinessRead = Field(alias="retryReadiness")
     review_item: EquityDataOperationReviewItemRead | None = Field(
         default=None,
         alias="reviewItem",

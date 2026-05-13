@@ -145,7 +145,7 @@ Current backend capability groups include:
 - Equity research universes, members, swing scans, candidate scoring, manual catalysts, equity data
   imports, metadata snapshots, fundamentals snapshots, earnings events, and queued background
   equity data operations with guarded stop, retry, summary, review queue, detail review, and
-  audit bundle, lineage, and diagnostics controls.
+  audit bundle, retry readiness, lineage, and diagnostics controls.
 - Outcome evaluation, backtest cohorts, profile diagnostics, confidence calibration, walk-forward
   validation, cohort drift, pattern attribution, scenario outcome tracking, and review-focused
   analytics.

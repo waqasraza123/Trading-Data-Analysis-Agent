@@ -61,10 +61,11 @@ operation as audit history. The operation review queue highlights failed, warnin
 stale active operations with safe operator next steps. Operation diagnostics compose linked job
 events, provider request state, recent import errors, and timeline events from existing persisted
 records. Retry lineage composes source and downstream retry operations from existing operation
-request summaries. Operation audit bundles compose detail, diagnostics, retry lineage, row errors,
-and review context into a single read-only operator package. External provider calls are disabled by
-default, raw uploaded files are not persisted, and raw provider secrets are not stored. See
-`docs/equity-data.md`.
+request summaries. Retry readiness preflights replayable payload availability, provider readiness,
+and queued/sync feasibility before operators retry work. Operation audit bundles compose detail,
+diagnostics, retry lineage, retry readiness, row errors, and review context into a single read-only
+operator package. External provider calls are disabled by default, raw uploaded files are not
+persisted, and raw provider secrets are not stored. See `docs/equity-data.md`.
 
 Product readiness is implemented under `/product-readiness`. It persists an operator-facing
 checklist run for API reachability, database/migration detectability, seed/workspace/user setup,

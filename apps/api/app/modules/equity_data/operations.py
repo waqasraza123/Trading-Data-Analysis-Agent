@@ -28,6 +28,7 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationLineageNodeRead,
     EquityDataOperationLineageRead,
     EquityDataOperationRead,
+    EquityDataOperationRetryReadinessRead,
     EquityDataOperationReviewItemRead,
     EquityDataOperationReviewQueueRead,
     EquityDataOperationRunMode,
@@ -232,23 +233,135 @@ class EquityDataOperationService:
         detail = await self.build_operation_detail(operation, error_limit)
         diagnostics = await self.get_operation_diagnostics(operation.id, error_limit)
         lineage = await self.get_operation_lineage(operation.id, scan_limit)
+        retry_readiness = await self.build_operation_retry_readiness(
+            operation,
+            EquityDataOperationRunMode.QUEUED,
+        )
         review_item = operation_audit_review_item(operation, stale_after_minutes)
         return EquityDataOperationAuditBundleRead(
             generatedAt=datetime.now(UTC),
             operation=detail,
             diagnostics=diagnostics,
             lineage=lineage,
+            retryReadiness=retry_readiness,
             reviewItem=review_item,
             sections=operation_audit_sections(
                 operation=detail,
                 diagnostics=diagnostics,
                 lineage=lineage,
+                retry_readiness=retry_readiness,
                 review_item=review_item,
             ),
             errorLimit=error_limit,
             scanLimit=scan_limit,
             staleAfterMinutes=stale_after_minutes,
         )
+
+    async def get_operation_retry_readiness(
+        self,
+        operation_id: UUID,
+        run_mode: EquityDataOperationRunMode,
+    ) -> EquityDataOperationRetryReadinessRead:
+        operation = await self.get_operation(operation_id)
+        return await self.build_operation_retry_readiness(operation, run_mode)
+
+    async def build_operation_retry_readiness(
+        self,
+        operation: EquityDataOperation,
+        run_mode: EquityDataOperationRunMode,
+    ) -> EquityDataOperationRetryReadinessRead:
+        retryable_status = operation.status in retryable_operation_statuses()
+        blockers: list[str] = []
+        warnings: list[str] = []
+        operation_type: EquityDataOperationType | None = None
+        provider_ready = True
+        can_run_sync = False
+        row_count: int | None = None
+        replay_source = "none"
+        payload_replayable = False
+        provider_name = operation.provider_name
+        if not retryable_status:
+            blockers.append(
+                "Only warning, failed, and cancelled operations can be retried"
+            )
+        try:
+            operation_type = coerce_operation_type(operation.operation_type)
+        except AppError as error:
+            blockers.append(error.message)
+        payload, replay_source = await self.get_operation_payload_for_retry_readiness(operation)
+        if payload is None:
+            blockers.append("Operation does not have a retryable request payload")
+        elif operation_type is not None:
+            try:
+                payload = self.validate_replayable_operation_payload(operation, payload)
+                payload_replayable = True
+                rows = payload.get("rows")
+                row_count = len(rows) if isinstance(rows, list) else None
+                provider_name = str(payload.get("provider") or provider_name or "") or None
+                provider_ready = await self.is_retry_provider_ready(
+                    operation,
+                    operation_type,
+                    payload,
+                    blockers,
+                )
+                can_run_sync = self.should_retry_sync(run_mode, operation_type, payload)
+                if run_mode == EquityDataOperationRunMode.SYNC and not can_run_sync:
+                    warnings.append("Requested retry mode will execute synchronously")
+                if replay_source == "request_summary":
+                    warnings.append(
+                        "Retry will use the stored operation request summary because linked job payload is unavailable"
+                    )
+            except AppError as error:
+                blockers.append(error.message)
+        return EquityDataOperationRetryReadinessRead(
+            operation=EquityDataOperationRead.model_validate(operation),
+            inspectedAt=datetime.now(UTC),
+            requestedRunMode=run_mode,
+            canRetry=not blockers and retryable_status and payload_replayable and provider_ready,
+            retryableStatus=retryable_status,
+            payloadReplayable=payload_replayable,
+            providerReady=provider_ready,
+            canRunSync=can_run_sync,
+            replaySource=replay_source,
+            operationType=operation_type,
+            providerName=provider_name,
+            rowCount=row_count,
+            blockers=blockers,
+            warnings=warnings,
+        )
+
+    async def get_operation_payload_for_retry_readiness(
+        self,
+        operation: EquityDataOperation,
+    ) -> tuple[dict[str, Any] | None, str]:
+        payload = await self.get_replayable_job_payload(operation)
+        if payload is not None:
+            return payload, "linked_job_payload"
+        summary = dict(operation.request_summary_json or {})
+        if summary:
+            return summary, "request_summary"
+        return None, "none"
+
+    async def is_retry_provider_ready(
+        self,
+        operation: EquityDataOperation,
+        operation_type: EquityDataOperationType,
+        payload: dict[str, Any],
+        blockers: list[str],
+    ) -> bool:
+        if operation_type not in provider_readiness_operation_types():
+            return True
+        provider = str(payload.get("provider") or operation.provider_name or "")
+        try:
+            await self.ensure_provider_ready(
+                operation.workspace_id,
+                provider,
+                coerce_uuid(payload.get("credentialRefId")),
+            )
+            return True
+        except AppError as error:
+            blockers.append(error.message)
+            return False
 
     async def resolve_retry_sources(
         self,
@@ -616,6 +729,13 @@ class EquityDataOperationService:
         payload = await self.get_replayable_job_payload(operation)
         if payload is None:
             payload = dict(operation.request_summary_json or {})
+        return self.validate_replayable_operation_payload(operation, payload)
+
+    def validate_replayable_operation_payload(
+        self,
+        operation: EquityDataOperation,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
         if not payload:
             raise AppError(
                 422,
@@ -1125,6 +1245,15 @@ def retryable_operation_statuses() -> set[str]:
     }
 
 
+def provider_readiness_operation_types() -> set[EquityDataOperationType]:
+    return {
+        EquityDataOperationType.PROVIDER_UNIVERSE_IMPORT,
+        EquityDataOperationType.METADATA_ENRICHMENT,
+        EquityDataOperationType.FUNDAMENTALS_ENRICHMENT,
+        EquityDataOperationType.EARNINGS_ENRICHMENT,
+    }
+
+
 def operation_detail_read(
     operation: EquityDataOperation,
     errors: list[EquityDataImportError],
@@ -1198,6 +1327,7 @@ def operation_audit_sections(
     operation: EquityDataOperationDetailRead,
     diagnostics: EquityDataOperationDiagnosticsRead,
     lineage: EquityDataOperationLineageRead,
+    retry_readiness: EquityDataOperationRetryReadinessRead,
     review_item: EquityDataOperationReviewItemRead | None,
 ) -> list[EquityDataOperationAuditSectionRead]:
     provider_request_count = 1 if diagnostics.linked_provider_request is not None else 0
@@ -1261,6 +1391,15 @@ def operation_audit_sections(
             status=review_status,
             summary=review_summary,
             count=1 if review_item is not None else 0,
+        ),
+        EquityDataOperationAuditSectionRead(
+            key="retry_readiness",
+            label="Retry readiness",
+            status="ready" if retry_readiness.can_retry else "blocked",
+            summary="Retry preflight passed"
+            if retry_readiness.can_retry
+            else "; ".join(retry_readiness.blockers[:2]) or "Retry preflight is blocked",
+            count=len(retry_readiness.blockers),
         ),
     ]
 

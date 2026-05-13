@@ -1,5 +1,33 @@
 # Current Session
 
+## Equity Data Operation Retry Readiness
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added backend retry readiness for equity data operations:
+  - `GET /equity-data/operations/{operation_id}/retry-readiness` reports whether a warning,
+    failed, or cancelled operation can be retried from persisted context;
+  - readiness checks retryable status, replayable payload availability, workspace match, compacted
+    row payload blockers, provider credential readiness, requested run mode, sync feasibility,
+    replay source, row count, blockers, and warnings;
+  - audit bundles now include retry readiness and a retry-readiness section summary;
+  - the endpoint is read-only and does not create operations, enqueue jobs, retry work, cancel work,
+    call providers for market data, mutate artifacts, expose secrets, or provide financial advice.
+- Added web retry readiness composition:
+  - shared API client function and typed readiness contract;
+  - selected operation audit bundle panel now shows ready/blocked state, replay source, row count,
+    requested mode, blockers, and warnings before the diagnostic timeline.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Audit Bundle
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

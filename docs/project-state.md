@@ -518,11 +518,13 @@ This repository is for an AI Trading Intelligence Agent with a deterministic mar
   idempotent JSON operation submissions, cooperative operator cancellation, and `/equity-research`
   panels for file import, queued enrichment, operation history, backend operation summary, operation
   review queue, linked job/provider request context, selected operation detail, operation
-  audit bundle, retry lineage, operation diagnostics timeline, row-level import error review, and
-  safe stop/retry controls for pending, running, warning, failed, or cancelled operations. The audit
-  bundle composes detail, diagnostics, lineage, row errors, and optional review context into a
-  read-only operator package. Retry creates a new operation only from replayable persisted payloads
-  and rejects compacted row summaries. Raw CSV file bytes and raw provider secrets are not persisted.
+  audit bundle, retry readiness, retry lineage, operation diagnostics timeline, row-level import
+  error review, and safe stop/retry controls for pending, running, warning, failed, or cancelled
+  operations. Retry readiness preflights replayable payload availability, provider readiness, and
+  queued/sync mode feasibility without creating work. The audit bundle composes detail,
+  diagnostics, lineage, retry readiness, row errors, and optional review context into a read-only
+  operator package. Retry creates a new operation only from replayable persisted payloads and rejects
+  compacted row summaries. Raw CSV file bytes and raw provider secrets are not persisted.
   Environment-backed secret references are now opt-in through
   `EQUITY_DATA_ALLOW_EXTERNAL_REQUESTS=true` and
   `EQUITY_DATA_ENV_SECRET_RESOLUTION_ENABLED=true`; Polygon read-only ticker/reference,
