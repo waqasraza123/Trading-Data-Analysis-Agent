@@ -77,6 +77,58 @@ export type EquityDataOperationDetail = EquityDataOperation & {
   recent_errors: EquityDataImportError[];
 };
 
+export type EquityDataOperationDiagnosticItem = {
+  source: string;
+  event_type: string;
+  status: string | null;
+  message: string;
+  occurred_at: string;
+  metadata_json: JsonRecord;
+};
+
+export type EquityDataOperationLinkedJob = {
+  id: UUID;
+  workspace_id: UUID | null;
+  queue_name: string;
+  job_type: string;
+  status: string;
+  priority: string;
+  idempotency_key: string | null;
+  scheduled_at: string | null;
+  available_at: string | null;
+  locked_by: string | null;
+  locked_until: string | null;
+  attempts: number;
+  max_attempts: number;
+  payload_json: JsonRecord;
+  result_json: JsonRecord | null;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+};
+
+export type EquityDataOperationJobEvent = {
+  id: UUID;
+  workspace_id: UUID | null;
+  job_id: UUID;
+  event_type: string;
+  message: string;
+  metadata_json: JsonRecord;
+  created_at: string;
+};
+
+export type EquityDataOperationDiagnostics = {
+  operation: EquityDataOperation;
+  linked_job: EquityDataOperationLinkedJob | null;
+  linked_provider_request: EquityDataProviderRequest | null;
+  job_events: EquityDataOperationJobEvent[];
+  recent_errors: EquityDataImportError[];
+  timeline: EquityDataOperationDiagnosticItem[];
+};
+
 export type EquityDataOperationSummary = {
   workspace_id: UUID;
   total_count: number;

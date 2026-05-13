@@ -16,6 +16,7 @@ from app.modules.equity_data.models import (
     EquityEarningsStatus,
 )
 from app.modules.equity_data.normalizer import normalize_provider, normalize_ticker
+from app.modules.job_queue.schemas import JobQueueEventRead, JobQueueJobRead
 
 
 class EquityDataProviderCapability(ApiSchema):
@@ -313,6 +314,30 @@ class EquityDataOperationDetailRead(EquityDataOperationRead):
         default_factory=list,
         alias="recentErrors",
     )
+
+
+class EquityDataOperationDiagnosticItem(ApiSchema):
+    source: str
+    event_type: str = Field(alias="eventType")
+    status: str | None = None
+    message: str
+    occurred_at: datetime = Field(alias="occurredAt")
+    metadata_json: dict[str, Any] = Field(default_factory=dict, alias="metadataJson")
+
+
+class EquityDataOperationDiagnosticsRead(ApiSchema):
+    operation: EquityDataOperationRead
+    linked_job: JobQueueJobRead | None = Field(default=None, alias="linkedJob")
+    linked_provider_request: EquityDataProviderRequestRead | None = Field(
+        default=None,
+        alias="linkedProviderRequest",
+    )
+    job_events: list[JobQueueEventRead] = Field(default_factory=list, alias="jobEvents")
+    recent_errors: list[EquityDataImportErrorRead] = Field(
+        default_factory=list,
+        alias="recentErrors",
+    )
+    timeline: list[EquityDataOperationDiagnosticItem] = Field(default_factory=list)
 
 
 class EquityDataOperationListRead(ApiSchema):

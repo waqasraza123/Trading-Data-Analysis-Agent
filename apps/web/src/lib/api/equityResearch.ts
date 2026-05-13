@@ -2,6 +2,7 @@ import { getPublicEnv } from "@/config/env";
 import { apiDelete, apiGet, apiPost } from "./client";
 import {
   getEquityDataOperation,
+  getEquityDataOperationDiagnostics,
   getEquityDataOperationSummary,
   getLatestEquityFundamentals,
   getLatestEquityMetadata,
@@ -207,7 +208,13 @@ export async function getEquityResearchData(params: {
     candidates.find((candidate) => candidate.id === params.candidateId) || candidates[0] || null;
   const selectedSymbolId =
     selectedCandidate?.symbol_id || selectedUniverseMembers[0]?.symbol_id || stockSymbols[0]?.id || null;
-  const [metadataResult, fundamentalsResult, earningsResult, operationResult] = await Promise.all([
+  const [
+    metadataResult,
+    fundamentalsResult,
+    earningsResult,
+    operationResult,
+    operationDiagnosticsResult,
+  ] = await Promise.all([
     selectedSymbolId
       ? getLatestEquityMetadata(workspace.id, selectedSymbolId)
       : emptyResult(null),
@@ -216,6 +223,7 @@ export async function getEquityResearchData(params: {
       : emptyResult(null),
     selectedSymbolId ? listEquityEarnings(workspace.id, selectedSymbolId) : emptyResult([]),
     params.operationId ? getEquityDataOperation(params.operationId) : emptyResult(null),
+    params.operationId ? getEquityDataOperationDiagnostics(params.operationId) : emptyResult(null),
   ]);
   const equityDataFailures: EquityDataFailure[] = [];
   return {
@@ -260,6 +268,12 @@ export async function getEquityResearchData(params: {
     selectedOperation: readEquityDataResult(
       "Equity data operation detail",
       operationResult,
+      null,
+      equityDataFailures,
+    ),
+    selectedOperationDiagnostics: readEquityDataResult(
+      "Equity data operation diagnostics",
+      operationDiagnosticsResult,
       null,
       equityDataFailures,
     ),
@@ -332,6 +346,7 @@ function emptyEquityData(
     operations: [],
     operationSummary: null,
     selectedOperation: null,
+    selectedOperationDiagnostics: null,
     selectedMetadata: null,
     selectedFundamentals: null,
     selectedEarnings: [],

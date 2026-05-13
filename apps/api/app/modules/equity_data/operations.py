@@ -19,8 +19,13 @@ from app.modules.equity_data.normalizer import normalize_provider, safe_referenc
 from app.modules.equity_data.repository import EquityDataRepository
 from app.modules.equity_data.schemas import (
     EquityCatalystOperationRequest,
+    EquityDataOperationDiagnosticsRead,
+    EquityDataOperationDiagnosticItem,
+    EquityDataOperationRead,
     EquityDataOperationRunMode,
     EquityDataOperationRetryRequest,
+    EquityDataImportErrorRead,
+    EquityDataProviderRequestRead,
     EquityEnrichmentOperationRequest,
     EquityOperationUniverseImportRequest,
     EquityProviderUniverseImportRequest,
@@ -29,8 +34,8 @@ from app.modules.equity_data.schemas import (
 )
 from app.modules.equity_data.service import EquityDataService, truncate
 from app.modules.equity_research.repository import EquityResearchRepository
-from app.modules.job_queue.models import JobQueueJobType, JobQueuePriority
-from app.modules.job_queue.schemas import JobQueueJobCreate
+from app.modules.job_queue.models import JobQueueItem, JobQueueJobType, JobQueuePriority
+from app.modules.job_queue.schemas import JobQueueEventRead, JobQueueJobCreate, JobQueueJobRead
 from app.modules.job_queue.service import JobQueueService
 
 COUNTER_KEYS = (
@@ -148,6 +153,63 @@ class EquityDataOperationService:
             limit,
             0,
         )
+
+    async def get_operation_diagnostics(
+        self,
+        operation_id: UUID,
+        error_limit: int,
+    ) -> EquityDataOperationDiagnosticsRead:
+        operation = await self.get_operation(operation_id)
+        job = await self.get_linked_job(operation)
+        job_events = (
+            await self.job_service.list_events(operation.linked_job_id)
+            if operation.linked_job_id is not None and job is not None
+            else []
+        )
+        provider_request = (
+            await self.repository.get_provider_request(operation.linked_provider_request_id)
+            if operation.linked_provider_request_id is not None
+            else None
+        )
+        recent_errors = (
+            await self.repository.list_import_errors(provider_request.id, error_limit, 0)
+            if provider_request is not None
+            else []
+        )
+        job_read = JobQueueJobRead.model_validate(job) if job is not None else None
+        provider_read = (
+            EquityDataProviderRequestRead.model_validate(provider_request)
+            if provider_request is not None
+            else None
+        )
+        job_event_reads = [JobQueueEventRead.model_validate(event) for event in job_events]
+        error_reads = [
+            EquityDataImportErrorRead.model_validate(error) for error in recent_errors
+        ]
+        return EquityDataOperationDiagnosticsRead(
+            operation=EquityDataOperationRead.model_validate(operation),
+            linkedJob=job_read,
+            linkedProviderRequest=provider_read,
+            jobEvents=job_event_reads,
+            recentErrors=error_reads,
+            timeline=operation_diagnostic_timeline(
+                operation=operation,
+                job=job_read,
+                provider_request=provider_read,
+                job_events=job_event_reads,
+                recent_errors=error_reads,
+            ),
+        )
+
+    async def get_linked_job(self, operation: EquityDataOperation) -> JobQueueItem | None:
+        if operation.linked_job_id is None:
+            return None
+        try:
+            return await self.job_service.get_job(operation.linked_job_id)
+        except AppError as error:
+            if error.code == "job_queue_job_not_found":
+                return None
+            raise
 
     async def submit_universe_import(
         self,
@@ -903,3 +965,150 @@ def retryable_operation_statuses() -> set[str]:
         EquityDataOperationStatus.FAILED.value,
         EquityDataOperationStatus.CANCELLED.value,
     }
+
+
+def operation_diagnostic_timeline(
+    operation: EquityDataOperation,
+    job: JobQueueJobRead | None,
+    provider_request: EquityDataProviderRequestRead | None,
+    job_events: list[JobQueueEventRead],
+    recent_errors: list[EquityDataImportErrorRead],
+) -> list[EquityDataOperationDiagnosticItem]:
+    items = [
+        diagnostic_item(
+            source="operation",
+            event_type="created",
+            status=operation.status,
+            message="Operation created",
+            occurred_at=operation.created_at,
+            metadata_json={
+                "operationType": operation.operation_type,
+                "providerName": operation.provider_name,
+                "dryRun": operation.dry_run,
+            },
+        ),
+    ]
+    if operation.started_at is not None:
+        items.append(
+            diagnostic_item(
+                source="operation",
+                event_type="started",
+                status=operation.status,
+                message="Operation started",
+                occurred_at=operation.started_at,
+                metadata_json={"progressMessage": operation.progress_message},
+            )
+        )
+    if job is not None:
+        items.append(
+            diagnostic_item(
+                source="job_queue",
+                event_type="job_state",
+                status=job.status.value,
+                message="Linked job queue item recorded",
+                occurred_at=job.created_at,
+                metadata_json={
+                    "jobId": str(job.id),
+                    "queueName": job.queue_name,
+                    "attempts": job.attempts,
+                    "maxAttempts": job.max_attempts,
+                },
+            )
+        )
+    items.extend(
+        diagnostic_item(
+            source="job_queue",
+            event_type=event.event_type.value,
+            status=event.event_type.value,
+            message=event.message,
+            occurred_at=event.created_at,
+            metadata_json=event.metadata_json,
+        )
+        for event in job_events
+    )
+    if provider_request is not None:
+        items.append(
+            diagnostic_item(
+                source="provider_request",
+                event_type="provider_request_created",
+                status=provider_request.status.value,
+                message="Linked provider request created",
+                occurred_at=provider_request.created_at,
+                metadata_json={
+                    "requestId": str(provider_request.id),
+                    "provider": provider_request.provider,
+                    "requestType": provider_request.request_type.value,
+                },
+            )
+        )
+        if provider_request.started_at is not None:
+            items.append(
+                diagnostic_item(
+                    source="provider_request",
+                    event_type="provider_request_started",
+                    status=provider_request.status.value,
+                    message="Linked provider request started",
+                    occurred_at=provider_request.started_at,
+                    metadata_json={"provider": provider_request.provider},
+                )
+            )
+        if provider_request.completed_at is not None:
+            items.append(
+                diagnostic_item(
+                    source="provider_request",
+                    event_type="provider_request_completed",
+                    status=provider_request.status.value,
+                    message="Linked provider request completed",
+                    occurred_at=provider_request.completed_at,
+                    metadata_json={
+                        "receivedCount": provider_request.received_count,
+                        "storedCount": provider_request.stored_count,
+                        "skippedCount": provider_request.skipped_count,
+                        "failedCount": provider_request.failed_count,
+                    },
+                )
+            )
+    items.extend(
+        diagnostic_item(
+            source="import_error",
+            event_type=error.error_code,
+            status="error",
+            message=error.error_message,
+            occurred_at=error.created_at,
+            metadata_json={"rowNumber": error.row_number},
+        )
+        for error in recent_errors
+    )
+    if operation.finished_at is not None:
+        items.append(
+            diagnostic_item(
+                source="operation",
+                event_type="finished",
+                status=operation.status,
+                message=operation.progress_message or "Operation finished",
+                occurred_at=operation.finished_at,
+                metadata_json={
+                    "counters": operation.counters_json,
+                    "errorSummary": operation.error_summary_json,
+                },
+            )
+        )
+    return sorted(items, key=lambda item: item.occurred_at)
+
+
+def diagnostic_item(
+    source: str,
+    event_type: str,
+    status: str | None,
+    message: str,
+    occurred_at: datetime,
+    metadata_json: dict[str, Any],
+) -> EquityDataOperationDiagnosticItem:
+    return EquityDataOperationDiagnosticItem(
+        source=source,
+        eventType=event_type,
+        status=status,
+        message=message,
+        occurredAt=occurred_at,
+        metadataJson=safe_reference(metadata_json),
+    )

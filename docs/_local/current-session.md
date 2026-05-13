@@ -1,5 +1,35 @@
 # Current Session
 
+## Equity Data Operation Diagnostics
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added backend operation diagnostics for equity data operations:
+  - `GET /equity-data/operations/{operation_id}/diagnostics` composes the operation, linked job
+    queue item, job events, linked provider request, recent import errors, and chronological
+    timeline entries;
+  - timeline entries are derived from existing operation, job, provider request, and import-error
+    records and do not create new events or mutate source artifacts;
+  - missing linked job rows are tolerated so older or manually adjusted operations still return a
+    diagnostics payload;
+  - the endpoint does not claim jobs, retry work, cancel work, call providers, expose provider
+    secrets, execute broker workflows, send alerts, or provide financial advice.
+- Added web diagnostics composition:
+  - shared API client function and typed diagnostics contracts;
+  - `selectedOperationDiagnostics` on `EquityResearchData`;
+  - selected operation detail now shows linked job status, provider request status, and a bounded
+    diagnostic timeline.
+- Updated docs and durable memory:
+  - `apps/api/docs/equity-data.md`;
+  - `apps/api/README.md`;
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `README.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - `python3 -m py_compile apps/api/app/modules/equity_data/operations.py apps/api/app/modules/equity_data/routes.py apps/api/app/modules/equity_data/schemas.py` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Retry Controls
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

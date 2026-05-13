@@ -190,6 +190,9 @@ export function EquityDataOperationsPanel({ data }: { data: EquityResearchData }
             <JsonSummary title="Request summary" value={data.selectedOperation.request_summary_json} />
             <JsonSummary title="Result summary" value={data.selectedOperation.result_summary_json} />
           </div>
+          {data.selectedOperationDiagnostics && (
+            <OperationDiagnostics diagnostics={data.selectedOperationDiagnostics} />
+          )}
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recent row errors</h4>
             <div className="mt-2 grid gap-2">
@@ -223,6 +226,78 @@ function OperationMeta({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="font-semibold text-[var(--strong)]">{label}</dt>
       <dd className="mt-0.5">{value}</dd>
+    </div>
+  );
+}
+
+function OperationDiagnostics({
+  diagnostics,
+}: {
+  diagnostics: NonNullable<EquityResearchData["selectedOperationDiagnostics"]>;
+}) {
+  return (
+    <div className="mt-4 grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-md border border-[var(--line)] bg-[var(--panel-muted)] px-3 py-2 text-xs text-slate-500">
+          <div className="font-semibold text-[var(--strong)]">Linked job</div>
+          {diagnostics.linked_job ? (
+            <dl className="mt-2 grid gap-1">
+              <OperationMeta label="Status" value={equityDataLabel(diagnostics.linked_job.status)} />
+              <OperationMeta label="Queue" value={diagnostics.linked_job.queue_name} />
+              <OperationMeta
+                label="Attempts"
+                value={`${diagnostics.linked_job.attempts} / ${diagnostics.linked_job.max_attempts}`}
+              />
+            </dl>
+          ) : (
+            <p className="mt-2">No linked job queue item was recorded.</p>
+          )}
+        </div>
+        <div className="rounded-md border border-[var(--line)] bg-[var(--panel-muted)] px-3 py-2 text-xs text-slate-500">
+          <div className="font-semibold text-[var(--strong)]">Linked provider request</div>
+          {diagnostics.linked_provider_request ? (
+            <dl className="mt-2 grid gap-1">
+              <OperationMeta
+                label="Status"
+                value={equityDataLabel(diagnostics.linked_provider_request.status)}
+              />
+              <OperationMeta label="Provider" value={diagnostics.linked_provider_request.provider} />
+              <OperationMeta
+                label="Stored"
+                value={String(diagnostics.linked_provider_request.stored_count)}
+              />
+            </dl>
+          ) : (
+            <p className="mt-2">No linked provider request was recorded.</p>
+          )}
+        </div>
+      </div>
+      <div className="rounded-md border border-[var(--line)] bg-[var(--panel-muted)] px-3 py-2">
+        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Operation timeline
+        </div>
+        <div className="mt-2 grid gap-2">
+          {diagnostics.timeline.slice(0, 12).map((item) => (
+            <div
+              key={`${item.source}-${item.event_type}-${item.occurred_at}`}
+              className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold text-[var(--strong)]">
+                  {equityDataLabel(item.source)} · {equityDataLabel(item.event_type)}
+                </span>
+                <span className="text-slate-500">{formatContextDate(item.occurred_at)}</span>
+              </div>
+              <p className="mt-1 text-slate-500">{item.message}</p>
+            </div>
+          ))}
+          {diagnostics.timeline.length === 0 && (
+            <p className="rounded-md bg-[var(--panel)] px-3 py-2 text-xs text-slate-500">
+              No diagnostic timeline entries were returned.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

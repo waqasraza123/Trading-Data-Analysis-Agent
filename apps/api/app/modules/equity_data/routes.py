@@ -18,6 +18,7 @@ from app.modules.equity_data.schemas import (
     EquityDataOperationCancelRequest,
     EquityDataImportErrorRead,
     EquityDataOperationDetailRead,
+    EquityDataOperationDiagnosticsRead,
     EquityDataOperationListRead,
     EquityDataOperationRead,
     EquityDataOperationRetryRequest,
@@ -217,6 +218,18 @@ async def get_operation(
         data
         | {"recentErrors": [EquityDataImportErrorRead.model_validate(error) for error in errors]}
     )
+
+
+@router.get(
+    "/operations/{operation_id}/diagnostics",
+    response_model=EquityDataOperationDiagnosticsRead,
+)
+async def get_operation_diagnostics(
+    operation_id: UUID,
+    service: Annotated[EquityDataOperationService, Depends(get_equity_data_operation_service)],
+    error_limit: Annotated[int, Query(ge=0, le=100)] = 25,
+) -> EquityDataOperationDiagnosticsRead:
+    return await service.get_operation_diagnostics(operation_id, error_limit)
 
 
 @router.post(

@@ -5,6 +5,7 @@ import type {
   EquityDataOperation,
   EquityDataOperationCancelInput,
   EquityDataOperationDetail,
+  EquityDataOperationDiagnostics,
   EquityDataOperationInput,
   EquityDataOperationList,
   EquityDataOperationRetryInput,
@@ -74,6 +75,15 @@ export function getEquityDataOperation(
   return apiGet<EquityDataOperationDetail>(`/equity-data/operations/${operationId}`, {
     optional: true,
   });
+}
+
+export function getEquityDataOperationDiagnostics(
+  operationId: UUID,
+): Promise<ApiResult<EquityDataOperationDiagnostics>> {
+  return apiGet<EquityDataOperationDiagnostics>(
+    `/equity-data/operations/${operationId}/diagnostics`,
+    { optional: true },
+  );
 }
 
 export function cancelEquityDataOperation(

@@ -3,6 +3,7 @@ import type {
   EquityDataFailure,
   EquityDataOperation,
   EquityDataOperationDetail,
+  EquityDataOperationDiagnostics,
   EquityDataOperationSummary,
   EquityDataProviderCapability,
   EquityDataProviderRequest,
@@ -135,6 +136,7 @@ export type EquityResearchData = {
   operations: EquityDataOperation[];
   operationSummary: EquityDataOperationSummary | null;
   selectedOperation: EquityDataOperationDetail | null;
+  selectedOperationDiagnostics: EquityDataOperationDiagnostics | null;
   selectedMetadata: EquitySymbolMetadataSnapshot | null;
   selectedFundamentals: EquityFundamentalSnapshot | null;
   selectedEarnings: EquityEarningsEvent[];

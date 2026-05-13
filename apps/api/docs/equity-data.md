@@ -79,6 +79,7 @@ POST /equity-data/earnings/{event_id}/create-catalyst-context
 GET /equity-data/operations
 GET /equity-data/operations/summary
 GET /equity-data/operations/{operation_id}
+GET /equity-data/operations/{operation_id}/diagnostics
 POST /equity-data/operations/{operation_id}/cancel
 POST /equity-data/operations/{operation_id}/retry
 POST /equity-data/operations/universe-import
@@ -125,6 +126,12 @@ data queue: total operations, active operations, terminal operations, warning, f
 counts, grouped status/type/provider counts, the latest operation timestamp, and a bounded list of
 recent warning/failed/cancelled operations. It reads only `equity_data_operations` and does not
 claim jobs, retry work, cancel work, call providers, or mutate artifacts.
+
+`GET /equity-data/operations/{operation_id}/diagnostics` composes a bounded operator diagnostic
+view from existing persisted records. The response includes the operation, linked job queue item,
+linked job events, linked provider request, recent import errors, and a chronological timeline
+covering operation, job, provider request, and row-error events. It does not create events, claim or
+retry jobs, cancel work, call external providers, expose raw provider secrets, or mutate artifacts.
 
 Operation submission accepts optional `idempotencyKey` values on JSON operation requests. Repeating
 the same workspace key returns the existing operation when the operation type, provider, and dry-run

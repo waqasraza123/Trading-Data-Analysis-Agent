@@ -144,7 +144,7 @@ Current backend capability groups include:
   scheduled scans, scanner presets, and bounded market scanning from stored final candles.
 - Equity research universes, members, swing scans, candidate scoring, manual catalysts, equity data
   imports, metadata snapshots, fundamentals snapshots, earnings events, and queued background
-  equity data operations with guarded stop, retry, summary, and detail review controls.
+  equity data operations with guarded stop, retry, summary, detail review, and diagnostics controls.
 - Outcome evaluation, backtest cohorts, profile diagnostics, confidence calibration, walk-forward
   validation, cohort drift, pattern attribution, scenario outcome tracking, and review-focused
   analytics.
