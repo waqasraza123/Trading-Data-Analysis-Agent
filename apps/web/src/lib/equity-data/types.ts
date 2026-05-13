@@ -66,6 +66,10 @@ export type EquityDataOperationList = {
   operations: EquityDataOperation[];
 };
 
+export type EquityDataOperationCancelInput = {
+  reason?: string;
+};
+
 export type EquityDataOperationInput = {
   workspaceId: UUID;
   provider?: string;

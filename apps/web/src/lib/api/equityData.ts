@@ -3,6 +3,7 @@ import type { ApiResult, UUID } from "./types";
 import type {
   EquityDataProviderCapability,
   EquityDataOperation,
+  EquityDataOperationCancelInput,
   EquityDataOperationInput,
   EquityDataOperationList,
   EquityDataProviderRequest,
@@ -53,6 +54,17 @@ export function listEquityDataOperations(
     query: { workspace_id: workspaceId, limit: 25 },
     optional: true,
   });
+}
+
+export function cancelEquityDataOperation(
+  operationId: UUID,
+  input: EquityDataOperationCancelInput = {},
+): Promise<ApiResult<EquityDataOperation>> {
+  return apiPost<EquityDataOperation>(
+    `/equity-data/operations/${operationId}/cancel`,
+    input,
+    { optional: true, timeoutMs: 15000 },
+  );
 }
 
 export function queueEquityMetadataEnrichment(

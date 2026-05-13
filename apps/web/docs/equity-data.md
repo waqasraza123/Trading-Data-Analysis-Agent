@@ -13,7 +13,8 @@ account actions, direct buy/sell wording, or financial-advice language.
 - `EquityUniverseImportPanel`: imports CSV-like ticker rows or the deterministic mock universe.
 - `EquityUniverseFileImportPanel`: uploads CSV files with auto, sync, or queued import mode.
 - `EquityDataOperationsPanel`: lists recent background operations with status, progress, counters,
-  safe error summaries, and cancellation status when an operation has been stopped.
+  linked job/provider request context, safe error summaries, and stop controls for pending or
+  running operations.
 - `EquityEnrichmentJobsPanel`: queues metadata, fundamentals, earnings, and earnings catalyst
   operations for the selected research universe.
 - `EquityMetadataPanel`: displays latest company, sector, industry, exchange, market cap, and
@@ -53,10 +54,12 @@ actions work without credentials. External providers show provider configured or
 configured state based on backend settings and credential references.
 
 The backend operation API supports idempotency keys for JSON operation submissions and
-`POST /equity-data/operations/{operation_id}/cancel` for operator stops. The current UI lists the
-resulting operation status and progress from the same operations endpoint; adding a visible cancel
-button should call that endpoint through the shared mutation proxy and preserve the existing
-non-advisory copy.
+`POST /equity-data/operations/{operation_id}/cancel` for operator stops. The operations panel calls
+that endpoint through the shared API client and same-origin mutation proxy, then refreshes the route
+so the persisted status, progress, linked job, linked provider request, and cancellation reason are
+shown from backend state. Stop controls are shown only for `pending` and `running` operations.
+Already written research artifacts remain visible as audit context; the UI does not imply rollback,
+broker execution, alerts, or advice.
 
 ## CSV File Import
 

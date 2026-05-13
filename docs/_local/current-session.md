@@ -1,5 +1,23 @@
 # Current Session
 
+## Equity Data Operation Controls UI
+
+- Started from a clean `main`; there was no pre-existing local work to commit before this pass.
+- Added frontend operation stop controls for the equity research data surface:
+  - shared API client function for `POST /equity-data/operations/{operation_id}/cancel`;
+  - typed cancellation payload contract;
+  - `EquityDataOperationsPanel` now shows Stop controls for pending/running operations only;
+  - row-level pending/error messaging, route refresh after stop requests, and linked job/provider
+    request context are visible in operation rows;
+  - cancellation copy stays operational and non-advisory.
+- Updated docs and durable memory:
+  - `apps/web/README.md`;
+  - `apps/web/docs/equity-data.md`;
+  - `docs/project-state.md`.
+- Verification:
+  - `git diff --check` passed;
+  - no tests, lint runs, typechecks, or builds were run per user instruction.
+
 ## Equity Data Operation Idempotency And Cancellation
 
 - Started from a clean `main`; there was no pre-existing local work to commit before this pass.

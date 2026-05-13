@@ -24,7 +24,8 @@ The dashboard makes the first usable product surface over the FastAPI backend:
 - Equity research page for stock universes, deterministic swing scan profiles, ranked swing setup candidates, setup scoring, evidence review, and manual catalyst context.
 - Equity data setup panels for provider capability review, mock/CSV universe import, CSV file
   upload, background operation progress, metadata, fundamentals, earnings context, catalyst
-  enrichment, and provider request history.
+  enrichment, provider request history, and safe stop controls for pending/running background
+  operations.
 - Guided scanner workflow with hero health metrics, preset gallery, watchlist manager, scan config builder, explicit run-now confirmation, scan history, and generated signal review.
 - Guided data onboarding workflow with source, credentials/config, symbols/timeframes, freshness check, gap detection, recovery plan, and ready summary steps.
 - In-app notification inbox for reviewing sanitized backend intelligence events, safety status, delivery attempts, and source links.
@@ -89,6 +90,23 @@ The client composes data from optional backend APIs:
 - `GET /equity-research/candidates/{candidate_id}`
 - `POST /equity-research/catalysts`
 - `GET /equity-research/catalysts`
+- `GET /equity-data/providers`
+- `GET /equity-data/provider-requests`
+- `GET /equity-data/operations`
+- `POST /equity-data/operations/{operation_id}/cancel`
+- `POST /equity-data/operations/universe-import`
+- `POST /equity-data/operations/universe-import-file`
+- `POST /equity-data/operations/metadata-enrichment`
+- `POST /equity-data/operations/fundamentals-enrichment`
+- `POST /equity-data/operations/earnings-enrichment`
+- `POST /equity-data/operations/earnings-to-catalysts`
+- `GET /equity-data/symbols/{symbol_id}/metadata/latest`
+- `GET /equity-data/symbols/{symbol_id}/fundamentals/latest`
+- `GET /equity-data/symbols/{symbol_id}/earnings`
+- `POST /equity-data/symbols/{symbol_id}/metadata/lookup`
+- `POST /equity-data/symbols/{symbol_id}/fundamentals/fetch`
+- `POST /equity-data/symbols/{symbol_id}/earnings/fetch`
+- `POST /equity-data/earnings/{event_id}/create-catalyst-context`
 - `GET /market-memory/snapshots`
 - `GET /read-models/symbols`
 - `GET /read-models/signals`
