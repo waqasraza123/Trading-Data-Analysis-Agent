@@ -1,5 +1,6 @@
 import { getServerApiProxyEnv } from "@/config/serverEnv";
 import { cookies } from "next/headers";
+import { isTrustedMutationRequest, untrustedOriginResponse } from "../../auth/origin";
 
 type RouteContext = {
   params: Promise<{ path?: string[] }>;
@@ -28,6 +29,9 @@ export async function DELETE(request: Request, context: RouteContext): Promise<R
 }
 
 async function proxyRequest(request: Request, context: RouteContext): Promise<Response> {
+  if (request.method !== "GET" && !isTrustedMutationRequest(request)) {
+    return untrustedOriginResponse();
+  }
   const params = await context.params;
   const path = params.path || [];
   if (path.length === 0) {

@@ -27,7 +27,9 @@ APP_ENV=production
 DATABASE_URL=postgresql://...
 CORS_ALLOWED_ORIGINS=https://your-web-origin.example
 AUTH_ENABLED=true
-ADMIN_API_KEY=provided-by-secret-manager
+AUTH_MODE=session
+AUTH_PASSWORD_ENABLED=true
+AUTH_PASSWORD_SIGNUP_ENABLED=true
 ```
 
 Optional production environment:
@@ -52,7 +54,9 @@ Build from the repository root:
 docker build \
   -f apps/web/Dockerfile \
   --build-arg NEXT_PUBLIC_API_BASE_URL=https://your-api-origin.example \
-  --build-arg NEXT_PUBLIC_APP_NAME="Daily Trading Dashboard" \
+  --build-arg NEXT_PUBLIC_APP_NAME="AI Trading SaaS Starter Kit" \
+  --build-arg NEXT_PUBLIC_SITE_URL=https://your-web-origin.example \
+  --build-arg NEXT_PUBLIC_REPOSITORY_URL=https://github.com/your-name/your-repository \
   -t trading-intelligence-web:latest .
 ```
 
@@ -65,6 +69,11 @@ The web image:
 
 `NEXT_PUBLIC_API_BASE_URL` is public frontend configuration. Do not put secrets in
 `NEXT_PUBLIC_*` variables.
+
+Set `NEXT_PUBLIC_AUTH_MODE=session`, `WEB_API_PROXY_BASE_URL` to the API origin, and
+`WEB_AUTH_SESSION_COOKIE` to the chosen HTTP-only cookie name at runtime. Leave
+`WEB_API_PROXY_ADMIN_API_KEY` unset for production user sessions. The API must receive a pooled
+Neon `DATABASE_URL`, and Alembic migrations must finish before either application receives traffic.
 
 ## Local Production-Like Stack
 

@@ -30,7 +30,7 @@ export async function apiPostForm<T>(
   options: RequestOptions = {},
 ): Promise<ApiResult<T>> {
   const env = getPublicEnv();
-  const url = buildRequestUrl(env.apiBaseUrl, "POST", path, options.query);
+  const url = buildRequestUrl(await requestApiBaseUrl(env), "POST", path, options.query);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || defaultTimeoutMs);
   try {
@@ -38,7 +38,7 @@ export async function apiPostForm<T>(
       method: "POST",
       headers: {
         accept: "application/json",
-        ...authHeaders(env),
+        ...(await requestAuthHeaders(env)),
       },
       body,
       cache: "no-store",
@@ -99,7 +99,7 @@ async function apiRequest<T>(
   options: RequestOptions,
 ): Promise<ApiResult<T>> {
   const env = getPublicEnv();
-  const url = buildRequestUrl(env.apiBaseUrl, method, path, options.query);
+  const url = buildRequestUrl(await requestApiBaseUrl(env), method, path, options.query);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || defaultTimeoutMs);
   try {
@@ -107,7 +107,7 @@ async function apiRequest<T>(
       method,
       headers: {
         accept: "application/json",
-        ...authHeaders(env),
+        ...(await requestAuthHeaders(env)),
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(stripUndefined(body)),
@@ -174,6 +174,31 @@ export function authHeaders(env = getPublicEnv()): ApiHeaders {
     }
   }
   return headers;
+}
+
+async function requestAuthHeaders(env = getPublicEnv()): Promise<ApiHeaders> {
+  const headers = authHeaders(env);
+  if (typeof window !== "undefined" || env.authMode !== "session") {
+    return headers;
+  }
+  const [{ cookies }, { getServerApiProxyEnv }] = await Promise.all([
+    import("next/headers"),
+    import("@/config/serverEnv"),
+  ]);
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(getServerApiProxyEnv().authSessionCookieName)?.value;
+  if (sessionToken) {
+    headers.authorization = `Bearer ${sessionToken}`;
+  }
+  return headers;
+}
+
+async function requestApiBaseUrl(env = getPublicEnv()): Promise<string> {
+  if (typeof window !== "undefined" || env.authMode !== "session") {
+    return env.apiBaseUrl;
+  }
+  const { getServerApiProxyEnv } = await import("@/config/serverEnv");
+  return getServerApiProxyEnv().apiBaseUrl;
 }
 
 function browserBearerToken(storageKey: string | null): string | null {

@@ -31,9 +31,10 @@ from app.modules.auth.schemas import (
     AuthLogoutRequest,
     AuthPasswordChangeRead,
     AuthPasswordChangeRequest,
+    AuthProfileUpdateRequest,
     AuthRegisterRequest,
-    AuthSessionCreated,
     AuthSessionBulkRevokeRead,
+    AuthSessionCreated,
     AuthSessionRead,
     AuthSessionStatusRead,
     CurrentIdentityRead,
@@ -43,6 +44,14 @@ from app.modules.auth.settings import auth_is_enforced, effective_auth_mode
 from app.modules.users.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+async def require_session_user_identity(
+    identity: Annotated[IdentityContext | None, Depends(optional_identity)],
+) -> IdentityContext:
+    if identity is None or identity.user is None or identity.source != IdentitySource.SESSION:
+        raise AppError(401, "session_auth_required", "Session authentication is required")
+    return identity
 
 
 @router.post("/register", response_model=AuthSessionCreated, status_code=status.HTTP_201_CREATED)
@@ -273,6 +282,23 @@ async def get_auth_me(
     return identity_to_read(identity)
 
 
+@router.patch("/profile", response_model=CurrentIdentityRead)
+async def update_auth_profile(
+    payload: AuthProfileUpdateRequest,
+    identity: Annotated[IdentityContext, Depends(require_session_user_identity)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> CurrentIdentityRead:
+    user = session_identity_user(identity)
+    normalized_name = payload.name.strip()
+    if not normalized_name:
+        raise AppError(422, "invalid_name", "Name is required")
+    user.name = normalized_name
+    await session.flush()
+    await session.refresh(user)
+    await session.commit()
+    return identity_to_read(identity)
+
+
 @router.get("/context", response_model=AuthContextRead)
 async def get_auth_context(
     request: Request,
@@ -441,7 +467,11 @@ async def record_auth_activity(
         AuthActivityDraft(
             event_type=event_type,
             status=status,
-            user_id=identity.user.id if identity is not None and identity.user is not None else None,
+            user_id=(
+                identity.user.id
+                if identity is not None and identity.user is not None
+                else None
+            ),
             workspace_id=identity.workspace_id if identity is not None else None,
             email=email,
             error_code=error_code,
@@ -449,14 +479,6 @@ async def record_auth_activity(
         ),
         activity_context_from_request(request, identity),
     )
-
-
-async def require_session_user_identity(
-    identity: Annotated[IdentityContext | None, Depends(optional_identity)],
-) -> IdentityContext:
-    if identity is None or identity.user is None or identity.source != IdentitySource.SESSION:
-        raise AppError(401, "session_auth_required", "Session authentication is required")
-    return identity
 
 
 def session_identity_user(identity: IdentityContext) -> User:

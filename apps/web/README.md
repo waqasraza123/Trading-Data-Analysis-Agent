@@ -1,4 +1,4 @@
-# Daily Trading Dashboard Web App
+# AI Trading SaaS Starter Kit Web App
 
 Read-only Next.js dashboard for deterministic market intelligence. The app is an operator cockpit for daily analysis over backend artifacts; it is not a broker terminal, auto-trading system, execution workflow, or financial-advice surface.
 
@@ -233,7 +233,9 @@ Create `apps/web/.env.local` when local defaults are not enough:
 
 ```sh
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
-NEXT_PUBLIC_APP_NAME=Daily Trading Dashboard
+NEXT_PUBLIC_APP_NAME=AI Trading SaaS Starter Kit
+NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+NEXT_PUBLIC_REPOSITORY_URL=https://github.com/waqasraza123/Trading-Data-Analysis-Agent
 NEXT_PUBLIC_AUTH_MODE=dev
 NEXT_PUBLIC_AUTH_DEV_USER_ID=
 NEXT_PUBLIC_AUTH_DEV_WORKSPACE_ID=
@@ -269,6 +271,10 @@ browser code points at the public API origin. Pass `WEB_API_PROXY_BASE_URL`,
 `WEB_API_PROXY_ADMIN_API_KEY`, and `WEB_API_PROXY_API_KEY_HEADER` as runtime server environment
 variables for the standalone Next.js server when mutating web actions must reach an
 `AUTH_ENABLED=true` backend through the server-side proxy.
+
+Server-rendered product reads resolve the same HTTP-only cookie through the Next.js request context
+and attach the bearer session directly to FastAPI. The optimistic route middleware checks cookie
+presence, while FastAPI remains the authoritative identity, workspace, and permission boundary.
 
 ## Run
 

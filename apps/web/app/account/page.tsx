@@ -1,5 +1,6 @@
 import { AccountSessionControls, RevokeOtherSessionsButton } from "@/components/account/AccountSessionControls";
 import { PasswordChangePanel } from "@/components/account/PasswordChangePanel";
+import { ProfilePanel } from "@/components/account/ProfilePanel";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -75,6 +76,16 @@ export default async function AccountPage() {
 
             <AnimatedListItem as="section" style={motionRevealDensityStyle(4, "compact")}>
               <ReviewSurfacePanel
+                title="Profile"
+                eyebrow="Identity"
+                description="Update the display name attached to your authenticated workspace account."
+              >
+                <ProfilePanel name={user?.name || ""} email={user?.email || ""} />
+              </ReviewSurfacePanel>
+            </AnimatedListItem>
+
+            <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+              <ReviewSurfacePanel
                 title="Password"
                 eyebrow="Credential"
                 description="Change the password for this account and optionally revoke other active sessions."
@@ -84,7 +95,7 @@ export default async function AccountPage() {
             </AnimatedListItem>
           </div>
 
-          <AnimatedListItem as="section" style={motionRevealDensityStyle(5, "compact")}>
+          <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
             <ReviewSurfacePanel
               title="Sessions"
               eyebrow="Security"
@@ -95,7 +106,7 @@ export default async function AccountPage() {
           </AnimatedListItem>
         </div>
 
-        <AnimatedListItem as="section" style={motionRevealDensityStyle(6, "compact")}>
+        <AnimatedListItem as="section" style={motionRevealDensityStyle(7, "compact")}>
           <ReviewSurfacePanel
             title="Recent account activity"
             eyebrow="Audit"

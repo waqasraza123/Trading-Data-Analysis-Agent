@@ -1,9 +1,11 @@
+from typing import cast
 from uuid import uuid4
 
 import pytest
 from fastapi import Depends
 from httpx import ASGITransport, AsyncClient
 from pydantic import SecretStr
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import AppEnvironment, Settings
 from app.main import create_app
@@ -11,11 +13,14 @@ from app.modules.auth.api_keys import api_key_prefix, generate_api_key, hash_api
 from app.modules.auth.identity import IdentityContext
 from app.modules.auth.passwords import (
     generate_session_token,
+    hash_legacy_password,
     hash_password,
     hash_session_token,
+    password_needs_rehash,
     verify_password,
 )
-from app.modules.auth.schemas import IdentitySource
+from app.modules.auth.routes import update_auth_profile
+from app.modules.auth.schemas import AuthProfileUpdateRequest, IdentitySource
 from app.modules.permissions.dependencies import require_permission
 from app.modules.permissions.registry import Permission
 from app.modules.users.models import User, UserRole
@@ -38,6 +43,17 @@ def test_password_hash_verification_does_not_store_raw_password() -> None:
     assert raw_password not in password_hash
     assert verify_password(raw_password, password_hash)
     assert not verify_password("incorrect horse battery", password_hash)
+    assert password_hash.startswith("$argon2id$")
+    assert not password_needs_rehash(password_hash)
+
+
+def test_legacy_password_hash_remains_verifiable_and_requires_rehash() -> None:
+    raw_password = "correct horse battery staple"
+    password_hash = hash_legacy_password(raw_password)
+
+    assert password_hash.startswith("pbkdf2_sha256$")
+    assert verify_password(raw_password, password_hash)
+    assert password_needs_rehash(password_hash)
 
 
 def test_session_token_hash_does_not_store_raw_token() -> None:
@@ -47,6 +63,41 @@ def test_session_token_hash_does_not_store_raw_token() -> None:
     assert raw_token.startswith("tai_session_")
     assert token_hash != raw_token
     assert hash_session_token(raw_token) == token_hash
+
+
+@pytest.mark.asyncio
+async def test_profile_update_changes_only_authenticated_user_name() -> None:
+    user = User(
+        id=uuid4(),
+        workspace_id=uuid4(),
+        email="analyst@example.test",
+        name="Original name",
+        role=UserRole.ADMIN.value,
+    )
+    identity = IdentityContext(source=IdentitySource.SESSION, user=user, admin=True)
+    session = cast(AsyncSession, ProfileSession())
+
+    result = await update_auth_profile(
+        AuthProfileUpdateRequest(name="  Updated name  "),
+        identity,
+        session,
+    )
+
+    assert user.name == "Updated name"
+    assert user.email == "analyst@example.test"
+    assert result.user is not None
+    assert result.user.name == "Updated name"
+
+
+class ProfileSession:
+    async def flush(self) -> None:
+        return None
+
+    async def refresh(self, instance: object) -> None:
+        return None
+
+    async def commit(self) -> None:
+        return None
 
 
 def test_identity_workspace_mismatch_denies_access() -> None:

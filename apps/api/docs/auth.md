@@ -37,7 +37,12 @@ JWT verification currently supports RS256 with a configured PEM public key. OAut
 
 ## Password Sessions
 
-Password credentials are stored in `auth_password_credentials` with PBKDF2-SHA256 hashes and never return raw passwords. Sessions are stored in `auth_sessions` as SHA-256 token hashes with expiry and revocation state. `POST /auth/register` creates a workspace, admin user, password credential, and session. `POST /auth/login` creates a new session for an existing credential. `POST /auth/logout` revokes the supplied bearer token.
+Password credentials are stored in `auth_password_credentials` with Argon2id hashes and never
+return raw passwords. Legacy PBKDF2-SHA256 credentials remain verifiable and are rehashed with
+Argon2id after the next successful login. Sessions are stored in `auth_sessions` as SHA-256 token
+hashes with expiry and revocation state. `POST /auth/register` creates a workspace, admin user,
+password credential, and session. `POST /auth/login` creates a new session for an existing
+credential. `POST /auth/logout` revokes the supplied bearer token.
 
 Session management endpoints are available for first-party password sessions:
 
@@ -49,11 +54,17 @@ Session management endpoints are available for first-party password sessions:
 
 These endpoints require a password-session identity. API keys and legacy admin keys are intentionally not a substitute for user-session and password management.
 
+`PATCH /auth/profile` updates only the authenticated user's display name. It cannot change email,
+role, workspace, permissions, credential ownership, or another user's profile.
+
 ## Activity Audit
 
 Authentication activity is persisted in `auth_activity_events` for account traceability. The event log records bounded metadata for registration, login, logout, password changes, session revocation, and API-key administration events. It stores request IDs plus SHA-256 hashes of client host and user agent values for correlation without storing raw network identifiers. It never stores passwords, session tokens, API keys, raw token hashes, request bodies, or provider secrets.
 
-Use a Neon Postgres `DATABASE_URL` and run Alembic migrations before enabling `AUTH_MODE=session` in deployed environments.
+Use a pooled Neon Postgres `DATABASE_URL` and run Alembic migrations before enabling
+`AUTH_MODE=session` in deployed environments. The Next.js web layer keeps the raw session token in
+an HTTP-only cookie, attaches it to server-rendered API reads, and proxies browser requests without
+exposing the token to browser JavaScript.
 
 ## API Keys
 

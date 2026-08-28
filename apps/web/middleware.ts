@@ -1,7 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultAuthSessionCookieName } from "@/config/serverEnv";
 
-const publicPaths = new Set(["/login", "/register", "/icon.svg"]);
+const publicPaths = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/icon.svg",
+  "/manifest.webmanifest",
+  "/robots.txt",
+  "/sitemap.xml",
+]);
 
 export function middleware(request: NextRequest) {
   if (process.env.NEXT_PUBLIC_AUTH_MODE !== "session") {
@@ -17,7 +25,7 @@ export function middleware(request: NextRequest) {
   }
   const loginUrl = request.nextUrl.clone();
   loginUrl.pathname = "/login";
-  loginUrl.searchParams.set("next", pathname);
+  loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
   return NextResponse.redirect(loginUrl);
 }
 

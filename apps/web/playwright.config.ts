@@ -25,7 +25,7 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: `NEXT_PUBLIC_API_BASE_URL=${mockApiBaseUrl} NEXT_PUBLIC_APP_NAME="Daily Trading Dashboard" npm run dev -- --hostname 127.0.0.1 --port ${webPort}`,
+      command: `NEXT_PUBLIC_API_BASE_URL=${mockApiBaseUrl} NEXT_PUBLIC_APP_NAME="AI Trading SaaS Starter Kit" npm run dev -- --hostname 127.0.0.1 --port ${webPort}`,
       url: webBaseUrl,
       reuseExistingServer: !process.env.CI,
       timeout: 90_000,

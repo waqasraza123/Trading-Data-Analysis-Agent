@@ -8,7 +8,7 @@ export type PublicEnv = {
 };
 
 const defaultApiBaseUrl = "http://127.0.0.1:8000";
-const defaultAppName = "Daily Trading Dashboard";
+const defaultAppName = "AI Trading SaaS Starter Kit";
 const defaultAuthBearerTokenStorageKey = "trading_intelligence_auth_token";
 
 export function getPublicEnv(): PublicEnv {

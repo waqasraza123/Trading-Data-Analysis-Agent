@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { getPublicEnv } from "@/config/env";
+import { getCurrentIdentity } from "@/lib/api/auth";
 import { PageContainer } from "./PageContainer";
 import { MobileNav } from "./MobileNav";
 import { Sidebar } from "./Sidebar";
@@ -14,8 +16,14 @@ type AppShellProps = {
   workspaceId?: string | null;
 };
 
-export function AppShell({ appName, children, workspaceName, workspaceId }: AppShellProps) {
+export async function AppShell({ appName, children, workspaceName, workspaceId }: AppShellProps) {
   const env = getPublicEnv();
+  if (env.authMode === "session") {
+    const identity = await getCurrentIdentity();
+    if (!identity.ok || !identity.data.authenticated) {
+      redirect("/login");
+    }
+  }
 
   return (
     <AnimatedSection

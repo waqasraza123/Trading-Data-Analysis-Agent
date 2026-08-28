@@ -4,8 +4,9 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from app.config import Settings
 from app.core.errors import AppError
@@ -27,7 +28,12 @@ class JwtVerifier:
         public_key = serialization.load_pem_public_key(
             self.settings.jwt_public_key.get_secret_value().encode("utf-8")
         )
-        public_key.verify(signature, signed_part, padding.PKCS1v15(), hashes.SHA256())
+        if not isinstance(public_key, rsa.RSAPublicKey):
+            raise AppError(401, "invalid_token", "Token signing key is invalid")
+        try:
+            public_key.verify(signature, signed_part, padding.PKCS1v15(), hashes.SHA256())
+        except InvalidSignature as error:
+            raise AppError(401, "invalid_token", "Token signature is invalid") from error
         validate_claims(payload, self.settings)
         return payload
 

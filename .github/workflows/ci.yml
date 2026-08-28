@@ -62,7 +62,7 @@ jobs:
       - run: npm run build --if-present
         env:
           NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
-          NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+          NEXT_PUBLIC_APP_NAME: AI Trading SaaS Starter Kit
 
   docker:
     runs-on: ubuntu-latest

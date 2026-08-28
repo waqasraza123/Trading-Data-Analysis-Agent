@@ -1,4 +1,4 @@
-name: trading-intelligence
+name: ai-trading-saas-starter
 
 services:
   postgres:
@@ -64,12 +64,12 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
-        NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+        NEXT_PUBLIC_APP_NAME: AI Trading SaaS Starter Kit
     env_file:
       - apps/web/.env.example
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
-      NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+      NEXT_PUBLIC_APP_NAME: AI Trading SaaS Starter Kit
     ports:
       - "3000:3000"
     depends_on:

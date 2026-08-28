@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "./client";
+import { apiGet, apiPatch, apiPost } from "./client";
 import type { ApiError, ApiResult, UUID } from "./types";
 
 export type AccountIdentity = {
@@ -128,4 +128,8 @@ export function changePassword(payload: {
     },
     { optional: true },
   );
+}
+
+export function updateProfile(name: string): Promise<ApiResult<AccountIdentity>> {
+  return apiPatch<AccountIdentity>("/auth/profile", { name }, { optional: true });
 }

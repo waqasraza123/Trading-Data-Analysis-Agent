@@ -1,10 +1,14 @@
 import { getServerApiProxyEnv } from "@/config/serverEnv";
+import { isTrustedMutationRequest, untrustedOriginResponse } from "../origin";
 import { clearAuthSessionCookie, getAuthSessionToken } from "../session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function POST(): Promise<Response> {
+export async function POST(request: Request): Promise<Response> {
+  if (!isTrustedMutationRequest(request)) {
+    return untrustedOriginResponse();
+  }
   const env = getServerApiProxyEnv();
   const token = await getAuthSessionToken();
   if (token) {

@@ -10,16 +10,26 @@ export type BackendAuthSession = {
   identity: unknown;
 };
 
-export async function setAuthSessionCookie(token: string): Promise<void> {
+export async function setAuthSessionCookie(token: string, expiresAt: string): Promise<void> {
   const env = getServerApiProxyEnv();
   const cookieStore = await cookies();
+  const maxAge = sessionCookieMaxAge(expiresAt);
   cookieStore.set(env.authSessionCookieName, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: authCookieMaxAgeSeconds,
+    maxAge,
   });
+}
+
+function sessionCookieMaxAge(expiresAt: string): number {
+  const expiresAtMilliseconds = Date.parse(expiresAt);
+  if (!Number.isFinite(expiresAtMilliseconds)) {
+    return authCookieMaxAgeSeconds;
+  }
+  const seconds = Math.floor((expiresAtMilliseconds - Date.now()) / 1000);
+  return Math.max(1, seconds);
 }
 
 export async function clearAuthSessionCookie(): Promise<void> {

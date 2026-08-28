@@ -1,10 +1,14 @@
 import { getServerApiProxyEnv } from "@/config/serverEnv";
+import { isTrustedMutationRequest, untrustedOriginResponse } from "../origin";
 import { isBackendAuthSession, setAuthSessionCookie } from "../session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isTrustedMutationRequest(request)) {
+    return untrustedOriginResponse();
+  }
   const env = getServerApiProxyEnv();
   const body = await request.text();
   try {
@@ -19,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
     });
     const payload = await parseJson(response);
     if (response.ok && isBackendAuthSession(payload)) {
-      await setAuthSessionCookie(payload.access_token);
+      await setAuthSessionCookie(payload.access_token, payload.expires_at);
     }
     return Response.json(payload, { status: response.status });
   } catch {

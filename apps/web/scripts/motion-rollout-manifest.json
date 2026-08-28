@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exemptRoutes": [""],
+  "exemptRoutes": ["", "login", "register"],
   "routes": [
     {
       "route": "command-center",

@@ -19,7 +19,7 @@ services:
       dockerfile: apps/web/Dockerfile.dev
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
-      NEXT_PUBLIC_APP_NAME: Daily Trading Dashboard
+      NEXT_PUBLIC_APP_NAME: AI Trading SaaS Starter Kit
     volumes:
       - ./apps/web:/app
       - web-node-modules:/app/node_modules

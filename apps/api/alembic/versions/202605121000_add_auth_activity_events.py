@@ -39,7 +39,8 @@ def upgrade() -> None:
         sa.Column("metadata_json", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         timestamp_column("created_at"),
         sa.CheckConstraint(
-            "event_type in ('register', 'login', 'logout', 'password_change', 'session_revoke', 'session_revoke_other', 'api_key_create', 'api_key_revoke')",
+            "event_type in ('register', 'login', 'logout', 'password_change', "
+            "'session_revoke', 'session_revoke_other', 'api_key_create', 'api_key_revoke')",
             name="auth_activity_events_type_allowed",
         ),
         sa.CheckConstraint(

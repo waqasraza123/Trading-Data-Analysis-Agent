@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +27,13 @@ from app.modules.workspaces.models import Workspace
 
 PASSWORD_HASH_ALGORITHM = "pbkdf2_sha256"
 PASSWORD_HASH_ITERATIONS = 210_000
+PASSWORD_HASHER = PasswordHasher(
+    time_cost=2,
+    memory_cost=19 * 1024,
+    parallelism=1,
+    hash_len=32,
+    salt_len=16,
+)
 SESSION_TOKEN_PREFIX = "tai_session_"
 
 
@@ -108,6 +117,8 @@ class PasswordAuthService:
         credential.failed_attempts = 0
         credential.locked_until = None
         credential.last_login_at = now
+        if password_needs_rehash(credential.password_hash):
+            credential.password_hash = hash_password(password)
         created_session = await self.create_session(user=user, workspace=workspace)
         await self.session.commit()
         return created_session
@@ -172,7 +183,11 @@ class PasswordAuthService:
             workspace_id=workspace_id,
         )
         if credential is None or credential.status != AuthIdentityStatus.ACTIVE.value:
-            raise AppError(404, "password_credential_not_found", "Password credential was not found")
+            raise AppError(
+                404,
+                "password_credential_not_found",
+                "Password credential was not found",
+            )
         now = datetime.now(UTC)
         if credential.locked_until is not None and credential.locked_until > now:
             raise AppError(423, "account_locked", "Account is temporarily locked")
@@ -380,6 +395,11 @@ def normalize_required_text(value: str, field_name: str) -> str:
 
 def hash_password(password: str) -> str:
     validate_password(password)
+    return PASSWORD_HASHER.hash(password)
+
+
+def hash_legacy_password(password: str) -> str:
+    validate_password(password)
     salt = secrets.token_bytes(32)
     digest = hashlib.pbkdf2_hmac(
         "sha256",
@@ -398,6 +418,15 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, stored_hash: str) -> bool:
+    if stored_hash.startswith("$argon2id$"):
+        try:
+            return PASSWORD_HASHER.verify(stored_hash, password)
+        except (InvalidHashError, VerificationError):
+            return False
+    return verify_legacy_password(password, stored_hash)
+
+
+def verify_legacy_password(password: str, stored_hash: str) -> bool:
     try:
         algorithm, iterations_value, salt_value, digest_value = stored_hash.split("$", 3)
         iterations = int(iterations_value)
@@ -414,6 +443,15 @@ def verify_password(password: str, stored_hash: str) -> bool:
         iterations,
     )
     return hmac.compare_digest(supplied_digest, expected_digest)
+
+
+def password_needs_rehash(stored_hash: str) -> bool:
+    if not stored_hash.startswith("$argon2id$"):
+        return True
+    try:
+        return PASSWORD_HASHER.check_needs_rehash(stored_hash)
+    except InvalidHashError:
+        return True
 
 
 def validate_password(password: str) -> None:

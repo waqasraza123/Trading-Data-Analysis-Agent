@@ -143,6 +143,10 @@ class AuthPasswordChangeRead(ApiSchema):
     revoked_session_count: int
 
 
+class AuthProfileUpdateRequest(ApiSchema):
+    name: str = Field(min_length=1, max_length=160)
+
+
 class AuthLogoutRequest(ApiSchema):
     token: str | None = Field(default=None, min_length=1, max_length=512)
 

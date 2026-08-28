@@ -25,7 +25,7 @@ export function AuthStatus() {
   async function handleLogout() {
     await logout();
     setIdentity(null);
-    window.location.href = "/login";
+    window.location.href = "/";
   }
 
   if (loading) {
